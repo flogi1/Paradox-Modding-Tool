@@ -1,0 +1,27 @@
+# .NET Build-Artefakte
+bin/
+obj/
+*.user
+
+# Von manuellen Merges erzeugte Backup-Dateien (siehe Architektur-Spezifikation, Abschnitt 10) —
+# werden vom Spiel sonst fälschlich als Skriptdatei eingelesen, daher hier ausgeschlossen.
+*.orig
+
+# Lokale IDE-Einstellungen
+.vs/
+.idea/
+
+# Snapshots des Versionsmanagers (siehe Abschnitt 6) — lokal, nicht versioniert
+/snapshots/
+
+# Git-Worktrees für isolierte Feature-Entwicklung (superpowers:using-git-worktrees)
+/.worktrees/
+
+# Brainstorming-Mockups (superpowers Visual Companion) — lokal, nicht versioniert
+/.superpowers/
+
+# Ausgabe von release.ps1 (Publish-Ordner, ZIP, Manifest, Signatur)
+/release-output/
+
+# Persönliche Backlog-Übersicht, nur lokal
+/Backlog.txt

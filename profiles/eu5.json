@@ -1,0 +1,65 @@
+{
+  "id": "eu5",
+  "steamAppId": "3450310",
+  "displayName": "Europa Universalis V",
+  "engineFamily": "clausewitz-jomini",
+  "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Europa Universalis V/mod",
+  "metadataFile": ".metadata/metadata.json",
+  "loadOrderRule": "alphabetical-filename-wins",
+  "vanillaHistoryFolderName": "EU V Vanilla History",
+  "folderCategories": [
+    { "path": "common", "label": "Common", "defaultColor": "#4A90D9", "description": "Kernspielregeln (Gebäude, Ideen, Modifikatoren, static_modifiers, generic_actions, ...)" },
+    { "path": "gui", "label": "GUI", "defaultColor": "#D98E4A", "description": "Interface-Layout-Dateien (.gui)" },
+    { "path": "gfx", "label": "Grafik", "defaultColor": "#7A4AD9", "description": "Grafik-Referenzen (.gfx)" },
+    { "path": "events", "label": "Events", "defaultColor": "#4AD98E" },
+    { "path": "localization", "label": "Lokalisierung", "defaultColor": "#D94A4A", "description": "YAML-Lokalisierungsdateien (.yml)" },
+    { "path": "map", "label": "Karte", "defaultColor": "#4AC7D9" },
+    { "path": "history", "label": "Historie", "defaultColor": "#B08AD9" },
+    { "path": "in_game", "label": "In-Game (Wurzel)", "defaultColor": "#808080", "description": "Oberste Ebene für In-Game-Inhalte, siehe Wiki-Ordnerstruktur" },
+    { "path": "main_menu", "label": "Hauptmenü", "defaultColor": "#808080" },
+    { "path": "loading_screen", "label": "Ladebildschirm", "defaultColor": "#808080" }
+  ],
+  "fileTypes": [
+    { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gui", "parser": "jomini-gui", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gfx", "parser": "jomini-gfx", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" }
+  ],
+  "launchOptions": [
+    { "label": "Normal", "args": "" },
+    { "label": "Debug-Modus (Konsole, Dev-Tools, Hotload)", "args": "-debug_mode" },
+    { "label": "Nach Absturz beim Ressourcen-Laden trotzdem mit Mods starten", "args": "--ignore-disable-mods-on-crash" },
+    { "label": "Debug-Modus + trotz Absturz mit Mods starten", "args": "-debug_mode --ignore-disable-mods-on-crash" }
+  ],
+  "keyOperators": [ "INJECT", "REPLACE", "TRY_INJECT", "TRY_REPLACE", "INJECT_OR_CREATE", "REPLACE_OR_CREATE" ],
+  "overrideRules": [
+    { "folder": "*/common", "behavior": "PerKey", "certain": true },
+    { "folder": "*/common/defines", "behavior": "PartialKeys", "certain": true },
+    { "folder": "*/common/on_action", "behavior": "AppendOnly", "certain": false },
+    { "folder": "*/common/on_actions", "behavior": "AppendOnly", "certain": false },
+    { "folder": "*/events", "behavior": "FirstWins", "certain": true },
+    { "folder": "*/gui", "behavior": "LastWins", "certain": true },
+    { "folder": "*/localization", "behavior": "LocalizationKeys", "certain": true },
+    { "folder": "*/gfx", "behavior": "WholeFile", "certain": true },
+    { "folder": "*/fonts", "behavior": "WholeFile", "certain": true },
+    { "folder": "*/music", "behavior": "WholeFile", "certain": true },
+    { "folder": "*/map_data", "behavior": "WholeFile", "certain": true }
+  ],
+  "errorLogRules": "eu5-error-patterns",
+  "notes": "Quelle für loadOrderRule und launchOptions: https://eu5.paradoxwikis.com/Modding sowie reale Error-Logs des Nutzers (siehe Architektur-Spezifikation Abschnitt 9). Quelle für overrideRules: https://eu5.paradoxwikis.com/Mod_compatibility.",
+  "gui": {
+    "structuredBlocks": [
+      "modify_texture", "glow", "state", "animation", "start_sound", "end_sound",
+      "action_tooltip", "scripted_action_tooltip", "parameter", "format", "textformatting",
+      "tooltipmeta", "iconsize", "texticon", "left_action", "left_click_and_hold_action",
+      "right_click_and_hold_action", "datacontext_from_model", "button_tooltip_override"
+    ],
+    "widgetHolders": [
+      "tooltipwidget", "item", "scrollwidget", "viewportwidget", "contextmenu_widget",
+      "dec_button", "inc_button", "slider", "track", "track_range", "track_highlight",
+      "buttonText", "list", "active_item", "zoomwidget", "axis_label", "marker",
+      "scrollbar_vertical", "scrollbar_horizontal"
+    ],
+    "layoutHolders": [ "item", "scrollwidget", "viewportwidget", "zoomwidget" ]
+  }
+}

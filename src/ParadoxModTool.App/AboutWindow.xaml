@@ -1,0 +1,45 @@
+<Window x:Class="ParadoxModTool.App.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Über Paradox Modding Tool" Width="500" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
+    <StackPanel Margin="20">
+        <StackPanel Orientation="Horizontal">
+            <Image Source="Assets/app-icon.png" Width="88" Height="88" RenderOptions.BitmapScalingMode="HighQuality" />
+            <StackPanel Margin="16,6,0,0">
+                <TextBlock Text="Paradox Modding Tool" FontSize="22" FontWeight="Bold" />
+                <TextBlock x:Name="VersionText" FontSize="13" Margin="0,2,0,0" />
+                <TextBlock x:Name="CreatorText" FontSize="13" Margin="0,2,0,0" />
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock Margin="0,16,0,0" TextWrapping="Wrap"
+                   Text="Editor und Werkzeugkasten für Mods der Paradox-Spiele (Schwerpunkt Europa Universalis V)." />
+
+        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
+            <Run FontWeight="SemiBold" Text="Hinweis zu KI:" />
+            <Run Text="Dieses Programm wurde mit Unterstützung von KI (Claude von Anthropic) entwickelt." />
+        </TextBlock>
+
+        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
+            <Run FontWeight="SemiBold" Text="Lizenz:" />
+            <Run Text="MIT-Lizenz, Copyright (c) 2026 flogi." />
+        </TextBlock>
+        <Expander Header="Volltext der Lizenz" Margin="0,4,0,0">
+            <TextBox x:Name="LicenseBox" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                     Height="150" Margin="0,4,0,0" FontFamily="Consolas" FontSize="11" />
+        </Expander>
+
+        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
+            <Run FontWeight="SemiBold" Text="Verwendete Komponenten:" />
+            <Run Text="AvalonEdit (MIT-Lizenz, ICSharpCode)." />
+        </TextBlock>
+
+        <TextBlock x:Name="RepositoryLine" Margin="0,12,0,0" Visibility="Collapsed">
+            <Run FontWeight="SemiBold" Text="Projektseite:" />
+            <Hyperlink x:Name="RepositoryLink" Click="RepositoryLink_Click"><Run x:Name="RepositoryLinkText" /></Hyperlink>
+        </TextBlock>
+
+        <Button Content="Schließen" HorizontalAlignment="Right" Padding="18,4" Margin="0,18,0,0" IsDefault="True" IsCancel="True" />
+    </StackPanel>
+</Window>

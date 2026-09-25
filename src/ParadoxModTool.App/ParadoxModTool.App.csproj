@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Nur für den klassischen Ordnerauswahldialog (FolderBrowserDialog) im Suchen-&
+         Ersetzen-Fenster, Abschnitt 5b - siehe SearchReplaceWindow.xaml.cs. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <OutputType>WinExe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.App</RootNamespace>
+    <AssemblyName>ParadoxModTool</AssemblyName>
+    <StartupObject>ParadoxModTool.App.Program</StartupObject>
+    <!-- Versionsnummer des Programms: erscheint im Startbild, im Über-Fenster, im Update-Vergleich und im
+         Fehlerbericht. Bei jedem veröffentlichten Release hier hochzählen (und den Git-Tag "v<Version>" setzen). -->
+    <Version>0.2.0</Version>
+    <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Compatch\ParadoxModTool.Compatch.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Editor\ParadoxModTool.Editor.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Explorer\ParadoxModTool.Explorer.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GitIntegration\ParadoxModTool.GitIntegration.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GuiDesign\ParadoxModTool.GuiDesign.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.LaunchControl\ParadoxModTool.LaunchControl.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ModCompat\ParadoxModTool.ModCompat.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Mods\ParadoxModTool.Mods.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Notes\ParadoxModTool.Notes.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SearchReplace\ParadoxModTool.SearchReplace.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ScriptDocs\ParadoxModTool.ScriptDocs.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Scopes\ParadoxModTool.Scopes.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Session\ParadoxModTool.Session.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SettingsUi\ParadoxModTool.SettingsUi.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SteamIntegration\ParadoxModTool.SteamIntegration.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Syntax\ParadoxModTool.Syntax.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Templates\ParadoxModTool.Templates.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Tools\ParadoxModTool.Tools.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.UndoRedo\ParadoxModTool.UndoRedo.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.VanillaDiff\ParadoxModTool.VanillaDiff.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Theming\ParadoxModTool.Theming.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Updates\ParadoxModTool.Updates.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.VersionManager\ParadoxModTool.VersionManager.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Logo für Startbild und Über-Fenster (das .ico oben ist das Symbol der .exe selbst). -->
+    <Resource Include="..\..\assets\app-icon.png" Link="Assets\app-icon.png" />
+    <Resource Include="..\..\LICENSE" Link="Assets\LICENSE.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Verweist auf die Datendateien am Repo-Root, damit Spielprofile und
+         Highlighting-Templates zentral (und community-editierbar) an einer
+         Stelle liegen, aber trotzdem neben der gebauten .exe landen. -->
+    <None Include="..\..\profiles\*.json" Link="profiles\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\locales\*.json" Link="locales\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\scriptdocs\*.json" Link="profiles\scriptdocs\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\syntax-templates\jomini-script.xshd" Link="syntax-templates\jomini-script.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

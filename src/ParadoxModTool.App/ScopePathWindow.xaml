@@ -1,0 +1,93 @@
+<Window x:Class="ParadoxModTool.App.ScopePathWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Scope Finder"
+        Height="580" Width="760" MinHeight="420" MinWidth="560"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <!--
+        Wegsuche zwischen Scopes: von einem Start-Scope (Cursor, root, gespeicherte Scopes oder ein frei gewählter) zu einem Ziel-Scope über Event-Targets und
+        Iteratoren. Die Liste zeigt die kürzesten Wege zuerst; Doppelklick oder "Einfügen" setzt den Weg als verschachtelte Blöcke an die Cursorstelle,
+        "Nur Kette" bei reinen Event-Target-Wegen nur den Ausdruck (owner.capital). Das Einfügen selbst übernimmt das Hauptfenster.
+    -->
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Von:" VerticalAlignment="Center" Margin="0,0,6,6" />
+            <ComboBox x:Name="StartBox" Grid.Row="0" Grid.Column="1" Margin="0,0,12,6" DisplayMemberPath="Label"
+                      SelectionChanged="Options_Changed"
+                      ToolTip="Wo der Weg beginnt: im aktuellen Scope, bei root, bei einem gespeicherten Scope (scope:actor …) oder bei einem frei gewählten Scope" />
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Nach:" VerticalAlignment="Center" Margin="0,0,6,6" />
+            <ComboBox x:Name="GoalBox" Grid.Row="0" Grid.Column="3" Margin="0,0,0,6" IsTextSearchEnabled="True"
+                      SelectionChanged="Options_Changed"
+                      ToolTip="Der Scope, zu dem der Weg führen soll. Tippen springt in der Liste zum passenden Namen." />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Schritte:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,12,0">
+                <ComboBox x:Name="StepsBox" Width="60" SelectionChanged="Options_Changed" ToolTip="Höchstzahl der Schritte; bei drei wird die Liste sehr lang">
+                    <ComboBoxItem Content="1" />
+                    <ComboBoxItem Content="2" IsSelected="True" />
+                    <ComboBoxItem Content="3" />
+                </ComboBox>
+                <TextBlock Text="Iterator:" VerticalAlignment="Center" Margin="12,0,6,0" />
+                <ComboBox x:Name="FormBox" Width="150" SelectionChanged="Options_Changed"
+                          ToolTip="Welche Form der Iteratoren geschrieben wird: any_ für Trigger, every_/random_/ordered_ für Effects. Kennt das Spiel die Form nicht, wird die nächstliegende benutzt.">
+                    <ComboBoxItem Content="any_ (Trigger)" Tag="any" />
+                    <ComboBoxItem Content="every_ (Effect)" Tag="every" />
+                    <ComboBoxItem Content="random_ (Effect)" Tag="random" />
+                    <ComboBoxItem Content="ordered_ (Effect)" Tag="ordered" />
+                </ComboBox>
+            </StackPanel>
+            <CheckBox x:Name="GlobalLinksBox" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" VerticalAlignment="Center"
+                      Content="Globale Verweise (location:KEY …) anbieten" Click="Options_Changed"
+                      ToolTip="Verweise, die von überall funktionieren, aber einen Schlüssel brauchen; KEY ersetzt du nach dem Einfügen" />
+        </Grid>
+
+        <DockPanel Grid.Row="1" Margin="0,0,0,6">
+            <TextBlock x:Name="CountText" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource Theme.TextMuted}" />
+            <TextBlock Text="Filter:" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox x:Name="FilterBox" TextChanged="Filter_TextChanged" ToolTip="Nur Wege zeigen, deren Text dies enthält" />
+        </DockPanel>
+
+        <ListBox x:Name="PathsList" Grid.Row="2" HorizontalContentAlignment="Stretch"
+                 MouseDoubleClick="PathsList_MouseDoubleClick" SelectionChanged="PathsList_SelectionChanged"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="0,2">
+                        <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <DockPanel Grid.Row="3" Margin="0,10,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="InsertButton" Content="Einfügen" Width="90" Margin="0,0,6,0" IsEnabled="False" Click="Insert_Click" IsDefault="True"
+                        ToolTip="Fügt den Weg als verschachtelte Blöcke an der Cursorstelle ein" />
+                <Button x:Name="ChainButton" Content="Nur Kette" Width="90" Margin="0,0,6,0" IsEnabled="False" Click="Chain_Click"
+                        ToolTip="Fügt nur den Ausdruck ein (z. B. owner.capital); nur bei Wegen ohne Iteratoren" />
+                <Button Content="Schließen" Width="90" IsCancel="True" />
+            </StackPanel>
+            <TextBlock x:Name="HintText" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" />
+        </DockPanel>
+    </Grid>
+</Window>

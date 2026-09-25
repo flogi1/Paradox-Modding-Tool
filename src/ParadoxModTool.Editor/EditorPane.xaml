@@ -1,0 +1,317 @@
+<UserControl x:Class="ParadoxModTool.Editor.EditorPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:local="clr-namespace:ParadoxModTool.Editor"
+             mc:Ignorable="d">
+    <!--
+        Ein unabhängiger Arbeitsbereich (Architektur-Spezifikation, Abschnitt 5,
+        Split-View): eigene Mini-Werkzeugleiste (Neu/Öffnen/Speichern/Verschieben),
+        eigene Tableiste mit den darin geöffneten Dokumenten und ein einzelnes
+        AvalonEdit-Steuerelement, dessen Document-Eigenschaft beim Tabwechsel auf das
+        jeweils ausgewählte Dokument umgeschaltet wird (spart Ressourcen gegenüber
+        einem TextEditor pro Tab). Der Split-View besteht aus zwei Instanzen dieses
+        UserControls im Hauptfenster nebeneinander, siehe MainWindow.xaml.
+    -->
+    <UserControl.Resources>
+        <!-- Für die Sichtbarkeit des Notiz-Icons im Dateienreiter (Nutzer-Feedback Runde 5) -
+             OpenDocument.HasNote ist ein bool, ItemTemplate.Visibility erwartet Visibility. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </UserControl.Resources>
+    <DockPanel>
+        <!-- Werkzeugleiste des Arbeitsbereichs in der Reihenfolge der UI-Reorganisation (Plan 3). Texte und Tooltips setzt
+             ApplyToolbarTexts aus MenuTexts. "Filter ▾" und "Symbole ▾" gehören seitdem hierher und nicht mehr zur Dokumentenleiste;
+             beide lassen sich in den Einstellungen (Kategorie 4) ausblenden, siehe SetToolbarButtonsVisible. -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Button x:Name="NewButton" Click="NewDocument_Click" Margin="2" Padding="6,2" />
+            <Button x:Name="OpenButton" Click="OpenDocument_Click" Margin="2" Padding="6,2" />
+            <Button x:Name="SaveButton" Click="SaveDocument_Click" Margin="2" Padding="6,2" />
+            <Button x:Name="SaveAllButton" Click="SaveAllDocuments_Click" Margin="2" Padding="6,2" />
+            <Button x:Name="CloseDocumentButton" Click="CloseActiveDocument_Click" Margin="2" Padding="6,2" />
+            <Button x:Name="MoveButton" Click="MoveActiveDocument_Click" Margin="2" Padding="6,2" />
+            <Separator Margin="4,2" />
+            <!-- Manuelle Kategorie-Zuweisung: Menü mit "Automatisch" (Regeln entscheiden) und allen Kategorien;
+                 das Häkchen zeigt die Zuweisung des aktiven Dokuments (siehe CategoryButton_Click). -->
+            <Button x:Name="CategoryButton" Click="CategoryButton_Click" Margin="2" Padding="6,2" />
+            <!-- Welche Häkchen die Filterleiste zeigt (Herkunft und Kategorien); siehe FilterBarSettings. -->
+            <Button x:Name="FilterBarButton" Click="FilterBarButton_Click" Margin="2" Padding="6,2" />
+            <!-- Welche Symbole die Tabs zeigen (Notiz, Lesezeichen, Bug, Vanilla, Mod, Sperre); siehe TabIconSettings. -->
+            <Button x:Name="TabIconsButton" Click="TabIconsButton_Click" Margin="2" Padding="6,2" />
+            <!-- GUI-Designer (Plan 2a): nur bei .gui-Dateien sichtbar, siehe EditorPane.Gui.cs. -->
+            <StackPanel x:Name="GuiModePanel" Orientation="Horizontal" Margin="6,0,0,0" Visibility="Collapsed">
+                <ToggleButton x:Name="GuiModeCodeButton" Content="Code" Margin="2" Padding="6,2" Click="GuiModeButton_Click"
+                              ToolTip="Nur den Code der .gui-Datei zeigen" />
+                <ToggleButton x:Name="GuiModeDesignerButton" Content="Designer" Margin="2" Padding="6,2" Click="GuiModeButton_Click"
+                              ToolTip="Nur den Designer zeigen: Vorschau, Elementbaum und Eigenschaften (nur lesend)" />
+                <ToggleButton x:Name="GuiModeSplitButton" Content="Geteilt" Margin="2" Padding="6,2" Click="GuiModeButton_Click"
+                              ToolTip="Designer oben, Code unten" />
+            </StackPanel>
+        </StackPanel>
+        <!-- Dateikategorie-Filter (Nutzer-Feedback: "Dateikategorien ... die man ein und ausblenden
+             kann"). Alle Kategorien sind standardmäßig sichtbar; das aktive Dokument bleibt beim
+             Ausblenden seiner Kategorie IMMER sichtbar (siehe CategoryFilter im Code-Behind), damit
+             der Nutzer nie versehentlich seinen gerade bearbeiteten Tab verliert. -->
+        <WrapPanel x:Name="CategoryFilterPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,0,2,2" />
+        <!-- Filter nach Eigenschaften (Nutzer-Feedback: konfigurierbare Dokumentenleiste): zeigt nur Tabs mit
+             Notiz bzw. Lesezeichen. Mehrere aktive Filter gelten gleichzeitig (UND). Zusammen mit den
+             Kategorie-Häkchen oben über Einstellungen ausblendbar (siehe SetDocumentBarVisible). -->
+        <StackPanel x:Name="PropertyFilterPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,0,2,2">
+            <TextBlock Text="Nur mit:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource Theme.TextMuted}" />
+            <ToggleButton x:Name="FilterHasNoteToggle" Content="🗒 Notiz" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
+                          ToolTip="Nur Dokumente mit Notiz anzeigen" />
+            <ToggleButton x:Name="FilterHasBookmarkToggle" Content="🔖 Lesezeichen" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
+                          ToolTip="Nur Dokumente mit Lesezeichen anzeigen" />
+            <ToggleButton x:Name="FilterHasBugToggle" Content="🐞 Bug" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
+                          ToolTip="Nur Dokumente mit offenen Bugs anzeigen" />
+        </StackPanel>
+        <ListBox x:Name="Tabs"
+                 DockPanel.Dock="Top"
+                 SelectionChanged="Tabs_SelectionChanged"
+                 AllowDrop="True"
+                 PreviewMouseLeftButtonDown="Tabs_PreviewMouseLeftButtonDown"
+                 PreviewMouseMove="Tabs_PreviewMouseMove"
+                 DragOver="Tabs_DragOver"
+                 Drop="Tabs_Drop"
+                 PreviewMouseWheel="Tabs_PreviewMouseWheel"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+            <!-- Aktiver Tab deutlich sichtbar, auch wenn der Fokus im Editortext liegt (dann wäre er mit der Standardvorlage nur hellgrau):
+                 fett, Auswahlfarbe und eine Akzentlinie unten. Im Arbeitsbereich, in dem gerade gearbeitet wird (Fokus im Editor oder in der
+                 Tableiste), volle Farbe; im anderen Arbeitsbereich bleibt er fett mit blasser Linie, damit man sieht, wo man tippt. -->
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+                    <Setter Property="Padding" Value="4,1" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Grid>
+                                    <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                                    </Border>
+                                    <Rectangle x:Name="ActiveLine" Height="3" VerticalAlignment="Bottom" Visibility="Collapsed"
+                                               Fill="{DynamicResource Theme.Accent}" />
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Theme.ControlHover}" />
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Theme.InactiveSelection}" />
+                                        <Setter TargetName="ActiveLine" Property="Visibility" Value="Visible" />
+                                        <Setter TargetName="ActiveLine" Property="Opacity" Value="0.5" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </Trigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
+                                            <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType={x:Type local:EditorPane}}}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Theme.Selection}" />
+                                        <Setter TargetName="ActiveLine" Property="Opacity" Value="1" />
+                                        <Setter Property="Foreground" Value="{DynamicResource Theme.SelectionText}" />
+                                    </MultiDataTrigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Foreground" Value="{DynamicResource Theme.TextDisabled}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <!-- Schließen-Button "✕" direkt am Tab (siehe Nutzer-Feedback zu Abschnitt 5)
+                         - Tag bindet auf das jeweilige OpenDocument, damit CloseTab_Click im
+                         Code-Behind weiß, welches Dokument geschlossen werden soll, ohne dass
+                         der Tab dafür erst ausgewählt werden muss. Der farbige Balken links zeigt
+                         die Dateikategorie an (Nutzer-Feedback: "Farbcode ... je nachdem welche
+                         Kategorie es ist"). Der Hintergrund des gesamten StackPanel ist an
+                         TabBackground gebunden (Nutzer-Feedback Runde 4: "Farbcodes ... den ganzen
+                         Reiter einfärben") - transparent, solange diese Einstellung nicht aktiviert
+                         ist (siehe OpenDocument.ColorizeWholeTabEnabled). Nutzer-Feedback Runde 5:
+                         Rechtsklick-Kontextmenü ("Ordner öffnen"; Nutzer-Feedback Runde 6: kürzerer
+                         Button-Text als ursprünglich "Ordner öffnen, wo die Datei liegt") sowie ein
+                         Notiz-Icon, das nur erscheint, wenn OpenDocument.HasNote gesetzt ist. -->
+                    <StackPanel Orientation="Horizontal" Margin="2,0" Background="{Binding TabBackground}">
+                        <StackPanel.ContextMenu>
+                            <!-- WPF-Falle: ein ContextMenu ist eine eigene Popup-Wurzel und erbt
+                                 den DataContext NICHT automatisch vom PlacementTarget - deshalb
+                                 hier explizit binden, damit OpenContainingFolderFromTab_Click im
+                                 Code-Behind über das DataContext des MenuItem an das richtige
+                                 OpenDocument kommt. -->
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                <MenuItem Header="Ordner öffnen" Click="OpenContainingFolderFromTab_Click" />
+                            </ContextMenu>
+                        </StackPanel.ContextMenu>
+                        <Border Width="4" Margin="0,1,4,1" Background="{Binding CategoryColor}" />
+                        <TextBlock Text="●" Foreground="{DynamicResource Theme.Warning}" FontSize="10" VerticalAlignment="Center" Margin="0,0,3,0"
+                                   Visibility="{Binding IsModified, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   ToolTip="Ungespeicherte Änderungen" />
+                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip="{Binding CategoryDisplayName}" />
+                        <!-- Herkunft: Vanilla-Symbol (eigene Raute mit "P") bzw. Werkzeug-Symbol für Mod-Dateien; nur Anzeige,
+                             ein-/ausblendbar über "Symbole" in der Dokumentenleiste (TabIconSettings). -->
+                        <local:VanillaIcon Margin="0,0,3,0" VerticalAlignment="Center" ToolTip="{Binding OriginTooltip}"
+                                           Visibility="{Binding VanillaIconVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Border Background="{DynamicResource Icon.Mod}" CornerRadius="2" Padding="1,0" Margin="0,0,3,0" VerticalAlignment="Center"
+                                ToolTip="{Binding OriginTooltip}"
+                                Visibility="{Binding ModIconVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="🛠" FontSize="10" />
+                        </Border>
+                        <TextBlock Text="🔒" FontSize="10" VerticalAlignment="Center" Margin="0,0,3,0" ToolTip="{Binding LockTooltip}"
+                                   Visibility="{Binding LockIconVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <!-- Nutzer-Feedback: "Ermögliche mir für den kleinen Notiz Button im
+                             Offene-Dokumente-Reiter eine extra Farbe auszuwählen." - als farbiger
+                             "Chip" HINTER dem 🗒-Emoji umgesetzt (siehe TabIconBrushes für die
+                             Begründung), über
+                             {DynamicResource Icon.Note} DIESELBE Farbe wie
+                             beim "🗒 Notizen anzeigen"-Button unten ("... sollte die gleiche Farbe
+                             haben"). Der Button selbst bekommt eine leere/flache Vorlage, damit
+                             NUR der Border als sichtbarer Klickbereich erscheint, nicht zusätzlich
+                             der WPF-Standard-Button-Rahmen. -->
+                        <Button Tag="{Binding}" Click="TabNoteIcon_Click"
+                                Visibility="{Binding NoteIconVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Padding="0" Margin="0,0,2,0" VerticalAlignment="Center"
+                                ToolTip="Es gibt eine Notiz zu dieser Datei - anklicken zum Anzeigen/Bearbeiten">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{DynamicResource Icon.Note}" CornerRadius="2" Padding="3,1">
+                                        <ContentPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Text="🗒" FontSize="10" />
+                        </Button>
+                        <!-- Lesezeichen-Icon (Nutzer-Feedback): erscheint, sobald in der Datei mindestens ein
+                             Lesezeichen gesetzt ist; Klick öffnet dasselbe Fenster wie das Notiz-Icon (dort stehen
+                             auch die Lesezeichen). Gleicher "Chip"-Aufbau wie das Notiz-Icon. -->
+                        <Button Tag="{Binding}" Click="TabNoteIcon_Click"
+                                Visibility="{Binding BookmarkIconVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Padding="0" Margin="0,0,2,0" VerticalAlignment="Center"
+                                ToolTip="{Binding BookmarkTooltip}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{DynamicResource Icon.Bookmark}" CornerRadius="2" Padding="3,1">
+                                        <ContentPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Text="🔖" FontSize="10" />
+                        </Button>
+                        <!-- Bug-Symbol (Paket 12c): erscheint, solange die Datei offene Bugs hat. Jeder Klick schaltet zum
+                             nächsten offenen Bug weiter (Sprung zur Zeile, falls eine referenziert ist). Heller "Chip" mit
+                             rotem Rand statt roter Fläche, damit der rote Käfer auch im hellen Theme Kontrast hat. -->
+                        <Button Tag="{Binding}" Click="TabBugIcon_Click"
+                                Visibility="{Binding BugIconVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Padding="0" Margin="0,0,2,0" VerticalAlignment="Center"
+                                ToolTip="{Binding BugTooltip}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{DynamicResource Theme.NoticeBackground}" BorderBrush="{DynamicResource Icon.Bug}"
+                                            BorderThickness="1" CornerRadius="2" Padding="2,0">
+                                        <ContentPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Text="🐞" FontSize="10" />
+                        </Button>
+                        <Button Content="✕" Tag="{Binding}" Click="CloseTab_Click"
+                                Padding="4,0" Margin="0" FontSize="10" VerticalAlignment="Center"
+                                ToolTip="Dokument schließen" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <!-- Pfadanzeige (Nutzer-Feedback): zeigt immer den vollen Pfad des aktiven Dokuments an,
+             bzw. einen Platzhalter für ein neues, noch nicht gespeichertes Dokument. Nutzer-
+             Feedback Runde 5: "Möglichkeit den angezeigten Dateipfad zu kopieren, mit einem
+             kleinen Button daneben und auch durch direktes kopieren" + "Button, der den
+             Dateienpfad öffnet" + "Notizen anzeigen"-Button daneben. Die drei Buttons sind rechts
+             angedockt und ABSICHTLICH in umgekehrter Reihenfolge deklariert (siehe DockPanel-
+             Verhalten: der zuerst deklarierte rechts angedockte Kindelement liegt am weitesten
+             rechts), damit sie in natürlicher Leserichtung nach dem Pfadtext erscheinen:
+             [Pfad] [📋 Kopieren] [📂 Ordner öffnen] [🗒 Notizen anzeigen]. PathText selbst ist
+             statt eines TextBlock (der keine Textauswahl unterstützt) eine schreibgeschützte,
+             randlose TextBox - derselbe Trick wie bei den Suchergebnis-Zeilen im Suchen-Fenster -
+             damit der Pfad auch per direkter Textmarkierung/Strg+C kopiert werden kann. -->
+        <DockPanel x:Name="PathBar" DockPanel.Dock="Top" Margin="0,0,2,0">
+            <!-- Nutzer-Feedback: "Der Notizen anzeigen Button sollte die gleiche Farbe haben." -
+                 derselbe Chip-Aufbau (Border + {DynamicResource Icon.Note}) wie beim
+                 Notiz-Icon im Dateienreiter oben, damit beide IMMER dieselbe Farbe zeigen. -->
+            <Button DockPanel.Dock="Right" x:Name="ShowNoteButton" Click="ShowNoteButton_Click"
+                    Margin="2,1" Padding="0" ToolTip="Notiz zur aktiven Datei anzeigen/bearbeiten">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{DynamicResource Icon.Note}" CornerRadius="2" Padding="4,1">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+                <TextBlock Text="🗒 Notizen anzeigen" FontSize="11" />
+            </Button>
+            <Button DockPanel.Dock="Right" x:Name="OpenFolderButton" Content="📂" Click="OpenFolderButton_Click"
+                    Margin="0,1" Padding="4,1" FontSize="11" ToolTip="Ordner öffnen, in dem die aktive Datei liegt" />
+            <Button DockPanel.Dock="Right" x:Name="CopyPathButton" Content="📋" Click="CopyPathButton_Click"
+                    Margin="0,1" Padding="4,1" FontSize="11" ToolTip="Dateipfad der aktiven Datei in die Zwischenablage kopieren" />
+            <TextBox x:Name="PathText"
+                     IsReadOnly="True"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     Padding="4,2"
+                     FontSize="11"
+                     Foreground="{DynamicResource Theme.TextMuted}"
+                     Text="Kein Dokument geöffnet"
+                     VerticalAlignment="Center"
+                     VerticalContentAlignment="Center" />
+        </DockPanel>
+        <!-- Dieselbe Scope-Zeile direkt unter der Pfadleiste (Einstellung "Scope unter der Pfadleiste"; Standard aus). -->
+        <Border x:Name="ScopeStatusBarTop" DockPanel.Dock="Top" Padding="6,2" BorderThickness="0,0,0,1" Visibility="Collapsed"
+                BorderBrush="{DynamicResource Theme.Separator}" Background="{DynamicResource Theme.PanelBackground}">
+            <TextBlock x:Name="ScopeStatusTextTop" FontSize="11" TextTrimming="CharacterEllipsis" />
+        </Border>
+        <!-- Scope am Cursor (siehe ScopeStatusController); ein-/ausblendbar über Einstellungen. -->
+        <Border x:Name="ScopeStatusBar" DockPanel.Dock="Bottom" Padding="6,2" BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource Theme.Separator}" Background="{DynamicResource Theme.PanelBackground}">
+            <TextBlock x:Name="ScopeStatusText" FontSize="11" TextTrimming="CharacterEllipsis" />
+        </Border>
+        <!-- Farbiger Rahmen in der Kategoriefarbe des aktiven Dokuments (Nutzer-Feedback: auf einen
+             Blick erkennen, welche Art Datei gerade offen ist) - siehe UpdateEditorBorder. -->
+        <!-- Editorbereich: Designer-Zeile (nur bei .gui-Dateien in Designer/Geteilt), Trenner, Code. Siehe EditorPane.Gui.cs. -->
+        <Grid x:Name="EditorArea">
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="DesignerRow" Height="0" />
+                <RowDefinition x:Name="DesignerSplitterRow" Height="0" />
+                <RowDefinition x:Name="CodeRow" Height="*" />
+            </Grid.RowDefinitions>
+            <ContentControl x:Name="DesignerHost" Grid.Row="0" Visibility="Collapsed" />
+            <GridSplitter x:Name="DesignerSplitter" Grid.Row="1" Height="5" HorizontalAlignment="Stretch" ResizeDirection="Rows"
+                          Visibility="Collapsed" Background="{DynamicResource Theme.Separator}"
+                          DragCompleted="DesignerSplitter_DragCompleted" />
+            <DockPanel Grid.Row="2">
+                <!-- Brotkrumen-Leiste über dem Code von .gui-Dateien (Plan 2b), siehe EditorPane.Gui.cs. -->
+                <ContentControl x:Name="BreadcrumbHost" DockPanel.Dock="Top" Visibility="Collapsed" />
+                <Border x:Name="EditorBorder" BorderThickness="2" BorderBrush="Transparent"
+                        AllowDrop="True" PreviewDragOver="EditorArea_PreviewDragOver" PreviewDrop="EditorArea_PreviewDrop">
+                    <avalonedit:TextEditor x:Name="Editor"
+                                            Background="{DynamicResource Theme.EditorBackground}"
+                                            Foreground="{DynamicResource Theme.EditorForeground}"
+                                            LineNumbersForeground="{DynamicResource Theme.LineNumbers}"
+                                            FontFamily="Consolas"
+                                            FontSize="13"
+                                            ShowLineNumbers="True"
+                                            WordWrap="False" />
+                </Border>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

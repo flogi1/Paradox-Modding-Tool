@@ -1,0 +1,64 @@
+<Window x:Class="ParadoxModTool.App.RuleEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Regel bearbeiten" Width="780" Height="760" MinWidth="640" MinHeight="620"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <!--
+        Dialog für eine Zählregel: Name, Ebene, Wo, Muster, Aktion. Unten zeigt eine Live-Vorschau, welche Namen im aktuellen Snippet die Regel treffen und
+        welche ihrer Zahlen zählen (grün) oder nicht zählen (rot, durchgestrichen). Die ausführliche Anleitung steht im Hilfefenster.
+    -->
+    <DockPanel Margin="12">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Anleitung" Padding="10,2" Margin="0,0,16,0" Click="Help_Click" ToolTip="Öffnet die Anleitung mit Beispielen" />
+            <Button x:Name="SaveButton" Content="Speichern" Width="90" Margin="0,0,6,0" IsDefault="True" Click="Save_Click" />
+            <Button Content="Abbrechen" Width="90" IsCancel="True" />
+        </StackPanel>
+        <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#E53935" />
+
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Name:" Margin="0,0,0,2" />
+            <TextBox x:Name="NameBox" MaxLength="120" TextChanged="Changed_TextChanged" />
+
+            <StackPanel x:Name="LayerPanel" Margin="0,8,0,0">
+                <TextBlock Text="Ebene:" Margin="0,0,0,2" />
+                <ComboBox x:Name="LayerBox" SelectionChanged="LayerBox_SelectionChanged"
+                          ToolTip="Wo die Regel gespeichert wird und für wen sie gilt: Vorlage (nur diese), Mod, Spiel oder Alle Spiele. Spezifischere Ebenen gehen vor." />
+            </StackPanel>
+
+            <StackPanel x:Name="GamesHost" Margin="0,8,0,0">
+                <TextBlock Text="Gilt für Spiele:" Margin="0,0,0,2" />
+                <CheckBox x:Name="AllGamesCheck" Content="alle Spiele" Click="AllGamesCheck_Click" />
+                <WrapPanel x:Name="GamesPanel" Margin="16,4,0,0" />
+            </StackPanel>
+
+            <TextBlock Text="Wo:" Margin="0,8,0,2" />
+            <StackPanel Orientation="Horizontal">
+                <ComboBox x:Name="WhereBox" Width="200" SelectionChanged="Changed_SelectionChanged"
+                          ToolTip="Überall: jeder Name im Snippet. Innerhalb von Schlüssel: nur im Eintrag &quot;Schlüssel = …&quot; (Wert und alles darin).">
+                    <ComboBoxItem Content="Überall" />
+                    <ComboBoxItem Content="Innerhalb von Schlüssel" />
+                </ComboBox>
+                <TextBlock Text="Schlüssel:" VerticalAlignment="Center" Margin="12,0,6,0" />
+                <TextBox x:Name="KeyBox" Width="220" TextChanged="Changed_TextChanged"
+                         ToolTip="Zum Beispiel position oder texture; * steht für beliebigen Text (z. B. *_button)" />
+            </StackPanel>
+
+            <TextBlock Text="Muster (eines pro Zeile):" Margin="0,8,0,2" />
+            <TextBox x:Name="PatternsBox" AcceptsReturn="True" Height="84" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" TextChanged="Changed_TextChanged" />
+            <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}"
+                       Text="* = beliebiger Text · # = eine Zahl · [#] = die Zahl, um die es geht (höchstens einmal je Muster). Das Muster muss auf den ganzen Namen passen; mehrere Muster gelten als „oder“." />
+            <CheckBox x:Name="CaseBox" Content="Groß-/Kleinschreibung beachten" Margin="0,6,0,0" Click="Changed_Click" />
+
+            <TextBlock Text="Aktion:" Margin="0,8,0,2" />
+            <ComboBox x:Name="ActionBox" SelectionChanged="ActionBox_SelectionChanged" />
+            <TextBlock x:Name="ActionHelpText" Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" />
+        </StackPanel>
+
+        <DockPanel Margin="0,10,0,0">
+            <TextBlock x:Name="PreviewCount" DockPanel.Dock="Top" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <TextBlock DockPanel.Dock="Bottom" Margin="0,4,0,0" Foreground="{DynamicResource Theme.TextMuted}"
+                       Text="grün, fett = zählt · rot, durchgestrichen = zählt nicht · grau = die Regel entscheidet hier nicht" />
+            <ListBox x:Name="PreviewList" FontFamily="Consolas" />
+        </DockPanel>
+    </DockPanel>
+</Window>

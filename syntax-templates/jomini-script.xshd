@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Syntax-Highlighting-Definition für Paradox-Skriptdateien (.txt), Format:
+  AvalonEdit XSHD (https://avalonedit.net). Bewusst einfach gehalten, damit
+  die Community sie ohne Programmierkenntnisse per Text-/XML-Editor anpassen
+  kann (siehe Architektur-Spezifikation, Abschnitt 15).
+
+  Neue Schlüsselwörter: einfach als <Word>...</Word> in den passenden
+  <Keywords>-Block eintragen. Neue Farben: <Color name="..." foreground="#RRGGBB" />
+  ergänzen und in einer <Rule>/<Span>/<Keywords> referenzieren.
+-->
+<SyntaxDefinition name="ParadoxScript"
+                   xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <Color name="Comment" foreground="#57A64A" exampleText="# Kommentar" />
+  <Color name="String" foreground="#D69D85" exampleText="&quot;Text&quot;" />
+  <Color name="Date" foreground="#569CD6" exampleText="1444.11.11" />
+  <Color name="Number" foreground="#B5CEA8" exampleText="123" />
+  <Color name="Operator" foreground="#D4D4D4" exampleText="=" />
+  <Color name="ScopeKeyword" foreground="#4EC9B0" fontWeight="bold" exampleText="ROOT" />
+  <Color name="BooleanKeyword" foreground="#569CD6" exampleText="yes" />
+  <Color name="LogicKeyword" foreground="#C586C0" fontWeight="bold" exampleText="AND" />
+
+  <RuleSet>
+    <!-- Kommentare: alles nach # bis Zeilenende -->
+    <Span color="Comment" begin="#" />
+
+    <!-- Zeichenketten in doppelten Anführungszeichen -->
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+    </Span>
+
+    <!-- Datumswerte im Format Jahr.Monat.Tag, z. B. 1444.11.11 -->
+    <Rule color="Date">
+      \b\d{1,4}\.\d{1,2}\.\d{1,2}\b
+    </Rule>
+
+    <!-- Zahlen, inkl. Dezimalwerte und negativer Vorzeichen -->
+    <Rule color="Number">
+      \b-?\d+(\.\d+)?\b
+    </Rule>
+
+    <!-- Häufige Geltungsbereichs-/Wurzel-Bezeichner -->
+    <Keywords color="ScopeKeyword">
+      <Word>ROOT</Word>
+      <Word>THIS</Word>
+      <Word>FROM</Word>
+      <Word>PREV</Word>
+      <Word>owner</Word>
+      <Word>controller</Word>
+    </Keywords>
+
+    <!-- Boolesche Werte -->
+    <Keywords color="BooleanKeyword">
+      <Word>yes</Word>
+      <Word>no</Word>
+    </Keywords>
+
+    <!-- Logische Operatoren in Trigger-Blöcken -->
+    <Keywords color="LogicKeyword">
+      <Word>AND</Word>
+      <Word>OR</Word>
+      <Word>NOT</Word>
+      <Word>NAND</Word>
+      <Word>NOR</Word>
+    </Keywords>
+
+    <!-- Zuweisungs-/Vergleichsoperatoren und Klammern -->
+    <Rule color="Operator">
+      [=\{\}&lt;&gt;]
+    </Rule>
+  </RuleSet>
+</SyntaxDefinition>

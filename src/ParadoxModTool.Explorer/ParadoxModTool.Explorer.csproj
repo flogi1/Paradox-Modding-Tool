@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Nur für den klassischen Ordnerauswahldialog (FolderBrowserDialog) bei "Ordner
+         hinzufügen…" - dieselbe Begründung wie bei ParadoxModTool.App (siehe dort), hier
+         lokal statt zentral in App, damit ExplorerPanel als eigenständiges UserControl seinen
+         Ordnerauswahl-Dialog selbst mitbringt und MainWindow dafür keine zusätzliche
+         Vermittlungslogik braucht. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Explorer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Für die Standardfarben je Ordnerkategorie (common/gui/gfx/...) aus dem aktiven
+         Spielprofil (siehe FolderCategoryColorResolver) - löst den bisher unter "Noch offene
+         Punkte" vermerkten Punkt "Einfärbung nach Datei-Herkunft braucht die noch fehlende
+         Spielprofil-/Mod-Ordner-Konfiguration". -->
+    <ProjectReference Include="..\ParadoxModTool.Storage\ParadoxModTool.Storage.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
+  </ItemGroup>
+
+</Project>

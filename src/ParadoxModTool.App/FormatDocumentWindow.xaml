@@ -1,0 +1,30 @@
+<Window x:Class="ParadoxModTool.App.FormatDocumentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Formatieren"
+        Height="260" Width="400"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <!--
+        Dialog für das Formatierungs-Werkzeug (Konzept, Abschnitt 10: "Tool zum bereinigen
+        überschüssiger Leerzeichen oder Tab Sprünge ... auch in der Lage, bereits existierenden
+        Codes schöner darzustellen"). Beide Optionen sind unabhängig voneinander wählbar, siehe
+        FormatDocumentWindow.xaml.cs und MainWindow.xaml.cs (FormatDocument_Click). Bewusst OHNE
+        eigenen KeyDown-Handler - wie bei GoToLineWindow übernehmen IsDefault/IsCancel das.
+    -->
+    <StackPanel Margin="12">
+        <TextBlock Text="Wird auf das AKTIVE Dokument angewendet (über Strg+Z rückgängig zu machen, solange die Datei noch nicht gespeichert wurde)."
+                   TextWrapping="Wrap" Margin="0,0,0,12" />
+        <CheckBox x:Name="CleanWhitespaceCheckBox" IsChecked="True" Margin="0,0,0,10"
+                  Content="Leerzeichen/Tabs am Zeilenende entfernen, mehrfache Leerzeilen auf eine reduzieren"
+                  ToolTip="Entfernt NUR überschüssigen Whitespace am Zeilenende und reduziert Läufe von 2+ Leerzeilen auf genau eine - einzelne Leerzeilen als optische Trennung bleiben erhalten, mehrfache Leerzeichen INNERHALB einer Zeile (z. B. zur Ausrichtung) bleiben ebenfalls unangetastet." />
+        <CheckBox x:Name="PrettyPrintCheckBox" Margin="0,0,0,4"
+                  Content="Struktur neu formatieren (einheitliche Einrückung)" />
+        <TextBlock x:Name="PrettyPrintHintText" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}" Margin="0,0,0,12" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="OK" Width="70" Margin="0,0,6,0" Click="Ok_Click" IsDefault="True" />
+            <Button Content="Abbrechen" Width="70" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

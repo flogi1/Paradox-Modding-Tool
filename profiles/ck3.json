@@ -1,0 +1,30 @@
+{
+  "id": "ck3",
+  "steamAppId": "1158310",
+  "displayName": "Crusader Kings III",
+  "engineFamily": "clausewitz-jomini",
+  "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Crusader Kings III/mod",
+  "metadataFile": ".metadata/metadata.json",
+  "loadOrderRule": "alphabetical-filename-wins",
+  "vanillaHistoryFolderName": "CK III Vanilla History",
+  "folderCategories": [
+    { "path": "common", "label": "Common", "defaultColor": "#4A90D9", "description": "Kernspielregeln" },
+    { "path": "events", "label": "Events", "defaultColor": "#4AD98E" },
+    { "path": "gui", "label": "GUI", "defaultColor": "#D98E4A", "description": "Interface-Layout-Dateien (.gui)" },
+    { "path": "gfx", "label": "Grafik", "defaultColor": "#7A4AD9", "description": "Grafik-Referenzen (.gfx)" },
+    { "path": "localization", "label": "Lokalisierung", "defaultColor": "#D94A4A", "description": "YAML-Lokalisierungsdateien (.yml)" },
+    { "path": "history", "label": "Historie", "defaultColor": "#B08AD9" },
+    { "path": "map_data", "label": "Karte", "defaultColor": "#4AC7D9" }
+  ],
+  "fileTypes": [
+    { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gui", "parser": "jomini-gui", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gfx", "parser": "jomini-gfx", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" }
+  ],
+  "launchOptions": [
+    { "label": "Normal", "args": "" },
+    { "label": "Debug-Modus", "args": "-debug_mode" }
+  ],
+  "notes": "Einfaches Startprofil, noch nicht gegen das Spiel geprüft: Ordner und Startoptionen bei Bedarf anpassen."
+}

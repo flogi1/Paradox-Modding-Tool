@@ -1,0 +1,4507 @@
+{{version|1.35}}
+{{hatnote|For an explanation of the game mechanic, see [[Modifiers]]. For an introduction into modding modifiers, see [[Modifier modding]].}}
+A '''modifier''' is a value that affects various attributes of a country or province.
+
+== Overview ==
+All modifiers are sorted into one of two internal scopes: ''country'' and ''province''. Adding country modifiers to a province scope will not work, and vice versa.
+
+All modifiers stack additively. For example, if you apply <code>infantry_cost = 0.1</code> and then apply <code>infantry_cost = 0.3</code>, the country will have <code>infantry_cost = 0.4</code>.
+
+However, the effect the modifier value has on its base value can be additive or multiplicative. For example: <code>army_tradition = 1</code> adds the value to the base Army Tradition, whereas <code>infantry_cost = 0.1</code> multiplies the base value by the modifier value.
+
+The following examples are mostly positive(green text in game) effects.
+
+== Country modifiers ==
+{{SVersion|1.28}}
+
+=== Military ===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" | Example
+! width="30%" | Description
+! width="10%" | Effect type
+! width="10%" | Version added
+|-
+|army_tradition
+|<code>army_tradition = 1</code>
+|Adds to the rate of army tradition gained each year.
+|Additive
+|1.1
+|-
+|army_tradition_decay
+|<code>army_tradition_decay = -0.01</code>
+|Adds to the decay rate of army tradition.
+|Additive
+|1.1
+|-
+|army_tradition_from_battle
+|<code>army_tradition_from_battle = 0.01</code>
+|Modifies the army tradition bonus when gained through battles.
+|Multiplicative
+|1.18
+|-
+|yearly_army_professionalism
+|<code>yearly_army_professionalism = 0.01</code>
+|Modifies the rate of army professionalism gained each year.
+|Multiplicative
+|1.23
+|-
+|drill_gain_modifier
+|<code>drill_gain_modifier = 0.10</code>
+|Modifies the army drill gains while drilling
+|Multiplicative
+|1.23
+|-
+|drill_decay_modifier
+|<code>drill_decay_modifier = -0.10</code>
+|Modifies the army drill decay rate per year.
+|Multiplicative
+|1.24
+|-
+|infantry_cost
+|<code>infantry_cost = -0.10</code>
+|Modifies the base cost of infantry units.
+|Multiplicative
+|1.1
+|-
+|infantry_power
+|<code>infantry_power = 0.10</code>
+|Modifies the power infantry gain from unit pips.
+|Multiplicative
+| 1.1
+|-
+|infantry_fire
+|<code>infantry_fire = 1</code>
+|added to infanty fire modifier, a pure multiplier to infantry damage during fire phase
+|Additive
+|1.28
+|-
+|infantry_shock
+|<code>infantry_shock = 1</code>
+|added to infanty shock modifier, a pure multiplier to infantry damage during shock phase
+|Additive
+|1.28
+|-
+|cavalry_cost
+|<code>cavalry_cost = -0.10</code>
+|Modifies the base cost of cavalry units.
+|Multiplicative
+|1.1
+|-
+|cavalry_power
+|<code>cavalry_power = 0.10</code>
+|Modifies the power cavalry gain from unit pips.
+|Multiplicative
+|1.1
+|-
+|cavalry_fire
+|<code>cavalry_fire = 1</code>
+|added to cavalry fire modifier, a pure multiplier to cavalry damage during fire phase
+|Additive
+|1.28
+|-
+|cavalry_shock
+|<code>cavalry_shock = 1</code>
+|added to cavalry shock modifier, a pure multiplier to cavalry damage during shock phase
+|Additive
+|1.28
+|-
+|artillery_cost
+|<code>artillery_cost = -0.10</code>
+| Modifies the base cost of artillery units.
+|Multiplicative
+|1.1
+|-
+|artillery_power
+|<code>artillery_power = 0.10</code>
+|Modifies the power artillery gain from unit pips.
+|Multiplicative
+|1.1
+|-
+|artillery_fire
+|<code>artillery_fire = 1</code>
+|added to artillery fire modifier, a pure multiplier to artillery damage during fire phase, also for ship cannons
+|Additive
+|1.28
+|-
+| artillery_shock
+|<code>artillery_shock = 1</code>
+|added to artillery shock modifier, a pure multiplier to artillery damage during shock phase
+|Additive
+|1.28
+|-
+|cav_to_inf_ratio
+|<code>cav_to_inf_ratio = 0.10</code>
+|Adds to the ratio required to negate the insufficient support penalty.
+|Additive
+|1.20
+|-
+|cavalry_flanking
+|<code>cavalry_flanking = 0.10</code>
+| Modifies the effectiveness of cavalry flanking.
+| Multiplicative
+|1.18
+|-
+|artillery_levels_available_vs_fort
+|<code>artillery_levels_available_vs_fort = 1</code>
+|Adds to the maximum levels of artillery on siege
+|Additive
+|1.34
+|-
+|artillery_level_modifier
+|<code>artillery_level_modifier = 1</code>
+|Modifies how much an artillery unit contributes towards a siege. E.g. 0.2 would mean a 20% bonus, so 5 artillery would count for 6.
+|Multiplicative
+|1.35
+|-
+|backrow_artillery_damage
+|<code>backrow_artillery_damage = 0.10</code>
+|Modifies the bonus damage artillery inflict when in the backrow during combat.
+|Multiplicative
+|1.20
+|-
+|discipline
+|<code>discipline = 0.01</code>
+|Modifies the discipline of land units.
+|Multiplicative
+|1.1
+|-
+|-
+|land_morale
+|<code>land_morale = 0.10</code>
+|Modifies the land morale of land units.
+|Multiplicative
+|1.1
+|-
+|land_morale_constant
+|<code>land_morale_constant = 0.1</code>
+|Adds to the land morale of land units.
+|Additive
+|1.35
+|-
+|movement_speed
+|<code>movement_speed = 0.10</code>
+|Modifies the base movement speed for all land units.
+|Multiplicative
+|1.18
+|-
+|fire_damage
+|<code>fire_damage = 0.10</code>
+|Modifies the fire damage done by land units.
+|Multiplicative
+|1.18
+|-
+|fire_damage_received
+|<code>fire_damage_received = -0.10</code>
+|Modifies the fire damage taken by land units.
+|Multiplicative
+|1.18
+|-
+|shock_damage
+|<code>shock_damage = 0.10</code>
+|Modifies the shock damage done by land units.
+|Multiplicative
+|1.18
+|-
+|shock_damage_received
+|<code>shock_damage_received = -0.10</code>
+|Modifies the shock damage taken by land units.
+|Multiplicative
+|1.18
+|-
+|morale_damage
+|<code>morale_damage = 0.025</code>
+|Modifies the morale damage done by land units.
+|Multiplicative
+|1.34
+|-
+|morale_damage_received
+|<code>morale_damage_received = -0.025</code>
+|Modifies the morale damage taken by land units.
+|Multiplicative
+|1.34
+|-
+|recover_army_morale_speed
+|<code>recover_army_morale_speed = 0.10</code>
+|Modifies the army morale recovery speed.
+|Multiplicative
+|1.1
+|-
+|reserves_organisation
+|<code>reserves_organisation = 0.10</code>
+| Modifies the morale damage taken by units in reserves (i.e. not in battle, but engaged with another unit)
+|Multiplicative
+|1.23
+|-
+|land_attrition
+|<code>land_attrition = -0.10</code>
+|Modifies the attrition taken by land units.
+|Multiplicative
+|1.1
+|-
+|reinforce_cost_modifier
+|<code>reinforce_cost_modifier = -0.10</code>
+|Modifies the cost of reinforcements when units are reinforced.
+|Multiplicative
+|1.19
+|-
+|no_cost_for_reinforcing
+|<code>no_cost_for_reinforcing = yes</code>
+|Allows free reinforcement for units.
+|Constant
+|1.19
+|-
+|reinforce_speed
+|<code>reinforce_speed = 0.10</code>
+|Modifies the rate at which units are reinforced with new men.
+|Multiplicative
+|1.1
+|-
+|manpower_recovery_speed
+|<code>manpower_recovery_speed = 0.10</code>
+|Modifies the rate at which manpower is recovered.
+|Multiplicative
+|1.1
+|-
+|global_manpower
+|<code>global_manpower = 1</code>
+|Adds to the country's total manpower pool. 1 equals 1000 men.
+| Additive
+|1.1
+|-
+|global_manpower_modifier
+|<code>global_manpower_modifier = 0.10</code>
+|Modifies a country's total manpower pool.
+| Multiplicative
+|1.1
+|-
+|global_regiment_cost
+|<code>global_regiment_cost = -0.10</code>
+|Modifies the base unit cost for all land units.
+|Multiplicative
+| 1.1
+|-
+|global_regiment_recruit_speed
+|<code>global_regiment_recruit_speed = -0.10</code>
+|Modifies the base speed at which land units are recruited.
+|Multiplicative
+|1.1
+|-
+|global_supply_limit_modifier
+|<code>global_supply_limit_modifier = 0.10</code>
+|Modifies the supply limit of provinces
+|Additive
+|1.28
+|-
+|land_forcelimit
+|<code>land_forcelimit = 1</code>
+|Adds to a country's force limit.
+|Additive
+|1.1
+|-
+|land_forcelimit_modifier
+|<code>land_forcelimit_modifier = 0.10</code>
+|Modifies a country's force limit.
+|Multiplicative
+|1.1
+|-
+|land_maintenance_modifier
+|<code>land_maintenance_modifier = -0.10</code>
+|Modifies the maintenance cost of all land units.
+|Multiplicative
+|1.1
+|-
+|possible_condottieri
+|<code>possible_condottieri = 1</code>
+|Modifies the base condottieri limit.
+|Multiplicative
+|1.16
+|-
+|hostile_attrition
+|<code>hostile_attrition = 1</code>
+|Adds to the attrition enemies take in a country's provinces.
+|Additive
+|1.1
+|-
+|max_hostile_attrition
+|<code>max_hostile_attrition = 3</code>
+|Modifies the maximum attrition enemies have in a country
+|Additive
+|1.34
+|-
+|siege_ability
+|<code>siege_ability = 0.10</code>
+|Modifies the siege ability that affects siege phase length. Reverse concept of defensiveness.
+|Multiplicative
+|1.6
+|-
+|artillery_barrage_cost
+|<code>artillery_barrage_cost = -0.25</code>
+|Modifies the cost for using 'Artillery Barrage' action during sieges.
+|Multiplicative
+|1.35
+|-
+|assault_fort_cost_modifier
+|<code>assault_fort_cost_modifier = -0.25</code>
+|Modifies the military cost to assault forts.
+|Multiplicative
+|1.35
+|-
+|assault_fort_ability
+|<code>assault_fort_ability = 0.25</code>
+|Modifies the damage the troops deal to the garrison when assaulting a fort.
+|Multiplicative
+|1.35
+|-
+|defensiveness
+|<code>defensiveness = 0.10</code>
+|Modifies the siege defensiveness that affects siege phase length.
+|Multiplicative
+|1.1
+|-
+|garrison_size
+|<code>garrison_size = 0.10</code>
+|Modifies the base garrison size in provinces.
+|Multiplicative
+|1.12
+|-
+|global_garrison_growth
+|<code>global_garrison_growth = 0.10</code>
+|Modifies the base garrison growth in provinces.
+|Multiplicative
+|1.1
+|-
+|garrison_damage
+|<code>garrison_damage = 0.5</code>
+|Modifies the damage the garrison deals when the fort gets assaulted or when a country use the sortie to fight the hostile army.
+|Multiplicative
+|1.35
+|-
+|fort_maintenance_modifier
+|<code>fort_maintenance_modifier = -0.10</code>
+| Modifies the base fort maintenance cost.
+|Multiplicative
+|1.12
+|-
+|rival_border_fort_maintenance
+|<code>rival_border_fort_maintenance = -0.10</code>
+|Modifies the base fort maintenance cost for forts in provinces that border rivals.
+|Multiplicative
+| 1.20
+|-
+|war_exhaustion
+|<code>war_exhaustion = -0.10</code>
+|Adds to the monthly war exhaustion rate.
+|Additive
+|1.1
+|-
+|war_exhaustion_cost
+|<code>war_exhaustion_cost = -0.10</code>
+|Modifies the diplomatic power cost for reducing war exhaustion.
+|Multiplicative
+|1.1
+|-
+|leader_land_fire
+|<code>leader_land_fire = 1</code>
+|Adds to the minimum fire pip count a leader can be generated with.
+|Additive
+|1.6
+|-
+|leader_land_manuever
+|<code>leader_land_manuever = 1</code>
+|Adds to the minimum maneuver pip count a leader can be generated with.
+| Additive
+|1.6
+|-
+|leader_land_shock
+|<code>leader_land_shock = 1</code>
+|Adds to the minimum shock pip count a leader can be generated with.
+|Additive
+|1.6
+|-
+|leader_siege
+|<code>leader_siege = 1</code>
+|Adds to the minimum siege pip count a leader can be generated with.
+|Additive
+|1.6
+|-
+|max_general_fire
+|<code>max_general_fire = 1</code>
+|Adds to the max amounts of fire pips a leader can have.
+|Additive
+|1.35
+|-
+|max_general_maneuver
+|<code>max_general_maneuver = 1</code>
+|Adds to the max amounts of maneuver pips a leader can have.
+|Additive
+|1.35
+|-
+|max_general_shock
+|<code>max_general_shock = 1</code>
+|Adds to the max amounts of shock pips a leader can have.
+|Additive
+|1.35
+|-
+|max_general_siege
+|<code>max_general_siege = 1</code>
+|Adds to the max amounts of siege pips a leader can have.
+|Additive
+|1.35
+|-
+|general_cost
+|<code>general_cost = -0.10</code>
+|Modifies the base military power cost for recruiting Generals.
+| Multiplicative
+|1.23
+|-
+|free_leader_pool
+|<code>free_leader_pool = 1</code>
+|Adds to the maximum amount of free leaders (both land leaders and navy leaders pool).
+|Additive
+|1.1
+|-
+|free_land_leader_pool
+|<code>free_land_leader_pool = 1</code>
+|Adds to the maximum amount of free land leaders.
+|Additive
+|1.33
+|-
+|free_navy_leader_pool
+|<code>free_navy_leader_pool = 1</code>
+|Adds to the maximum amount of free navy leaders.
+|Additive
+|1.33
+|-
+|raze_power_gain
+|<code>raze_power_gain = 0.10</code>
+|Modifies the amount of monarch power gained from razing.
+|Multiplicative
+|1.14
+|-
+|loot_amount
+|<code>loot_amount = 0.10</code>
+|Modifies the amount of loot taken at once during looting.
+|Multiplicative
+|1.12
+|-
+|available_province_loot
+|<code>available_province_loot = 0.10</code>
+|Modifies the amount of loot available in a province.
+|Multiplicative
+|1.30
+|-
+|prestige_from_land
+|<code>prestige_from_land = 0.10</code>
+|Modifies the prestige bonus from combat.
+|Multiplicative
+|1.11
+|-
+|war_taxes_cost_modifier
+|<code>war_taxes_cost_modifier = -0.10</code>
+|Modifies the military power cost for raising war taxes.
+|Multiplicative
+|1.20
+|-
+|leader_cost
+|<code>leader_cost = -0.10</code>
+|Modifies the military power cost for hiring leaders.
+|Multiplicative
+|1.26
+|-
+|may_recruit_female_generals
+|<code>may_recruit_female_generals = yes</code>
+|Allows the recruitment of female generals.
+|Constant
+|1.11(Only usable in ideas or religions before 1.30)
+|-
+|manpower_in_true_faith_provinces
+|<code>manpower_in_true_faith_provinces= 0.10</code>
+|Modifies the amount of manpower gained from provinces that follow the true faith of a country.
+|Multiplicative
+|1.30
+|-
+|regiment_manpower_usage
+|<code>regiment_manpower_usage = -0.1</code>
+|Modifies the manpower usage for reinforcement by regiments.
+|Multiplicative
+|1.34
+|-
+|military_tactics
+|<code>military_tactics = 0.25</code>
+|Modifies the amount of Military tactics your armies have. Military tactics reduces the amount of damage a country's troops take in combat. When set in ideas it shows up like a multiplicative % modifier, but it is treated like an additive one.
+|Additive
+|1.1(usable like a normal modifier since 1.34)
+|-
+|capped_by_forcelimit
+|<code>capped_by_forcelimit = yes</code>
+|Forbids countries to go over their forcelimit
+|Constant
+|1.34
+|-
+|global_attacker_dice_roll_bonus
+|<code>global_attacker_dice_roll_bonus = 1</code>
+|Adds to the global attacker dice roll bonus
+|Additive
+|1.34
+|-
+|global_defender_dice_roll_bonus
+|<code>global_defender_dice_roll_bonus = 1</code>
+|Adds to the global defender dice roll bonus
+|Additive
+|1.34
+|-
+|own_territory_dice_roll_bonus
+|<code>own_territory_dice_roll_bonus = 1</code>
+|Adds to the dice roll bonus for the territory owner
+|Additive
+|1.34
+|-
+|manpower_in_accepted_culture_provinces
+|<code>manpower_in_accepted_culture_provinces = 0.10</code>
+|Modifies the manpower in your accepted culture provinces but not in the provinces of your primary culture
+|Multiplicative
+|1.34
+|-
+|manpower_in_culture_group_provinces
+|<code>manpower_in_culture_group_provinces = 0.1</code>
+|Modifies the manpower in the provinces of your culture group
+|Multiplicative
+|1.34
+|-
+|manpower_in_own_culture_provinces
+|<code>manpower_in_own_culture_provinces = 0.10</code>
+|Modifies the manpower in the provinces with your own culture
+|Multiplicative
+|1.34
+|-
+|may_build_supply_depot
+|<code>may_build_supply_depot = yes</code>
+|Allows a country to build supply depots
+|Constant
+|1.23(Only usable in army professionalism abilities before 1.34)
+|-
+|may_refill_garrison
+|<code>may_refill_garrison = yes</code>
+|Allows a country to refill garrisons from armies
+|Constant
+|1.23(Only usable in army professionalism abilities before 1.34)
+|-
+|may_return_manpower_on_disband
+|<code>may_return_manpower_on_disband = yes</code>
+|Allows a country to regain the manpower of units they are disbanding
+|Constant
+|1.23(Only usable in army professionalism abilities before 1.34)
+|-
+|attack_bonus_in_capital_terrain
+|<code>attack_bonus_in_capital_terrain = 1</code>
+|Grants attack bonus in provinces with the same terrain as capital province.
+|Additive
+|1.20(Only usable in age bonuses before 1.34)
+|-
+|can_bypass_forts
+|<code>can_bypass_forts = yes</code>
+|Allows units to ignore fort zones of control.
+|Constant
+|1.20(Only usable in age bonuses before 1.34)
+|-
+|force_march_free
+|<code>force_march_free = yes</code>
+|Allows usage of the ‘Force March’ action for free.
+|Constant
+|1.20(Only usable in age bonuses before 1.34)
+|-
+|enable_forced_march
+|<code>enable_forced_march = yes</code>
+|Allows to use Force March regardless of current tech level.
+|Constant
+|1.35
+|-
+|warscore_from_battles_modifier
+|<code>warscore_from_battles_modifier = 0.1</code>
+|Modifiers the amount of war score a country gain from land and naval battles.
+|Multiplicative
+|1.35
+|}
+
+=== Mercenary ===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" | Example
+! width="30%" | Description
+! width="10%" | Effect type
+! width="10%" | Version added
+|-
+|mercenary_cost
+|<code>mercenary_cost = -0.10</code>
+|Modifies the base cost for mercenary units.
+|Multiplicative
+|1.1
+|-
+|merc_maintenance_modifier
+|<code>merc_maintenance_modifier = -0.10</code>
+|Modifies the maintenance cost of all mercenary units.
+|Multiplicative
+|1.1
+|-
+|mercenary_discipline
+|<code>mercenary_discipline = 0.10</code>
+|Modifies the discipline of mercenary units.
+|Multiplicative
+|1.20
+|-
+|mercenary_manpower
+|<code>mercenary_manpower = 0.10</code>
+|Modifies the amount of manpower mercenary companies have.
+|Multiplicative
+|1.30
+|-
+|merc_leader_army_tradition
+|<code>merc_leader_army_tradition = 0.5</code>
+|Modifies the army tradition a leader of a merc company is spawned with.
+|Multiplicative
+|1.35
+|-
+|allow_mercenary_drill
+|<code>allow_mercenary_drill = yes</code>
+|Allows mercenaries the ability to drill. Also works in unit scope.
+|Constant
+|1.35
+|-
+|merc_independent_from_trade_range
+|<code>merc_independent_from_trade_range = yes</code>
+|Allows a country to recruit merc companies which have their home in provinces which are outside your trade range.
+|Constant
+|1.35
+|-
+|allow_mercenaries_to_split
+|<code>allow_mercenaries_to_split = yes</code>
+|Allow mercenaries to split (as of 1.37, only works using split hotkey). They are supposed to be able to merge with regiments of their own company, but as of 1.37, this functionality is broken. Using the hotkey to create a new unit also creates empty 0-stacks that cannot be readjusted.
+|Constant
+|1.35
+|}
+
+=== Special Regiments ===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" | Example
+! width="30%" | Description
+! width="10%" | Effect type
+! width="10%" | Version added
+|-
+|special_unit_forcelimit
+|<code>special_unit_forcelimit = 0.10</code>
+|Modifies the allowed forcelimit of special units.
+|Multiplicative
+|1.30
+|-
+|special_unit_cost_modifier
+|<code>special_unit_cost_modifier = -0.2</code>
+|Modifies the recruitment cost of special units.
+|Multiplicative
+|1.35
+|-
+|special_unit_manpower_cost_modifier
+|<code>special_unit_manpower_cost_modifier = -0.2</code>
+|Modifies the manpower/sailors cost for recruitment of special units. As of 1.37, does not work on marines.
+|Multiplicative
+|1.35
+|-
+|has_marines
+|<code>has_marines = yes</code>
+|Allows the usage of Marine units. Basically it's always yes.
+|Constant
+|1.36
+|-
+|allowed_marine_fraction
+|<code>allowed_marine_fraction = 0.1</code>
+|Modifies the amount of marines allowed to be recruited.
+|Multiplicative
+|1.30
+|-
+|has_banners
+|<code>has_banners = yes</code>
+|Allows the usage of Manchu banner units. It also requires the province to have the "local_has_banners = yes" modifier.
+|Constant
+|1.20
+|-
+|amount_of_banners
+|<code>amount_of_banners = 0.10</code>
+|Modifies the maximum amount of banners available.
+|Multiplicative
+|1.20
+|-
+|can_recruit_cawa
+|<code>can_recruit_cawa = yes</code>
+|Allows the usage of Cawa units. Doesn't work properly in 1.35.3
+|Constant
+|1.35
+|-
+|amount_of_cawa
+|<code>amount_of_cawa = 0.15</code>
+|Modifies the maximum amount of Cawa units available.
+|Multiplicative
+|1.32
+|-
+|cawa_cost_modifier
+|<code>cawa_cost_modifier = -0.10</code>
+|Modifies the military power cost for recruiting Cawa units.
+|Multiplicative
+|1.32
+|-
+|has_carolean
+|<code>has_carolean = yes</code>
+|Allows the usage of Carolean units. It also requires the province to have the "local_has_carolean = yes" modifier.
+|Constant
+|1.34
+|-
+|amount_of_carolean
+|<code>amount_of_carolean = 0.25</code>
+|Modifies the maximum amount of Carolean units available.
+|Multiplicative
+|1.34
+|-
+|can_recruit_hussars
+|<code>can_recruit_hussars = yes</code>
+|Allows the usage of Winged Hussar units. (Winged Hussars can only be recruited in provinces where the culture is either part of the primary group or accepted.)
+|Constant
+|1.34
+|-
+|amount_of_hussars
+|<code>amount_of_hussars = 4</code>
+|Adds to the maximum amount of Winged Hussar units available.
+|Additive
+|1.34
+|-
+|hussars_cost_modifier
+|<code>hussars_cost_modifier = -0.1</code>
+|(Recruiting Winged Hussars costs nothing, so this modifier seems to be practically non-functional)
+|Multiplicative
+|1.35
+|-
+|can_recruit_janissaries
+|<code>can_recruit_janissaries = yes</code>
+|Allows the usage of Janissary units.
+|Constant
+|1.35
+|-
+|janissary_cost_modifier
+|<code>janissary_cost_modifier = -0.33</code>
+|Modifies the military power cost for recruiting Janissary units.
+|Multiplicative
+|1.35
+|-
+|allow_janissaries_from_own_faith
+|<code>allow_janissaries_from_own_faith = yes</code>
+|Allows to recruit Janissary units in true faith provinces as well as heathen provinces.
+|Constant
+|1.35
+|-
+|can_recruit_cossacks
+|<code>can_recruit_cossacks = yes</code>
+|Allows the usage of Cossack units.
+|Constant
+|1.35
+|-
+|allowed_cossack_fraction
+|<code>allowed_cossack_fraction = 0.5</code>
+|Modifies the amount of cossacks that can be recruited.
+|Multiplicative
+|1.35.4
+|-
+|can_recruit_rajputs
+|<code>can_recruit_rajputs = yes</code>
+|Allows the usage of Rajput units.
+|Constant
+|1.35
+|-
+|allowed_rajput_fraction
+|<code>allowed_rajput_fraction = 0.5</code>
+|Modifies the amount of rajputs that can be recruited.
+|Multiplicative
+|1.35.4
+|-
+|can_recruit_revolutionary_guards
+|<code>can_recruit_revolutionary_guards = yes</code>
+|Allows the usage of Revolutionary Guard units.
+|Constant
+|1.35
+|-
+|allowed_rev_guard_fraction
+|<code>allowed_rev_guard_fraction = 0.2</code>
+|Modifies the amount of revolutionary guards that can be recruited.
+|Multiplicative
+|1.35.4
+|-
+|has_streltsy
+|<code>has_streltsy = yes</code>
+|Allows the usage of Streltsy units. It also requires the province to have the "local_has_streltsy = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_streltsy_fraction
+|<code>allowed_streltsy_fraction = 0.2</code>
+|Modifies the amount of streltsy that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_streltsy
+|<code>amount_of_streltsy = 1</code>
+|Adds to the maximum amount of Streltsy units available.
+|Additive
+|1.35
+|-
+|has_tercio
+|<code>has_tercio = yes</code>
+|Allows the usage of Tercio units. It also requires the province to have the "local_has_tercio = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_tercio_fraction
+|<code>allowed_tercio_fraction = 0.1</code>
+|Modifies the amount of tercios that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_tercio
+|<code>amount_of_tercio = 1</code>
+|Adds to the maximum amount of Tercio units available.
+|Additive
+|1.35
+|-
+|has_samurai
+|<code>has_samurai = yes</code>
+|Allows the usage of Samurai units. It also requires the province to have the "local_has_samurai = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_samurai_fraction
+|<code>allowed_samurai_fraction = 0.1</code>
+|Modifies the amount of samurai that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_samurai
+|<code>amount_of_samurai = 5</code>
+|Adds to the maximum amount of Samurai units available.
+|Additive
+|1.35
+|-
+|has_musketeer
+|<code>has_musketeer = yes</code>
+|Allows the usage of Musketeer units. It also requires the province to have the "local_has_musketeers = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_musketeer_fraction
+|<code>allowed_musketeer_fraction = 0.15</code>
+|Modifies the amount of musketeers that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_musketeers
+|<code>amount_of_musketeers = 1</code>
+|Adds to the maximum amount of Musketeer units available.
+|Additive
+|1.35
+|-
+|has_mamluks
+|<code>has_mamluks = yes</code>
+|Allows the usage of Mamluk units. It also requires the province to have the "local_has_mamluks = yes" modifier.
+|Constant
+|1.36
+|-
+|allowed_mamluks_fraction
+|<code>allowed_mamluks_fraction = 0.2</code>
+|Modifies the amount of mamluks that can be recruited.
+|Multiplicative
+|1.36
+|-
+|amount_of_mamluks
+|<code>amount_of_mamluks = 1</code>
+|Adds to the maximum amount of Mamluk units available.
+|Additive
+|1.36
+|-
+|has_qizilbash
+|<code>has_qizilbash = yes</code>
+|Allows the usage of Qizilbash units. It also requires the province to have the "local_has_qizilbash = yes" modifier.
+|Constant
+|1.36
+|-
+|allowed_qizilbash_fraction
+|<code>allowed_qizilbash_fraction = 0.2</code>
+|Modifies the amount of qizilbash that can be recruited.
+|Multiplicative
+|1.36
+|-
+|amount_of_qizilbash
+|<code>amount_of_qizilbash = 6</code>
+|Adds to the maximum amount of Qizilbash units available.
+|Additive
+|1.36
+|}
+
+===Navy===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+| navy_tradition
+|<code>navy_tradition = 1</code>
+|Adds to the yearly navy tradition rate.
+|Additive
+|1.1
+|-
+| navy_tradition_decay
+|<code>navy_tradition_decay = -0.01</code>
+|Adds to the decay rate of navy tradition.
+|Additive
+|1.1
+|-
+|naval_tradition_from_battle
+|<code>naval_tradition_from_battle = 0.1</code>
+|Modifies the base navy tradition gained from battles.
+|Multiplicative
+|1.18
+|-
+|naval_tradition_from_trade
+|<code>naval_tradition_from_trade = 0.1</code>
+|Modifies the base navy tradition gained from protecting trade.
+|Multiplicative
+|1.28
+|-
+|heavy_ship_cost
+|<code>heavy_ship_cost = -0.1</code>
+|Modifies the base cost of heavy ships.
+|Multiplicative
+|1.1
+|-
+|heavy_ship_power
+|<code>heavy_ship_power = 0.1</code>
+|Modifies the power heavy ships gain from unit pips.
+|Multiplicative
+|1.1
+|-
+|light_ship_cost
+|<code>light_ship_cost = -0.1</code>
+|Modifies the base cost of light ships.
+|Multiplicative
+|1.1
+|-
+|light_ship_power
+|<code>light_ship_power = 0.1</code>
+|Modifies the power light ships gain from unit pips.
+|Multiplicative
+|1.1
+|-
+|galley_cost
+|<code>galley_cost = -0.1</code>
+|Modifies the base cost of galley ships.
+|Multiplicative
+|1.1
+|-
+|galley_power
+|<code>galley_power = 0.1</code>
+|Modifies the power galley ships gain from unit pips.
+|Multiplicative
+|1.1
+|-
+|transport_cost
+|<code>transport_cost = -0.1</code>
+|Modifies the base cost of transport ships.
+|Multiplicative
+|1.1
+|-
+|transport_power
+|<code>transport_power = 0.1</code>
+|Modifies the power transport ships gain from unit pips.
+| Multiplicative
+| 1.1
+|-
+|global_ship_cost
+|<code>global_ship_cost = -0.1</code>
+|Modifies the base cost of all ships.
+|Multiplicative
+|1.1
+|-
+|global_ship_recruit_speed
+|<code>global_ship_recruit_speed = -0.1</code>
+|Modifies the base recruitment speed of all ships.
+|Multiplicative
+|1.1
+|-
+|global_ship_repair
+|<code>global_ship_repair = 0.1</code>
+|Modifies the base repair speed (in port) of all ships.
+|Multiplicative
+|1.7
+|-
+|naval_forcelimit
+|<code>naval_forcelimit = 1</code>
+|Adds to a country's naval force limit.
+|Additive
+|1.1
+|-
+|naval_forcelimit_modifier
+|<code>naval_forcelimit_modifier = 0.1</code>
+|Modifies a country's naval force limit.
+|Multiplicative
+|1.1
+|-
+|naval_maintenance_modifier
+|<code>naval_maintenance_modifier = -0.1</code>
+|Modifies the naval maintenance for all ships.
+|Multiplicative
+|1.1
+|-
+|global_sailors
+|<code>global_sailors = 1000</code>
+|Adds to a country's maximum sailor pool.
+|Additive
+|1.1
+|-
+|global_sailors_modifier
+|<code>global_sailors_modifier = 0.1</code>
+|Modifies a country's maximum sailor pool.
+|Multiplicative
+|1.16
+|-
+|sailor_maintenance_modifer
+|<code>sailor_maintenance_modifer = -0.1</code>
+|Modifies the sailor maintenance for all ships.
+|Multiplicative
+|1.16
+|-
+|sailors_recovery_speed
+|<code>sailors_recovery_speed = 0.1</code>
+|Modifies the sailor recovery rate for all ships.
+|Multiplicative
+|1.16
+|-
+|blockade_efficiency
+|<code>blockade_efficiency = 0.1</code>
+|Modifies the efficiency of blockades against enemies.
+|Multiplicative
+|1.1
+|-
+|siege_blockade_progress
+|<code>siege_blockade_progress = 1</code>
+|Modifies the bonus siege status by blockaded.
+|Additive
+|1.20
+|-
+|capture_ship_chance
+|<code>capture_ship_chance = 0.1</code>
+|Adds to the chance for ship capture during naval battles.
+|Additive
+|1.18
+|-
+|global_naval_engagement_modifier
+|<code>global_naval_engagement_modifier = 0.1</code>
+|Modifies the maximum naval engagement width.
+|Multiplicative
+|1.16
+|-
+|global_naval_engagement
+|<code>global_naval_engagement = 1</code>
+|Adds to the maximum naval engagement width.
+|Additive
+|1.35
+|-
+|naval_attrition
+|<code>naval_attrition = -0.1</code>
+|Modifies the naval attrition taken by ships.
+|Multiplicative
+|1.1
+|-
+|naval_morale
+|<code>naval_morale = 0.1</code>
+|Modifies the naval morale of all ships.
+|Multiplicative
+|1.1
+|-
+|naval_morale_constant
+|<code>naval_morale_constant = 0.1</code>
+|Adds to the naval morale of all ships.
+|Additive
+|1.35
+|-
+|naval_morale_damage
+|<code>naval_morale_damage = 0.15</code>
+|Modifies the morale damage done by naval units.
+|Multiplicative
+|1.35
+|-
+|naval_morale_damage_received
+|<code>naval_morale_damage_received = -0.15</code>
+|Modifies the morale damage taken by naval units.
+|Multiplicative
+|1.35
+|-
+|ship_durability
+|<code>ship_durability = 0.1</code>
+|Modifies the durability of all ships.
+|Multiplicative
+|1.7
+|-
+|sunk_ship_morale_hit_recieved
+|<code>sunk_ship_morale_hit_recieved = -0.1</code>
+|Modifies the morale damage taken during battle by losing ships.
+|Multiplicative
+|1.18
+|-
+|recover_navy_morale_speed
+|<code>recover_navy_morale_speed = 0.1</code>
+|Modifies the morale recovery rate of ships.
+|Multiplicative
+|1.1
+|-
+|prestige_from_naval
+|<code>prestige_from_naval = 0.1</code>
+|Modifies the prestige gained through naval battles.
+|Multiplicative
+|1.11
+|-
+|leader_naval_fire
+|<code>leader_naval_fire = 1</code>
+|Adds to the minimum fire pip count a leader can be generated with.
+|Additive
+|1.6
+|-
+|leader_naval_manuever
+|<code>leader_naval_manuever = 1</code>
+|Adds to the minimum maneuver pip count a leader can be generated with.
+|Additive
+|1.6
+|-
+|leader_naval_shock
+|<code>leader_naval_shock = 1</code>
+|Adds to the minimum shock pip count a leader can be generated with.
+|Additive
+|1.6
+|-
+|max_admiral_fire
+|<code>max_admiral_fire = 1</code>
+|Adds to the max amounts of fire pips a leader can have.
+|Additive
+|1.35
+|-
+|max_admiral_maneuver
+|<code>max_admiral_maneuver = 1</code>
+|Adds to the max amounts of maneuver pips a leader can have.
+|Additive
+|1.35
+|-
+|max_admiral_shock
+|<code>max_admiral_shock = 1</code>
+|Adds to the max amounts of shock pips a leader can have.
+|Additive
+|1.35
+|-
+|max_admiral_siege
+|<code>max_admiral_siege = 1</code>
+|Adds to the max amounts of siege pips a leader can have.
+|Additive
+|1.35
+|-
+|own_coast_naval_combat_bonus
+|<code>own_coast_naval_combat_bonus = 1.0</code>
+|Modifies the combat bonus navies gain when sailing in coastal tiles that border their home nation.
+|Multiplicative
+|1.26
+|-
+|admiral_cost
+|<code>admiral_cost = -0.1</code>
+|Modifies the cost of hiring an admiral.
+|Multiplicative
+|1.28
+|-
+|global_naval_barrage_cost
+|<code>global_naval_barrage_cost = -0.1</code>
+|Modifies the cost for using the ‘Naval Barrage’ action.
+|Multiplicative
+|1.28
+|-
+|flagship_cost
+|<code>flagship_cost = -0.1</code>
+| Modifies the cost of building a flagship.
+|Multiplicative
+|1.30
+|-
+|disengagement_chance
+|<code>disengagement_chance = 0.05</code>
+|Modifies the chance of disengagement for ships during battle.
+|Multiplicative
+|1.30
+|-
+|transport_attrition
+|<code>transport_attrition = -0.5</code>
+|Modifies the attrition units takes while being on ships.
+|Multiplicative
+|1.34
+|-
+|landing_penalty
+|<code>landing_penalty = -2</code>
+|Adds to the combat penalty when landing.
+|Additive
+|1.34
+|-
+|regiment_disembark_speed
+|<code>regiment_disembark_speed = 0.25</code>
+|Modifies the speed in which units disembark.
+|Multiplicative
+|1.34
+|-
+|may_perform_slave_raid
+|<code>may_perform_slave_raid = yes</code>
+|Allows ships to perform slave raids.
+|Constant
+|1.16(Only usable in ideas or religions before 1.30)
+|-
+|may_perform_slave_raid_on_same_religion
+|<code>may_perform_slave_raid_on_same_religion = yes</code>
+|Grants the abiliy to conduct slave raids against nations that share the same religion.
+|Constant
+|1.27(Only usable in ideas or religions before 1.30)
+|-
+|coast_raid_range
+|<code>coast_raid_range = 1</code>
+|Adds to the amounts of sea tiles a country can raid in.
+|Additive
+|1.35
+|-
+|sea_repair
+|<code>sea_repair = yes</code>
+|Allows ships to repair in coastal sea zones adjacent to owned provinces.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|movement_speed_in_fleet_modifier
+|<code>movement_speed_in_fleet_modifier = 1</code>
+|Modifies the movement speed for ships.
+|Additive
+|1.28(Only usable in flagships before 1.32)
+|-
+|max_flagships
+|<code>max_flagships = 1</code>
+|Adds to the number of flagships a country can have at the same time.
+|Additive
+|1.35
+|-
+|number_of_cannons
+|<code>number_of_cannons = 10</code>
+|Adds to the number of cannons for all ships.
+|Additive
+|1.35
+|-
+|number_of_cannons_modifier
+|<code>number_of_cannons_modifier = 0.1</code>
+|Modifies the number of cannons for all ships.
+|Multiplicative
+|1.35
+|-
+|heavy_ship_number_of_cannons_modifier
+|<code>heavy_ship_number_of_cannons_modifier = 0.1</code>
+|Modifies the number of cannons for heavy ships.
+|Multiplicative
+|1.35
+|-
+|light_ship_number_of_cannons_modifier
+|<code>light_ship_number_of_cannons_modifier = 0.1</code>
+|Modifies the number of cannons for light ships.
+|Multiplicative
+|1.35
+|-
+|galley_number_of_cannons_modifier
+|<code>galley_number_of_cannons_modifier = 0.1</code>
+|Modifies the number of cannons for galley ships.
+|Multiplicative
+|1.35
+|-
+|transport_number_of_cannons_modifier
+|<code>transport_number_of_cannons_modifier = 0.1</code>
+|Modifies the number of cannons for transport ships.
+|Multiplicative
+|1.35
+|-
+|hull_size
+|<code>hull_size = 10</code>
+|Adds to the hull size of all ships.
+|Additive
+|1.35
+|-
+|hull_size_modifier
+|<code>hull_size_modifier = 0.1</code>
+|Modifies the hull size of all ships.
+|Multiplicative
+|1.35
+|-
+|heavy_ship_hull_size_modifier
+|<code>heavy_ship_hull_size_modifier = 0.1</code>
+|Modifies the hull size of heavy ships.
+|Multiplicative
+|1.35
+|-
+|light_ship_hull_size_modifier
+|<code>light_ship_hull_size_modifier = 0.1</code>
+|Modifies the hull size of light ships.
+|Multiplicative
+|1.35
+|-
+|galley_hull_size_modifier
+|<code>galley_hull_size_modifier = 0.1</code>
+|Modifies the hull size of galley ships.
+|Multiplicative
+|1.35
+|-
+|transport_hull_size_modifier
+|<code>transport_hull_size_modifier = 0.1</code>
+|Modifies the hull size of transport ships.
+|Multiplicative
+|1.35
+|-
+|engagement_cost
+|<code>engagement_cost = -1</code>
+|Adds to the engagement width occupied by a ship.
+|Additive
+|1.35
+|-
+|engagement_cost_modifier
+|<code>engagement_cost_modifier = -0.1</code>
+|Modifies the engagement width occupied by a ship.
+|Multiplicative
+|1.35
+|-
+|ship_trade_power
+|<code>ship_trade_power = 5</code>
+|Adds to the trade power of ships. Only works properly with '''unit scope'''.
+|Additive
+|1.35
+|-
+|ship_trade_power_modifier
+|<code>ship_trade_power_modifier = 0.2</code>
+|Modifies the trade power of ships. Only works properly with '''unit scope'''.
+|Multiplicative
+|1.35
+|-
+|can_transport_units
+|<code>can_transport_units = yes</code>
+|Allows non-transport ships to transport land units. Only works properly with '''unit scope'''.
+|Constant
+|1.35
+|-
+|}
+
+===Flagships ===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+| admiral_skill_gain_modifier
+|<code>admiral_skill_gain_modifier = 0.1</code>
+|The monthly chance that an admiral gains a pip while he is assigned to a fleet that is on a mission and contains a flagship with this modifier
+|Additive
+|1.28
+|-
+|flagship_durability
+|<code>flagship_durability = 1</code>
+|Modifies the ship durability for the flagship.
+|Multiplicative
+|1.28
+|-
+|flagship_morale
+|<code>flagship_morale = 1</code>
+|Modifies the naval morale for the flagship.
+|Multiplicative
+|1.28
+|-
+|flagship_naval_engagement_modifier
+|<code>flagship_naval_engagement_modifier = 1</code>
+|Modifies the fleet engagement width of the flagship's fleet.
+|Additive
+|1.28
+|-
+|movement_speed_onto_off_boat_modifier
+|<code>movement_speed_onto_off_boat_modifier = -0.1</code>
+|Modifies the speed at which troops disembark off ships into provinces.
+|Multiplicative
+|1.28
+|-
+|flagship_landing_penalty
+|<code>flagship_landing_penalty = 1</code>
+|Modifies the disembarkment penalty for the flagship.
+|Multiplicative
+|1.28
+|-
+|number_of_cannons_flagship_modifier
+|<code>number_of_cannons_flagship_modifier = 0.1</code>
+|Modifies the number of cannons for the flagship.
+|Multiplicative
+|1.28
+|-
+|number_of_cannons_flagship
+|<code>number_of_cannons_flagship = 200</code>
+|Modifies the number of cannons for the flagship.
+|Additive
+|1.28
+|-
+|naval_maintenance_flagship_modifier
+|<code>naval_maintenance_flagship_modifier = -0.1</code>
+|Modifies the naval maintenance for the flagship.
+|Multiplicative
+|1.28
+|-
+|trade_power_in_fleet_modifier
+|<code>trade_power_in_fleet_modifier = 1</code>
+|Modifies the trade power conferred by the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|morale_in_fleet_modifier
+|<code>morale_in_fleet_modifier = 0.1</code>
+|Modifies the naval morale for the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|blockade_impact_on_siege_in_fleet_modifier
+|<code>blockade_impact_on_siege_in_fleet_modifier = 0.1</code>
+|Modifies the blockade impact of the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|exploration_mission_range_in_fleet_modifier
+|<code>exploration_mission_range_in_fleet_modifier = 100</code>
+|Modifies the exploration mission range for the flagship and all other ships within its fleet.
+|Additive
+|1.28
+|-
+|barrage_cost_in_fleet_modifier
+|<code>barrage_cost_in_fleet_modifier = -0.1</code>
+|Modifies the ‘Naval Barrage’ action cost for the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|naval_attrition_in_fleet_modifier
+|<code>naval_attrition_in_fleet_modifier = -0.1</code>
+|Modifies the naval attrition suffered by the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|privateering_efficiency_in_fleet_modifier
+|<code>privateering_efficiency_in_fleet_modifier = 0.1</code>
+|Modifies the privateering efficiency of the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|prestige_from_battles_in_fleet_modifier
+|<code>prestige_from_battles_in_fleet_modifier = 1</code>
+| Modifies the amount of prestige gained from battles for the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|naval_tradition_in_fleet_modifier
+|<code>naval_tradition_in_fleet_modifier = 1</code>
+| Modifies the amount of Naval Tradition gained from battles for the flagship and all other ships within its fleet.
+|Multiplicative
+|1.28
+|-
+|cannons_for_hunting_pirates_in_fleet
+|<code>cannons_for_hunting_pirates_in_fleet = 1</code>
+|Modifies the amount of cannons for the flagship and all other ships within its fleet while on the Hunting Pirates mission.
+|Multiplicative
+|1.28
+|-
+|}
+
+=== Special Ships ===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" | Example
+! width="30%" | Description
+! width="10%" | Effect type
+! width="10%" | Version added
+|-
+|has_geobukseon
+|<code>has_geobukseon = yes</code>
+|Allows the usage of Geobukseon ships. It also requires the province to have the "local_has_geobukseon = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_geobukseon_fraction
+|<code>allowed_geobukseon_fraction = 0.5</code>
+|Modifies the amount of geobukseon that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_geobukseon
+|<code>amount_of_geobukseon = 1</code>
+|Adds to the maximum amount of Geobukseon ships available.
+|Additive
+|1.35
+|-
+|has_galleass
+|<code>has_galleass = yes</code>
+|Allows the usage of Galleass ships. It also requires the province to have the "local_has_galleass = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_galleass_fraction
+|<code>allowed_galleass_fraction = 0.5</code>
+|Modifies the amount of galleasses that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_galleass
+|<code>amount_of_galleass = 1</code>
+|Adds to the maximum amount of Galleas ships available.
+|Additive
+|1.35
+|-
+|has_voc_indiamen
+|<code>has_voc_indiamen = yes</code>
+|Allows the usage of VOC Indiaman ships. It also requires the province to have the "local_has_voc_indiamen = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_voc_indiamen_fraction
+|<code>allowed_voc_indiamen_fraction = 0.25</code>
+|Modifies the amount of VOC indiamen that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_voc_indiamen
+|<code>amount_of_voc_indiamen = 1</code>
+|Adds to the maximum amount of VOC Indiaman ships available.
+|Additive
+|1.35
+|-
+|has_man_of_war
+|<code>has_man_of_war = yes</code>
+|Allows the usage of Man of War ships. It also requires the province to have the "local_has_man_of_war = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_man_of_war_fraction
+|<code>allowed_man_of_war_fraction = 0.2</code>
+|Modifies the amount of men of war that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_man_of_war
+|<code>amount_of_man_of_war = 1</code>
+|Adds to the maximum amount of Man of War ships available.
+|Additive
+|1.35
+|-
+|has_galleon
+|<code>has_galleon = yes</code>
+|Allows the usage of Galleon ships. It also requires the province to have the "local_has_galleon = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_galleon_fraction
+|<code>allowed_galleon_fraction = 0.1</code>
+|Modifies the amount of galleons that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_galleon
+|<code>amount_of_galleon = 1</code>
+|Adds to the maximum amount of Galleon ships available.
+|Additive
+|1.35
+|-
+|has_caravel
+|<code>has_caravel = yes</code>
+|Allows the usage of Caravel ships. It also requires the province to have the "local_has_caravel = yes" modifier.
+|Constant
+|1.35
+|-
+|allowed_caravel_fraction
+|<code>allowed_caravel_fraction = 0.1</code>
+|Modifies the amount of caravels that can be recruited.
+|Multiplicative
+|1.35
+|-
+|amount_of_caravel
+|<code>amount_of_caravel = 1</code>
+|Adds to the maximum amount of Caravel ships available.
+|Additive
+|1.35
+|-
+|}
+
+===Diplomacy ===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|diplomats
+|<code>diplomats = 1</code>
+|Adds to a country's diplomat count.
+|Additive
+|1.1
+|-
+|diplomatic_reputation
+|<code>diplomatic_reputation = 1</code>
+|Adds to a country's diplomatic reputation.
+|Additive
+|1.1
+|-
+|diplomatic_upkeep
+|<code>diplomatic_upkeep = 1</code>
+| Adds to the maximum number of free diplomatic relations.
+|Additive
+|1.1
+|-
+|envoy_travel_time
+|<code>envoy_travel_time = -0.2</code>
+|Modifies diplomat, merchant, and colonist travel time during actions.
+|Multiplicative
+|1.6
+|-
+|improve_relation_modifier
+|<code>improve_relation_modifier = 0.2</code>
+|Modifies the speed of the ‘Improve Relations’ diplomatic action.
+|Multiplicative
+|1.18
+|-
+|ae_impact
+|<code>ae_impact = -0.2</code>
+|Modifies the total size of aggressive expansion gained during actions that confer it.
+|Multiplicative
+|1.6
+|-
+|diplomatic_annexation_cost
+|<code>diplomatic_annexation_cost = -0.2</code>
+|Modifies the diplomatic power cost for annexation.
+|Multiplicative
+|1.7
+|-
+|province_warscore_cost
+|<code>province_warscore_cost = -0.2</code>
+|Modifies the warscore cost for taking provinces.
+|Multiplicative
+|1.8
+|-
+|unjustified_demands
+|<code>unjustified_demands = -0.2</code>
+|Modifies the cost in diplomatic power of making unjustified demands in a peace deal.
+|Multiplicative
+|1.1
+|-
+|rival_change_cost
+|<code>rival_change_cost = -0.2</code>
+| Modifies the diplomatic power cost to change rivals.
+|Multiplicative
+|1.20
+|-
+|justify_trade_conflict_cost
+|<code>justify_trade_conflict_cost = -0.2</code>
+|Modifies the spy network cost to justify trade conflicts.
+|Multiplicative
+|1.26
+|-
+|stability_cost_to_declare_war
+|<code>stability_cost_to_declare_war = 1</code>
+|Modifies the stability cost to declare war. Default is 0 with a casus belli and no truce.
+|Additive
+|1.30
+|-
+|accept_vassalization_reasons
+|<code>accept_vassalization_reasons = 5</code>
+|Gives reasons to accept vassalization.
+|Additive
+|1.30
+|-
+|transfer_trade_power_reasons
+|<code>transfer_trade_power_reasons = 5</code>
+|Gives reasons to transfer trade.
+|Additive
+|1.30
+|-
+|monthly_federation_favor_growth
+|<code>monthly_federation_favor_growth = 0.05</code>
+|Adds to the monthly change of favors with other countries in the native federation.
+|Additive
+|1.31
+|-
+|monthly_favor_modifier
+|<code>monthly_favor_modifier = 0.1</code>
+|Modifies the amount of favour gained by the country.
+|Multiplicative
+|1.32
+|-
+|cb_on_overseas
+|<code>cb_on_overseas = yes</code>
+|Allows claims to be fabricated on overseas provinces in trade company regions.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|cb_on_primitives
+|<code>cb_on_primitives = yes</code>
+|Allows claims to be fabricated on overseas provinces in colonial regions.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|idea_claim_colonies
+|<code>idea_claim_colonies = yes</code>
+|Allows claims to be fabricated on overseas provinces in colonial regions that are owned by another nation that is also overseas.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|cb_on_government_enemies
+|<code>cb_on_government_enemies = yes</code>
+|Acts a visible script flag. Can be checked in triggers with <code>cb_on_government_enemies = yes</code>
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|cb_on_religious_enemies
+|<code>cb_on_religious_enemies = yes</code>
+|Acts a visible script flag. Can be checked in triggers with <code>cb_on_religious_enemies = yes</code>
+|Constant
+|1.1(Only usable in ideas or religions before 1.30)
+|-
+|reduced_stab_impacts
+|<code>reduced_stab_impacts = yes</code>
+|Reduces the stability hits when taking diplomatic actions that cause them (i.e. 'Break Marriage').
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|can_fabricate_for_vassals
+|<code>can_fabricate_for_vassals = yes</code>
+|Grants the ability to fabricate claims for vassals.
+|Constant
+|1.27(Only usable in ideas before 1.34)
+|}
+
+===Economy===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|global_tax_income
+|<code>global_tax_income = 12</code>
+|Adds to the base tax income per year (i.e. 12 equals 1 extra per month).
+|Additive
+|1.10
+|-
+|global_tax_modifier
+|<code>global_tax_modifier = 0.05</code>
+|Modifies the base tax income by a percentage.
+|Multiplicative
+|1.1
+|-
+|production_efficiency
+|<code>production_efficiency = 0.05</code>
+|Modifies the base production income by a percentage.
+|Multiplicative
+|1.1
+|-
+|state_maintenance_modifier
+|<code>state_maintenance_modifier = -0.25</code>
+|Modifies the maintenance cost for states.
+|Multiplicative
+|1.16
+|-
+|inflation_action_cost
+|<code>inflation_action_cost = -0.1</code>
+|Modifies the administrative power cost for reducing inflation.
+|Multiplicative
+|1.2
+|-
+|may_not_reduce_inflation
+|<code>may_not_reduce_inflation = yes</code>
+|Forbids a country to use the 'Reduce Inflation' button.
+|Constant
+|1.35
+|-
+|inflation_reduction
+|<code>inflation_reduction = 0.1</code>
+|Adds to the base yearly inflation reduction rate.
+|Additive
+|1.1
+|-
+|monthly_gold_inflation_modifier
+|<code>monthly_gold_inflation_modifier = -0.1</code>
+|Modifies the amount of inflation generated by gold mines.
+|Multiplicative
+|1.32
+|-
+|gold_depletion_chance_modifier
+|<code>gold_depletion_chance_modifier = -0.1</code>
+|Modifies the depletation chance of a gold mine.
+|Multiplicative
+|1.32
+|-
+|interest
+|<code>interest = -1</code>
+|Adds to the base interest rate.
+|Additive
+|1.1
+|-
+|can_not_build_buildings
+|<code>can_not_build_buildings = yes</code>
+|Forbids a country to build buildings
+|Constant
+|1.34
+|-
+|development_cost
+|<code>development_cost = -0.1</code>
+|Modifies the development cost for provinces.
+|Multiplicative
+|1.12
+|-
+|development_cost_in_primary_culture
+|<code>development_cost_in_primary_culture = -0.1</code>
+|Modifies the development cost for provinces of primary culture.
+|Multiplicative
+|1.35
+|-
+|development_cost_modifier
+|<code>development_cost_modifier = -0.05</code>
+|Modifies the base Development Cost Modifier. "Development Cost Modifier" was called "Development Efficiency" before 1.34
+|Multiplicative
+|1.34
+|-
+|tribal_development_growth
+|<code>tribal_development_growth = 0.02</code>
+|Adds to the growth of tribal development
+|Additive
+|1.31
+|-
+|add_tribal_land_cost
+|<code>add_tribal_land_cost = -0.25</code>
+|Modifies the cost of adding tribal land.
+|Multiplicative
+|1.31
+|-
+|settle_cost
+|<code>settle_cost = 0.1</code>
+|Modifies the cost for settling tribal development into a province.
+|Multiplicative
+|1.31
+|-
+|global_allowed_num_of_buildings
+|<code>global_allowed_num_of_buildings = 1</code>
+|Adds to the number of allowed buildings in every owned province.
+|Additive
+|1.34
+|-
+|global_allowed_num_of_manufactories
+|<code>global_allowed_num_of_manufactories = 1</code>
+|Adds to the number of allowed manufactories in every owned province.
+|Additive
+|1.35
+|-
+|build_cost
+|<code>build_cost = -0.1</code>
+|Modifies all building costs.
+|Multiplicative
+|1.1
+|-
+|build_time
+|<code>build_time = -0.25</code>
+|Modifies all building construction times.
+|Multiplicative
+| 1.1
+|-
+|great_project_upgrade_cost
+|<code>great_project_upgrade_cost = -0.25</code>
+|Modifies all great project upgrade costs.
+|Multiplicative
+|1.31
+|-
+|great_project_upgrade_time
+|<code>great_project_upgrade_time = -0.1</code>
+|Modifies the time needed to upgrade a great project.
+|Multiplicative
+|1.35
+|-
+|global_monthly_devastation
+|<code>global_monthly_devastation = 0.1</code>
+|Adds to the devastation rate in all provinces.
+|Additive
+|1.32
+|-
+|global_prosperity_growth
+|<code>global_prosperity_growth = 0.1</code>
+|Adds to the prosperity rate in all provinces.
+|Additive
+|1.32
+|-
+|administrative_efficiency
+|<code>administrative_efficiency = 0.2</code>
+|Modifies the base core creation cost, diplo-annexation costs and the impact of province development on overextension and warscore cost.
+|Multiplicative
+|1.20
+|-
+|free_concentrate_development
+|<code>free_concentrate_development = yes</code>
+|Allows a country to concentrate development without the cost.
+|Constant
+|1.35
+|-
+|expand_infrastructure_cost_modifier
+|<code>expand_infrastructure_cost_modifier = -0.25</code>
+|Modifies the adm and government reform progress cost for expanding infrastructure.
+|Multiplicative
+|1.35
+|-
+|centralize_state_cost
+|<code>centralize_state_cost = -0.1</code>
+|Modifies the adm and government reform progress cost for centralizing a state.
+|Multiplicative
+|1.35
+|}
+
+=== Core Creation===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|core_creation
+|<code>core_creation = -0.1</code>
+|Modifies the base core creation cost.
+|Multiplicative
+|1.1
+|-
+|core_decay_on_your_own
+|<code>core_decay_on_your_own = -0.1</code>
+|Modifies the rate at which the cores of a country will decay when under the ownership of a different country.
+|Multiplicative
+|1.20
+|-
+|enemy_core_creation
+|<code>enemy_core_creation = 0.2</code>
+|Modifies the cost of coring provinces for enemies that have your cores.
+|Multiplicative
+|1.1
+|-
+|ignore_coring_distance
+|<code>ignore_coring_distance = yes</code>
+|Allows coring in any uncored province, regardless of distance.
+|Constant
+|1.20(Only usable in age bonuses before 1.34)
+|}
+
+===Technology ===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|<tech>_cost_modifier
+|<code>adm_tech_cost_modifier = -0.1</code>
+|Modifies the monarch power cost of <code><tech></code> technologies. <br>Generated automatically for all technology tables in {{path|common/technology.txt}}.
+|Multiplicative
+|1.1
+|-
+|technology_cost
+|<code>technology_cost = -0.1</code>
+|Modifies the monarch power  cost of all technologies.
+|Multiplicative
+|1.1
+|-
+|idea_cost
+|<code>idea_cost = -0.1</code>
+|Modifies the monarch power cost of purchasable ideas.
+|Multiplicative
+|1.1
+|-
+|embracement_cost
+|<code>embracement_cost = -0.1</code>
+|Modifies the ducat cost for embracing an institution.
+|Multiplicative
+|1.18
+|-
+|global_institution_spread
+|<code>global_institution_spread = 0.1</code>
+|Modifies the rate of spread for institutions in all owned provinces.
+|Multiplicative
+|1.18
+|-
+|institution_spread_from_true_faith
+|<code>institution_spread_from_true_faith = 0.1</code>
+|Modifies the rate of spread for institutions in owned provinces following the owner's religion.
+|Multiplicative
+|1.20
+|-
+| native_advancement_cost
+|<code>native_advancement_cost = -0.2</code>
+|Modifies the monarch power cost of native advancements.
+|Multiplicative
+|1.4
+|-
+|all_power_cost
+|<code>all_power_cost = -0.1</code>
+|Modifies the monarch power cost of '''every''' action that costs monarch power.
+|Multiplicative
+|1.16
+|-
+|innovativeness_gain
+|<code>innovativeness_gain = 0.5</code>
+|Modifies the amount of innovativeness gained.
+|Multiplicative
+|1.25
+|-
+|yearly_innovativeness
+|<code>yearly_innovativeness = 0.25</code>
+|Adds to the yearly rate of innovativeness.
+|Additive
+|1.35
+|-
+|free_adm_policy
+|<code>free_adm_policy = 1</code>
+|Modifies the amount of free administrative policies.
+|Additive
+|1.26
+|-
+|free_dip_policy
+|<code>free_dip_policy = 1</code>
+|Modifies the amount of free diplomatic policies.
+|Additive
+|1.26
+|-
+|free_mil_policy
+|<code>free_mil_policy = 1</code>
+|Modifies the amount of free military policies.
+|Additive
+|1.26
+|-
+|possible_adm_policy
+|<code>possible_adm_policy = 1</code>
+|Modifies the amount of administrative policy slots.
+|Additive
+|1.26
+|-
+|possible_dip_policy
+|<code>possible_dip_policy = 1</code>
+|Modifies the amount of diplomatic policy slots.
+|Additive
+| 1.26
+|-
+| possible_mil_policy
+|<code>possible_mil_policy = 1</code>
+|Modifies the amount of military policy slots.
+|Additive
+|1.26
+|-
+|possible_policy
+|<code>possible_policy = 1</code>
+|Modifies the amount of all policy slots.
+|Additive
+|
+|-
+|free_policy
+|<code>free_policy = 1</code>
+|Modifies the amount of all free policies.
+|Additive
+|1.26
+|-
+|country_admin_power
+|<code>country_admin_power = 1</code>
+|Modifies the monthly administrative power a country generates.
+|Additive
+|1.30
+|-
+|country_diplomatic_power
+|<code>country_diplomatic_power = 1</code>
+|Modifies the monthly diplomatic power a country generates.
+|Additive
+|1.30
+|-
+|country_military_power
+|<code>country_military_power = 1</code>
+|Modifies the monthly military power a country generates.
+|Additive
+|1.30
+|}
+
+===Court===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|prestige
+|<code>prestige = 0.5</code>
+|Adds to the base yearly rate of prestige.
+|Additive
+|1.1
+|-
+| prestige_decay
+|<code>prestige_decay = -0.01</code>
+|Adds to the base rate of prestige decay.
+|Additive
+| 1.1
+|-
+|monthly_splendor
+|<code>monthly_splendor = 1</code>
+|Adds to the monthly rate of splendor points.
+|Additive
+|1.20
+|-
+| yearly_corruption
+|<code>yearly_corruption = -0.1</code>
+|Adds to the yearly rate of corruption.
+|Additive
+|1.16
+|-
+|advisor_cost
+|<code>advisor_cost = -0.25</code>
+|Modifies the base cost of advisors.
+|Multiplicative
+|1.1
+|-
+|same_culture_advisor_cost
+|<code>same_culture_advisor_cost = -0.2</code>
+|Modifies the advisor cost for advisors that share the same culture as the country's court they're in.
+|Multiplicative
+|1.23
+|-
+|same_religion_advisor_cost
+|<code>same_religion_advisor_cost = -0.2</code>
+|Modifies the advisor cost for advisors that share the same religion as the country's court they're in.
+|Multiplicative
+|1.35
+|-
+| advisor_pool
+|<code>advisor_pool = 1</code>
+|Adds to the pool size for advisors.
+|Additive
+|1.1
+|-
+|female_advisor_chance
+|<code>female_advisor_chance = 0.1</code>
+|Modifies the base chance rate for female advisors.
+|Multiplicative
+|1.12
+|-
+|heir_chance
+|<code>heir_chance = 0.5</code>
+|Modifies the base chance for an heir during the heir generation tick.
+|Multiplicative
+|1.1
+|-
+|monthly_heir_claim_increase
+|<code>monthly_heir_claim_increase = 0.05</code>
+|Adds to the monthly change of heir claim.
+|Additive
+|1.31
+|-
+|monthly_heir_claim_increase_modifier
+|<code>monthly_heir_claim_increase_modifier = 0.1</code>
+|Modifies the monthly change of heir claim.
+|Multiplicative
+|1.34
+|-
+|block_introduce_heir
+|<code>block_introduce_heir = yes</code>
+|Disallows the country to use the 'Introduce New Heir' interaction.
+|Constant
+| 1.30
+|-
+|monarch_admin_power
+|<code>monarch_admin_power = 1</code>
+|Adds to the base ADM skill a ruler, heir and consort can be generated with.<br>
+Does not affect rulers created with <code>fixed = yes</code>.
+|Additive
+|1.20
+|-
+|monarch_diplomatic_power
+|<code>monarch_diplomatic_power = 1</code>
+|Adds to the base DIP skill a ruler, heir and consort can be generated with.<br>
+Does not affect rulers created with <code>fixed = yes</code>.
+|Additive
+|1.20
+|-
+|monarch_military_power
+|<code>monarch_military_power = 1</code>
+|Adds to the base MIL skill a ruler, heir and consort can be generated with.<br>
+Does not affect rulers created with <code>fixed = yes</code>.
+|Additive
+|1.20
+|-
+|adm_advisor_cost
+|<code>adm_advisor_cost = -0.1</code>
+|Modifies the cost of hiring an administrative advisor.
+| Multiplicative
+|1.26
+|-
+|dip_advisor_cost
+|<code>dip_advisor_cost = -0.1</code>
+|Modifies the cost of hiring an diplomatic advisor.
+|Multiplicative
+|1.26
+|-
+|mil_advisor_cost
+|<code>mil_advisor_cost = -0.1</code>
+|Modifies the cost of hiring an military advisor.
+|Multiplicative
+|1.26
+|-
+|monthly_support_heir_gain
+|<code>monthly_support_heir_gain = 0.1</code>
+|Modifies the monthly gain in support for the heir of a country in a country that uses the ‘Elective Monarchy’ mechanics.
+|Multiplicative
+|1.27
+|-
+|power_projection_from_insults
+|<code>power_projection_from_insults = 0.1</code>
+|Modifies the amount of power projection gained when using the ‘Insult’ diplomatic action.
+|Multiplicative
+|1.27
+|-
+|monarch_lifespan
+|<code>monarch_lifespan = 0.1</code>
+|Modifies the average lifespan of a ruler.
+|Multiplicative
+|1.30
+|-
+|local_heir_adm
+|<code>local_heir_adm = 1</code>
+|Adds to the base ADM skill that non-foreign heirs for Elective Monarchy can be generated with.
+|Additive
+|1.30
+|-
+|local_heir_dip
+|<code>local_heir_dip = 1</code>
+| Adds to the base DIP skill that non-foreign heirs for Elective Monarchy can be generated with.
+|Additive
+|1.30
+|-
+|local_heir_mil
+|<code>local_heir_mil = 1</code>
+|Adds to the base MIL skill that non-foreign heirs for Elective Monarchy can be generated with.
+|Additive
+|1.30
+|-
+|national_focus_years
+|<code>national_focus_years = -1</code>
+|Adds to the cooldown of setting the national focus
+|Additive
+|1.34
+|}
+
+===Government===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" | Effect type
+! width="10%" |Version added
+|-
+|yearly_absolutism
+|<code>yearly_absolutism = 0.1</code>
+|Adds to the yearly base rate of absolutism.
+|Additive
+|1.20
+|-
+|max_absolutism
+|<code>max_absolutism = 10</code>
+|Adds to the maximum value of absolutism. Internally absolutism bonuses do not scale above 100.
+|Additive
+|1.20
+|-
+|max_absolutism_effect
+|<code>max_absolutism_effect = 0.1</code>
+|Modifies the maximum effect of absolutism on modifiers.
+|Multiplicative
+|1.35
+|-
+|legitimacy
+|<code>legitimacy = 1</code>
+|Adds to the yearly rate of legitimacy.<br>Does not appear or have an effect if a country's government does not use legitimacy.
+|Additive
+|1.1
+|-
+|republican_tradition
+|<code>republican_tradition = 0.5</code>
+|Adds to the yearly rate of republican tradition.<br>Does not appear or have an effect if a country's government does not use republican tradition.
+|Additive
+|1.1
+|-
+|devotion
+|<code>devotion = 1</code>
+|Adds to the yearly rate of devotion.<br>Does not appear or have an effect if a country's government does not use devotion.
+| Additive
+|1.12
+|-
+|horde_unity
+|<code>horde_unity = 1</code>
+|Adds to the yearly rate of horde unity.<br>Does not appear or have an effect if a country's government does not use horde unity.
+|Additive
+|1.14
+|-
+|meritocracy
+|<code>meritocracy = 1</code>
+| Adds to the yearly rate of meritocracy. Does not appear or have an effect if a country's government does not use meritocracy.
+|Additive
+|1.20
+|-
+|<government_power_type_id>_gain_modifier
+|<code>monthly_militarized_society = 0.05</code>
+|Modifies the gain of power from the add_government_power effect for governments with the particular mechanic.
+|Multiplicative
+|1.35
+|-
+|monthly_<government_power_type_id>
+|<code>monthly_militarized_society = 0.05</code>
+|Adds to the monthly rate of power for governments with the particular mechanic.
+|Additive
+|1.35
+|-
+|yearly_government_power
+|<code>yearly_government_power = 0.5</code>
+|Adds to the yearly rate of power for governments with mechanics.
+|Additive
+|1.35
+|-
+|<faction>_influence
+|<code><faction>_influence = 0.1</code>
+|Adds to the monthly rate of faction influence. <br>Generated automatically for all factions in {{path|common/factions}}.
+|Additive
+|1.1
+|-
+|imperial_mandate
+|<code>imperial_mandate = 0.1</code>
+| Adds to the rate of Mandate gained per month.
+|Additive
+|1.21
+|-
+|election_cycle
+|<code>election_cycle = 1</code>
+|Adds to the duration of an election cycle for the current nation. Negative values shorten the duration, positive values add to it.
+|Additive
+|1.26
+|-
+|candidate_random_bonus
+|<code>candidate_random_bonus = 1</code>
+|Adds to the randomized stats a republican candidate may receive during elections.
+|Additive
+|1.26
+|-
+|reelection_cost
+|<code>reelection_cost = -0.1</code>
+|Modifies the cost in Republican Tradition when re-electing candidates.
+|Multiplicative
+|1.26
+|-
+|max_terms
+|<code>max_terms = 2</code>
+|
+|Additive
+|1.35
+|-
+|governing_capacity
+|<code>governing_capacity = 100</code>
+|Adds to the base governing capacity.
+|Additive
+|1.30
+|-
+|governing_capacity_modifier
+|<code>governing_capacity_modifier = 0.1</code>
+|Modifies the base governing capacity.
+|Multiplicative
+|1.30
+|-
+|governing_cost
+|<code>governing_cost = -0.1</code>
+|Modifies the governing capacity usage of all provinces.
+|Multiplicative
+|1.30
+|-
+|state_governing_cost
+|<code>state_governing_cost = -0.1</code>
+|Modifies the governing capacity usage of states.
+|Multiplicative
+|1.30
+|-
+|territories_governing_cost
+|<code>territories_governing_cost = -0.1</code>
+|Modifies the governing capacity usage of territories.
+|Multiplicative
+|1.30
+|-
+|trade_company_governing_cost
+|<code>trade_company_governing_cost = -0.1</code>
+|Modifies the governing capacity usage of trade companies.
+|Multiplicative
+| 1.30
+|-
+|state_governing_cost_increase
+|<code>state_governing_cost_increase = -20</code>
+|Adds to the governing capacity usage of states.
+|Additive
+| 1.31
+|-
+|expand_administration_cost
+|<code>expand_administration_cost = 0.1</code>
+|Modifies the cost of the ‘Expand Administration’ action.
+|Multiplicative
+|1.30
+|-
+|yearly_revolutionary_zeal
+|<code>yearly_revolutionary_zeal = 0.1</code>
+|Adds to the yearly base rate of revolutionary zeal.
+|Additive
+|1.30
+|-
+|max_revolutionary_zeal
+|<code>max_revolutionary_zeal= 10</code>
+|Adds to the maximum value of revolutionary zeal. Internally revolutionary zeal bonuses do not scale above 100.
+|Additive
+|1.30
+|-
+|reform_progress_growth
+|<code>reform_progress_growth = 0.1</code>
+| Changes the rate of government reform progress gain from autonomy.
+| Multiplicative
+|1.26
+|-
+|monthly_reform_progress
+|<code>monthly_reform_progress = 0.5</code>
+|Adds to the rate of government reform progress gain (this is modified by monthly_reform_progress_modifier, but not by reform_progress_growth).
+|Additive
+| 1.31
+|-
+|monthly_reform_progress_modifier
+|<code>monthly_reform_progress_modifier = 0.1</code>
+|Changes the rate of government reform progress gain (both from monthly_reform_progress as well as the progress from autonomy).
+|Multiplicative
+|1.31
+|-
+|move_capital_cost_modifier
+|<code>move_capital_cost_modifier = -0.1</code>
+|Modifies the amount of needed admin power to move the capital.
+|Multiplicative
+|1.32
+|-
+|can_revoke_parliament_seats
+|<code>can_revoke_parliament_seats = yes</code>
+|Allows a country to remove seats from a province.
+|Constant
+|1.35
+|-
+|parliament_backing_chance
+|<code>parliament_backing_chance = 0.25</code>
+|Modifies how many seats will back an issue in general.
+|Multiplicative
+|1.35
+|-
+|parliament_effect_duration
+|<code>parliament_effect_duration = 5</code>
+|Adds to the years for the effect duration of passed issue.
+|Additive
+|1.35
+|-
+|parliament_debate_duration
+|<code>parliament_debate_duration = 5</code>
+|Adds to the years of debate duration for an issue.
+|Additive
+|1.35
+|-
+|parliament_chance_of_decision
+|<code>parliament_chance_of_decision = 0.1</code>
+|Adds to the chance for the debate to be ended after debate duration.
+|Multiplicative
+|1.35
+|-
+|num_of_parliament_issues
+|<code>num_of_parliament_issues = 1</code>
+|Adds to the maximum number of issues a country can pick from.
+|Additive
+|1.35
+|-
+|max_possible_parliament_seats
+|<code>max_possible_parliament_seats = 8</code>
+|Defines the minimum amount of seats needed 
+|Additive
+|1.35
+|-
+|}
+
+===Estates===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|<estate>_influence_modifier
+|<code>church_influence_modifier = 0.1</code>
+|Modifies to the influence of the specified estate. These modifiers are defined in {{path|common/estates_preload}}.
+| Multiplicative
+|1.30
+|-
+|<estate>_loyalty_modifier
+|<code>church_loyalty_modifier = 0.1</code>
+|Modifies to the loyalty equilibrium of the specified estate. These modifiers are defined in {{path|common/estates_preload}}.
+|Multiplicative
+|1.30
+|-
+|<estate>_privilege_slots
+|<code>nobles_privilege_slots = 1</code>
+|Adds to the number of possible privilege slots on the specified estate. These modifiers are defined in {{path|common/estates_preload}}.
+|Additive
+|1.35
+|-
+|all_estate_influence_modifier
+|<code>all_estate_influence_modifier = 0.1</code>
+|Modifies to the influence of all estates in the country
+|Multiplicative
+|1.34
+|-
+|all_estate_loyalty_equilibrium
+|<code>all_estate_loyalty_equilibrium = 0.1</code>
+|Modifies to the loyalty equilibrium of all estates in the country.
+|Multiplicative
+|1.32
+|-
+|all_estate_possible_privileges
+|<code>all_estate_possible_privileges = 1</code>
+|Adds to the number of possible privilege slots on all estates in the country.
+|Additive
+|1.35
+|-
+|allow_free_estate_privilege_revocation
+|<code>allow_free_estate_privilege_revocation = yes</code>
+|Allows to revoke estate privileges without having the loyalty higher than the estates influence
+|Constant
+|1.34
+|-
+|loyalty_change_on_revoked
+|<code>loyalty_change_on_revoked = 0.05</code>
+|Modifies the estate loyalty hit when a privilege is revoked.
+|Multiplicative
+|1.35
+|-
+|estate_interaction_cooldown_modifier
+|<code>estate_interaction_cooldown_modifier = -0.2</code>
+|Modifies the cooldown of the estate interactions like Seizing Land.
+|Multiplicative
+|1.35
+|}
+
+===Holy Roman Empire===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" | Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|imperial_authority
+|<code>imperial_authority = 0.05</code>
+|Modifies the impact of imperial authority gains.
+|Multiplicative
+|1.1
+|-
+|imperial_authority_value
+|<code>imperial_authority_value = 0.1</code>
+|Adds to the rate of imperial authority gained per month.
+|Additive
+|1.1
+|-
+| free_city_imperial_authority
+|<code>free_city_imperial_authority = 0.1</code>
+|Adds to the rate of imperial authority gained per month from Free Cities.
+|Additive
+|1.30
+|-
+|reasons_to_elect
+|<code>reasons_to_elect = 10</code>
+|Adds to the reasons a country should elect you as emperor
+|Additive
+| 1.34
+|-
+|imperial_mercenary_cost
+|<code>imperial_mercenary_cost = -0.1</code>
+|Modifies the cost of mercenary companies for nations within the Holy Roman Empire.
+|Multiplicative
+|1.30
+|-
+|max_free_cities
+|<code>max_free_cities = 3</code>
+|Adds to the maximum number of free cities allowed.
+|Additive
+|1.30
+|-
+|max_electors
+|<code>max_electors = 3</code>
+|Adds to the maximum number of electors allowed.
+|Additive
+| 1.30
+|-
+|legitimate_subject_elector
+|<code>legitimate_subject_elector = 50</code>
+|Adds to the elector desire for the current country to become Emperor (if they are a valid choice).
+|Additive
+| 1.30
+|-
+|manpower_against_imperial_enemies
+|<code>manpower_against_imperial_enemies = 0.1</code>
+|Adds to the total manpower pool when at war (doesn't matter if you are rivals)
+|Additive
+|1.30
+|-
+|imperial_reform_catholic_approval
+|<code>imperial_reform_catholic_approval = 15</code>
+|Adds reasons for the country its applied to to vote for a reform of the Holy Roman Empire. This only has an effect on AI members of the HRE. The name of the modifier is confusing, because the modifier has nothing to do with religion at all and is also not a global modifier applied to the Emperor.
+|Additive
+|1.30
+|}
+
+===Culture===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|culture_conversion_cost
+|<code>culture_conversion_cost = -0.25</code>
+|Modifies the diplomatic power cost for culture conversion in provinces.
+|Multiplicative
+|1.7
+|-
+|culture_conversion_time
+|<code>culture_conversion_time = -0.1</code>
+|Modifies the speed for culture conversion in provinces.
+|Multiplicative
+|1.35
+|-
+|num_accepted_cultures
+|<code>num_accepted_cultures = 1</code>
+|Adds to the maximum number of accepted cultures a country can have.
+|Additive
+|1.18
+|-
+|promote_culture_cost
+|<code>promote_culture_cost = -0.25</code>
+|Modifies the diplomatic power cost for promoting a culture.
+|Multiplicative
+| 1.23
+|-
+|relation_with_same_culture
+|<code>relation_with_same_culture = 5</code>
+|Modifiers this countries opinion of countries whose primary culture is the same.
+|Additive
+|1.33
+|-
+|relation_with_same_culture_group
+|<code>relation_with_same_culture_group = 5</code>
+|Modifies this countries opinion of countries whose primary culture is in the same culture group but do not share the same primary culture.
+|Additive
+|1.33
+|-
+|relation_with_accepted_culture
+|<code>relation_with_accepted_culture = 5</code>
+|Modifies this countries opinion of countries whose primary culture is an accepted culture.
+|Additive
+|1.33
+|-
+|relation_with_other_culture
+|<code>relation_with_other_culture = 5</code>
+|Modifies this countries opinion of countries that are not within the same culture group and whose culture they do not accept.
+|Additive
+| 1.33
+|}
+
+===Stability===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" | Effect type
+! width="10%" |Version added
+|-
+|can_not_declare_war
+|<code>can_not_declare_war = yes</code>
+|Fobids a country from declaring wars
+|Constant
+|1.34
+|-
+|global_unrest
+|<code>global_unrest = -2</code>
+| Adds to the base unrest value.
+|Additive
+|1.8
+|-
+|stability_cost_modifier
+|<code>stability_cost_modifier = -0.1</code>
+|Modifies the administrative power cost of raising stability.
+|Multiplicative
+|1.1
+|-
+|global_autonomy
+|<code>global_autonomy = -0.05</code>
+|Adds to the monthly rate of autonomy in owned provinces.
+|Additive
+| 1.8
+|-
+|min_autonomy
+|<code>min_autonomy = 50</code>
+| Sets the minimum autonomy level allowed in all owned provinces.
+|Constant
+|1.8
+|-
+|autonomy_change_time
+|<code>autonomy_change_time = -0.25</code>
+|Modifies the cooldown for the autonomy reduction and increase buttons.
+| Multiplicative
+|1.8
+|-
+|harsh_treatment_cost
+|<code>harsh_treatment_cost = -0.2</code>
+|Modifies the military power cost for using harsh treatment.
+|Multiplicative
+|1.20
+|-
+|global_rebel_suppression_efficiency
+|<code>global_rebel_suppression_efficiency = -0.2</code>
+|Modifies the efficiency of unrest reduction by units stationed in provinces or deployed for autonomous rebel suppression.
+|Multiplicative
+|1.32
+|-
+|years_of_nationalism
+|<code>years_of_nationalism = -5</code>
+|Adds to the base separatism value of provinces when conquered.
+|Additive
+|1.7
+|-
+|min_autonomy_in_territories
+|<code>min_autonomy_in_territories = 0.1</code>
+|Modifies the minimum autonomy experienced in territories.
+|Additive
+|1.26
+|-
+|unrest_catholic_provinces
+|<code>unrest_catholic_provinces = -2</code>
+|Modifies the local unrest in all provinces of the catholic religion
+|Additive
+|1.30
+|-
+|no_stability_loss_on_monarch_death
+|<code>no_stability_loss_on_monarch_death = yes</code>
+|Removes the stability penalty that occurs when ruler dies.
+|Constant
+|1.33
+|-
+|overextension_impact_modifier
+|<code>overextension_impact_modifier = -0.1</code>
+|Modifies the impact of conquered provinces in regards to the overextension.
+|Multiplicative
+|1.35
+|}
+
+===Subject===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" | Version added
+|-
+|vassal_forcelimit_bonus
+|<code>vassal_forcelimit_bonus = 0.2</code>
+|Modifies the bonus to a country's forcelimit from their subjects.
+|Multiplicative
+|1.7
+|-
+|vassal_naval_forcelimit_bonus
+|<code>vassal_naval_forcelimit_bonus = 0.2</code>
+|Modifies the bonus to a country's naval forcelimit from their subjects.
+|Multiplicative
+|1.35
+|-
+|vassal_manpower_bonus
+|<code>vassal_manpower_bonus = 0.1</code>
+|Modifies the bonus to a country's manpower from their subjects.
+|Multiplicative
+|1.35
+|-
+|vassal_sailors_bonus
+|<code>vassal_sailors_bonus = 0.1</code>
+|Modifies the bonus to a country's sailors from their subjects.
+|Multiplicative
+|1.35
+|-
+|vassal_income
+|<code>vassal_income = 0.2</code>
+|Modifies the bonus to a country's income from their subjects.
+|Multiplicative
+|1.1
+|-
+|overlord_naval_forcelimit
+|<code>overlord_naval_forcelimit = 10</code>
+|Adds to the bonus to a country's naval forcelimit to their overlord. Applied to the subject.
+|Additive
+|1.35
+|-
+|overlord_naval_forcelimit_modifier
+|<code>overlord_naval_forcelimit_modifier = 0.3</code>
+|Modifies the bonus to a country's naval forcelimit to their overlord. Applied to the subject.
+|Multiplicative
+|1.35
+|-
+|can_transfer_vassal_wargoal
+|<code>can_transfer_vassal_wargoal = yes</code>
+|Allows usage of the ‘Transfer Subject’ peace term at half cost.
+|Constant
+|1.20(Only usable in age bonuses before 1.34)
+|-
+|liberty_desire
+|<code>liberty_desire = -10</code>
+|Adds to subject liberty desire against their overlord.
+|Additive
+|1.17
+|-
+|liberty_desire_from_subject_development
+|<code>liberty_desire_from_subject_development = -0.25</code>
+|Modifies the subject liberty desire from development against their overlord (Note: Tooltip is bugged as of 1.29. A modifier of -0.2 shows as "-0.20%" when it reduces it by 20%).
+|Multiplicative
+|1.20
+|-
+|reduced_liberty_desire
+|<code>reduced_liberty_desire = 10</code>
+|Adds to the liberty desire subjects have against their overlord. Applied to the overlord.
+|Additive
+| 1.17
+|-
+|reduced_liberty_desire_on_same_continent
+|<code>reduced_liberty_desire_on_same_continent = 10</code>
+|Adds to the liberty desire subjects have against their overlord if on the same continent. Applied to the overlord.
+|Additive
+|1.20
+|-
+|reduced_liberty_desire_on_other_continent
+|<code>reduced_liberty_desire_on_other_continent = 10</code>
+|Adds to the liberty desire subjects have against their overlord if on the other continent. Applied to the overlord.
+|Additive
+|1.35
+|-
+|allow_client_states
+|<code>allow_client_states = yes</code>
+|Allows a country to create client states.
+|Constant
+|1.34
+|-
+|colonial_type_change_cost_modifier
+|<code>colonial_type_change_cost_modifier = -0.2</code>
+|Modifies the cost of changing colonial type.
+|Multiplicative
+|1.34
+|-
+|colonial_subject_type_upgrade_cost_modifier
+|<code>colonial_subject_type_upgrade_cost_modifier = -0.2</code>
+|Modifies the cost of upgrading colonial subject type.
+|Multiplicative
+|1.34
+|-
+|years_to_integrate_personal_union
+|<code>years_to_integrate_personal_union = -5</code>
+|Adds to the years it takes to integrate a personal union
+|Additive
+|1.34
+|-
+|chance_to_inherit
+|<code>chance_to_inherit = 0.5</code>
+|Modifies the chance to inherit a personal union when ruler dies.
+|Multiplicative
+|1.35
+|-
+|monarch_power_tribute
+|<code>monarch_power_tribute = 1</code>
+|Adds to the yearly monarch power tribute a tributary pays to its overlord.
+|Additive
+|1.35
+|-
+|tributary_conversion_cost_modifier
+|<code>tributary_conversion_cost_modifier = -0.5</code>
+|Modifies the cost of the mandate that is required to turn a tributary into a vassal, which is unlocked via the final reform of the mandate.
+|Multiplicative
+|1.35
+|-
+|annexation_relations_impact
+|<code>annexation_relations_impact = -0.25</code>
+|Modifies the impact of the relations applied to all subjects when their overlord is annexing a subject. Applied to the overlord.
+|Multiplicative
+|1.35
+|}
+
+===Espionage===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|spy_offence
+|<code>spy_offence = 0.1</code>
+|Modifies the base effectiveness of spies against enemies.
+|Multiplicative
+|1.1
+|-
+|global_spy_defence
+|<code>global_spy_defence = 0.1</code>
+|Modifies the base effectiveness of counter-espionage against enemy spies.
+|Multiplicative
+|1.1
+|-
+|fabricate_claims_cost
+|<code>fabricate_claims_cost = -0.2</code>
+|Modifies spy network cost for fabricating claim.
+|Multiplicative
+|1.1
+|-
+|claim_duration
+|<code>claim_duration = 0.2</code>
+|Modifies the duration of claims. (not used in vanilla)
+|Multiplicative
+|1.20
+|-
+|can_chain_claim
+|<code>can_chain_claim = yes</code>
+|Allows to chain claims
+|Constant
+|1.20(Only usable in age bonuses before 1.34)
+|-
+|discovered_relations_impact
+|<code>discovered_relations_impact = -0.1</code>
+|Modifies the relations impact applied to a country when discovered committing an espionage action.
+|Multiplicative
+|1.1
+|-
+|rebel_support_efficiency
+|<code>rebel_support_efficiency = 0.5</code>
+|Modifies the effectiveness of supported rebels in other countries.
+|Multiplicative
+|1.1
+|-
+|can_claim_states
+|<code>can_claim_states = yes</code>
+|Allows to fabricate claims on areas instead of provinces.
+|Constant
+|1.35
+|-
+|no_claim_cost_increasement
+|<code>no_claim_cost_increasement = yes</code>
+|Removes the additional cost for fabricating a claim if a country already have a claim on the target country.
+|Constant
+|1.35
+|-
+|spy_action_cost_modifier
+|<code>spy_action_cost_modifier = -0.2</code>
+|Modifies the spy network costs of all spy actions.
+|Multiplicative
+|1.35
+|}
+
+===Religion===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+| global_missionary_strength
+|<code>global_missionary_strength = 0.03</code>
+|Adds to the base missionary strength against all religions.
+|Additive
+|1.1
+|-
+|global_heretic_missionary_strength
+|<code>global_heretic_missionary_strength = 0.03</code>
+|Adds to the base missionary strength against heretic religions.
+|Additive
+|1.6
+|-
+|global_heathen_missionary_strength
+|<code>global_heathen_missionary_strength = 0.03</code>
+|Adds to the base missionary strength against heathen religions.
+|Additive
+|1.30
+|-
+|can_not_build_missionaries
+|<code>can_not_build_missionaries = yes</code>
+|Forbids a country to convert provinces with missionaries.
+|Constant
+|1.34
+|-
+|may_not_convert_territories
+|<code>may_not_convert_territories = yes</code>
+|Forbids a country to convert territory provinces with missionaries.
+|Constant
+|1.35
+|-
+|missionaries
+|<code>missionaries = 1</code>
+|Adds to the base missionary count for a country.
+|Additive
+|1.1
+|-
+|missionary_maintenance_cost
+|<code>missionary_maintenance_cost = -0.1</code>
+|Modifies the cost of missionary maintenance while converting provinces.
+|Multiplicative
+|1.28
+|-
+|religious_unity
+|<code>religious_unity = 0.5</code>
+|Adds to the base religious unity value for a country.
+|Additive
+|1.1
+|-
+|tolerance_own
+|<code>tolerance_own = 1</code>
+|Adds to the base tolerance for the true faith within a country.
+|Additive
+|1.1
+|-
+|tolerance_heretic
+|<code>tolerance_heretic = 1</code>
+|Adds to the base tolerance for heretics within a country.
+|Additive
+|1.1
+|-
+|tolerance_heathen
+|<code>tolerance_heathen = 1</code>
+|Adds to the base tolerance for heathens within a country.
+|Additive
+|1.1
+|-
+|tolerance_of_heretics_capacity
+|<code>tolerance_of_heretics_capacity = 1</code>
+|Adds to the maximum tolerance for heretics within a country.
+|Additive
+|1.32
+|-
+|tolerance_of_heathens_capacity
+|<code>tolerance_of_heathens_capacity = 1</code>
+|Adds to the maximum tolerance for heathens within a country.
+|Additive
+|1.32
+|-
+|papal_influence
+|<code>papal_influence = 0.5</code>
+|Adds to the rate of papal influence gained per year.
+|Additive
+|1.1
+|-
+|papal_influence_from_cardinals
+|<code>papal_influence_from_cardinals = 1.0</code>
+|Modifiers the papal influence gain from holding cardinals.
+|Multiplicative
+|1.30
+|-
+|appoint_cardinal_cost
+|<code>appoint_cardinal_cost = -0.5</code>
+|Modifiers the cost of appointing a cardinal.
+|Multiplicative
+|1.30
+|-
+|curia_treasury_contribution
+|<code>curia_treasury_contribution = 0.1</code>
+|Modifies the amount of treasury contribution to the Curia.
+|Multiplicative
+|1.30
+|-
+|curia_powers_cost
+|<code>curia_powers_cost = 0.1</code>
+|Modifies the papal influence cost of the curia actions.
+|Multiplicative
+|1.30
+|-
+|monthly_church_power
+|<code>monthly_church_power = 0.02</code>
+|Adds to the monthly gained churchpower
+|Additive
+|1.34
+|-
+|church_power_modifier
+|<code>church_power_modifier = 0.5</code>
+|Modifies the effectiveness of church power gains.
+|Multiplicative
+|1.12
+|-
+|monthly_fervor_increase
+|<code>monthly_fervor_increase = 1</code>
+|Adds to the rate of fervor gained per month.
+|Additive
+|1.1
+|-
+|yearly_patriarch_authority
+|<code>yearly_patriarch_authority = 0.1</code>
+|Adds to the amount of yearly patriarch authority gained.
+|Additive
+|1.30
+|-
+|monthly_piety
+|<code>monthly_piety = 0.1</code>
+|Adds to the rate of piety gained per month.
+|Additive
+|1.22
+|-
+|monthly_piety_accelerator
+|<code>monthly_piety_accelerator = 0.001</code>
+|Increases the rate of piety gained per month when piety is above zero. <br>Reduces the rate of piety gained per month when piety is below zero.
+|Additive
+|1.33
+|-
+|harmonization_speed
+|<code>harmonization_speed = 0.2</code>
+|Modifies the rate at which harmonization occurs.
+|Multiplicative
+|1.1
+|-
+|yearly_harmony
+|<code>yearly_harmony = 1</code>
+|Adds to the rate of harmony gained per year.
+|Additive
+|1.20
+|-
+|monthly_karma
+|<code>monthly_karma = 0.1</code>
+|Adds to the rate of karma gained per month.
+|Additive
+|1.22
+|-
+|monthly_karma_accelerator
+|<code>monthly_karma_accelerator = 0.02</code>
+|Increases the rate of karma gained per month when karma is above zero. <br>Reduces the rate of karma gained per month when karma is below zero.
+|Additive
+|1.34
+|-
+|yearly_karma_decay
+|<code>yearly_karma_decay = 0.005</code>
+|Modifies the yearly decay rate of Karma towards 0.
+|Multiplicative
+|1.30
+|-
+|yearly_doom_reduction
+|<code>yearly_doom_reduction = 0.5</code>
+|Adds to the yearly reduction rate of doom.
+|Additive
+|1.31
+|-
+|yearly_authority
+|<code>yearly_authority = 1</code>
+|Adds to the rate of Inti authority gained per year.
+|Additive
+|1.32
+|-
+| enforce_religion_cost
+|<code>enforce_religion_cost = -0.5</code>
+|Modifies the war score cost for the Enforce Religion peace term.
+|Multiplicative
+|1.20
+|-
+|prestige_per_development_from_conversion
+|<code>prestige_per_development_from_conversion = 0.5</code>
+|Adds to the prestige bonus gained per development when successfully converting a province to a state religion.
+|Additive
+|1.20
+|-
+|warscore_cost_vs_other_religion
+|<code>warscore_cost_vs_other_religion = -0.25</code>
+|Modifies the war score costs for peace terms while in war against countries of a different religion.
+|Multiplicative
+|1.20
+|-
+|establish_order_cost
+|<code>establish_order_cost = -0.1</code>
+|Modifies the cost for using the ‘Establish Order’ action.
+| Multiplicative
+|1.28
+|-
+|global_religious_conversion_resistance
+|<code>global_religious_conversion_resistance = -0.1</code>
+|Adds to conversion resistance from centres of reformation in all provinces.
+|Multiplicative
+| 1.30
+|-
+|relation_with_same_religion
+|<code>relation_with_same_religion = 5</code>
+|Adds to this countries opinion towards other countries with the same religion.
+|Additive
+| 1.33
+|-
+|relation_with_heretics
+|<code>relation_with_heretics = -20</code>
+|Adds to this countries opinion towards other countries with heretic religions.
+|Additive
+|1.30
+|-
+|relation_with_heathens
+|<code>relation_with_heathens = -10</code>
+|Adds to this countries opinion towards other countries with heathen religions.
+|Additive
+|1.33
+|-
+|reverse_relation_with_same_religion
+|<code>reverse_relation_with_same_religion = 25</code>
+|Adds to the opinion of OTHER countries with the same religion towards this country.
+|Additive
+|1.35
+|-
+|reverse_relation_with_heretic_religion
+|<code>reverse_relation_with_heretic_religion = 25</code>
+|Adds to the opinion of OTHER countries with heretic religions towards this country.
+|Additive
+|1.37
+|-
+|reverse_relation_with_heathen_religion
+|<code>reverse_relation_with_heathen_religion = 25</code>
+|Adds to the opinion of OTHER countries with heathen religions towards this country.
+|Additive
+|1.37
+|-
+|no_religion_penalty
+|<code>no_religion_penalty = yes</code>
+|Removes the penalties associated with negative religious tolerance.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|extra_manpower_at_religious_war
+|<code>extra_manpower_at_religious_war = yes</code>
+|Grants an increase in manpower recovery by a factor of 3 during religious wars.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|}
+
+===Colonisation===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|can_not_build_colonies
+|<code>can_not_build_colonies = yes</code>
+|Forbids the country to form colonies
+|Constant
+|1.34
+|-
+|colonists
+|<code>colonists = 1</code>
+|Modifies the base colonist count for a country.
+|Additive
+|1.1
+|-
+|colonist_placement_chance
+|<code>colonist_placement_chance = 0.05</code>
+|Adds to the base colonial placement chance for colonists, which is the chance that additional settlers will be spawned while the colonist is present.
+|Additive
+|1.1
+|-
+|global_colonial_growth
+|<code>global_colonial_growth = 10</code>
+|Adds to the base yearly colonial growth gain.
+|Additive
+|1.1
+|-
+|colony_cost_modifier
+|<code>colony_cost_modifier = 1</code>
+|Modifies the colonial maintenance cost for a country.
+|Multiplicative
+|1.35
+|-
+|range
+|<code>range = 0.5</code>
+|Modifies the base colonisation range, used for exploration, colonisation and coring province that border sea.
+|Multiplicative
+|1.1
+|-
+|native_uprising_chance
+|<code>native_uprising_chance = -0.25</code>
+|Adds to the chance of native uprisings in a colony province.
+| Multiplicative
+|1.14
+|-
+| native_assimilation
+|<code>native_assimilation = 0.25</code>
+|Modifies the bonus from assimilation in colonies. Native assimilation is bonus to goods produced depends on the native population.
+|Multiplicative
+|1.14
+|-
+|migration_cost
+|<code>migration_cost = -0.2</code>
+|Modifies the cost for the migration action for primitive nations that can migrate.
+|Multiplicative
+|1.31
+|-
+|global_tariffs
+|<code>global_tariffs = 0.25</code>
+|Modifies the tariff income from colonial nations.
+|Multiplicative
+|1.1
+|-
+|treasure_fleet_income
+|<code>treasure_fleet_income = 0.1</code>
+|Modifies the income from treasure fleets sent by colonial nations.
+|Multiplicative
+|1.28
+|-
+| expel_minorities_cost
+|<code>expel_minorities_cost = -0.1</code>
+|Modifies the cost of using the ‘Expel Minorities’ action.
+|Multiplicative
+|1.28
+|-
+|may_explore
+|<code>may_explore = yes</code>
+| Allows the recruitment of explorers and conquisadors.
+|Constant
+| 1.1(Only usable in ideas before 1.34)
+|-
+|auto_explore_adjacent_to_colony
+|<code>auto_explore_adjacent_to_colony = yes</code>
+|Grants the abiliy to automatically discover undiscovered provinces adjacent to colonies.
+|Constant
+|1.1(Only usable in ideas before 1.34)
+|-
+|may_establish_frontier
+|<code>may_establish_frontier = yes</code>
+|Allows the usage of the Siberian frontier mechanic.
+|Constant
+|1.22(Only usable in ideas before 1.34)
+|-
+|free_maintenance_on_expl_conq
+|<code>free_maintenance_on_expl_conq = yes</code>
+|Removes maintenance cost for explorers and conquisadors.
+|Constant
+|1.20(Only usable in age bonuses before 1.34)
+|-
+|colony_development_boost
+|<code>colony_development_boost = 1</code>
+|Grants bonus tax, production and manpower on completed colonies.
+|Additive
+|1.35
+|}
+
+===Trade===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" | Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|caravan_power
+|<code>caravan_power = 0.2</code>
+|Modifies the bonus trade power inland nodes receive from trade power sources.
+|Multiplicative
+|1.10
+|-
+|can_not_send_merchants
+|<code>can_not_send_merchants = yes</code>
+|Forbids a nations to send merchants to trade nodes
+|Constant
+|1.34
+|-
+|merchants
+|<code>merchants = 1</code>
+|Adds to the base merchant count for a country.
+|Additive
+|1.1
+|-
+|placed_merchant_power
+|<code>placed_merchant_power = 3</code>
+|Adds to the additional trade power when a merchant present in a trade node.
+|Additive
+|1.20
+|-
+|placed_merchant_power_modifier
+|<code>placed_merchant_power_modifier = 0.5</code>
+|Modifies the additional trade power when a merchant present in a trade node.
+|Multiplicative
+|1.35
+|-
+|global_trade_power
+|<code>global_trade_power = 0.1</code>
+|Modifies the trade power in all trade nodes for a country.
+|Multiplicative
+|1.1
+|-
+|global_foreign_trade_power
+|<code>global_foreign_trade_power = 0.1</code>
+|Modifies the trade power for a country in trade nodes that are not [[Trade#Domestic_trade_power|domestic]].
+|Multiplicative
+|1.1
+|-
+|global_own_trade_power
+|<code>global_own_trade_power = 0.1</code>
+|Modifies the trade power for a country in trade nodes that are [[Trade#Domestic_trade_power|domestic]].
+|Multiplicative
+| 1.1
+|-
+|global_prov_trade_power_modifier
+|<code>global_prov_trade_power_modifier = 0.1</code>
+|Modifies the base trade power of owned provinces.
+|Multiplicative
+|1.1
+|-
+|global_trade_goods_size_modifier
+|<code>global_trade_goods_size_modifier = 0.1</code>
+|Modifies the base trade good size of owned provinces.
+|Multiplicative
+|1.12
+|-
+|global_trade_goods_size
+|<code>global_trade_goods_size = 0.1</code>
+|Adds to the trade good size in a country
+|Additive
+|1.34
+|-
+|trade_efficiency
+|<code>trade_efficiency = 0.1</code>
+|Modifies a country's trade income. (Maximum is 200%)
+|Multiplicative
+|1.1
+|-
+|trade_range_modifier
+|<code>trade_range_modifier = 0.25</code>
+|Modifies the trade range used to determine if a country can place a merchant in a trade node.
+| Multiplicative
+| 1.1
+|-
+|trade_steering
+|<code>trade_steering = 0.1</code>
+|Modifies the bonus to trade power used for steering when determining which outgoing node trade is steered to. If you have a merchant present, it also slightly increases the outgoing value.
+|Multiplicative
+| 1.1
+|-
+|global_ship_trade_power
+|<code>global_ship_trade_power = 0.2</code>
+|Modifies the trade power ships grant when protecting trade.
+|Multiplicative
+|1.16
+|-
+|privateer_efficiency
+|<code>privateer_efficiency = 0.2</code>
+|Modifies the effectiveness of privateers in a trade node.
+|Multiplicative
+|1.6
+|-
+|embargo_efficiency
+|<code>embargo_efficiency = 0.25</code>
+|Modifies the effectiveness of embargoing another country.
+|Multiplicative
+|1.1
+|-
+|ship_power_propagation
+|<code>ship_power_propagation = 0.1</code>
+|Modifies the propagation of trade power from ships protecting trade.
+|Multiplicative
+|1.20
+|-
+|center_of_trade_upgrade_cost
+|<code>center_of_trade_upgrade_cost = -0.1</code>
+|Modifies the cost of upgrading a center of trade in a province.
+|Multiplicative
+|1.27
+|-
+|trade_company_investment_cost
+|<code>trade_company_investment_cost = -0.1</code>
+|Modifies the cost of purchasing a trade company investment in a state.
+|Multiplicative
+|1.27
+|-
+|mercantilism_cost
+|<code>mercantilism_cost = -0.1</code>
+|Modifies the cost of the ‘Boost Mercantilism’ action.
+|Multiplicative
+|1.30
+|-
+|reduced_trade_penalty_on_non_main_tradenode
+|<code>reduced_trade_penalty_on_non_main_tradenode = 0.25</code>
+|Modifies the trade power penalty from collecting in your non-main trade nodes.
+|Multiplicative
+|1.35
+|}
+
+==Province modifiers==
+{{SVersion|1.28}}
+
+===Military===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" | Example
+! width="30%" |Description
+! width="10%" | Effect type
+! width="10%" |Version added
+|-
+|max_attrition
+|<code>max_attrition = 5</code>
+|Adds to the maximum attrition that can be experienced in a province.
+|Additive
+|1.1
+|-
+|attrition
+|<code>attrition = 5</code>
+|Adds to the base attrition in a province.
+|Additive
+|1.1
+|-
+|local_hostile_attrition
+|<code>local_hostile_attrition = 5</code>
+|Adds to the base attrition for enemies in a province.
+|Additive
+|1.4
+|-
+|local_attacker_dice_roll_bonus
+|<code>local_attacker_dice_roll_bonus = 1</code>
+|Adds to the local attacker dice roll bonus
+|Additive
+|1.34
+|-
+|local_defender_dice_roll_bonus
+|<code>local_defender_dice_roll_bonus = 1</code>
+|Adds to the local defender dice roll bonus
+|Additve 
+|1.34
+|-
+|fort_level
+|<code>fort_level = 1</code>
+|Adds to the fort level in a province, determining how difficult it is to siege.
+|Additive
+| 1.8
+|-
+|garrison_growth
+|<code>garrison_growth = 0.05</code>
+|Modifies the rate of garrison growth in a province.
+|Multiplicative
+|1.1
+|-
+|local_defensiveness
+|<code>local_defensiveness = 0.1</code>
+|Modifies the defensiveness of a province, impacting siege phase length.
+|Multiplicative
+|1.1
+|-
+|local_fort_maintenance_modifier
+|<code>local_fort_maintenance_modifier = -0.1</code>
+|Modifies the local fort maintenance in a province
+|Multiplicative
+|1.34
+|-
+|local_garrison_size
+|<code>local_garrison_size = 0.10</code>
+|Modifies the base garrison size in a province
+|Multiplicative
+|1.34
+|-
+|local_garrison_damage
+|<code>local_garrison_damage = 0.5</code>
+|Modifies the damage the local garrison deals when the fort gets assaulted or when a country use the sortie to fight the hostile army.
+|Multiplicative
+|1.35
+|-
+|local_assault_fort_cost_modifier
+|<code>local_assault_fort_cost_modifier = 0.5</code>
+|Modifies the military cost to assault the fort of the province.
+|Multiplicative
+|1.35
+|-
+|local_assault_fort_ability
+|<code>local_assault_fort_ability = -0.5</code>
+|Modifies the damage the troops deal to the garrison when assaulting a fort of the province.
+|Multiplicative
+|1.35
+|-
+|local_friendly_movement_speed
+|<code>local_friendly_movement_speed = 0.1</code>
+|Modifies the movement speed of friendly units in or towards a province.
+|Multiplicative
+|1.20
+|-
+|local_hostile_movement_speed
+|<code>local_hostile_movement_speed = 0.1</code>
+|Modifies the movement speed of enemy units in or towards a province.
+|Multiplicative
+|1.20
+|-
+|local_manpower
+|<code>local_manpower = 1</code>
+|Adds to the base manpower value. 1 equals 1000 men.
+|Additive
+|1.1
+|-
+|local_manpower_modifier
+|<code>local_manpower_modifier = 0.25</code>
+|Modifies the manpower efficiency in a province.
+|Multiplicative
+|1.1
+|-
+|local_regiment_cost
+|<code>local_regiment_cost = -0.25</code>
+|Modifies the recruitment cost of land units in a province.
+|Multiplicative
+| 1.1
+|-
+|regiment_recruit_speed
+|<code>regiment_recruit_speed = -0.25</code>
+|Modifies the recruitment speed of land units in a province.
+|Multiplicative
+|1.1
+|-
+|supply_limit
+|<code>supply_limit = 1</code>
+|Adds to the base supply limit of a province.
+|Additive
+|1.1
+|-
+|supply_limit_modifier
+|<code>supply_limit_modifier = 0.25</code>
+|Modifies the supply limit efficiency of a province.
+|Multiplicative
+|1.1
+|-
+|local_own_coast_naval_combat_bonus
+|<code>local_own_coast_naval_combat_bonus = 1</code>
+|Adds to the dice roll bonus on a provinces' coast
+|Additive
+|1.34
+|}
+
+=== Special Regiments ===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" | Example
+! width="30%" | Description
+! width="10%" | Effect type
+! width="10%" | Version added
+|-
+|local_has_banners
+|<code>local_has_banners = yes</code>
+|Allows Manchu banner units to be raised in owned provinces.
+|Constant
+|1.20
+|-
+|local_amount_of_banners
+|<code>local_amount_of_banners = 0.1</code>
+|Modifies the amount of banners that can be raised from a province. When it set in a static modifier it is applied multiplicatively, but in other cases it is additive.
+|Additive / Multiplicative
+|1.20
+|-
+|local_amount_of_cawa
+|<code>local_amount_of_cawa = 0.125</code>
+|Modifies the amount of Cawa units that can be raised from a province. When it set in a static modifier it is applied multiplicatively, but in other cases it is additive.
+|Additive / Multiplicative
+|1.32
+|-
+|local_has_carolean
+|<code>local_has_carolean = yes</code>
+|Allows Carolean units to be raised in owned provinces.
+|Constant
+|1.34
+|-
+|local_amount_of_carolean
+|<code>local_amount_of_carolean = 0.1</code>
+|Modifies the amount of Carolean units that can be raised from a province. When it set in a static modifier it is applied multiplicatively, but in other cases it is additive.
+|Additive / Multiplicative
+|1.34
+|-
+|local_amount_of_hussars
+|<code>local_amount_of_hussars = 4</code>
+|Modifies the amount of Winged Hussar units that can be raised from a province. When it set in a static modifier it is applied multiplicatively, but in other cases it is additive.
+|Additive / Multiplicative
+|1.34
+|-
+|local_has_streltsy
+|<code>local_has_streltsy = yes</code>
+|Allows Streltsy units to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_tercio
+|<code>local_has_tercio = yes</code>
+|Allows Tercio units to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_musketeers
+|<code>local_has_musketeers = yes</code>
+|Allows Musketeer units to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_samurai
+|<code>local_has_samurai = yes</code>
+|Allows Samurai units to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_mamluks
+|<code>local_has_mamluks = yes</code>
+|Allows Mamluk units to be raised in owned provinces.
+|Constant
+|1.36
+|-
+|local_has_qizilbash
+|<code>local_has_qizilbash = yes</code>
+|Allows Qizilbash units to be raised in owned provinces.
+|Constant
+|1.36
+|}
+
+=== Navy===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|local_naval_engagement_modifier
+|<code>local_naval_engagement_modifier = 0.1</code>
+|Modifies the naval engagement width in a province. Only usable in sea provinces.
+|Multiplicative
+|1.16
+|-
+|local_sailors
+|<code>local_sailors = 250</code>
+|Adds to the sailors value for a province. 1 equals 1 sailor.
+|Additive
+|1.16
+|-
+|local_sailors_modifier
+|<code>local_sailors_modifier = 0.1</code>
+|Modifies the sailors efficiency of a province.
+|Multiplicative
+|1.16
+|-
+|local_ship_cost
+|<code>local_ship_cost = -0.2</code>
+|Modifies the cost of ship recruitment in a province.
+|Multiplicative
+|1.1
+|-
+|local_ship_repair
+|<code>local_ship_repair = 0.2</code>
+|Modifies the speed of ship repair in a province.
+|Multiplicative
+|1.1
+|-
+|ship_recruit_speed
+|<code>ship_recruit_speed = -0.25</code>
+|Modifies the recruitment speed of ships in a province.
+|Multiplicative
+|1.1
+|-
+|blockade_force_required
+|<code>blockade_force_required = 0.5</code>
+|Modifies the number of ships required to fully blockade the province.
+|Multiplicative
+|1.30
+|-
+|hostile_disembark_speed
+|<code>hostile_disembark_speed = 0.5</code>
+|Modifies the speed of disembarkation by hostile troops into the province.
+|Multiplicative
+|1.30
+|-
+|hostile_fleet_attrition
+|<code>hostile_fleet_attrition = 5</code>
+|Modifies the amount of fleet attrition experienced by hostile ships in sea zones adjacent to the province.
+|Multiplicative
+|1.30
+|-
+|block_slave_raid
+|<code>block_slave_raid = yes</code>
+|Prevents coastal raiding in a province.
+|Constant
+|1.31
+|}
+
+=== Special Ships ===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" | Example
+! width="30%" | Description
+! width="10%" | Effect type
+! width="10%" | Version added
+|-
+|local_has_geobukseon
+|<code>local_has_geobukseon = yes</code>
+|Allows Geobukseon ships to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_man_of_war
+|<code>local_has_man_of_war = yes</code>
+|Allows Man of War ships to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_galleon
+|<code>local_has_galleon = yes</code>
+|Allows Galleon ships to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_galleass
+|<code>local_has_galleass = yes</code>
+|Allows Galleass ships to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_caravel
+|<code>local_has_caravel = yes</code>
+|Allows Caravel ships to be raised in owned provinces.
+|Constant
+|1.35
+|-
+|local_has_voc_indiamen
+|<code>local_has_voc_indiamen = yes</code>
+|Allows VOC Indiaman ships to be raised in owned provinces.
+|Constant
+|1.35
+|}
+
+===Diplomacy===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|local_warscore_cost_modifier
+|<code>local_warscore_cost_modifier = 0.1</code>
+|Modifies the local warscore cost for taking the province.
+|Multiplicative
+|1.30
+|}
+
+===Economy===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|inflation_reduction_local
+|<code>inflation_reduction_local = 0.1</code>
+|Adds to the base yearly inflation value. Requires '''every''' province in a country to have the modifier to work however.
+|Additive
+|1.1
+|-
+|local_state_maintenance_modifier
+|<code>local_state_maintenance_modifier = -0.25</code>
+|Modifies the state maintenance cost for the state that a province belongs to.
+|Multiplicative
+|1.16
+|-
+|local_build_cost
+|<code>local_build_cost = -0.25</code>
+|Modifies the cost of constructing buildings in a province.
+|Multiplicative
+|1.1
+|-
+|local_build_time
+|<code>local_build_time = -0.25</code>
+|Modifies the construction speed of buildings in a province.
+|Multiplicative
+|1.1
+|-
+|local_great_project_upgrade_cost
+|<code>local_great_project_upgrade_cost = -0.25</code>
+|Modifies the cost of upgrading great projects in a province.
+|Multiplicative
+|1.31
+|-
+|local_great_project_upgrade_time
+|<code>local_great_project_upgrade_time = -0.1</code>
+|Modifies the time needed to upgrade a great project in a province.
+|Multiplicative
+|1.35
+|-
+|local_monthly_devastation
+|<code>local_monthly_devastation = -0.1</code>
+|Adds to the devastation rate in a province.
+|Additive
+|1.20
+|-
+|local_prosperity_growth
+|<code>local_prosperity_growth = -0.1</code>
+|Adds to the prosperity rate in a province.
+|Additive
+|1.32
+|-
+|local_production_efficiency
+|<code>local_production_efficiency = 0.1</code>
+|Modifies the production efficiency in a province.
+|Multiplicative
+|1.1
+|-
+|local_tax_modifier
+|<code>local_tax_modifier = 0.1</code>
+|Modifies the tax efficiency in a province.
+|Multiplicative
+|1.1
+|-
+|tax_income
+|<code>tax_income = 12</code>
+|Adds to the yearly tax income of a province.
+|Additive
+|1.10
+|-
+|allowed_num_of_buildings
+|<code>allowed_num_of_buildings = 1</code>
+|Adds to the maximum number of building slots in a province.
+|Additive
+|1.12
+|-
+|allowed_num_of_manufactories
+|<code>allowed_num_of_manufactories = 1</code>
+|Adds to the maximum number of allowed manufactories in a province.
+|Additive
+|1.31
+|-
+|local_development_cost
+|<code>local_development_cost = -0.1</code>
+|Modifies the monarch power cost for development in a province.
+|Multiplicative
+|1.12
+|-
+|local_development_cost_modifier
+|<code>local_development_cost_modifier = -0.25</code>
+|Modifies the base Development Cost Modifier in a province. "Development Cost Modifier" was called "Development Efficiency" before 1.34
+|Multiplicative
+|1.34
+|-
+|local_gold_depletion_chance_modifier
+|<code>local_gold_depletion_chance_modifier = -0.1</code>
+|Modifies the depletation chance of a gold mine.
+|Multiplicative
+|1.32
+|-
+|local_institution_spread
+|<code>local_institution_spread = 0.1</code>
+|Modifies the spread of institutions in a province.
+|Multiplicative
+|1.18
+|-
+|local_core_creation
+|<code>local_core_creation = -0.25</code>
+|Modifies the cost of coring in a province.
+|Multiplicative
+|1.18
+|-
+|local_governing_cost
+|<code>local_governing_cost = -0.25</code>
+|Modifies the local governing capacity usage of the province.
+|Multiplicative
+|1.30
+|-
+|statewide_governing_cost
+|<code>statewide_governing_cost = -0.25</code>
+|Modifies the local governing capacity usage of all provinces in the state of the province.
+|Multiplicative
+|1.30
+|-
+|local_governing_cost_increase
+|<code>local_governing_cost_increase = -10</code>
+|Adds to the local governing capacity usage of a province.
+|Additive
+|1.31
+|-
+|local_centralize_state_cost
+|<code>local_centralize_state_cost = -0.1</code>
+|Modifies the adm and government reform progress cost for centralizing a state in the province.
+|Multiplicative
+|1.35
+|}
+
+===Technology===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|institution_growth
+|<code>institution_growth = 1</code>
+|Modifies the annual growth of all institutions in a province by the specified value. Is not scaled by province development level
+|Additive
+|1.25
+|}
+
+===Culture===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|local_culture_conversion_cost
+|<code>local_culture_conversion_cost = -0.25</code>
+|Modifies the culture conversion cost in a province.
+|Multiplicative
+|1.22
+|-
+|local_culture_conversion_time
+|<code>local_culture_conversion_time = -0.1</code>
+|Modifies the speed for culture conversion cost in a province.
+|Multiplicative
+|1.35
+|}
+
+===Stability===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|local_unrest
+|<code>local_unrest = -1</code>
+|Adds to the unrest value in a province.
+|Additive
+|1.8
+|-
+| local_autonomy
+|<code>local_autonomy = 0.05</code>
+|Adds to the autonomy rate in a province.
+|Additive
+|1.8
+|-
+|local_years_of_nationalism
+|<code>local_years_of_nationalism = -5</code>
+|Adds to the base nationalism value in a province.
+|Additive
+|1.20
+|-
+|min_local_autonomy
+|<code>min_local_autonomy = -10</code>
+|Adds or subtracts the base minimum autonomy a province has.
+|Additive
+|1.16
+|}
+
+===Religion===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|local_missionary_strength
+|<code>local_missionary_strength = 0.01</code>
+|Adds to the missionary strength in a province. 1 equals 100% strength.
+|Additive
+|1.1
+|-
+|local_religious_unity_contribution
+|<code>local_religious_unity_contribution = 0.1</code>
+|Adds to the religious unity contribution made by a province.
+|Additive
+|1.27
+|-
+|local_missionary_maintenance_cost
+|<code>local_missionary_maintenance_cost = -0.1</code>
+|Adds to the missionary maintenance cost for converting a province.
+|Additive
+|1.28
+|-
+|local_religious_conversion_resistance
+|<code>local_religious_conversion_resistance = 0.1</code>
+|Adds to conversion resistance from Centres of Reformation.
+|Additive
+|1.30
+|-
+|local_tolerance_of_heretics
+|<code>local_tolerance_of_heretics = 3</code>
+|Adds to the base tolerance for heretics within the province.
+|Additive
+|1.35
+|-
+|local_tolerance_of_heathens
+|<code>local_tolerance_of_heathens = 3</code>
+|Adds to the base tolerance for heathens within the province.
+|Additive
+|1.35
+|}
+
+===Colonisation===
+{| class="wikitable sortable" width="100%"
+! width="20%" | Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|local_colonial_growth
+|<code>local_colonial_growth = 10</code>
+|Adds to the colonial growth in a colony province.
+|Additive
+| 1.1
+|-
+|local_colonist_placement_chance
+|<code>local_colonist_placement_chance = 0.05</code>
+|Adds to the placement chance in a colony province.
+|Additive
+|1.1
+|-
+|local_colony_cost_modifier
+|<code>local_colony_cost_modifier = 1</code>
+|Modifies the colonial maintenance cost in a colony province.
+|Multiplicative
+|1.35
+|}
+
+===Trade===
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="30%" |Description
+! width="10%" |Effect type
+! width="10%" |Version added
+|-
+|province_trade_power_modifier
+|<code>province_trade_power_modifier = 0.1</code>
+|Modifies the trade power efficiency in a province.
+|Multiplicative
+|1.1
+|-
+|province_trade_power_value
+|<code>province_trade_power_value = 0.5</code>
+|Adds to the trade power in a province.
+|Additive
+|1.1
+|-
+|trade_goods_size_modifier
+|<code>trade_goods_size_modifier = 0.25</code>
+| Modifies the goods produced efficiency in a province.
+|Multiplicative
+|1.12
+|-
+|trade_goods_size
+|<code>trade_goods_size = 0.5</code>
+|Adds to the trade good size in a province
+|Additive
+|1.12
+|-
+|trade_value_modifier
+|<code>trade_value_modifier = 0.1</code>
+|Modifies the base trade value in a province.
+|Multiplicative
+|1.1
+|-
+|trade_value
+|<code>trade_value = 1</code>
+|Adds to the base trade value in a province.
+|Additive
+|1.1
+|-
+|local_center_of_trade_upgrade_cost
+|<code>local_center_of_trade_upgrade_cost = -0.33</code>
+|Modifies the cost of upgrading a center of trade in a province.
+|Multiplicative
+|1.34
+|}
+
+==Unique modifiers==
+{{SVersion|1.32}}
+There are some modifiers that are used within event modifiers only:
+
+<pre>
+religion = yes
+secondary_religion = yes
+</pre>
+
+When added to an event modifier, these will cause the event modifier to disappear if the country changes religion (or syncretic religion).
+
+===Unit Scope===
+The event modifier with these modifiers is set to Unit Scope. These are also used for estate privileges and parliament issues.
+Without correct DLC this part is ignored and the event modifiers become a normal global modifier.
+
+{| class="wikitable sortable" width="100%"
+! width="20%" |Modifier
+! width="20%" |Example
+! width="40%" |Description
+! width="10%" |DLC
+|-
+|is_mercenary_modifier
+|<code>is_mercenary_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect mercenary regiments.
+|-
+|-
+|is_marine_modifier
+|<code>is_marine_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect marine regiments.
+|{{icon|rb}} or {{icon|gc}}
+|-
+|is_janissary_modifier
+|<code>is_janissary_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect janissary regiments.
+|{{icon|coc}}
+|-
+|is_rajput_modifier
+|<code>is_rajput_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect rajput regiments.
+|{{icon|dhr}}
+|-
+|is_revolutionary_guard_modifier
+|<code>is_revolutionary_guard_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect revolutionary guard regiments.
+|{{icon|emp}}
+|-
+|is_cawa_modifier
+|<code>is_cawa_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect cawa regiments.
+|{{icon|org}}
+|-
+|is_hussars_modifier
+|<code>is_hussars_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect winged hussar regiments.
+|{{icon|lon}}
+|-
+|is_banner_modifier
+|<code>is_banner_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect banner regiments.
+|{{icon|moh}}
+|-
+|is_streltsy_modifier
+|<code>is_streltsy_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect streltsy regiments.
+|{{icon|tr}}
+|-
+|is_cossack_modifier
+|<code>is_cossack_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect cossack regiments.
+|{{icon|cos}}
+|-
+|is_carolean_modifier
+|<code>is_carolean_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect carolean regiments.
+|{{icon|lon}}
+|-
+|is_tercio_modifier
+|<code>is_tercio_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect tercio regiments.
+|{{icon|dom}}
+|-
+|is_musketeer_modifier
+|<code>is_musketeer_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect musketeer regiments.
+|{{icon|dom}}
+|-
+|is_samurai_modifier
+|<code>is_samurai_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect samurai regiments.
+|{{icon|dom}}
+|-
+|is_geobukseon_modifier
+|<code>is_geobukseon_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect geobukseon ships.
+|{{icon|dom}}
+|-
+|is_man_of_war_modifier
+|<code>is_man_of_war_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect man of war ships.
+|{{icon|dom}}
+|-
+|is_galleon_modifier
+|<code>is_galleon_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect galleon ships.
+|{{icon|dom}}
+|-
+|is_galleass_modifier
+|<code>is_galleass_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect galleass ships.
+|{{icon|dom}}
+|-
+|is_caravel_modifier
+|<code>is_caravel_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect caravel ships.
+|{{icon|dom}}
+|-
+|is_voc_indiamen_modifier
+|<code>is_voc_indiamen_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect voc indiaman ships.
+|{{icon|dom}}
+|-
+|is_mamluks_modifier
+|<code>is_mamluks_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect mamluk regiments.
+|{{icon|kok}}
+|-
+|is_qizilbash_modifier
+|<code>is_qizilbash_modifier = yes</code>
+|When added to an event modifier, the event modifier will only affect qizilbash regiments.
+|{{icon|kok}}
+|}
+
+==Removed modifiers==
+{{SVersion|1.28}}
+These modifiers have been removed from the game and no longer function.
+
+{| class="wikitable sortable" width="100%"
+! width="40%" |Modifier
+! width="40%" |Example
+! width="20%" |Version removed
+|-
+|overseas_income
+|<code>overseas_income = 0.1</code>
+|1.4
+|-
+|local_tariffs
+|<code>local_tariffs = 0.1</code>
+|1.4
+|-
+|colonist_time
+|<code>colonist_time = -0.1</code>
+|1.4
+|-
+|leader_fire
+|<code>leader_fire = 1</code>
+|1.6
+|-
+|leader_shock
+|<code>leader_shock = 1</code>
+|1.6
+|-
+|minimum_revolt_risk
+|<code>minimum_revolt_risk = 1</code>
+|1.8
+|-
+|local_revolt_risk
+|<code>local_revolt_risk = 1</code>
+|1.8
+|-
+|global_revolt_risk
+|<code>global_revolt_risk = 1</code>
+|1.8
+|-
+|colonial_liberty_desire
+|<code>colonial_liberty_desire = 0.05</code>
+|1.10 (added in 1.8)
+|-
+|merchant_steering_to_inland
+|<code>merchant_steering_to_inland = 10</code>
+|1.10 (added in 1.6)
+|-
+|may_force_march
+|<code>may_force_march = yes</code>
+|1.10
+|-
+|merchant_present_inland
+|<code>merchant_present_inland = 5</code>
+|1.10 (added in 1.6)
+|-
+|build_power_cost
+|<code>build_power_cost = -0.2</code>
+|1.12 (added in 1.7)
+|-
+|global_trade_income_modifier
+|<code>global_trade_income_modifier = 0.1</code>
+|1.13
+|-
+|reduced_native_attacks
+|<code>reduced_native_attacks = yes</code>
+|1.14
+|-
+|local_spy_defence
+|<code>local_spy_defence = 0.5</code>
+|1.16
+|-
+|may_study_technology
+|<code>may_study_technology = yes</code>
+|1.16
+|-
+|may_sow_discontent
+|<code>may_sow_discontent = yes</code>
+|1.16
+|-
+|may_sabotage_reputation
+|<code>may_sabotage_reputation = yes</code>
+|1.16
+|-
+|may_infiltrate_administration
+|<code>may_infiltrate_administration = yes</code>
+|1.16
+|-
+|may_agitate_for_liberty
+|<code>may_agitate_for_liberty = yes</code>
+|1.16
+|-
+|accepted_culture_threshold
+|<code>accepted_culture_threshold = -0.1</code>
+|1.18 (added in 1.7)
+|-
+|relations_decay_of_me
+|<code>relations_decay_of_me = 0.3</code>
+|1.19
+|-
+|local_movement_speed
+|<code>local_movement_speed = 0.33</code>
+|1.20
+|-
+|cs_only_local_development_cost
+|<code>cs_only_local_development_cost = -0.25</code>
+|1.27
+|-
+|max_states
+|<code>max_states = 5</code>
+|1.30 (added in 1.16)
+|-
+|possible_mercenaries
+|<code>possible_mercenaries = 0.5</code>
+|1.30
+|-
+|religious_conversion_resistance
+|<code>religious_conversion_resistance = 0.1</code>
+|1.30 (added in 1.20)
+|-
+|migration_cooldown
+|<code>migration_cooldown = -0.2</code>
+|1.31 (added in 1.4)
+|-
+|artillery_bonus_vs_fort
+|<code>artillery_bonus_vs_fort = 1</code>
+|1.34 (added in 1.20)
+|-
+|yearly_tribal_allegiance
+|<code>yearly_tribal_allegiance = 0.05</code>
+|1.35 (added in 1.23)
+|-
+|can_colony_boost_development
+|<code>can_colony_boost_development = yes</code>
+|1.35 (added in 1.20)
+|}
+{{Modding navbox}}
+[[Category:Modding]]

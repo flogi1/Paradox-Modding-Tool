@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.SettingsUi</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Editor\ParadoxModTool.Editor.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Compatch\ParadoxModTool.Compatch.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GuiDesign\ParadoxModTool.GuiDesign.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Categories\ParadoxModTool.Categories.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,373 @@
+<UserControl x:Class="ParadoxModTool.Explorer.ExplorerPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ParadoxModTool.Explorer">
+    <!--
+        Verzeichnis-Übersicht (Nutzer-Feedback: "Ich möchte auch noch eine Verzeichnis Übersicht
+        wie bei Notepad++. Dort soll man die Ordnerstruktur der Spieldateien und der Dateien, die
+        man gerade moddet sehen können. Man soll außerdem bei Bedarf weitere Ordnerstrukturen zu
+        diesem Arbeitsbereich hinzufügen können.") - eigenständiges UserControl nach demselben
+        Muster wie ParadoxModTool.Editor.EditorPane, damit MainWindow nur Ereignisse verdrahten
+        muss statt Baum-/Speicherlogik selbst zu enthalten.
+
+        Reihenfolge der Resourcen ist HIER bewusst wichtig: StaticResource-Verweise innerhalb
+        DESSELBEN ResourceDictionary lösen nur RÜCKWÄRTS auf (der Ziel-Eintrag muss weiter OBEN
+        im Dokument stehen) - deshalb stehen EntryContextMenu und EntryContainerStyle vor dem
+        HierarchicalDataTemplate, das EntryContainerStyle referenziert.
+    -->
+    <UserControl.Resources>
+        <local:HexColorConverter x:Key="HexColorConverter" />
+
+        <!-- Kontextmenü für Baumeinträge - WPF-Falle: ein ContextMenu ist eine eigene
+             Popup-Wurzel und erbt den DataContext NICHT automatisch vom PlacementTarget,
+             daher die explizite Bindung (dasselbe Muster wie beim Tab-Kontextmenü in
+             ParadoxModTool.Editor.EditorPane, Lessons Learned der Architektur-Dokumentation). -->
+        <ContextMenu x:Key="EntryContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" Opened="EntryContextMenu_Opened">
+            <MenuItem Header="Neue Datei anlegen" Click="NewFile_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDirectory}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+            <!-- Nutzer-Feedback (Runde 10, weitere Verbesserungen): "Es sollte auch die
+                 Möglichkeit geben über die Verzeichnis Übersicht einen neuen Ordner zu
+                 erstellen" - direkt neben "Neue Datei anlegen…", gleiches Sichtbarkeits-
+                 verhalten (nur für Ordner). -->
+            <MenuItem Header="Neuen Ordner anlegen" Click="NewFolder_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDirectory}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+            <MenuItem Header="Ordner aktualisieren" Click="RefreshFolder_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDirectory}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Farbe zuweisen" Click="AssignColor_Click" />
+            <MenuItem Header="Farbe entfernen" Click="ClearColor_Click" />
+            <Separator />
+            <MenuItem Header="Als Favorit anpinnen" Click="PinFavorite_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+            <MenuItem Header="Von Favoriten entfernen" Click="UnpinFavorite_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsFavorite}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Ordner öffnen (Explorer)" Click="RevealInExplorer_Click" />
+            <Separator Tag="BranchSeparator" Visibility="Collapsed" />
+            <MenuItem Header="In andere Mod kopieren" Tag="Copy" Visibility="Collapsed" />
+            <MenuItem Header="In andere Mod verschieben" Tag="Move" Visibility="Collapsed" />
+            <MenuItem Header="Mit anderer Mod vergleichen" Tag="Compare" Visibility="Collapsed" />
+            <MenuItem Header="Sperren" Tag="Lock" Visibility="Collapsed" />
+            <MenuItem Header="Alle Sperren darunter aufheben" Tag="UnlockBelow" Visibility="Collapsed" />
+            <!-- Nutzer-Feedback (Runde 10, weitere Verbesserungen - Kontext: "Das Löschen der
+                 Datei funktioniert auch, allerdings wird die Verzeichnis Übersicht nach einer
+                 Löschung nicht aktualisiert"): bisher gab es in der Verzeichnis-Übersicht selbst
+                 GAR KEINE Löschfunktion (nur "Ordner öffnen (Explorer)", von wo aus man bisher von
+                 Hand im Windows-Explorer löschen musste - dabei aktualisiert sich der Baum hier
+                 verständlicherweise nicht automatisch mit, da das Programm die Löschung ja gar
+                 nicht mitbekommt). Jetzt zusätzlich eine ECHTE Löschfunktion direkt hier im
+                 Kontextmenü (siehe ExplorerPanel.xaml.cs, Delete_Click/MainWindow.
+                 ExplorerPanel_DeleteRequested) - mit Bestätigungsabfrage, Papierkorb statt
+                 endgültigem Löschen (Microsoft.VisualBasic.FileIO.FileSystem, siehe dort) UND
+                 sofortiger Aktualisierung des betroffenen Ordnerknotens danach. Für Wurzeln
+                 bewusst ausgeblendet (Wurzel = kompletter Mod-/Spielordner - dafür bleibt "Aus
+                 Übersicht entfernen" zuständig, das NUR aus der Anzeige entfernt, nichts auf der
+                 Platte löscht). -->
+            <MenuItem Header="Löschen" Click="Delete_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRoot}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+            <Separator>
+                <Separator.Style>
+                    <Style TargetType="Separator" BasedOn="{StaticResource {x:Type Separator}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRoot}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Separator.Style>
+            </Separator>
+            <MenuItem Header="Aus Übersicht entfernen" Click="RemoveRoot_Click">
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRoot}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+        </ContextMenu>
+
+        <!-- TreeViewItem-Style: löst das Nachladen der Kinder beim Aufklappen aus (Lazy-Loading,
+             siehe ExplorerEntry.Children) und hängt das obige Kontextmenü an jede Zeile. -->
+        <Style x:Key="EntryContainerStyle" TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+            <Setter Property="ContextMenu" Value="{StaticResource EntryContextMenu}" />
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            <EventSetter Event="Expanded" Handler="TreeViewItem_Expanded" />
+            <EventSetter Event="Collapsed" Handler="TreeViewItem_Collapsed" />
+        </Style>
+
+        <!--
+            Ordner-/Dateizeile im Baum. EIN gemeinsames Template für Wurzeln/Ordner/Dateien
+            (ExplorerEntry.IsDirectory/IsRoot/IsPlaceholder steuern per DataTrigger, was
+            sichtbar ist) - die beiden Buttons "◀"/"▶" sind laut Nutzer-Feedback EXPLIZIT als
+            zwei separate Buttons gefordert ("Zwei verschiedene Buttons sollen das ermöglichen."),
+            alle übrigen Aktionen (Farbe, Favorit, neue Datei, Wurzel entfernen, im Explorer
+            öffnen) liegen im Kontextmenü, um die Zeile nicht zu überladen.
+
+            ItemContainerStyle hier auf dem Template (statt nur auf der TreeView selbst) gesetzt:
+            TreeView.ItemContainerStyle greift NUR für die OBERSTE Ebene (direkt aus
+            TreeView.ItemsSource) - für alle tieferen Ebenen (aus HierarchicalDataTemplate.
+            ItemsSource erzeugt) muss der Container-Style stattdessen HIER stehen, sonst bekommen
+            aufgeklappte Unterordner weder das Kontextmenü noch das Lazy-Loading beim Aufklappen.
+        -->
+        <HierarchicalDataTemplate DataType="{x:Type local:ExplorerEntry}" ItemsSource="{Binding Children}"
+                                   ItemContainerStyle="{StaticResource EntryContainerStyle}">
+            <!--
+                Nutzer-Feedback (Runde 10, 2. Rückmeldung): "Auf und Zuklappen von mehreren
+                Ordnerebenen funktioniert, ich finde die Buttons aber etwas zu groß. Mach sie ein
+                wenig kleiner und rücke sie logisch auch ein wenig von dem Ordner ab. Vielleicht
+                könnte man zwischen den unterschiedlichen Ordnerebenen auch noch etwas mehr Platz
+                lassen." - Zeilenabstand über Grid.Margin (0,1 -> 0,3) erhöht; ◀/▶ deutlich
+                kleiner (FontSize 10, Padding 2,0 statt 4,0) UND per Margin (8,0,0,0 statt 2,0,0,0)
+                sichtbar vom Namen abgerückt, statt direkt daran zu kleben.
+
+                BUGFIX (Nutzer-Feedback: "Ordner einfärben funktioniert nicht, weder mit einer
+                vordefinierten Farbe, noch mit einer selbst konfigurierten Farbe."): Der Farbbalken
+                (Grid.Column="0") war bisher exakt so breit wie sein EIGENER rechter Rand
+                (ColumnDefinition Width="4" bei Border-Margin "0,0,4,0") - dadurch blieb für den
+                Border selbst IMMER eine tatsächliche Breite von 0 übrig, unabhängig vom
+                gebundenen ColorHex/vom Converter (beide waren die ganze Zeit korrekt - reines
+                Layout-Problem, kein Bindungs-/Converter-Fehler). Behoben, indem die Spalte breiter
+                ist als ihr rechter Rand (8 statt 4, Rand 3 statt 4 -> 5 sichtbare Pixel Balkenbreite).
+            -->
+            <Grid Margin="0,3">
+                <!-- Spalte 0 nimmt die Schaltflächen auf, wenn sie links stehen (Option "Buttons links"), Spalte 3 sonst. -->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="1" Margin="0,1,3,1" Background="{Binding ColorHex, Converter={StaticResource HexColorConverter}}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{Binding Name}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <!-- Schloss-Symbol: nur bei gesperrten Einträgen (Tooltip erklärt die Sperre). -->
+                    <TextBlock Text="🔒" FontSize="10" Margin="5,0,0,0" VerticalAlignment="Center" ToolTip="{Binding LockTooltip}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LockTooltip}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Grid.Column" Value="3" />
+                            <Setter Property="Margin" Value="5,0,0,0" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ButtonsOnLeft, RelativeSource={RelativeSource AncestorType=local:ExplorerPanel}}" Value="True">
+                                    <Setter Property="Grid.Column" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,5,0" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Button x:Name="SearchFolderButton" Content="🔍" Padding="2,0" Margin="3,0,0,0"
+                            FontSize="10" MinWidth="0" Click="SearchFolder_Click" ToolTip="In diesem Ordner suchen (öffnet das Suchen-Fenster)">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsPlaceholder}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button x:Name="OpenLeftButton" Content="◀" Padding="2,0" Margin="3,0,0,0"
+                            FontSize="10" MinWidth="0" Click="OpenLeft_Click" ToolTip="Im linken Arbeitsbereich öffnen">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button x:Name="OpenRightButton" Content="▶" Padding="2,0" Margin="3,0,0,0"
+                            FontSize="10" MinWidth="0" Click="OpenRight_Click" ToolTip="Im rechten Arbeitsbereich öffnen">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </HierarchicalDataTemplate>
+
+    </UserControl.Resources>
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Verzeichnis-Übersicht" FontWeight="Bold" Margin="4,4,4,2" />
+        <ToolBar DockPanel.Dock="Top">
+            <Button Content="Ordner hinzufügen" Click="AddRoot_Click" ToolTip="Weitere Ordnerstruktur zur Übersicht hinzufügen (Spieldateien, ein weiterer Mod, o. ä.)" />
+            <Button Content="🔄" Click="RefreshAll_Click" ToolTip="Alle Wurzeln neu einlesen" />
+            <CheckBox Content="Buttons links" VerticalAlignment="Center" Margin="6,0,0,0"
+                      IsChecked="{Binding ButtonsOnLeft, RelativeSource={RelativeSource AncestorType=local:ExplorerPanel}, Mode=TwoWay}"
+                      ToolTip="Lupe und die Knöpfe für den linken und rechten Arbeitsbereich auf die linke Seite der Zeilen setzen" />
+        </ToolBar>
+        <!-- Nutzer-Feedback (Runde 10, weitere Rückmeldung): "Favorit anlegen funktioniert, aber
+             man kann mit dem Eintrag nichts machen. Man sollte in der Lage sein den Ordner dann
+             aufzutoggeln, wie den normalen Ordner." - bisher eine flache ListBox mit eigenem,
+             ZUSÄTZLICHEM Template (＋/✕-Buttons); jetzt stattdessen ein zweiter TreeView, der
+             DASSELBE (implizite) HierarchicalDataTemplate wie der Hauptbaum oben wiederverwendet
+             (siehe HierarchicalDataTemplate DataType="local:ExplorerEntry" in den Resources) -
+             ein favorisierter Ordner lässt sich dadurch genauso auf-/zuklappen wie im Hauptbaum,
+             OHNE dass TreeViewItem_Expanded/LoadChildren dafür geändert werden mussten (beide
+             arbeiten bereits rein über ExplorerEntry.FullPath, unabhängig davon, aus welchem Baum
+             der Knoten stammt - siehe RebuildFavoritesDisplay). Farbe/Kontextmenü (inkl. "Von
+             Favoriten entfernen") sind dadurch ebenfalls automatisch identisch zum Hauptbaum,
+             die vorherigen dedizierten ＋/✕-Buttons entfallen zugunsten des ohnehin vorhandenen
+             Kontextmenüs. -->
+        <!-- Namenssuche (Nutzer-Feedback): Text wird als Teilstring gesucht, * und ? sind Platzhalter.
+             Solange das Feld Text enthält, ersetzt die Trefferliste unten Baum und Favoriten. -->
+        <DockPanel DockPanel.Dock="Top" Margin="4,4,4,0">
+            <Button DockPanel.Dock="Right" Content="✕" Padding="6,0" Margin="4,0,0,0" Click="ClearSearch_Click"
+                    ToolTip="Suche leeren (Esc)" />
+            <TextBox x:Name="SearchBox" TextChanged="SearchBox_TextChanged" PreviewKeyDown="SearchBox_PreviewKeyDown"
+                     VerticalContentAlignment="Center"
+                     ToolTip="Datei- und Ordnernamen in allen Wurzeln suchen. Teilstring, oder mit Platzhaltern (* und ?), z. B. *.gui - Enter startet sofort, Esc leert" />
+        </DockPanel>
+        <Expander x:Name="FavoritesExpander" DockPanel.Dock="Top" Header="Favoriten" IsExpanded="True" Margin="4,4,4,0"
+                   ToolTip="Angepinnte Dateien/Ordner (Nutzer-Feedback: 'eine extra Favoritenliste ... wo ich einige Dateien oder Ordner anpinnen kann') - Alt+F pinnt den gerade ausgewählten Eintrag an">
+            <TreeView x:Name="FavoritesTree" MaxHeight="220" ItemContainerStyle="{StaticResource EntryContainerStyle}"
+                      MouseDoubleClick="Entry_MouseDoubleClick"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0,1,0,0" />
+        </Expander>
+        <Grid>
+            <TreeView x:Name="Tree" Margin="4" ItemContainerStyle="{StaticResource EntryContainerStyle}"
+                      MouseDoubleClick="Entry_MouseDoubleClick" />
+            <DockPanel x:Name="SearchResultsPanel" Visibility="Collapsed" Margin="4">
+                <TextBlock x:Name="SearchStatusText" DockPanel.Dock="Top" Foreground="{DynamicResource Theme.TextMuted}" Margin="0,0,0,4" TextWrapping="Wrap" />
+                <ListBox x:Name="SearchResultsList" HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         MouseDoubleClick="SearchResultsList_MouseDoubleClick"
+                         ToolTip="Doppelklick: Datei öffnen bzw. Ordner im Baum zeigen">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2" ToolTip="{Binding FullPath}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Icon}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Location}" Foreground="{DynamicResource Theme.TextMuted}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Content="◀" Padding="2,0" Margin="6,0,0,0" FontSize="10" MinWidth="0"
+                                        Click="SearchHitOpenLeft_Click" ToolTip="Im linken Arbeitsbereich öffnen">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button Grid.Column="3" Content="▶" Padding="2,0" Margin="3,0,0,0" FontSize="10" MinWidth="0"
+                                        Click="SearchHitOpenRight_Click" ToolTip="Im rechten Arbeitsbereich öffnen">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

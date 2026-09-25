@@ -1,0 +1,378 @@
+<Window x:Class="ParadoxModTool.App.TemplateGeneratorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        Title="Templates erzeugen"
+        Height="840" Width="1320" MinHeight="600" MinWidth="960"
+        WindowStartupLocation="CenterOwner"
+        PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
+    <!--
+        Template-Generator: Beispiel-Snippet einfügen, das Tool erkennt die Stellen, die hochgezählt werden (Zahlen in Bezeichnern und Texten, mehrfach eingefügte Beispiele,
+        gleichförmige Unterblöcke), und erzeugt N Durchläufe. Der Prüfmodus zeigt die erkannten Zählpunkte samt Start und Schritt zum Bearbeiten. Optional entstehen passende
+        Lokalisierungseinträge aus einer bearbeitbaren Tabelle. Ergebnisse lassen sich einfügen, in ein neues Dokument übernehmen, kopieren oder an eine Datei anhängen.
+    -->
+    <DockPanel Margin="10">
+        <TextBlock x:Name="StatusText" DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{DynamicResource Theme.TextMuted}" TextWrapping="Wrap" />
+
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <TextBlock Text="Vorlage:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox x:Name="TemplateNameBox" Width="150" VerticalContentAlignment="Center" Margin="0,0,6,0"
+                     ToolTip="Name, unter dem die Vorlage gespeichert oder geladen wird. Eine Vorlage enthält das Snippet, deine Änderungen an den Zählpunkten und die Lokalisierungstabelle." />
+            <ComboBox x:Name="TemplateBox" Width="150" Margin="0,0,6,0" SelectionChanged="TemplateBox_SelectionChanged"
+                      ToolTip="Gespeicherte Vorlagen. Die Auswahl übernimmt den Namen in das Feld links; danach mit Laden laden." />
+            <Button Content="Laden" Padding="8,0" Margin="0,0,6,0" Click="LoadTemplate_Click" ToolTip="Die gewählte Vorlage laden (ersetzt das aktuelle Snippet)" />
+            <Button Content="Speichern" Padding="8,0" Margin="0,0,6,0" Click="SaveTemplate_Click" ToolTip="Den aktuellen Stand unter dem Namen im Feld speichern" />
+            <Button Content="Löschen" Padding="8,0" Margin="0,0,6,0" Click="DeleteTemplate_Click" ToolTip="Die gewählte Vorlage löschen" />
+
+            <TextBlock Text="Mod:" VerticalAlignment="Center" Margin="10,0,6,0" />
+            <ComboBox x:Name="ModBox" Width="190" Margin="0,0,6,0" SelectionChanged="ModBox_SelectionChanged"
+                      ToolTip="Die Mod, deren Vorlagen angezeigt werden. Vorgabe ist die Mod, die das Hauptfenster erkannt hat (Mod der offenen Datei). Die Wahl hier ändert nicht die erkannte Mod im Hauptfenster." />
+            <TextBlock Text="Speichern in:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <ComboBox x:Name="LayerBox" Width="80" SelectedIndex="0" IsEnabled="False" Margin="0,0,16,0"
+                      ToolTip="Spiel: die Vorlage gilt für alle Mods dieses Spiels. Mod: nur für die links gewählte Mod (nur wählbar, wenn eine Mod gewählt ist).">
+                <ComboBoxItem Content="Spiel" />
+                <ComboBoxItem Content="Mod" />
+            </ComboBox>
+
+            <TextBlock Text="Anzahl:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox x:Name="CountBox" Width="50" Text="3" Margin="0,0,16,0" VerticalContentAlignment="Center" TextChanged="CountBox_TextChanged"
+                     ToolTip="Wie viele Durchläufe erzeugt werden (1 bis 1000)" />
+            <CheckBox x:Name="CollapseBox" Content="Beispiele zusammenfassen" IsChecked="True" VerticalAlignment="Center" Margin="0,0,16,0" Click="Options_Click"
+                      ToolTip="Steht dasselbe Muster mehrfach im Snippet (idea_1, idea_2, idea_3 …), gilt es als Beispiel: das Tool lernt daraus Start und Schritt und macht eine Vorlage daraus. Ausschalten, wenn du das Snippet genau so verwenden willst." />
+            <TextBlock Text="Mehrere Zahlen:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <ComboBox x:Name="MultiBox" Width="110" SelectedIndex="0" Margin="0,0,16,0" SelectionChanged="MultiBox_SelectionChanged"
+                      ToolTip="Enthält ein Bezeichner mehrere Zahlen (z. B. ARA_1_1: Zähler und Stufe), zählt nur die gewählte. Zahlen direkt hinter einem Buchstaben (iv2) zählen dann nie. Einzelne Zahlen schaltest du im Prüfmodus um.">
+                <ComboBoxItem Content="erste zählt" />
+                <ComboBoxItem Content="letzte zählt" />
+                <ComboBoxItem Content="alle zählen" />
+            </ComboBox>
+            <Button x:Name="RulesButton" Content="Regeln" Padding="8,0" Margin="0,0,16,0" Click="RulesButton_Click"
+                    ToolTip="Zählregeln: legen fest, welche Zahlen mitzählen (Textur, Button, position, Namenspräfix … und deine eigenen Regeln), je Vorlage, Mod, Spiel oder für alle Spiele" />
+            <CheckBox x:Name="ReviewBox" Content="Prüfmodus" VerticalAlignment="Center" Margin="0,0,16,0" Click="Options_Click"
+                      ToolTip="Zeigt die erkannten Zählpunkte in einer Liste und im Snippet farbig, damit du Start und Schritt ändern oder Punkte abschalten kannst" />
+            <CheckBox x:Name="LocBox" Content="Lokalisierung erzeugen" VerticalAlignment="Center" Margin="0,0,6,0" Click="Options_Click"
+                      ToolTip="Erzeugt zusätzlich Einträge für die Lokalisierung (Datei .yml) aus der Tabelle rechts" />
+            <TextBlock Text="Sprache:" VerticalAlignment="Center" Margin="10,0,6,0" />
+            <TextBox x:Name="LanguageBox" Width="90" Text="english" VerticalContentAlignment="Center" TextChanged="Language_TextChanged"
+                     ToolTip="Sprache im Kopf der Lokalisierungsdatei, z. B. english für l_english:" />
+        </WrapPanel>
+
+        <Border DockPanel.Dock="Top" Margin="0,0,0,6" Padding="6" BorderThickness="1" BorderBrush="{DynamicResource Theme.ControlBorder}">
+            <WrapPanel>
+                <TextBlock Text="Suchen in:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <ComboBox x:Name="FindTargetBox" Width="100" SelectedIndex="0" Margin="0,0,10,0" SelectionChanged="FindTarget_SelectionChanged"
+                          ToolTip="Snippet: suchen und ersetzen. Code-Vorschau: nur suchen, um das erzeugte Ergebnis zu prüfen. Klickst du in einen der beiden Editoren, wird er hier gewählt.">
+                    <ComboBoxItem Content="Snippet" />
+                    <ComboBoxItem Content="Code-Vorschau" />
+                </ComboBox>
+                <TextBox x:Name="FindBox" Width="180" VerticalContentAlignment="Center" Margin="0,0,10,0" KeyDown="FindBox_KeyDown" TextChanged="FindBox_TextChanged"
+                         ToolTip="Alle Treffer werden markiert und gezählt (Enter = weitersuchen)" />
+                <TextBlock Text="Ersetzen:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBox x:Name="ReplaceBox" Width="180" VerticalContentAlignment="Center" Margin="0,0,10,0" />
+                <Button Content="Weitersuchen" Padding="8,0" Margin="0,0,6,0" Click="FindNext_Click" />
+                <Button Content="Ersetzen" Padding="8,0" Margin="0,0,6,0" Click="Replace_Click" />
+                <Button Content="Alle ersetzen" Padding="8,0" Margin="0,0,12,0" Click="ReplaceAll_Click" />
+                <CheckBox x:Name="MatchCaseBox" Click="FindOptions_Click" Content="Groß/klein" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <CheckBox x:Name="WholeWordBox" Click="FindOptions_Click" Content="Ganze Wörter" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <CheckBox x:Name="IgnoreFormattingBox" Click="FindOptions_Click" Content="Formatierung ignorieren" IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0"
+                          ToolTip="Beim Suchen werden Leerzeichen, Tabs, Einrückung, Zeilenumbrüche und Leerzeilen nicht verglichen. Beispiel: &quot;name = idea_1&quot; findet auch &quot;name=idea_1&quot; und eine Fundstelle über mehrere Zeilen. Beim Ersetzen wird die Einrückung des neuen Textes an die jeweilige Fundstelle angepasst. Ausschalten für eine genaue Suche, bei der jedes Leerzeichen zählt." />
+                <TextBlock x:Name="FindStatusText" VerticalAlignment="Center" Foreground="{DynamicResource Theme.TextMuted}" />
+            </WrapPanel>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.35*" MinWidth="380" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="RightColumn" Width="1*" MinWidth="0" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Links: Snippet und Vorschau -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="120" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="140" />
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                    <Button DockPanel.Dock="Right" Content="Zählpunkt am Cursor umschalten" Padding="8,0" Click="TogglePointAtCaret_Click"
+                            ToolTip="Schaltet den Zählpunkt an der Cursorstelle im Snippet an oder aus (auch über das Rechtsklick-Menü)" />
+                    <TextBlock Text="Beispiel-Snippet" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </DockPanel>
+
+                <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource Theme.ControlBorder}">
+                    <avalonEdit:TextEditor x:Name="SnippetEditor" FontFamily="Consolas" FontSize="13"
+                                            Background="{DynamicResource Theme.EditorBackground}"
+                                            Foreground="{DynamicResource Theme.EditorForeground}"
+                                            LineNumbersForeground="{DynamicResource Theme.LineNumbers}"
+                                            ShowLineNumbers="True" WordWrap="False"
+                                            HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <avalonEdit:TextEditor.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="Cut" />
+                                <MenuItem Command="Copy" />
+                                <MenuItem Command="Paste" />
+                                <Separator />
+                                <MenuItem Header="Zählpunkt an/aus" Click="TogglePointAtCaret_Click" />
+                                <MenuItem Header="Regel aus dieser Zahl erstellen" Click="CreateRuleFromNumber_Click"
+                                          ToolTip="Legt aus der Zahl am Cursor eine Zählregel an (Muster aus dem Namen, die Zahl als [#])" />
+                            </ContextMenu>
+                        </avalonEdit:TextEditor.ContextMenu>
+                    </avalonEdit:TextEditor>
+                </Border>
+
+                <GridSplitter Grid.Row="2" Height="6" HorizontalAlignment="Stretch" />
+
+                <TabControl x:Name="PreviewTabs" Grid.Row="3" SelectionChanged="PreviewTabs_SelectionChanged">
+                    <TabItem Header="Code">
+                        <DockPanel Margin="0,6,0,0">
+                            <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
+                                <Button Content="Am Cursor einfügen" Padding="8,0" Margin="0,0,6,0" Click="CodeInsert_Click"
+                                        ToolTip="Fügt das Ergebnis im aktiven Editor des Hauptfensters an der Cursorstelle ein" />
+                                <Button Content="In neues Dokument" Padding="8,0" Margin="0,0,6,0" Click="CodeNewDocument_Click" />
+                                <Button Content="Kopieren" Padding="8,0" Margin="0,0,6,0" Click="CodeCopy_Click" />
+                                <Button Content="An Datei anhängen" Padding="8,0" Click="CodeAppend_Click"
+                                        ToolTip="Hängt das Ergebnis an eine Datei an (bei einer neuen Datei wird sie angelegt). Ist die Datei im Programm offen, wird dort angehängt." />
+                            </WrapPanel>
+                            <Border BorderThickness="1" BorderBrush="{DynamicResource Theme.ControlBorder}">
+                                <avalonEdit:TextEditor x:Name="CodePreview" FontFamily="Consolas" FontSize="13" IsReadOnly="True"
+                                                        Background="{DynamicResource Theme.EditorBackground}"
+                                                        Foreground="{DynamicResource Theme.EditorForeground}"
+                                                        LineNumbersForeground="{DynamicResource Theme.LineNumbers}"
+                                                        ShowLineNumbers="True" WordWrap="False"
+                                                        HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+                            </Border>
+                        </DockPanel>
+                    </TabItem>
+                    <TabItem x:Name="LocTab" Header="Lokalisierung" Visibility="Collapsed">
+                        <DockPanel Margin="0,6,0,0">
+                            <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
+                                <Button Content="Am Cursor einfügen" Padding="8,0" Margin="0,0,6,0" Click="LocInsert_Click" />
+                                <Button Content="In neues Dokument" Padding="8,0" Margin="0,0,6,0" Click="LocNewDocument_Click" />
+                                <Button Content="Kopieren" Padding="8,0" Margin="0,0,6,0" Click="LocCopy_Click" />
+                                <Button Content="An Datei anhängen" Padding="8,0" Margin="0,0,12,0" Click="LocAppend_Click"
+                                        ToolTip="Hängt die Einträge an eine .yml-Datei an. Schlüssel, die es dort schon gibt, kannst du überspringen." />
+                                <Button Content="Einzeländerungen zurücksetzen" Padding="8,0" Click="LocResetOverrides_Click"
+                                        ToolTip="Verwirft alle Texte, die du unten einzeln geändert hast" />
+                            </WrapPanel>
+                            <ListBox x:Name="EntryList" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="260" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Key}" FontFamily="Consolas" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Key}" />
+                                            <TextBox Grid.Column="1" Text="{Binding Text, UpdateSourceTrigger=LostFocus}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+
+            <GridSplitter x:Name="ColumnSplitter" Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Visibility="Collapsed" />
+
+            <!-- Rechts: Prüfmodus und Lokalisierungstabelle -->
+            <Grid x:Name="RightPanel" Grid.Column="2" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel x:Name="PointsHeaderPanel" Grid.Row="0">
+                    <TextBlock Text="Gelb = zählt, markiert im Snippet und im Ergebnis, aber nur für Stellen, die die Liste gerade zeigt · ▶ rot = ausgewählte Stelle · ● = von dir geändert" FontSize="11"
+                               Foreground="{DynamicResource Theme.TextMuted}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                    <CheckBox x:Name="MarkBox" Content="Eingesetzte Zahlen im Ergebnis markieren" IsChecked="True" Margin="0,0,0,4" Click="MarkBox_Click"
+                              ToolTip="Färbt im Code-Ergebnis jede Zahl ein, die ein Zählpunkt eingesetzt hat. Ein in der Liste angeklickter Punkt wird kräftiger gefärbt." />
+                    <WrapPanel Margin="0,0,0,4">
+                        <TextBox x:Name="PointFilterBox" Width="120" VerticalContentAlignment="Center" Margin="0,0,6,0" TextChanged="PointFilter_Changed"
+                                 ToolTip="Nur Stellen zeigen, deren Name, Werte oder Hinweis diesen Text enthalten" />
+                        <ComboBox x:Name="PointShowBox" Width="140" SelectedIndex="0" Margin="0,0,6,0" SelectionChanged="PointShow_SelectionChanged"
+                                  ToolTip="Welche Stellen die Liste zeigt. Die Auswahl wirkt nur auf die Anzeige, nicht auf das Ergebnis.">
+                            <ComboBoxItem Content="alle" />
+                            <ComboBoxItem Content="nur aktive" />
+                            <ComboBoxItem Content="nur ausgeschaltete" />
+                            <ComboBoxItem Content="nur geänderte" />
+                        </ComboBox>
+                        <Button x:Name="HideButton" Content="Ausblenden ▾" Padding="8,0" Margin="0,0,8,0" Click="HideButton_Click"
+                                ToolTip="Arten von Stellen aus der Liste ausblenden. Sie zählen weiter wie eingestellt und bleiben im Snippet markiert.">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem x:Name="HideIgnoredItem" Header="Ignorierte Stellen (texture, position …)" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True" Click="HideItem_Click" />
+                                    <MenuItem x:Name="HideNumbersItem" Header="Einzelne Zahlen (cost = 10)" IsCheckable="True" StaysOpenOnClick="True" Click="HideItem_Click" />
+                                    <MenuItem x:Name="HideTextsItem" Header="Zahlen in Texten" IsCheckable="True" StaysOpenOnClick="True" Click="HideItem_Click" />
+                                    <MenuItem x:Name="HideRuleItem" Header="Durch die Regel abgeschaltete (Stufen, iv2)" IsCheckable="True" StaysOpenOnClick="True" Click="HideItem_Click" />
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
+                        <TextBlock x:Name="PointCountText" VerticalAlignment="Center" Foreground="{DynamicResource Theme.TextMuted}" />
+                    </WrapPanel>
+                    <DockPanel Margin="0,0,0,4">
+                        <Button DockPanel.Dock="Right" Content="Änderungen zurücksetzen" Padding="8,0" Click="ResetPoints_Click"
+                                ToolTip="Verwirft alle deine Änderungen an den Zählpunkten und stellt die automatische Erkennung wieder her" />
+                        <Button DockPanel.Dock="Right" Content="Regel erstellen" Padding="8,0" Margin="0,0,6,0" Click="CreateRuleFromSelected_Click"
+                                ToolTip="Legt aus der in der Liste gewählten Zahl eine Zählregel an (Muster aus dem Namen, die Zahl als [#])" />
+                        <TextBlock Text="Zählpunkte (Prüfmodus)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <Grid Margin="4,0,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="52" />
+                            <ColumnDefinition Width="62" />
+                            <ColumnDefinition Width="52" />
+                            <ColumnDefinition Width="84" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="1" Text="Stelle" Foreground="{DynamicResource Theme.TextMuted}" />
+                        <TextBlock Grid.Column="2" Text="Anz." Foreground="{DynamicResource Theme.TextMuted}" ToolTip="Wie oft die Stelle im Vorlagentext vorkommt" />
+                        <TextBlock Grid.Column="3" Text="Start" Foreground="{DynamicResource Theme.TextMuted}" />
+                        <TextBlock Grid.Column="4" Text="Schritt" Foreground="{DynamicResource Theme.TextMuted}" ToolTip="Um wie viel der Wert von einem Durchlauf (Anzahl oben) zum nächsten steigt. Der erste Durchlauf bleibt beim Startwert." />
+                        <TextBlock Grid.Column="5" Text="Wdh.-Schritt" Foreground="{DynamicResource Theme.TextMuted}" ToolTip="Nur für Zahlen in einem wiederholten Unterblock (siehe &quot;Wiederholte Unterblöcke&quot; unten in dieser Spalte). Der Wert sagt, um wie viel die Zahl von einer Wiederholung des Blocks zur nächsten steigt. Beispiel: Ein Event hat drei gleiche option-Blöcke mit opt_1, opt_2 und opt_3. Mit Wdh.-Schritt 1 erscheint in jedem erzeugten Event wieder opt_1, opt_2, opt_3. Der Schritt links davon gilt dagegen von einem erzeugten Event zum nächsten." />
+                    </Grid>
+                </StackPanel>
+
+                <ListBox x:Name="PointList" Grid.Row="1" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="PointList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness="4,0,0,0" Margin="0,1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="Background" Value="{Binding RowBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#FFFF5722" />
+                                            <Setter Property="Background" Value="#55FF5722" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="52" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="52" />
+                                    <ColumnDefinition Width="84" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Top" Margin="2,2,0,0" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Left" Text="▶" FontWeight="Bold" Foreground="#FFFF5722" Margin="0,0,4,0" ToolTip="Ausgewählte Stelle (markiert im Snippet und im Ergebnis)">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock DockPanel.Dock="Left" Text="●" Foreground="{DynamicResource Theme.Warning}" Margin="0,0,4,0"
+                                                   Visibility="{Binding ChangedVisibility}" ToolTip="Gegenüber der automatischen Erkennung geändert" />
+                                        <TextBlock Text="{Binding Label}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding Values}" FontSize="11" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Note}" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}" TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0" Visibility="{Binding ShapeVisibility}" ToolTip="{Binding ShapeToolTip}">
+                                        <TextBlock Text="Zahlen im Namen:" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource Theme.TextMuted}" />
+                                        <ItemsControl ItemsSource="{Binding ShapeNumbers}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox Content="{Binding Digits}" IsChecked="{Binding IsCounted}" FontWeight="{Binding Weight}" FontSize="11"
+                                                              Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Button Content="↺" Padding="5,0" FontSize="11" Visibility="{Binding ResetVisibility}" Click="ResetShapeRule_Click"
+                                                ToolTip="Zurück zur allgemeinen Regel &quot;Mehrere Zahlen&quot; für diese Form" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding OccurrenceText}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                <TextBox Grid.Column="3" Text="{Binding StartText, UpdateSourceTrigger=LostFocus}" Margin="0,0,4,0" VerticalAlignment="Top" />
+                                <TextBox Grid.Column="4" Text="{Binding StepText, UpdateSourceTrigger=LostFocus}" Margin="0,0,4,0" VerticalAlignment="Top" />
+                                <TextBox Grid.Column="5" Text="{Binding InnerStepText, UpdateSourceTrigger=LostFocus}" Visibility="{Binding InnerVisibility}" VerticalAlignment="Top" ToolTip="Wdh.-Schritt: um wie viel die Zahl von einer Wiederholung des Unterblocks zur nächsten steigt (innerhalb eines erzeugten Durchlaufs)" />
+                            </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <StackPanel x:Name="GroupsPanel" Grid.Row="2" Margin="0,6,0,0" Visibility="Collapsed">
+                    <TextBlock Text="Wiederholte Unterblöcke" FontWeight="SemiBold" Margin="0,0,0,4"
+                               ToolTip="Gleichförmige Blöcke im Snippet, die zu einem zusammengefasst wurden. Die Anzahl bestimmt, wie oft er je Durchlauf erscheint." />
+                    <ItemsControl x:Name="GroupList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Description}" FontFamily="Consolas" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}" Margin="0,0,6,0" />
+                                    <TextBox Grid.Column="1" Text="{Binding CountText, UpdateSourceTrigger=LostFocus}" ToolTip="Wie oft der Block wiederholt wird" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <Grid x:Name="LocPanel" Grid.Row="3" Margin="0,8,0,0" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Lokalisierung" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <WrapPanel Grid.Row="1" Margin="0,0,0,4">
+                        <TextBlock Text="Dateityp:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <ComboBox x:Name="ProfileBox" Width="250" Margin="0,0,6,0" SelectionChanged="ProfileBox_SelectionChanged"
+                                  ToolTip="Welche Stellen eine Lokalisierung brauchen, hängt vom Dateityp ab (Gebäude, GUI …). „automatisch“ nimmt den Ordner der zuletzt geöffneten Datei. Die Profile werden aus den Spieldateien gelernt." />
+                        <Button Content="Profil" Padding="8,0" Margin="0,0,12,0" Click="ProfileButton_Click"
+                                ToolTip="Zeigt, welche Endungen und Felder das Profil vorschlägt, und lässt dich einzelne ein- oder ausschalten (gilt nur für diese Vorlage)" />
+                        <TextBlock Text="Standardtext:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox x:Name="DefaultTextBox" Width="130" Text="TODO" VerticalContentAlignment="Center" TextChanged="LocOptions_TextChanged"
+                                 ToolTip="Text neuer Zeilen. In Textmustern steht {n} für den Zähler und {key} für den Schlüssel." />
+                    </WrapPanel>
+                    <TextBlock x:Name="ProfileStatusText" Grid.Row="2" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" />
+                    <ListBox x:Name="LocRowList" Grid.Row="3" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="200" />
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding Selected}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding KeyPattern}" FontFamily="Consolas" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding KeyPattern}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Origin}" Foreground="{DynamicResource Theme.TextMuted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Origin}" Margin="4,0" />
+                                    <TextBox Grid.Column="3" Text="{Binding TextPattern, UpdateSourceTrigger=LostFocus}" ToolTip="Textmuster: {n} = Zähler, {key} = Schlüssel" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

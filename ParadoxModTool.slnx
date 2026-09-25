@@ -1,0 +1,65 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ParadoxModTool.App/ParadoxModTool.App.csproj" />
+    <Project Path="src/ParadoxModTool.Categories/ParadoxModTool.Categories.csproj" />
+    <Project Path="src/ParadoxModTool.Compatch/ParadoxModTool.Compatch.csproj" />
+    <Project Path="src/ParadoxModTool.Editor/ParadoxModTool.Editor.csproj" />
+    <Project Path="src/ParadoxModTool.ErrorLog/ParadoxModTool.ErrorLog.csproj" />
+    <Project Path="src/ParadoxModTool.Explorer/ParadoxModTool.Explorer.csproj" />
+    <Project Path="src/ParadoxModTool.GameProfiles/ParadoxModTool.GameProfiles.csproj" />
+    <Project Path="src/ParadoxModTool.GitIntegration/ParadoxModTool.GitIntegration.csproj" />
+    <Project Path="src/ParadoxModTool.GuiDesign/ParadoxModTool.GuiDesign.csproj" />
+    <Project Path="src/ParadoxModTool.LaunchControl/ParadoxModTool.LaunchControl.csproj" />
+    <Project Path="src/ParadoxModTool.Localization/ParadoxModTool.Localization.csproj" />
+    <Project Path="src/ParadoxModTool.ModCompat/ParadoxModTool.ModCompat.csproj" />
+    <Project Path="src/ParadoxModTool.Mods/ParadoxModTool.Mods.csproj" />
+    <Project Path="src/ParadoxModTool.Notes/ParadoxModTool.Notes.csproj" />
+    <Project Path="src/ParadoxModTool.SearchReplace/ParadoxModTool.SearchReplace.csproj" />
+    <Project Path="src/ParadoxModTool.ScriptDocs/ParadoxModTool.ScriptDocs.csproj" />
+    <Project Path="src/ParadoxModTool.Scopes/ParadoxModTool.Scopes.csproj" />
+    <Project Path="src/ParadoxModTool.Session/ParadoxModTool.Session.csproj" />
+    <Project Path="src/ParadoxModTool.Settings/ParadoxModTool.Settings.csproj" />
+    <Project Path="src/ParadoxModTool.SettingsUi/ParadoxModTool.SettingsUi.csproj" />
+    <Project Path="src/ParadoxModTool.SteamIntegration/ParadoxModTool.SteamIntegration.csproj" />
+    <Project Path="src/ParadoxModTool.Storage/ParadoxModTool.Storage.csproj" />
+    <Project Path="src/ParadoxModTool.Templates/ParadoxModTool.Templates.csproj" />
+    <Project Path="src/ParadoxModTool.Syntax/ParadoxModTool.Syntax.csproj" />
+    <Project Path="src/ParadoxModTool.Theming/ParadoxModTool.Theming.csproj" />
+    <Project Path="src/ParadoxModTool.Tools/ParadoxModTool.Tools.csproj" />
+    <Project Path="src/ParadoxModTool.UndoRedo/ParadoxModTool.UndoRedo.csproj" />
+    <Project Path="src/ParadoxModTool.Updates/ParadoxModTool.Updates.csproj" />
+    <Project Path="src/ParadoxModTool.VanillaDiff/ParadoxModTool.VanillaDiff.csproj" />
+    <Project Path="src/ParadoxModTool.VersionManager/ParadoxModTool.VersionManager.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ParadoxModTool.Categories.Tests/ParadoxModTool.Categories.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Compatch.Tests/ParadoxModTool.Compatch.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.ErrorLog.Tests/ParadoxModTool.ErrorLog.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Explorer.Tests/ParadoxModTool.Explorer.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.LaunchControl.Tests/ParadoxModTool.LaunchControl.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.ModCompat.Tests/ParadoxModTool.ModCompat.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Mods.Tests/ParadoxModTool.Mods.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Notes.Tests/ParadoxModTool.Notes.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.GitIntegration.Tests/ParadoxModTool.GitIntegration.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.GuiDesign.Tests/ParadoxModTool.GuiDesign.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.SearchReplace.Tests/ParadoxModTool.SearchReplace.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.ScriptDocs.Tests/ParadoxModTool.ScriptDocs.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Scopes.Tests/ParadoxModTool.Scopes.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Session.Tests/ParadoxModTool.Session.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Settings.Tests/ParadoxModTool.Settings.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.SettingsUi.Tests/ParadoxModTool.SettingsUi.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Editor.Tests/ParadoxModTool.Editor.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.SteamIntegration.Tests/ParadoxModTool.SteamIntegration.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Storage.Tests/ParadoxModTool.Storage.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Templates.Tests/ParadoxModTool.Templates.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Theming.Tests/ParadoxModTool.Theming.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Tools.Tests/ParadoxModTool.Tools.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.UndoRedo.Tests/ParadoxModTool.UndoRedo.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Updates.Tests/ParadoxModTool.Updates.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.VanillaDiff.Tests/ParadoxModTool.VanillaDiff.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.VersionManager.Tests/ParadoxModTool.VersionManager.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ParadoxModTool.ReleaseSigner/ParadoxModTool.ReleaseSigner.csproj" />
+  </Folder>
+</Solution>

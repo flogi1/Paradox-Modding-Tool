@@ -1,0 +1,41 @@
+# Beispieldatei zum Ausprobieren des Syntax-Highlightings.
+# Selbst geschrieben zu Demonstrationszwecken — keine echten Mod-Inhalte.
+
+example_idea_group = {
+	category = ADM
+
+	trigger = {
+		ROOT = {
+			has_dlc = "Example Content Pack"
+			tag = EXA
+		}
+	}
+
+	ai_will_do = {
+		factor = 1.0
+	}
+
+	start_date = 1444.11.11
+
+	traditions = {
+		modifier = {
+			stability_cost_modifier = -0.1
+		}
+	}
+
+	example_idea = {
+		modifier = {
+			core_creation = -0.15
+		}
+	}
+}
+
+example_trigger_block = {
+	AND = {
+		is_year = 1500
+		NOT = { has_country_flag = example_flag }
+		owner = {
+			war = no
+		}
+	}
+}

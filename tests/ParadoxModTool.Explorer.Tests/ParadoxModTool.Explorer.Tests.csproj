@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net8.0-windows (statt nur net8.0 wie bei den übrigen Testprojekten) - das getestete
+         ParadoxModTool.Explorer ist selbst net8.0-windows+UseWPF (wegen ExplorerPanel.xaml),
+         und das Testprojekt bleibt damit in derselben TFM-Familie statt sich auf eine
+         funktionierende net8.0→net8.0-windows-Projektreferenz verlassen zu müssen - bewusst die
+         sichere Wahl, da hier kein Compiler zur Verfügung steht, um das zu verifizieren.
+         UseWPF wird HIER NICHT gesetzt: die Tests selbst benutzen nur reine, WPF-unabhängige
+         Klassen (FolderScanner, PathNormalization, ExplorerColorStore, ExplorerFavoritesStore,
+         FolderCategoryColorResolver), daher gelten hier ganz normale ImplicitUsings (siehe
+         Lessons Learned Punkt 2 - die WPF-Einschränkung betrifft nur UseWPF=true-Projekte). -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ParadoxModTool.Explorer\ParadoxModTool.Explorer.csproj" />
+  </ItemGroup>
+
+</Project>

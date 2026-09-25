@@ -1,0 +1,1560 @@
+{{version|1.23}}
+A '''scope''' is the context that [[triggers]] and [[effects]] are used in.
+
+== Overview ==
+All script scopes operate on one of two internal scopes: ''country'' and ''province''. Scopes that are for a country scope will not function correctly when used in a province scope.
+
+Additionally, all script scopes operate in one of two type scopes: ''effect'' and ''trigger''. Using an effect scope within a trigger scope will not work, and vice versa. There are scopes that operate in both type scopes.
+
+Which base scopes are ''effect'' and which are ''trigger'' depends on the feature you are modding. For example, in a decision: <code>potential = { }</code> and <code>allow = { }</code> are ''trigger'' scopes, whereas <code>effect = { }</code> is an ''effect'' scope. This is normally self-evident in most cases.
+
+=== Dynamic scopes ===
+Four script scopes are unique in that they change their contents depending on where they are used. They can be used in both ''effect'' and ''trigger'' scopes.
+
+{| class="wikitable sortable" width="100%"
+!Scope
+!Description
+!Example
+!Notes
+|-
+|ROOT
+|The base scope.
+|The ROOT scope in a country event is the country that the event fires for.
+|
+|-
+|FROM
+|The calling scope.
+|The FROM scope in a country event would be the ROOT scope of another event that called it (via the <code>country_event = {}</code> effect).
+|
+|-
+|PREV
+|The previous scope.
+|If you change the scope to <code>FRA = { }</code> and then to change scope to <code>capital_scope = { }</code> within it, the PREV scope is <code>FRA = { }</code>.
+|There is also "PREV_PREV", although this only works as target for the province_id trigger.
+|-
+|THIS
+|The current scope.
+|If you change scope to <code>FRA = { }</code> and then the THIS scope is <code>FRA = { }</code> while used within the <code>FRA = { }</code> scope.
+|This only works as a target for an effect. Effects placed within a THIS scope will not work correctly.
+|}
+
+=== Logic scopes ===
+There are three trigger scopes used to alter the boolean value of a trigger, or set of triggers. They are ''AND'', ''OR'' and ''NOT''.
+
+==== AND ====
+The ''AND'' scope groups a set of triggers together, and returns true only if all triggers nested within return true as well. This scope is the default scope for all trigger scopes, so you don't need to explicitly use a ''AND'' scope most of the time.
+<pre>
+AND = {
+    tag = FRA
+    stability = 1
+}
+</pre>
+
+==== OR ====
+The ''OR'' scope splits multiple sets of triggers, returning true if one or more of the sets of triggers nested within return true. This scope is used to make triggers return valid on state 1 ''or'' state 2 ''or'' state 3, and so on. Often the ''AND'' scope is used within the group to group multiple triggers together.
+<pre>
+stability = 1
+OR = {
+    tag = FRA
+    tag = SPA
+    AND = {
+        tag = CAS
+        NOT = { exists = SPA }
+    }
+}
+</pre>
+
+==== NOT ====
+The ''NOT'' scope inverts the truth value of a returned trigger. This allows you to check for the opposite instance of all triggers without needing an different trigger to do so. It also reverses the ''x'' or greater behaviour with numbers in triggers, making it less than ''x''.
+<pre>
+NOT = { stability = 1 }    # Returns true when stability is less than 1
+</pre>
+'''Note:''' Multiple conditions in one NOT scope have the same effect as multiple NOT scopes which are combined with an AND scope.
+{| class="wikitable"
+|+ These three code samples are equivalent(but they have different tooltips in some situations)
+|-
+| <pre>
+NOT = {
+    stability = 1
+    legitimacy = 90
+}
+</pre>
+|<pre>
+AND = {
+    NOT = { stability = 1 }
+    NOT = { legitimacy = 90 }
+}
+</pre>
+| <pre>
+NOT = {
+    OR = {
+        stability = 1
+        legitimacy = 90
+    }
+}
+</pre>
+|}
+
+==== implication ====
+There is no "implication" scope. If you need to express one (e.g. P -> Q, "if P then Q"), use the logical equivalent with OR and negation instead (not P or Q). For example, the game encodes one of the conditions for using various religious CBs - "If Art of War is active and attacker and defender are both members of the Holy Roman Empire: the Peace of Westphalia has not occurred" - as something like the following:
+<pre>
+OR = {
+    NOT = { has_dlc = "Art of War" }
+    is_part_of_hre = no
+    FROM = { is_part_of_hre = no }
+    hre_religion_treaty = no
+}
+</pre>
+
+=== Subscopes ===
+Many scopes return multiple subscopes. For example, <code>every_owned_province = { }</code> returns every owned province scope. This means any effect within this scope is executed in every province subscope. Likewise for trigger scopes, just with comparison instead.
+
+A quick reference on which scopes operate in this way:
+{| class="wikitable sortable" width="100%"
+!Scope Prefix
+!Type
+!Description
+|-
+|all_<scope>
+|Trigger
+|Requires valid trigger matches for '''all''' subscopes.
+|-
+|any_<scope>
+|Trigger
+|Requires valid trigger matches for '''one''' subscope in the set.
+|-
+|every_<scope>
+|Effect
+|Applies effects to '''all''' subscopes.
+|-
+|random_<scope>
+|Effect
+|Applies effects to '''one''' random subscope.
+|-
+|}
+
+=== Limit scope ===
+For all effect scopes, you can nest a <code>limit = { }</code> to filter the returned subscopes.
+
+For example, the following returns subscopes of countries that have 3 Stability:
+<pre>
+every_country = {
+    limit = {
+        stability = 3
+    }
+}
+</pre>
+
+Trigger scopes are inherently used for filtering, so do not require a limit scope.
+
+=== Tradenode scopes ===
+Theoretically tradenode scopes are province scopes. However, in practice you need to be within a tradenode scope to use tradenode effect and trigger scopes.
+
+This means you cannot do this:
+<pre>
+ROOT = {
+    every_privateering_country = {
+
+    }
+}
+</pre>
+
+Rather, you need to do this:
+<pre>
+ROOT = {
+    random_active_trade_node = {
+        every_privateering_country = {
+
+        }
+    }
+}
+</pre>
+
+== Dual scopes ==
+Dual scopes can be used in both '''effect''' and '''trigger''' contexts. However they operate differently in either context.
+
+In an effect scope, a dual scope will act like <code>every_<scope></code> and apply effects to '''all''' subscopes.
+
+In an trigger scope, a dual scope will act like <code>any_<scope></code> and match for '''one''' subscope in the set.
+
+You can alter this for dual scopes that return more than one subscope by including the <code>type = all</code> line within the dual scope. This will make the dual scope match for '''all''' subscopes.
+<pre>
+<region> = {
+
+    type = all
+}
+</pre>
+
+=== Country and Province ===
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|<province id>
+|<code>110 = { }</code>
+|Refers to the province ids listed {{path|map/definition.csv}}
+|No
+|Province
+|1.1
+|-
+|<tag>
+|<code>FRA = { }</code>
+|Refers to the country tags listed {{path|common/country_tags}}
+|No
+|Country
+|1.1
+|-
+|<area>
+|<code>western_mediterrenean_area = { }</code>
+|Refers to any area found in {{path|map/area.txt}}
+|Yes
+|Province
+|1.14
+|-
+|<region>
+|<code>france_region = { }</code>
+|Refers to any region found in {{path|map/region.txt}}
+|Yes
+|Province
+|1.1
+|-
+|<superregion>
+|<code>india_superregion = { }</code>
+|Refers to any superregion found in {{path|map/superregion.txt}}
+|Yes
+|Province
+|1.14 (1.15 for trigger)
+|-
+|<provincegroup>
+|<code>my_prov_group = { }</code>
+|Refers to any province group found in {{path|map/provincegroup.txt}}
+|Yes
+|Province
+|1.14 (1.15 for trigger)
+|-
+|<continent>
+|<code>europe = { }</code>
+|Refers to any continent found in {{path|map/continent.txt}}
+|Yes
+|Province
+|1.1
+|-
+|<trade_company>
+|<code>trade_company_west_africa = { }</code>
+|Refers to any trade company found in {{path|common/trade_companies/}}
+|Yes
+|Province
+|1.6
+|-
+|<colonial_region>
+|<code>colonial_alaska = { }</code>
+|Refers to any colonial region found in {{path|common/colonial_regions/}}
+|Yes
+|Province
+|1.4
+|-
+|<event_target>
+|<code>event_target:my_event_target_name = { }</code>
+|Refers to the saved event target scope. Potentially can be any scope internally.
+|Yes
+|Any
+|1.8
+|-
+|emperor
+|<code>emperor = { }</code>
+|Refers to the country (if it exists) that is currently the Holy Roman Emperor.
+|No
+|Country
+|1.1
+|-
+|revolution_target
+|<code>revolution_target = { }</code>
+|Refers to the country (if it exists) that is the current revolution target.
+|No
+|Country
+|1.1
+|-
+|crusade_target
+|<code>crusade_target = { }</code>
+|Refers to the country (if it exists) that is the current crusade target.
+|No
+|Country
+|1.1
+|-
+|papal_controller
+|<code>papal_controller = { }</code>
+|Refers to the country (if it exists) that is the current papal controller.
+|No
+|Country
+|1.35
+|}
+
+=== Country ===
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|colonial_parent
+|<code>colonial_parent = { }</code>
+|Refers to the country (if it exists) that is the colonial parent of the current country scope.
+|No
+|Country
+|1.4
+|-
+|overlord
+|<code>overlord = { }</code>
+|Refers to the country (if it exists) that is the overlord of the current country scope.
+|No
+|Country
+|1.1
+|-
+|capital_scope
+|<code>capital_scope = { }</code>
+|Refers to the capital province of the current country scope.
+|No
+|Province
+|1.1
+|}
+
+=== Province ===
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|owner
+|<code>owner = { }</code>
+|Refers to the country that owns the current province scope.
+|No
+|Country
+|1.1
+|-
+|controller
+|<code>controller = { }</code>
+|Refers to the country that controls the current province scope.
+|No
+|Country
+|1.1
+|-
+|sea_zone
+|<code>sea_zone = { }</code>
+|Refers to the sea province on which the current land province scope has a port.
+|No
+|Province
+|1.1
+|-
+|tribal_owner
+|<code>tribal_owner = { }</code>
+|Scopes to the country that has the current province as tribal land
+|No
+|Country
+|1.32
+|}
+
+=== Trade node ===
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|most_province_trade_power
+|<code>most_province_trade_power = { }</code>
+|The country in the trade node that generates the most trade power from provinces.
+|No
+|Country
+|1.1
+|-
+|strongest_trade_power
+|<code>strongest_trade_power = { }</code>
+|The country with the most trade power in the node.
+|No
+|Country
+|1.1
+|}
+
+== Effect scopes ==
+All effect scopes that potentially match multiple subscopes, plus <code>if</code>, can be limited with the <code>limit = { }</code> scope within. For example:
+
+<pre>
+every_country = {
+    limit = {
+        <triggers>
+    }
+    <effects>
+}
+</pre>
+Scopes that choose one random subscope (e.g. <code>random_owned_province</code>) make their choice after applying the limit.
+
+=== Country ===
+Used within the country scopes--e.g., <code>FRA = { }</code>
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|every_ally
+|<code>every_ally = { }</code>
+|Scopes to '''all''' valid countries that meet the triggers in the limit.
+|Yes
+|Country
+|1.1
+|-
+|every_coalition_member
+|<code>every_coalition_member = { }</code>
+|Scopes to '''all''' members of the coalition against the current scope (if any).
+|Yes
+|Country
+|1.1
+|-
+|every_country
+|<code>every_country = { }</code>
+|Scopes to '''all''' countries in the world. Avoid this if you can use something more specific.
+|Yes
+|Country
+|1.1
+|-
+|every_country_including_inactive
+|<code>every_country_including_inactive = { }</code>
+|Scopes to '''all''' country tags, even countries that do not own any provinces on the map. Avoid this if you can use something more specific.
+|Yes
+|Country
+|1.31.4
+|-
+|every_elector
+|<code>every_elector = { }</code>
+|Scopes to '''all''' electors of the HRE.
+|Yes
+|Country
+|1.1
+|-
+|every_enemy_country
+|<code>every_enemy_country = { }</code>
+|Scopes to '''all''' countries that have rivalled the current scope.
+|Yes
+|Country
+|1.1
+|-
+|every_known_country
+|<code>every_known_country = { }</code>
+|Scopes to '''all''' countries that have been discovered by the current scope.
+|Yes
+|Country
+|1.1
+|-
+|every_local_enemy
+|<code>every_local_enemy = { }</code>
+|???
+|Yes
+|Country
+|1.1
+|-
+|every_neighbor_country
+|<code>every_neighbor_country = { }</code>
+|Scopes to '''all''' countries that share a land/strait border with the current scope.
+|Yes
+|Country
+|1.1
+|-
+|every_rival_country
+|<code>every_rival_country = { }</code>
+|Scopes to '''all''' countries that the current scope has rivalled.
+|Yes
+|Country
+|1.1
+|-
+|every_subject_country
+|<code>every_subject_country = { }</code>
+|Scopes to '''all''' subject nations under the current scope.
+|Yes
+|Country
+|1.4
+|-
+|every_war_enemy_country
+|<code>every_war_enemy_country = { }</code>
+|Scopes to '''all''' countries that are at war with the current scope.
+|Yes
+|Country
+|1.34
+|-
+|every_federation_member
+|<code>every_federation_member = { }</code>
+|Scopes to '''all''' countries in the same [[federation]] as the current scope.
+|Yes
+|Country
+|
+|-
+|random_ally
+|<code>random_ally = { }</code>
+|Scopes to '''one''' valid country that meet the triggers in the limit.
+|No
+|Country
+|1.1
+|-
+|random_coalition_member
+|<code>random_coalition_member = { }</code>
+|Scopes to '''one''' random member of the coalition against the current scope.
+|No
+|Country
+|1.1
+|-
+|random_country
+|<code>random_country = { }</code>
+|Scopes to '''one''' random country among all countries in the world. Avoid this if you can use something more specific.
+|No
+|Country
+|1.1
+|-
+|random_elector
+|<code>random_elector = { }</code>
+|Scopes to '''one''' random elector of the HRE.
+|No
+|Country
+|1.1
+|-
+|random_enemy_country
+|<code>random_enemy_country = { }</code>
+|Scopes to '''one''' country that has rivalled the current scope.
+|No
+|Country
+|1.1
+|-
+|random_hired_mercenary_company
+|<code>random_hired_mercenary_company = { }</code><br>
+Possible parameters:<br>
+<code>template = <string></code><br>
+Optional: Checks whether the mercenary company uses the specified template.<br>
+<code>is_foreign_company = yes</code><br>
+Optional: Checks whether the mercenary company is of foreign origin.<br>
+<code>hired_for_months = <int></code><br>
+Optional: Checks how long the mercenary company has been hired.<br>
+<code>has_company_manpower = <int></code><br>
+Optional: Checks whether the company has X% of its manpower (can be negated by <code>NOT = { }</code>).<br>
+<code>home_province = { }</code><br>
+Optional: Scopes to the company's home province if existing.<br>
+<code>location = { }</code><br>
+Optional: Scopes to the current province location of the company.
+|Scopes to '''one''' random mercenary companies currently hired by the current scope.
+|No
+|Unit
+|1.30
+|-
+|random_known_country
+|<code>random_known_country = { }</code>
+|Scopes to '''one''' random country that has been discovered by the current scope.
+|No
+|Country
+|1.1
+|-
+|random_local_enemy
+|<code>random_local_enemy = { }</code>
+|???
+|No
+|Country
+|1.1
+|-
+|random_neighbor_country
+|<code>random_neighbor_country = { }</code>
+|Scopes to '''one''' random country that shares a land/strait border with the current scope.
+|No
+|Country
+|1.1
+|-
+|random_rival_country
+|<code>random_rival_country = { }</code>
+|Scopes to '''one''' country that the current scope has rivalled.
+|No
+|Country
+|1.1
+|-
+|random_subject_country
+|<code>random_subject_country = { }</code>
+|Scopes to '''one''' random subject country under the current scope.
+|No
+|Country
+|1.4
+|-
+|random_war_enemy_country
+|<code>random_war_enemy_country = { }</code>
+|Scopes to '''one''' random country that is at war with the current scope.
+|No
+|Country
+|1.34
+|-
+|every_core_province
+|<code>every_core_province = { }</code>
+|Scopes to '''all''' provinces that this country has a core on, whether owned or not.
+|Yes
+|Province
+|1.1
+|-
+|every_heretic_province
+|<code>every_heretic_province = { }</code>
+|Scopes to '''all''' provinces whose religion is heretic to the current scope.
+|Yes
+|Province
+|1.1
+|-
+|every_owned_province
+|<code>every_owned_province = { }</code>
+|Scopes to '''all''' provinces the current scope owns.
+|Yes
+|Province
+|1.1
+|-
+|every_owned_or_subject_province
+|<code>every_owned_or_subject_province = { }</code>
+|Scopes to '''all''' provinces the current scope or its subjects own.
+|Yes
+|Province
+|
+|-
+|every_owned_or_non_tributary_subject_province
+|<code>every_owned_or_non_tributary_subject_province = { }</code>
+|Scopes to '''all''' provinces the current scope or its non-tributary subjects own.
+|Yes
+|Province
+|
+|-
+|every_province
+|<code>every_province = { }</code>
+|Scopes to '''all''' provinces in the world.<br>'''Note:''' executing effects on every province without a limit will cause slowdown in game. Use something more specific if you can.
+|Yes
+|Province
+|1.1
+|-
+|random_core_province
+|<code>random_core_province = { }</code>
+|Scopes to '''one''' random province that the current scope has a core on, whether owned or not.
+|No
+|Province
+|1.1
+|-
+|random_heretic_province
+|<code>random_heretic_province = { }</code>
+|Scopes to '''one''' random province whose religion is heretic to the current scope.
+|No
+|Province
+|1.1
+|-
+|random_owned_area
+|<code>random_owned_area = { }</code>
+|Scopes to '''one''' valid area that meet the triggers in the limit.
+|No
+|Province
+|1.18
+|-
+|random_owned_province
+|<code>random_owned_province = { }</code>
+|Scopes to '''one''' random province the current scope owns.
+|No
+|Province
+|1.1
+|-
+|random_owned_or_subject_province
+|<code>random_owned_or_subject_province = { }</code>
+|Scopes to '''one''' random province the current scope or its subjects own.
+|No
+|Province
+|
+|-
+|random_owned_or_non_tributary_subject_province
+|<code>random_owned_or_non_tributary_subject_province = { }</code>
+|Scopes to '''one''' random province the current scope or its non-tributary subjects own.
+|No
+|Province
+|
+|-
+|random_active_trade_node
+|<code>random_active_trade_node = { }</code>
+|Scopes to '''one''' valid tradenode (province) that meet the triggers in the limit.<br>Active means the current scope is interacting with the trade node in some way.
+|No
+|Province
+|1.18
+|-
+|random_trade_node
+|<code>random_trade_node = { }</code>
+|Scopes to '''one''' random trade node.
+|No
+|Province
+|1.1
+|-
+|home_trade_node_effect_scope
+|<code>home_trade_node_effect_scope = { }</code>
+|Scopes to the trade node where the country has its main trading port.
+|No
+|Province
+|
+|-
+|every_capital_province
+|<code>every_capital_province = { }</code>
+|Scopes to '''all''' capital provinces in the world.
+|Yes
+|Province
+|1.34
+|-
+|random_capital_province
+|<code>random_capital_province = { }</code>
+|Scopes to '''one''' random capital province.
+|No
+|Province
+|1.34
+|-
+|every_claimed_province
+|<code>every_claimed_province = { }</code>
+|Scopes to '''all''' provinces claimed by the current country scope.
+|Yes
+|Province
+|1.34
+|-
+|random_claimed_province
+|<code>random_claimed_province = { }</code>
+|Scopes to '''one''' random province claimed by the current country scope.
+|No
+|Province
+|1.34
+|}
+
+=== Province ===
+Used within the province scopes--e.g., <code>capital_scope = { }</code>. These generally only select land provinces.
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|every_empty_neighbor_province
+|<code>every_empty_neighbor_province = { }</code>
+|Scopes to '''all''' provinces sharing a land/strait border with the current scope that are colonizable and uncolonized.
+|No
+|Province
+|1.1
+|-
+|every_neighbor_province
+|<code>every_neighbor_province = { }</code>
+|Scopes to '''all''' provinces sharing a land/strait border with the current scope.<br>Does not include empty provinces.
+May also be used within country scope to specify all provinces which border the current scope.
+|No
+|Province
+|1.1
+|-
+|every_province_in_state
+|<code>every_province_in_state = { }</code>
+|Scopes to '''all''' provinces in the same state (Does not apply to provinces in territories, if you want to apply in territories, then use area = { limit = { owned_by = ROOT } ... }).
+|No
+|Province
+|1.20
+|-
+|random_empty_neighbor_province
+|<code>random_empty_neighbor_province = { }</code>
+|Scopes to '''one''' random province sharing a land/strait border with the current scope that is colonizable and uncolonized.
+|No
+|Province
+|1.1
+|-
+|random_neighbor_province
+|<code>random_neighbor_province = { }</code>
+|Scopes to '''one''' random province sharing a land/strait border with the current scope.<br>Does not include empty provinces.
+|No
+|Province
+|1.1
+|-
+|random_province_in_state
+|<code>random_province_in_state = { }</code>
+|Scopes to '''one''' random province in the same state as the current scope.
+|No
+|Province
+|1.20
+|-
+|random_area_province
+|<code>random_area_province = { }</code>
+|Scopes to '''one''' random province in the same area as the current scope.
+|No
+|Province
+|1.35
+|-
+|random_province
+|<code>random_province = { }</code>
+|Scopes to '''one''' random province among all provinces in the world.
+|No
+|Province
+|1.1
+|-
+|every_core_country
+|<code>every_core_country = { }</code>
+|Scopes to '''all''' countries that have a core on the current scope, whether existing or not.
+|Yes
+|Country
+|1.1
+|-
+|random_core_country
+|<code>random_core_country = { }</code>
+|Scopes to '''one''' random country that has a core on the current scope, whether existing or not.
+|No
+|Country
+|1.1
+|-
+|area
+|<code>area = { }</code>
+|Refers to all provinces in the area that the current province scope is in.
+|Yes
+|Province
+|1.14
+|-
+|region
+|<code>region = { }</code>
+|Refers to all provinces in the region that the current province scope is in.
+|Yes
+|Province
+|1.14
+|}
+
+=== Tradenode ===
+Used within the tradenode scopes--e.g., <code>random_active_trade_node = { }</code>
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|every_privateering_country
+|<code>every_privateering_country = { }</code>
+|Scopes to '''all''' countries that are sending privateers to the current scope.
+|Yes
+|Country
+|1.6
+|-
+|random_privateering_country
+|<code>random_privateering_country = { }</code>
+|Scopes to '''one''' random country that is sending privateers to the current scope.
+|No
+|Country
+|1.6
+|-
+|every_trade_node_member_country
+|<code>every_trade_node_member_country = { }</code>
+|Scopes to '''all''' countries that own a province in the current scope.
+|Yes
+|Country
+|1.1
+|-
+|random_trade_node_member_country
+|<code>random_trade_node_member_country = { }</code>
+|Scopes to '''one''' random country that owns a province in the current scope.
+|No
+|Country
+|1.1
+|-
+|every_trade_node_member_province
+|<code>every_trade_node_member_province = { }</code>
+|Scopes to '''all''' provinces in the current trade node.
+|Yes
+|Province
+|1.1
+|-
+|random_trade_node_member_province
+|<code>random_trade_node_member_province = { }</code>
+|Scopes to '''one''' random province in the current trade node.
+|No
+|Province
+|1.1
+|}
+
+=== Unit ===
+Used within the unit scopes.
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|unit_owner
+|<code>unit_owner = { }</code>
+|Scopes to the owner of the unit.
+
+|No
+|Country
+|1.1
+|-
+|enemy_unit
+|<pre>
+enemy_unit = { }
+</pre>
+|Scopes to units that are considered enemies.
+Only used within <code>on_battle_won_unit</code> and <code>on_battle_lost_unit</code> on actions.
+|No
+|Unit
+|1.1
+|-
+|location
+|<pre>
+location = { }
+</pre>
+|Scopes to the unit's current location.
+|No
+|Province
+|1.30
+|}
+
+=== Missions ===
+Only available in missions found in {{path|missions}}.
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|every_target_province
+|<code>every_target_province = { }</code>
+|Scopes to '''all''' provinces among those specified as targets in the mission.
+|Yes
+|Province
+|1.1
+|-
+|random_target_province
+|<code>random_target_province = { }</code>
+|Scopes to '''one''' random province among those specified as targets in the mission.
+|No
+|Province
+|1.1
+|}
+
+== Trigger scopes ==
+=== Country ===
+Used within the country scopes--e.g., <code>FRA = { }</code>
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|any_army
+|<code>any_army = { }</code>
+|Scopes to '''all''' armies currently fielded by the current scope.
+|No
+|Unit
+|1.1
+|-
+|all_ally
+|<code>all_ally = { }</code>
+|Scopes to '''all''' valid countries that meet the triggers.
+|Yes
+|Country
+|1.1
+|-
+|all_coalition_member
+|<code>all_coalition_member = { }</code>
+|Scopes to '''all''' members of the coalition against the current scope (if any).
+|Yes
+|Country
+|1.1
+|-
+|all_country
+|<code>all_country = { }</code>
+|Scopes to '''all''' countries in the world excluding your own country. Avoid this if you can use something more specific.
+|Yes
+|Country
+|1.1
+|-
+|all_countries_including_self
+|<code>all_countries_including_self = { }</code>
+|Scopes to '''all''' countries in the world including your own country. Avoid this if you can use something more specific.
+|Yes
+|Country
+|1.26
+|-
+|all_elector
+|<code>all_elector = { }</code>
+|Scopes to '''all''' electors of the HRE
+|Yes
+|Country
+|1.1
+|-
+|all_enemy_country
+|<code>all_enemy_country = { }</code>
+|Scopes to '''all''' countries that have rivalled the current scope.
+|Yes
+|Country
+|1.1
+|-
+|all_known_country
+|<code>all_known_country = { }</code>
+|Scopes to '''all''' countries that have been discovered by the current scope.
+|Yes
+|Country
+|1.1
+|-
+|all_local_enemy
+|<code>all_local_enemy = { }</code>
+|???
+|Yes
+|Country
+|1.1
+|-
+|all_neighbor_country
+|<code>all_neighbor_country = { }</code>
+|Scopes to '''all''' countries that own a province that shares a land/strait border with a province owned by the current scope.
+|Yes
+|Country
+|1.1
+|-
+|all_rival_country
+|<code>all_rival_country = { }</code>
+|Scopes to '''all''' countries that the current scope has rivalled.
+|Yes
+|Country
+|1.1
+|-
+|all_subject_country
+|<code>all_subject_country = { }</code>
+|Scopes to '''all''' subject countries under the current scope.
+|Yes
+|Country
+|1.4
+|-
+|all_war_enemy_countries
+|<code>all_war_enemy_countries = { }</code>
+|Scopes to '''all''' countries that are at war with the current scope.
+|Yes
+|Country
+|1.34
+|-
+|all_federation_members
+|<code>all_federation_members = { }</code>
+|Scopes to '''all''' countries in the same [[federation]] as the current scope.
+|Yes
+|Country
+|
+|-
+|all_core_province
+|<code>all_core_province = { }</code>
+|Scopes to '''all''' provinces that the current scope has a core on, whether owned or not.
+|Yes
+|Province
+|1.1
+|-
+|all_heretic_province
+|<code>all_heretic_province = { }</code>
+|Scopes to '''all''' provinces whose religion is heretic to the current scope.
+|Yes
+|Province
+|1.1
+|-
+|all_owned_province
+|<code>all_owned_province = { }</code>
+|Scopes to '''all''' provinces owned by the current scope.
+|Yes
+|Province
+|1.1
+|-
+|all_owned_or_subject_province
+|<code>all_owned_or_subject_province = { }</code>
+|Scopes to '''all''' provinces owned by the current scope or its subjects.
+|Yes
+|Province
+|
+|-
+|all_owned_or_non_tributary_subject_province
+|<code>all_owned_or_non_tributary_subject_province = { }</code>
+|Scopes to '''all''' provinces owned by the current scope or its non-tributary subjects.
+|Yes
+|Province
+|
+|-
+|all_province
+|<code>all_province = { }</code>
+|Scopes to '''all''' provinces in the world. Avoid this if you can use something more specific.
+|Yes
+|Province
+|1.1
+|-
+|all_state_province
+|<code>all_state_province = { }</code>
+|Scopes to '''all''' provinces in states of the current scope.
+|Yes
+|Province
+|1.20
+|-
+|all_states
+|<code>all_states = { }</code>
+|Scopes to '''all''' states of the current scope.
+|Yes
+|Province
+|1.20
+|-
+|all_active_trade_node
+|<code>all_active_trade_node = { }</code>
+|Scopes to '''all''' active trade nodes.
+|Yes
+|Province
+|1.18
+|-
+|all_trade_node
+|<code>all_trade_node = { }</code>
+|Scopes to '''all''' trade nodes.
+|Yes
+|Province
+|1.1
+|-
+|any_ally
+|<code>any_ally = { }</code>
+|Scopes to '''one''' valid country that meet the triggers.
+|No
+|Country
+|1.1
+|-
+|any_coalition_member
+|<code>any_coalition_member = { }</code>
+|Scopes to '''one''' member of the coalition against the current scope.
+|No
+|Country
+|1.1
+|-
+|any_country
+|<code>any_country = { }</code>
+|Scopes to '''one''' country among all countries in the world. Avoid this if you can use something more specific.
+|No
+|Country
+|1.1
+|-
+|any_elector
+|<code>any_elector = { }</code>
+|Scopes to '''one''' elector of the HRE.
+|No
+|Country
+|1.1
+|-
+|any_enemy_country
+|<code>any_enemy_country = { }</code>
+|Scopes to '''one''' country that has rivalled the current scope.
+|No
+|Country
+|1.1
+|-
+|any_known_country
+|<code>any_known_country = { }</code>
+|Scopes to '''one''' country that has been discovered by the current scope.
+|No
+|Country
+|1.1
+|-
+|any_local_enemy
+|<code>any_local_enemy = { }</code>
+|???
+|No
+|Country
+|1.1
+|-
+|any_neighbor_country
+|<code>any_neighbor_country = { }</code>
+|Scopes to '''one''' country sharing a land/strait border with the current scope.
+|No
+|Country
+|1.1
+|-
+|any_rival_country
+|<code>any_rival_country = { }</code>
+|Scopes to '''one''' country that the current scope has rivalled.
+|No
+|Country
+|1.1
+|-
+|any_subject_country
+|<code>any_subject_country = { }</code>
+|Scopes to '''one''' subject country under the current scope.
+|No
+|Country
+|1.4
+|-
+|any_war_enemy_country
+|<code>any_war_enemy_country = { }</code>
+|Scopes to '''one''' country that is at war with the current scope.
+|No
+|Country
+|1.34
+|-
+|any_federation_members
+|<code>any_federation_members = { }</code>
+|Scopes to '''one''' country that is in the same [[federation]] as the current scope.
+|No
+|Country
+|
+|-
+|any_core_province
+|<code>any_core_province = { }</code>
+|Scopes to '''one''' province that the current scope has a core on, whether owned or not.
+|No
+|Province
+|1.1
+|-
+|any_heretic_province
+|<code>any_heretic_province = { }</code>
+|Scopes to '''one''' province whose religion is heretic to the current scope.
+|No
+|Province
+|1.1
+|-
+|any_hired_mercenary_company
+|<code>any_hired_mercenary_company = { }</code><br>
+Possible parameters:<br>
+<code>template = <string></code><br>
+Optional: Checks whether the mercenary company uses the specified template.<br>
+<code>is_foreign_company = yes</code><br>
+Optional: Checks whether the mercenary company is of foreign origin.<br>
+<code>hired_for_months = <int></code><br>
+Optional: Checks how long the mercenary company has been hired.<br>
+<code>has_company_manpower = <int></code><br>
+Optional: Checks whether the company has X% of its manpower (can be negated by <code>NOT = { }</code>).<br>
+<code>home_province = { }</code><br>
+Optional: Scopes to the company's home province if existing.<br>
+<code>location = { }</code><br>
+Optional: Scopes to the current province location of the company.
+|Scopes to '''one''' mercenary companies currently hired by the current scope.
+|No
+|Unit
+|1.30
+|-
+|any_owned_province
+|<code>any_owned_province = { }</code>
+|Scopes to '''one''' province owned by the current scope.
+|No
+|Province
+|1.1
+|-
+|any_owned_or_subject_province
+|<code>any_owned_or_subject_province = { }</code>
+|Scopes to '''one''' province owned by the current scope or its subjects.
+|No
+|Province
+|
+|-
+|any_owned_or_non_tributary_subject_province
+|<code>any_owned_or_non_tributary_subject_province = { }</code>
+|Scopes to '''one''' province owned by the current scope or its non-tributary subjects.
+|No
+|Province
+|
+|-
+|any_province
+|<code>any_province = { }</code>
+|Scopes to '''one''' province from among all provinces in the world. Avoid this if you can use something more specific.
+|No
+|Province
+|1.1
+|-
+|any_state
+|<code>any_state = { }</code>
+|Scopes to '''one''' state of the current country.
+|No
+|Province
+|1.20
+|-
+|any_active_trade_node
+|<code>any_active_trade_node = { }</code>
+|Scopes to '''one''' valid tradenode (province) that meet the triggers.<br>Note: will return true if a merchant is placed, even without explicit triggers.
+|No
+|Province
+|1.18
+|-
+|any_trade_node
+|<code>any_trade_node = { }</code>
+|Scopes to '''one''' trade node among all trade nodes in the world.
+|No
+|Province
+|1.1
+|-
+|home_trade_node
+|<code>home_trade_node = { }</code>
+|Scopes to the trade node containing the current scope's main trade port.
+|No
+|Province
+|1.1
+|-
+|any_great_power
+|<code>any_great_power = { }</code>
+|Scopes to '''one''' great power among all great powers in the world '''including''' the ROOT country.
+|No
+|Country
+|1.30
+|-
+|any_other_great_power
+|<code>any_other_great_power = { }</code>
+|Scopes to '''one''' great power among all great powers in the world '''except''' the ROOT country.
+|No
+|Country
+|1.30
+|-
+|all_capital_provinces
+|<code>all_capital_provinces = { }</code>
+|Scopes to '''all''' capital provinces in the world.
+|Yes
+|Province
+|1.34
+|-
+|any_capital_province
+|<code>any_capital_province = { }</code>
+|Scopes to '''one''' capital province among all capitals in the world.
+|No
+|Province
+|1.34
+|-
+|all_claimed_provinces
+|<code>all_claimed_provinces = { }</code>
+|Scopes to '''all''' claimed provinces of the current country scope.
+|Yes
+|Province
+|1.34
+|-
+|any_claimed_province
+|<code>any_claimed_province = { }</code>
+|Scopes to '''one''' province claimed by the current country scope.
+|No
+|Province
+|1.34
+|-
+|any_tribal_land
+|<code>any_tribal_land = { }</code>
+|Scopes to tribal land provinces of the country
+|No
+|Province
+|1.32
+|}
+
+=== Province ===
+Used within the province scopes—e.g., <code>capital_scope = { }</code>
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|all_empty_neighbor_province
+|<code>all_empty_neighbor_province = { }</code>
+|Scopes to '''all''' provinces sharing a land/strait border with the current scope that are colonizable and uncolonized.
+|Yes
+|Province
+|1.1
+|-
+|all_province_in_state
+|<code>all_province_in_state = { }</code>
+|Scopes to '''all''' provinces in the same state as the current scope.
+|Yes
+|Province
+|1.20
+|-
+|all_neighbor_province
+|<code>all_neighbor_province = { }</code>
+|Scopes to '''all''' provinces sharing a land/strait border with the current scope.
+|Yes
+|Province
+|1.1
+|-
+|any_empty_neighbor_province
+|<code>any_empty_neighbor_province = { }</code>
+|Scopes to '''one''' province sharing a land/strait border with the current scope that is colonizable and uncolonized.
+|No
+|Province
+|1.1
+|-
+|any_province
+|<code>any_province = { }</code>
+|Scopes to '''one''' province among all provinces in the world. Avoid this if you can use something more specific.
+|No
+|Province
+|1.1
+|-
+|any_province_in_state
+|<code>any_province_in_state = { }</code>
+|Scopes to '''one''' province in the same state as the current scope.
+|No
+|Province
+|1.20
+|-
+|any_friendly_coast_border_province
+|<code>any_friendly_coast_border_province = { }</code>
+|Scopes to '''one''' province that shares a border or sea zone with the current scope that is friendly to the current scope (meaning its owner is the same or has positive relations).
+|No
+|Province
+|1.18
+|-
+|any_neighbor_province
+|<code>any_neighbor_province = { }</code>
+|Scopes to '''one''' province that shares a border with the current scope.
+May also be used within country scope to specify any province which borders the current scope.
+|No
+|Province
+|1.1
+|-
+|all_core_country
+|<code>all_core_country = { }</code>
+|Scopes to '''all''' countries that have a core on the current scope, whether existing or not.
+|Yes
+|Country
+|1.1
+|-
+|any_core_country
+|<code>any_core_country = { }</code>
+|Scopes to '''one''' country that has a core on the current scope, whether existing or not.
+|No
+|Country
+|1.1
+|-
+|area_for_scope_province
+|<code>area_for_scope_province = { }</code>
+|Scopes to the area that the current province scope is in. Used with <code>type = all</code> when you want to target all provinces of an area.
+|No
+|Province
+|1.14
+|-
+|region_for_scope_province
+|<code>region_for_scope_province = { }</code>
+|Scopes to the region that the current province scope is in. Used with <code>type = all</code> when you want to target all provinces of a region.
+|No
+|Province
+|1.14
+|-
+|colonial_region_for_scope_province
+|<code>colonial_region_for_scope_province = { }</code>
+|Scopes to the colonial region that the current province scope is in. Used with <code>type = all</code> when you want to target all provinces of a colonial region.
+|No
+|Province
+|1.30
+|}
+
+=== Trade node ===
+Used within the trade node scopes—e.g., <code>any_active_trade_node = { }</code>
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+|-
+|all_privateering_country
+|<code>all_privateering_country = { }</code>
+|Scopes to '''all''' countries that are sending privateers to the current scope.
+|Yes
+|Country
+|1.6
+|-
+|all_trade_node_member_country
+|<code>all_trade_node_member_country = { }</code>
+|Scopes to '''all''' countries that own a province in the current trade node.
+|Yes
+|Country
+|1.1
+|-
+|any_privateering_country
+|<code>any_privateering_country = { }</code>
+|Scopes to '''one''' country that is sending privateers to the current scope.
+|Yes
+|Country
+|1.6
+|-
+|any_trade_node_member_country
+|<code>any_trade_node_member_country = { }</code>
+|Scopes to '''one''' country that owns a province in the current trade node.
+|Yes
+|Country
+|1.1
+|-
+|all_trade_node_member_province
+|<code>all_trade_node_member_province = { }</code>
+|Scopes to '''all''' provinces in the current trade node.
+|No
+|Province
+|1.1
+|-
+|any_trade_node_member_province
+|<code>any_trade_node_member_province = { }</code>
+|Scopes to '''one''' province in the current trade node.
+|No
+|Province
+|1.1
+|}
+
+== Removed scopes ==
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="20%" | Description
+! width="10%" | Version Removed
+! width="15%" | Alternatives
+|-
+|every_trade_node
+|<code>every_trade_node = { }</code>
+|Scopes to '''all''' trade nodes.
+|1.30
+|Province group of one trade node member each, or loop with random_trade_node
+|}
+
+=== Missions ===
+They were only available in old-style missions found in {{path|missions}}. These types of missions were removed in patch [[1.25]]
+
+{| class="wikitable sortable" width="100%"
+! width="15%" | Name
+! width="20%" | Example
+! width="25%" | Description
+! width="5%" | Multiple Subscopes
+! width="5%" | Changes Scope To
+! width="10%" | Version Added
+! width="10%" | Version Removed
+|-
+|all_target_province
+|<code>all_target_province = { }</code>
+|Scopes to '''all''' provinces specified as a target in the mission.
+|Yes
+|Province
+|1.1
+|1.25
+|-
+|any_target_province
+|<code>any_target_province = { }</code>
+|Scopes to '''one''' province specified as a target in the mission.
+|Yes
+|Province
+|1.1
+|1.25
+|}
+
+== References ==
+<references/>
+{{Modding navbox}}
+
+[[Category:Modding]]

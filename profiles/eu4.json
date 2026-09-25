@@ -1,0 +1,47 @@
+{
+  "id": "eu4",
+  "steamAppId": "236850",
+  "displayName": "Europa Universalis IV",
+  "engineFamily": "clausewitz",
+  "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Europa Universalis IV/mod",
+  "metadataFile": "*.mod",
+  "loadOrderRule": "alphabetical-filename-wins",
+  "scriptDocsSourceKind": "wiki",
+  "scriptDocsWikiFile": "scriptdocs/eu4.json",
+  "vanillaHistoryFolderName": "EU IV Vanilla History",
+  "folderCategories": [
+    { "path": "common", "label": "Common", "defaultColor": "#4A90D9", "description": "Kernspielregeln" },
+    { "path": "events", "label": "Events", "defaultColor": "#4AD98E" },
+    { "path": "interface", "label": "Interface", "defaultColor": "#D98E4A", "description": "Interface-Layout-Dateien (.gui), entspricht \"gui\" bei anderen Spielen" },
+    { "path": "gfx", "label": "Grafik", "defaultColor": "#7A4AD9" },
+    { "path": "localisation", "label": "Lokalisierung", "defaultColor": "#D94A4A", "description": "YAML-Lokalisierungsdateien (.yml), britische Schreibweise beachten" },
+    { "path": "history", "label": "Historie", "defaultColor": "#B08AD9" },
+    { "path": "map", "label": "Karte", "defaultColor": "#4AC7D9" },
+    { "path": "decisions", "label": "Entscheidungen", "defaultColor": "#D9C24A" },
+    { "path": "missions", "label": "Missionen", "defaultColor": "#4AD9C2" },
+    { "path": "music", "label": "Musik", "defaultColor": "#8A8A8A" },
+    { "path": "sound", "label": "Sound", "defaultColor": "#8A8A8A" }
+  ],
+  "fileTypes": [
+    { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gui", "parser": "jomini-gui", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gfx", "parser": "jomini-gfx", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".lua", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" }
+  ],
+  "launchOptions": [
+    { "label": "Normal", "args": "" },
+    { "label": "Debug-Modus", "args": "-debug_mode" }
+  ],
+  "overrideRules": [
+    { "folder": "common", "behavior": "PerKey", "certain": false },
+    { "folder": "common/defines", "behavior": "PartialKeys", "certain": true },
+    { "folder": "events", "behavior": "FirstWins", "certain": false },
+    { "folder": "interface", "behavior": "LastWins", "certain": false },
+    { "folder": "localisation", "behavior": "LocalizationKeys", "certain": false },
+    { "folder": "gfx", "behavior": "WholeFile", "certain": false },
+    { "folder": "history", "behavior": "WholeFile", "certain": false },
+    { "folder": "map", "behavior": "WholeFile", "certain": false }
+  ],
+  "notes": "Startprofil, gegen die echte Installation (D:\\SteamLibrary, AppID 236850) und eu4.paradoxwikis.com geprüft, 2026-09-22. Bekannte Lücken: Mod-Anzeigename kommt aus dem Ordnernamen statt der externen .mod-Datei (Metadaten liegen dort außerhalb des Mod-Ordners, PMTs MetadataFile-Mechanismus erwartet sie innerhalb — siehe Backlog). Playset-Import nicht verfügbar (Playsets liegen in launcher-v2.sqlite, nicht als JSON — siehe Backlog). Override-Regeln bis auf common/defines nicht Wiki-bestätigt (EU IV hat kein INJECT/REPLACE, die Wiki dokumentiert kein Override-Verhalten) — als unsicher markiert, common/defines dagegen wiki-bestätigt (siehe eu4.paradoxwikis.com/Defines: eigene .lua-Datei unter common/defines/, kopiert von 00_dummy.lua, setzt nur einzelne NDefines.*-Schlüssel). Script-Datenbank (Modifier/Trigger/Effect/On-Action) und Scope-Viewer/Scope-Finder jetzt aus der offiziellen Wiki vorab erzeugt (siehe tools/wiki-scraper, scriptDocsWikiFile), da EU IV keine docs/*.log-Dateien wie EU V exportiert. Weiterhin unverfügbar: Event-Target (Wiki-Abdeckung nicht geprüft) und Custom-Localization (Wiki dokumentiert nur den defined_text-Mechanismus, keine feste Namensliste — Custom-Loc-Kommandos sind pro Mod definiert, nicht wiki-referenzierbar)."
+}

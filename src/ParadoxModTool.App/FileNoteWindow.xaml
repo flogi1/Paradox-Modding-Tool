@@ -1,0 +1,50 @@
+<Window x:Class="ParadoxModTool.App.FileNoteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Notizen"
+        Height="420" Width="440"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <!--
+        Notizfenster zu genau einer Datei (Nutzer-Feedback Runde 4: "Füge für die Textbearbeitung
+        noch eine Notizfunktion hinzu, sodass man sich zu einer Datei explizit Notizen [machen
+        kann]. Diese Notizen sollten aber nicht in der Datei selbst gespeichert werden, sondern
+        nur für den Modder sichtbar sein, wenn er das Programm nutzt."). Die Notiz wird bewusst
+        NICHT automatisch beim Schließen gespeichert (wie beim Dokument selbst auch) - erst der
+        "Speichern"-Button hier schreibt sie über ParadoxModTool.Notes.FileNoteStore in die
+        separate Notizdatei.
+
+        Nutzer-Feedback (Runde 10, weitere Verbesserungen): "Für die Notiz Option: Füge die Option
+        hinzu, dass man im Dokument eine Codestelle bookmarken kann, wo man dann über den Notizen
+        Reiter schnell hinspringen kann." - "Notizen Reiter" wörtlich als TabControl umgesetzt: der
+        bisherige alleinige Inhalt wandert in den ersten Tab "Notiz", ein neuer zweiter Tab
+        "Bookmarks" zeigt die über Strg+F2 im Editor gesetzten Bookmarks dieser Datei (siehe
+        MainWindow.ToggleBookmarkAtCursor) mit Sprung-Funktion.
+    -->
+    <TabControl Margin="12">
+        <TabItem Header="Notiz">
+            <DockPanel Margin="8">
+                <TextBlock x:Name="FileNameText" DockPanel.Dock="Top" FontWeight="Bold" Margin="0,0,0,8"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                    <Button Content="Speichern" Width="80" Margin="0,0,6,0" Click="Save_Click" IsDefault="True" />
+                    <Button Content="Schließen" Width="80" IsCancel="True" />
+                </StackPanel>
+                <TextBox x:Name="NoteTextBox" AcceptsReturn="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" />
+            </DockPanel>
+        </TabItem>
+        <TabItem Header="Bookmarks">
+            <DockPanel Margin="8">
+                <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}"
+                           Text="Mit Strg+F2 an der Cursorposition im Editor gesetzt/entfernt. Doppelklick oder &quot;Springe zu&quot; springt zur Stelle und schließt dieses Fenster." />
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                    <Button Content="Springe zu" Width="90" Margin="0,0,6,0" Click="JumpToBookmark_Click" />
+                    <Button Content="Entfernen" Width="90" Click="RemoveBookmark_Click" />
+                </StackPanel>
+                <ListBox x:Name="BookmarksList" MouseDoubleClick="BookmarksList_MouseDoubleClick"
+                         DisplayMemberPath="DisplayText" />
+            </DockPanel>
+        </TabItem>
+    </TabControl>
+</Window>

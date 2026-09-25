@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.GuiDesign</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
+</Project>

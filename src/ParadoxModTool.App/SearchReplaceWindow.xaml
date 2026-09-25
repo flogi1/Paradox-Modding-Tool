@@ -1,0 +1,147 @@
+<Window x:Class="ParadoxModTool.App.SearchReplaceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Suchen &amp; Ersetzen" Width="640" Height="580" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+    <!--
+        Vereinheitlichter Suchen/Ersetzen/Suchen-in-Dateien-Funktionskasten (Architektur-
+        Spezifikation, Abschnitt 5b): "Suchen und Ersetzen und Suchen in Dateien kann in einem
+        Funktionskasten vereinheitlicht werden [...] es wäre gut, wenn es einfach ist zwischen
+        den Modi hin und her zu wechseln." Der Modus-Umschalter (RadioButtons) blendet den
+        Ordner-/Favoriten-Bereich ein bzw. aus. Die Such-/Ersetzen-Textfelder erlauben
+        mehrzeilige Eingabe, um ganze Codeblöcke zu ersetzen (Vorbild: NPP-Toolbucket-Erweiterung
+        von Notepad++).
+    -->
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <RadioButton x:Name="CurrentDocumentModeRadio" Content="Aktuelles Dokument"
+                         GroupName="SearchMode" IsChecked="True" Checked="ModeRadio_Checked"
+                         Margin="0,0,16,0" VerticalAlignment="Center" />
+            <RadioButton x:Name="FilesModeRadio" Content="Ordner (Dateien)"
+                         GroupName="SearchMode" Checked="ModeRadio_Checked"
+                         VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel x:Name="FolderPanel" Grid.Row="1" Margin="0,0,0,8" Visibility="Collapsed">
+            <DockPanel Margin="0,0,0,4">
+                <Button DockPanel.Dock="Right" Content="Durchsuchen" Click="Browse_Click"
+                        Padding="6,2" Margin="4,0,0,0" />
+                <TextBox x:Name="FolderTextBox" VerticalContentAlignment="Center"
+                         ToolTip="Zu durchsuchender Ordner (z. B. der lokale Mod-Ordner)" />
+            </DockPanel>
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Entfernen" Click="RemoveFavorite_Click"
+                        Padding="6,2" Margin="4,0,0,0" ToolTip="Ausgewählten Favoriten entfernen" />
+                <Button DockPanel.Dock="Right" Content="★ Speichern" Click="AddFavorite_Click"
+                        Padding="6,2" Margin="4,0,0,0" ToolTip="Aktuellen Ordner als Favorit speichern" />
+                <ComboBox x:Name="FavoritesList" DisplayMemberPath="."
+                          SelectionChanged="FavoritesList_SelectionChanged"
+                          ToolTip="Favorisierte Suchordner" />
+            </DockPanel>
+            <!--
+                Nutzer-Feedback (Runde 10, weitere Verbesserungen): "Im Suchen und Ersetzen Menü:
+                Ermögliche mir hier ebenfalls Bookmarks zu speichern. Sagen wir es sollten für das
+                Spiel 4 Default Buttons angezeigt werden, mit denen man einen schnellen
+                Dateienpfad in das Suchfeld von Suchen in Dateien eingeben kann. [...] Darüber
+                hinaus sollte es 4 weitere Buttons geben, wo man den Pfad frei konfigurieren kann
+                [...]. Man sollte auch die Möglichkeit haben die Buttons auszublenden." - bewusst
+                von den bereits vorhandenen "Favoriten" (oben, FavoritesList/SearchFavoritesStore -
+                eine Dropdown-Liste für BELIEBIG VIELE Ordner) UNTERSCHIEDEN: hier explizit als
+                feste, sofort sichtbare EINZELKNÖPFE, wie vom Nutzer wörtlich verlangt ("4 Default
+                Buttons"/"4 weitere Buttons"), nicht als weiterer Dropdown-Eintrag. Die eigentlichen
+                Buttons werden in SearchReplaceWindow.xaml.cs dynamisch erzeugt (feste Buttons
+                abhängig vom aktiven Spielprofil, freie Buttons abhängig von QuickPathStore) -
+                FixedQuickPathButtons/CustomQuickPathButtons sind hier nur die leeren
+                Einfüge-Punkte dafür.
+            -->
+            <StackPanel x:Name="QuickPathPanel" Margin="0,6,0,0">
+                <DockPanel Margin="0,0,0,2">
+                    <ToggleButton x:Name="QuickPathVisibilityToggle" DockPanel.Dock="Right"
+                                  Content="▾ Ausblenden" IsChecked="True" Padding="4,1"
+                                  Click="QuickPathVisibilityToggle_Click"
+                                  ToolTip="Schnellzugriff-Buttons ein-/ausblenden" />
+                    <TextBlock Text="Schnellzugriff:" VerticalAlignment="Center" FontWeight="Bold" />
+                </DockPanel>
+                <StackPanel x:Name="QuickPathButtonsPanel">
+                    <WrapPanel x:Name="FixedQuickPathButtons" Margin="0,0,0,2" />
+                    <WrapPanel x:Name="CustomQuickPathButtons" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,0,0,4">
+            <TextBlock Text="Suchbegriff (auch mehrzeilige Codeblöcke möglich):" Margin="0,0,0,2" />
+            <!-- AcceptsTab="True" ist wichtig: ohne dieses Attribut bewegt die Tab-Taste in einer
+                 WPF-TextBox NUR den Tastaturfokus zum nächsten Element, statt ein Tab-Zeichen
+                 einzufügen - beim manuellen Abtippen eines eingerückten Codeblocks (Paradox-
+                 Dateien werden mit Tabs eingerückt) gingen dadurch alle Einrückungen verloren,
+                 ohne dass das sichtbar aufgefallen wäre (Nutzer-Feedback: Suche fand den Block
+                 trotz Zeilenumbruch-Angleichung nicht). -->
+            <TextBox x:Name="SearchTextBox" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
+                     MinHeight="48" MaxHeight="96" VerticalScrollBarVisibility="Auto"
+                     FontFamily="Consolas" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Margin="0,0,0,4">
+            <TextBlock Text="Ersetzen durch:" Margin="0,0,0,2" />
+            <TextBox x:Name="ReplaceTextBox" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
+                     MinHeight="48" MaxHeight="96" VerticalScrollBarVisibility="Auto"
+                     FontFamily="Consolas" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,0,0,4">
+            <CheckBox x:Name="MatchCaseCheckBox" Content="Groß-/Kleinschreibung beachten" Margin="0,0,16,0" />
+            <CheckBox x:Name="WholeWordCheckBox" Content="Nur ganzes Wort" Margin="0,0,16,0" />
+            <!-- Nutzer-Feedback: unterschiedlich formatierte (Einrückung/Zeilenumbrüche/Leerzeichen)
+                 Varianten desselben Codeblocks sollen beide gefunden werden. Ersetzt wird trotzdem
+                 exakt der in der jeweiligen Datei tatsächlich gefundene, unterschiedlich formatierte
+                 Textbereich - siehe SearchOptions.IgnoreFormatting/TextSearch.FindAllIgnoringFormatting. -->
+            <CheckBox x:Name="IgnoreFormattingCheckBox" Content="Formatierung ignorieren"
+                      ToolTip="Findet Codeblöcke unabhängig von Einrückung, Zeilenumbrüchen und Leerzeichen. Ersetzt wird trotzdem jeweils exakt die tatsächlich gefundene, ggf. unterschiedlich formatierte Stelle." />
+        </StackPanel>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Alle finden" Click="FindAll_Click" Padding="10,4" Margin="0,0,8,0" />
+            <Button Content="Alle ersetzen" Click="ReplaceAll_Click" Padding="10,4" />
+        </StackPanel>
+
+        <DockPanel Grid.Row="6" Margin="0,0,0,4">
+            <CheckBox x:Name="HideDescriptionCheckBox" DockPanel.Dock="Right"
+                      Content="Nur gefundenen Code anzeigen" Click="HideDescriptionCheckBox_Changed"
+                      ToolTip="Blendet die beschreibende Zeile (Datei/Zeilennummer) aus, damit nur der gefundene Code selbst zu sehen ist (zum Kopieren)" />
+            <TextBlock x:Name="StatusText" Text="" TextWrapping="Wrap" />
+        </DockPanel>
+
+        <!-- Trefferzeilen: Beschreibung ("Datei — Zeile N: ...") optional ausblendbar (Nutzer-
+             Feedback), darunter der exakt gefundene Code in einer schreibgeschützten TextBox statt
+             eines TextBlock — nur eine TextBox unterstützt in WPF Textmarkierung/Strg+C, damit der
+             gefundene Codeblock tatsächlich herauskopiert werden kann. -->
+        <ListBox x:Name="ResultsList" Grid.Row="7" FontFamily="Consolas"
+                 MouseDoubleClick="ResultsList_MouseDoubleClick"
+                 ToolTip="Doppelklick springt zum Treffer">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="0,3">
+                        <TextBlock Text="{Binding Description}" Visibility="{Binding DescriptionVisibility}"
+                                   TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}" Margin="0,0,0,2" />
+                        <TextBox Text="{Binding MatchedText, Mode=OneWay}" IsReadOnly="True"
+                                 BorderThickness="0" Background="Transparent" Padding="0"
+                                 FontFamily="Consolas" TextWrapping="Wrap" AcceptsReturn="True"
+                                 IsReadOnlyCaretVisible="True" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

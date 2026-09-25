@@ -1,0 +1,42 @@
+<Window x:Class="ParadoxModTool.Explorer.NewFileWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Neue Datei anlegen"
+        Width="420" MinWidth="420" MinHeight="240"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <!--
+        Minimaler Dialog nach demselben Muster wie GoToLineWindow (siehe ParadoxModTool.App) -
+        Nutzer-Feedback: "Dort soll man dann auch direkt in den Moddateien neue Dateien
+        entsprechend der von uns bekannten Typen anlegen können." Die Endungs-Auswahl kommt aus
+        dem aktiven Spielprofil (GameProfile.FileTypes, siehe ExplorerPanel.SetGameProfile) -
+        dieselbe Datengetriebenheit wie bei den Startoptionen (Abschnitt 8).
+
+        BUGFIX (Nutzer-Feedback: "Neue Datei anlegen funktioniert, allerdings ist das Fenster zu
+        klein als dass die Anzeige, wo man den Dateientyp einstellen kann, nicht vollständig
+        angezeigt wird."): Die vorherige feste Höhe (180) reichte nicht mehr aus, sobald
+        TargetFolderText (Zielordner-Pfad, TextWrapping="Wrap") bei einem längeren/tiefer
+        verschachtelten Pfad - bei Paradox-Modordnern eher die Regel als die Ausnahme - auf zwei
+        oder mehr Zeilen umbrach: die Dateityp-Zeile mit ExtensionCombo wurde dadurch nach unten
+        aus dem festen Fenster hinausgedrückt und abgeschnitten. Jetzt "SizeToContent=Height" statt
+        einer festen Höhe (skaliert IMMER exakt zum tatsächlichen Inhalt, unabhängig davon, wie
+        viele Zeilen der Pfad braucht) plus etwas mehr Breite (420 statt 340), damit lange Pfade
+        von vornherein seltener umbrechen müssen.
+    -->
+    <StackPanel Margin="12">
+        <TextBlock Text="Zielordner:" Margin="0,0,0,2" FontWeight="Bold" />
+        <TextBlock x:Name="TargetFolderText" Margin="0,0,0,10" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" />
+        <TextBlock Text="Dateiname (ohne Endung):" Margin="0,0,0,4" />
+        <TextBox x:Name="FileNameBox" Margin="0,0,0,10" />
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="Dateityp: " VerticalAlignment="Center" />
+            <ComboBox x:Name="ExtensionCombo" Width="140" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Anlegen" Width="80" Margin="0,0,6,0" Click="Ok_Click" IsDefault="True" />
+            <Button Content="Abbrechen" Width="80" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

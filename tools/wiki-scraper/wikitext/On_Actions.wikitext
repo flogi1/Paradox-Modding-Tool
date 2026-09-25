@@ -1,0 +1,1887 @@
+{{version|1.31}}
+
+== Overview ==
+On Actions are effects that are triggered by hardcoded actions, like a button being pressed. They are found in {{path|common/on_actions}}.
+As of version 1.36, On Actions will combine like in CK2. In versions before 1.36, however, the latest On Action will override the previous ones. For example, if Mod A adds an effect to on_annexed, and then Mod B loaded later adds another effect, pre-1.36, only Mod B's effect runs, post-1.36, both effects will execute.
+
+On Actions support a list of events to trigger. Use the events' own trigger to restrict when they actually do.
+
+    events = {
+        my_event.1
+        my_event.2
+    }
+
+Alternatively, events can also be triggered directly in the On Action's effect.
+
+On Actions also support a list of events of which exactly one happens randomly, similar to a random list.
+
+    random_events = {
+        200 = my_event.1
+        300 = my_event.1
+        500 = 0
+    }
+
+Event id "0" is used as a 'no event' case.
+
+Random event list events should have both `is_triggered_only = yes` and a `mean_time_to_happen` of **`days = 1`**.
+This mean time to happen works differently than usual - here, modifiers that increase the MTTH time will **multiply** the random event weight, making it **more likely** for the event to happen. Similar to adding chance modifiers to a random_list.
+== List ==
+{{SVersion|1.31}}
+{| class="wikitable sortable" width="100%"
+! width="20%" | On Action
+! width="30%" | Description
+! width="10%" | ROOT
+! width="10%" | THIS
+! width="10%" | FROM
+! width="20%" | Notes
+|-
+|consort_on_shipwreck
+|
+|country
+|
+|
+|
+|-
+|heir_on_shipwreck
+|
+|country
+|
+|
+|
+|-
+|monarch_on_shipwreck
+|
+|country
+|
+|
+|
+|-
+| on_abandon_colony
+|Fired right before the colony is abandoned.
+|location
+|
+|country
+|country refers to who abandoned it
+|-
+| on_accept_tribute
+|
+|country
+|
+|overlord
+|
+|-
+| on_add_pasha
+|
+|
+|province
+|
+|THIS = One province in the state
+|-
+| on_added_to_trade_company
+|
+|location
+|
+|country
+|
+|-
+|on_adm_advisor_hired
+|Executed after on_advisor_hired
+|country
+|
+|
+|
+|-
+| on_adm_development
+|
+|location
+|
+|
+|
+|-
+|on_adm_exploited
+|
+|province
+|
+|
+|
+|-
+|on_adm_tech_taken
+|Executed after on_tech_taken
+|country
+|
+|
+|
+|-
+| on_admiral_recruited
+|
+|country
+|
+|
+|
+|-
+|on_advisor_hired
+|
+|country
+|
+|
+|
+|-
+|on_alliance_broken
+|
+|Original alliance creator
+|
+|Alliance accepter
+|
+|-
+|on_alliance_created
+|
+|Alliance sender
+|
+|Alliance accepter
+|
+|-
+| on_annexed
+|
+|annexing country
+|
+|annexed country
+|
+|-
+| on_bankruptcy
+|
+|country
+|
+|
+|
+|-
+|on_banner_raised
+|
+|
+|location
+|
+|
+|-
+|on_barrage
+|
+|barraging country
+|
+|barraged province
+|
+|-
+| on_battle_lost_country
+|
+|loser country
+|
+|winner country
+|There are two hard-coded variables accessible within this on action:
+*<code>land_units_lost</code>: The number of soldiers killed by ROOT
+*<code>land_units_killed</code>: The number of soldiers killed by FROM
+|-
+| on_battle_lost_province
+|
+|location
+|
+|winner country
+|
+|-
+| on_battle_lost_unit
+|
+|unit
+|
+|
+|
+|-
+| on_battle_won_country
+|
+|winner country
+|
+|loser country
+|There are two hard-coded variables accessible within this on action:
+*<code>land_units_lost</code>: The number of soldiers killed by ROOT
+*<code>land_units_killed</code>: The number of soldiers killed by FROM
+|-
+| on_battle_won_province
+|
+|location
+|
+|loser country
+|
+|-
+| on_battle_won_unit
+|
+|unit
+|
+|
+|
+|-
+| on_become_free_city
+|
+|country
+|
+|
+|
+|-
+| on_bi_yearly_pulse
+|
+|
+|
+|
+|
+|-
+| on_bi_yearly_pulse_2
+|
+|
+|
+|
+|
+|-
+| on_bi_yearly_pulse_3
+|
+|
+|
+|
+|
+|-
+| on_bi_yearly_pulse_4
+|
+|
+|
+|
+|
+|-
+| on_bi_yearly_pulse_5
+|
+|
+|
+|
+|
+|-
+| on_buy_religious_reform
+|
+|country
+|
+|
+|
+|-
+|on_capital_moved
+|
+|new capital province
+|
+|old capital
+|
+|-
+|on_caravel_raised
+|
+|
+|location
+|
+|
+|-
+|on_carolean_raised
+|
+|
+|location
+|
+|
+|-
+|on_cawa_raised
+|
+|
+|location
+|
+|
+|-
+| on_center_of_trade_downgrade
+|Fired when center of trade is downgraded.
+|location
+|
+|
+|
+|-
+| on_center_of_trade_upgrade
+|Fired when center of trade is upgraded.
+|location
+|
+|
+|
+|-
+|on_centralized_state
+|
+|province
+|
+|
+|
+|-
+| on_change_hre_religion
+|
+|
+|
+|
+|
+|-
+| on_change_revolution_target
+|
+|
+|country
+|country
+|THIS = new target, FROM = previous target
+|-
+| on_chinese_empire_dismantled
+|Fired when Chinese Emperor is annexed.
+|country
+|
+|country
+|ROOT = annexing country, FROM = emperor
+|-
+| on_circumnavigation
+|
+|
+|
+|
+|
+|-
+| on_colonial_liberation
+|
+|country
+|
+|
+|
+|-
+|on_colonial_nation_established
+|
+|new country
+|
+|parent country
+|
+|-
+| on_colonial_pulse
+|
+|province
+|
+|
+|
+|-
+| on_colonial_reintegration
+|
+|country
+|
+|
+|
+|-
+| on_colonial_type_change
+|
+|colony
+|
+|overlord
+|
+|-
+|on_colonist_boosting_colony
+|
+|colony province
+|
+|country/province
+|FROM = owner country or province if there's a minority expulsion source
+|-
+|on_colony_established
+|Fires when the colony is created
+|colony province
+|
+|country/province
+|FROM = owner country or province if there's a minority expulsion source
+|-
+|on_colony_finished
+|
+|province
+|
+|
+|
+|-
+| on_company_chartered
+|
+|location
+|
+|country
+|FROM = previous country
+|-
+|on_concentrate_development
+|
+|
+|
+|
+|
+|-
+| on_company_disolved
+|
+|location
+|
+|country
+|
+|-
+| on_company_formed
+|
+|location
+|
+|country
+|
+|-
+| on_conquest
+|
+|location
+|
+|previous owner
+|
+|-
+| on_conquistador_empty
+|
+|country
+|
+|province
+|FROM = country doing the exploring, ROOT = province discovered
+|-
+| on_conquistador_native
+|
+|
+|
+|
+|
+|-
+| on_conquistador_recruited
+|
+|country
+|
+|
+|
+|-
+| on_consecrate_patriarch
+|
+|location
+|
+|
+|
+|-
+| on_convert_by_trade_policy
+|
+|
+|location
+|country
+|FROM = country who propogated
+|-
+|on_core
+|
+|
+|province
+|
+|
+|-
+|on_cossack_raised
+|
+|
+|location
+|
+|
+|-
+|on_cossacks_receive_serfs
+|
+|country
+|
+|country
+|ROOT = country, FROM = country they fled from
+|-
+| on_country_creation
+|
+|
+|
+|
+|Doesn't cover all ways to spawn a country
+|-
+| on_country_released
+|Fires when a country is forced to be released via a peace treaty / when a country is created with the return province button
+|released country
+|released country
+|country which is forcing the province owner to release the country / country which uses the return province button
+|Doesn't cover all ways to spawn a country
+|-
+| on_create_client_state
+|
+|
+|country
+|overlord
+|
+|-
+| on_create_vassal
+|
+|country
+|
+|overlord
+|
+|-
+|on_culture_demoted
+|
+|
+|
+|
+|
+|-
+| on_culture_promoted
+|
+|
+|
+|
+|
+|-
+| on_death_election
+|
+|country
+|
+|
+|
+|-
+| on_death_foreign_slave_ruler
+|
+|country
+|
+|
+|
+|-
+| on_death_has_harem
+|
+|country
+|
+|
+|
+|-
+|on_defender_of_faith_claim
+|
+|country
+|
+|
+|
+|-
+|on_defender_of_faith_loss
+|
+|country
+|
+|
+|
+|-
+| on_dependency_gained
+|
+|overlord
+|
+|subject
+|
+|-
+| on_dependency_lost
+|
+|overlord
+|
+|subject
+|
+|-
+|on_dip_advisor_hired
+|Executed after on_advisor_hired
+|country
+|
+|
+|
+|-
+| on_dip_development
+|
+|location
+|
+|
+|
+|-
+|on_dip_exploited
+|
+|
+|
+|
+|
+|-
+|on_dip_tech_taken
+|
+|
+|
+|
+|
+|-
+| on_diplomatic_annex
+|
+|target country
+|
+|annexing country
+|
+|-
+| on_dismantle_revolution
+|
+|
+|loser country
+|winner country
+|loser country = rev. country, winner country = peace treaty enforcer
+|-
+| on_embrace_revolution
+|
+|country
+|
+|
+|
+|-
+| on_emperor_elected
+|
+|country
+|
+|country
+|ROOT = New Emperor, FROM = Previous Emperor
+|-
+| on_enforce_rebel_demands
+|
+|country
+|
+|
+|
+|-
+| on_estate_led_regency
+|
+|country
+|
+|
+|
+|-
+| on_estate_led_regency_surpassed
+|
+|country
+|
+|
+|
+|-
+|on_estate_removed
+|
+|
+|
+|
+|
+|-
+|on_expanded_infrastructure
+|
+|province
+|
+|country
+|FROM = country that did it
+|-
+|on_expanded_infrastructure_removed
+|
+|province
+|
+|country
+|FROM = country that did it
+|-
+| on_explore_coast
+|
+|location
+|
+|country
+|ROOT = discovered province, FROM = country doing the exploring
+|-
+| on_explorer_recruited
+|
+|country
+|
+|
+|
+|-
+| on_extend_regency
+|
+|country
+|
+|
+|
+|-
+| on_extended_regency
+|
+|
+|
+|
+|
+|-
+| on_federation_leader_change
+|
+|
+|
+|
+|
+|-
+| on_fetishist_cult_change
+|
+|country
+|
+|
+|
+|-
+| on_five_year_pulse
+|
+|
+|
+|
+|
+|-
+| on_five_year_pulse_2
+|
+|
+|
+|
+|
+|-
+| on_five_year_pulse_3
+|
+|
+|
+|
+|
+|-
+| on_five_year_pulse_4
+|
+|
+|
+|
+|
+|-
+| on_flagship_captured
+|
+|country
+|
+|country
+|ROOT = who captured, FROM = who lost
+|-
+| on_flagship_destroyed
+|
+|country
+|
+|country
+|ROOT = who destroyed, FROM = who lost
+|-
+|on_force_conversion
+|
+|
+|
+|
+|
+|-
+| on_four_year_pulse
+|
+|
+|
+|
+|
+|-
+| on_four_year_pulse_2
+|
+|
+|
+|
+|
+|-
+| on_four_year_pulse_3
+|
+|
+|
+|
+|
+|-
+| on_four_year_pulse_4
+|
+|
+|
+|
+|
+|-
+| on_gain_great_power_status
+|
+|country
+|
+|
+|
+|-
+|on_galleass_raised
+|
+|
+|location
+|
+|
+|-
+|on_galleon_raised
+|
+|
+|location
+|
+|
+|-
+| on_general_recruited
+|
+|country
+|
+|
+|
+|-
+|on_geobukseon_raised
+|
+|
+|location
+|
+|
+|-
+| on_golden_bull_enacted
+|
+|
+|country
+|
+|THIS = curia controller
+|-
+| on_government_change
+|
+|country
+|
+|
+|
+|-
+| on_grant_estate_land
+|
+|location
+|
+|
+|
+|-
+| on_great_project_constructed
+|
+|location
+|
+|country
+|FROM = country that owns it
+|-
+| on_harmonized_buddhism
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_christian
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_dharmic
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_jewish_group
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_mahayana
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_muslim
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_pagan
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_shinto
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_vajrayana
+|
+|country
+|
+|
+|
+|-
+| on_harmonized_zoroastrian_group
+|
+|country
+|
+|
+|
+|-
+| on_heir_death
+|
+|country
+|
+|
+|
+|-
+|on_heir_disinherited
+|
+|
+|
+|
+|
+|-
+| on_heir_needed_theocracy
+|
+|country
+|
+|
+|
+|-
+| on_holy_order_established
+|
+|country
+|province
+|province
+|The FROM and THIS province is the first province listed in the area definition in map\area.txt
+This on_action fires after the per_province_effect of the holy order fires for each province in the area.
+|-
+| on_hre_defense
+|
+|
+|
+|
+|
+|-
+|on_hre_dismantled
+|
+|
+|
+|
+|
+|-
+| on_hre_member_annexed
+|
+|
+|
+|
+|
+|-
+| on_hre_member_false_religion
+|
+|
+|
+|
+|
+|-
+| on_hre_member_true_religion
+|
+|
+|
+|
+|
+|-
+| on_hre_non_defense
+|
+|
+|
+|
+|
+|-
+| on_hre_province_reconquest
+|
+|
+|
+|
+|
+|-
+|on_hre_reform_passed
+|
+|
+|
+|
+|
+|-
+| on_hre_released_vassal
+|
+|
+|
+|
+|
+|-
+| on_hre_religion_white_peace
+|
+|
+|
+|
+|
+|-
+| on_hre_transfered_vassal
+|
+|
+|
+|
+|
+|-
+| on_hre_wins_defensive_war
+|
+|
+|
+|
+|
+|-
+|on_hussars_raised
+|
+|
+|location
+|
+|
+|-
+|on_institution_embracement
+|
+|
+|
+|
+|
+|-
+| on_integrate
+|
+|
+|
+|
+|
+|-
+| on_janissaries_raised
+|
+|
+|location
+|
+|
+|-
+| on_leader_recruited
+|
+|country
+|
+|
+|
+|-
+| on_loan_repaid
+|
+|
+|country
+|
+|
+|-
+| on_lock_hre_religion
+|
+|
+|
+|
+|
+|-
+| on_lose_great_power_status
+|
+|country
+|
+|
+|
+|-
+|on_main_war_lost
+|
+|
+|
+|
+|
+|-
+|on_main_war_won
+|
+|
+|
+|
+|
+|-
+|on_mamluks_raised
+|
+|
+|location
+|
+|
+|-
+|on_man_of_war_raised
+|
+|
+|location
+|
+|
+|-
+| on_mandate_of_heaven_gained
+|
+|country
+|
+|country
+|ROOT = new emperor, FROM = old emperor
+|-
+| on_mandate_of_heaven_lost
+|
+|country
+|
+|country
+|ROOT = old emperor, FROM = new emperor
+|-
+|on_mandate_reform_passed
+|
+|
+|
+|
+|
+|-
+|on_marine_raised
+|
+|
+|location
+|
+|
+|-
+| on_mercenary_recruited
+|
+|country
+|location
+|unit
+|
+|-
+|on_mil_advisor_hired
+|Executed after on_advisor_hired
+|country
+|
+|
+|
+|-
+| on_mil_development
+|
+|location
+|
+|
+|
+|-
+|on_mil_exploited
+|
+|
+|
+|
+|
+|-
+|on_mil_tech_taken
+|
+|
+|
+|
+|
+|-
+| on_minority_expelled
+|
+|location
+|location
+|location
+|FROM = home province
+|-
+| on_monarch_death
+|
+|country
+|
+|
+|
+|-
+|on_monthly_pulse
+|
+|
+|
+|
+|fires once a month for each tag. The day depends on the month and the tag order id
+|-
+|on_musketeer_raised
+|
+|
+|location
+|
+|
+|-
+|on_national_focus_change
+|
+|
+|
+|
+|
+|-
+| on_native_change_government
+|
+|country
+|
+|
+|
+|-
+|on_naval_barrage
+|
+|
+|
+|
+|
+|-
+|on_new_age
+|
+|
+|
+|
+|
+|-
+| on_new_consort
+|
+|country
+|
+|
+|
+|-
+| on_new_heir
+|
+|country
+|
+|
+|
+|-
+| on_new_monarch
+|
+|country
+|
+|
+|can be called for Personal Union juniors as well
+|-
+| on_new_term_election
+|
+|country
+|
+|
+|
+|-
+| on_overextension_pulse
+|
+|
+|
+|
+|
+|-
+|on_overrun
+|on stackwipe
+|winner
+|
+|loser
+|
+|-
+| on_parliament_debate_failed
+|
+|country
+|
+|
+|
+|-
+|on_parliament_debate_reset
+|
+|
+|
+|
+|
+|-
+| on_parliament_debate_succeeded
+|
+|country
+|
+|
+|
+|-
+|on_parliament_seat_given
+|
+|
+|
+|
+|
+|-
+|on_parliament_seat_lost
+|
+|
+|
+|
+|
+|-
+| on_peace_actor
+|
+|country
+|
+|
+|
+|-
+| on_peace_recipient
+|
+|country
+|
+|
+|
+|-
+| on_pillaged_capital
+|
+|country
+|
+|country
+|ROOT = country pillaging, FROM = country pillaged
+|-
+| on_post_adm_advisor_fired
+|
+|
+|country
+|
+|
+|-
+| on_post_dip_advisor_fired
+|
+|
+|country
+|
+|
+|-
+| on_post_mil_advisor_fired
+|
+|
+|country
+|
+|
+|-
+| on_pre_adm_advisor_fired
+|
+|
+|country
+|
+|
+|-
+| on_pre_dip_advisor_fired
+|
+|
+|country
+|
+|
+|-
+| on_pre_mil_advisor_fired
+|
+|
+|country
+|
+|
+|-
+|on_primary_culture_changed
+|
+|
+|
+|
+|
+|-
+|on_province_culture_changed
+|
+|
+|
+|
+|
+|-
+| on_province_culture_converted
+|
+|location
+|
+|
+|
+|-
+| on_province_owner_change
+|
+|location
+|
+|country
+| FROM = old owner
+For a new colony started by sending a colonist, at the point this fires, ''is_colony = yes'' is still false, but you can use ''has_construction = colonist'' instead.
+|-
+|on_province_religion_changed
+|
+|
+|
+|
+|
+|-
+| on_province_religion_converted
+|
+|location
+|
+|
+|
+|-
+|on_qizilbash_raised
+|
+|
+|location
+|
+|
+|-
+| on_queen_death
+|
+|country
+|
+|
+|
+|-
+| on_raid_coast
+|
+|
+|country
+|location
+|THIS = raiding country
+|-
+|on_rajput_raised
+|
+|
+|location
+|
+|
+|-
+|on_raze
+|
+|
+|
+|
+|
+|-
+| on_rebels_break_country
+|
+|
+|country
+|
+|
+|-
+| on_reform_changed
+|
+|
+|
+|
+|
+|-
+| on_reform_enacted
+|
+|
+|
+|
+|
+|-
+| on_refuse_tribute
+|
+|subject
+|
+|overlord
+|
+|-
+| on_regent
+|
+|country
+|
+|
+|
+|-
+| on_regiment_recruited
+|
+|
+|location
+|country
+|
+|-
+| on_released_hre_member
+|
+|
+|
+|
+|
+|-
+| on_religion_change
+|
+|country
+|
+|
+|
+|-
+| on_remove_free_city
+|
+|
+|
+|
+|
+|-
+| on_remove_pasha
+|
+|
+|
+|
+|
+|-
+| on_removed_from_company
+|
+|location
+|
+|country
+|FROM = country doing it
+|-
+| on_replace_governor
+|
+|country
+|
+|
+|
+|-
+| on_revoke_estate_land
+|
+|
+|
+|
+|
+|-
+| on_revoke_estate_land_ai
+|
+|
+|
+|
+|
+|-
+| on_revoke_estate_land_ai_post
+|
+|
+|
+|
+|
+|-
+| on_revoke_estate_land_post
+|
+|
+|
+|
+|
+|-
+| on_revolutionary_guard_raised
+|
+|
+|location
+|
+|
+|-
+|on_royal_marriage
+|
+|Marraige sender
+|
+|marriage accepter
+|
+|-
+|on_royal_marriage_broken
+|
+|Original marriage creator
+|
+|Marriage accepter
+|
+|-
+|on_samurai_raised
+|
+|
+|location
+|
+|
+|-
+|on_scorch_earth
+|
+|
+|
+|
+|
+|-
+| on_secondary_religion_change
+|
+|country
+|
+|
+|
+|-
+| on_select_heir_from_harem
+|
+|
+|
+|
+|
+|-
+|on_separate_war_lost
+|
+|
+|
+|
+|
+|-
+|on_separate_war_won
+|
+|
+|
+|
+|
+|-
+| on_siberian_pulse
+|
+|
+|
+|
+|
+|-
+| on_siege_lost_country
+|
+|loser country
+|
+|location
+|
+|-
+| on_siege_lost_province
+|
+|location
+|
+|winner country
+|
+|-
+| on_siege_won_country
+|
+|winner country
+|
+|location
+|
+|-
+| on_siege_won_province
+|
+|location
+|
+|loser country
+|
+|-
+|on_slacken_start
+|
+|
+|
+|
+|
+|-
+|on_slacken_stop
+|
+|
+|
+|
+|
+|-
+| on_startup
+|
+|country
+|
+|
+|
+|-
+|on_streltsy_raised
+|
+|
+|location
+|
+|
+|-
+| on_successive_emperor
+|
+|
+|
+|
+|
+|-
+|on_tech_taken
+|
+|
+|
+|
+|
+|-
+|on_tercio_raised
+|
+|
+|location
+|
+|
+|-
+| on_thri_yearly_pulse
+|
+|
+|
+|
+|
+|-
+| on_thri_yearly_pulse_2
+|
+|
+|
+|
+|
+|-
+| on_thri_yearly_pulse_3
+|
+|
+|
+|
+|
+|-
+| on_thri_yearly_pulse_4
+|
+|
+|
+|
+|
+|-
+| on_trade_company_investment
+|
+|
+|
+|
+|
+|-
+| on_trade_good_changed
+|
+|location
+|
+|country
+|
+|-
+| on_transfer_development
+|
+|country
+|
+|country
+|ROOT = country doing transfer, FROM = country dev was transferred from
+|-
+|on_voc_indiamen_raised
+|
+|
+|location
+|
+|
+|-
+|on_war_ended
+|
+|
+|
+|
+|
+|-
+| on_war_lost
+|
+|loser country
+|
+|winner country
+|
+|-
+| on_war_won
+|
+|winner country
+|
+|loser country
+|
+|-
+| on_weak_heir_claim
+|
+|country
+|
+|
+|
+|-
+|on_yearly_pulse
+|
+|
+|
+|
+|
+|-
+|on_yearly_pulse_2
+|
+|
+|
+|
+|
+|-
+|on_yearly_pulse_3
+|
+|
+|
+|
+|
+|-
+|on_yearly_pulse_4
+|
+|
+|
+|
+|
+|-
+|on_yearly_pulse_5
+|
+|
+|
+|
+|
+|-
+|}
+
+== Actions not in the file ==
+{{SVersion|1.31}}
+{| class="wikitable sortable" width="100%"
+! width="20%" | On Action
+! width="30%" | Description
+! width="10%" | ROOT
+! width="10%" | THIS
+! width="10%" | FROM
+! width="20%" | Notes
+|-
+| on_harmonized_<religion>
+|
+|country
+|
+|
+|Modded religions are supported
+|}
+
+== Removed on actions ==
+{{sversion|timeless}}
+
+{| class="wikitable sortable"
+! On Action || Version removed
+|-
+| on_cossacks_receive_serfs
+| 1.35
+|-
+| on_raise_cossacks
+| 1.35
+|-
+| on_russian_oprichnina
+| 1.35
+|-
+| on_russian_streltsy
+| 1.35
+|-
+| on_russian_sudebnik
+| 1.35
+|}
+== Footnotes ==
+
+{{Modding navbox}}
+[[Category:Modding]]

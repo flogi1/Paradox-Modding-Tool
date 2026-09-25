@@ -1,0 +1,2787 @@
+{{version|1.25}}
+'''Triggers''' are used in order to execute commands of [[effects]] only when certain conditions are true. The command will be executed within a specific [[scope]].
+
+== Operators ==
+{{SVersion|Timeless}}
+Operators are used to combine several conditions. In most cases the AND operator is the default.
+
+{| class="wikitable"
+|-
+! Operator !! Description !! Example 
+|-
+| AND || Returns true if all enclosed conditions return true || <pre>AND = {
+    adm_power = 10
+    dip_power = 10
+}</pre>
+|-
+| OR || Returns true if at least one enclosed condition returns true|| <pre>OR = {
+    adm_power = 10
+    dip_power = 10
+}</pre>
+|-
+| NOT || Returns true if none of the enclosed condition returns true || <pre>NOT = {
+    adm_power = 10
+    dip_power = 10
+}</pre>
+|}
+
+== Simple triggers ==
+{{SVersion|Timeless}}
+A simple trigger can be used inside its scope in the following way:
+ <trigger> = <X>
+* Boolean triggers can be checked against yes/no
+* Integer triggers can be checked against an integer value (...-1,0,5...)
+* Float triggers can be checked against a floating point or integer value (...0.25, 1.6, 2...)
+* Tag triggers can be checked against a country tag (ENG, PRU, ...)
+* ID triggers can be checked against a province ID
+* Date triggers can be checked against a date value (1444.11.11, 1745.11.03, ...)
+* Identifier triggers can be checked against an appropriate identifier
+
+=== Base scopes ===
+{{SVersion|1.32}}
+Base scopes represent a single country tag or province ID, and can be used in most triggers too. For value/identifier triggers, the game will compare with the base scope's value/identifier for the same trigger.
+{| class="wikitable"
+|-
+! Value !! Scopes !! Description
+|-
+| ROOT || anywhere || Refers to the receiver of an event, decision, mission, etc.
+|-
+| FROM || anywhere || Refers to the sender/target of an event, decision, mission, etc.
+|-
+| PREV || anywhere || Refers to the previous scope. Unlike a previous PDS title (CKII), cannot be repeated (e.g., PREVPREV) to refer to nested previous scopes.
+|-
+| THIS || anywhere || Refers to the current scope. Useful for specific triggers like is_in_war.
+|-
+| owner || province scope || Refers to the country that owns the province in scope
+|-
+| controller || province scope || Refers to the country that controls the province in scope
+|-
+| overlord || country scope || Refers to the country that has the country in scope as a subject
+|-
+| capital || country scope || Refers to the capital province of the country in scope
+|-
+| emperor || anywhere || Refers to the current emperor country of the Holy Roman Empire
+|-
+| event_target:<target> || anywhere || Refers to the saved event target "<target>"
+|}
+
+=== List of triggers ===
+{{SVersion|1.25}}
+{| class="wikitable sortable"
+|-
+! Value !! Type !! Description !! Scope !! Example
+|-
+| <advisor> || Integer || Returns true if the country has hired an [[advisor]] of the specified type which has at least level X. || Country ||<code>statesman = 3</code>
+|-
+| <building> || Integer || Returns true if the country has at least X [[buildings]] from the specified building type. || Country ||<code>temple = 3</code>
+|-
+| <idea group> || Integer || Returns true if the country has at least X ideas from the specified [[idea group]]. || Country ||<code>religious_ideas = 3</code>
+|-
+| <institution> || Integer || Returns true if the support for the specified [[institution]] in the province is at least X. || Province ||<code>printing_press = 50</code>
+|-
+| <religion> || Integer || Returns true if the country has a [[tolerance]] of at least X of the specified [[religion]].<br>Note: No correct localisation. || Country ||<code>orthodox = -2</code>
+|-
+| <subject_type> || Integer || Returns true if the country has at least X subjects of the given type. || Country ||<code>vassal = 3</code>
+|-
+| <trade good> || Integer || Returns true if the country has at least X provinces producing the specified [[trade good]]. || Country ||<code>gold = 2</code>
+|-
+| absolutism || Integer || Returns true if the country has at least X absolutism. || Country ||<code>absolutism = 50</code>
+|-
+| accepted_culture || Identifier, Province scope || Returns true if the country accepts the specified [[culture]]. || Country ||<code>accepted_culture = ROOT</code>
+|-
+| active_major_mission|| Identifier || Returns true if X is the current [[mission]] of the country. Obsolete since 1.25. || Country ||<code>active_major_mission = finish_reconquista</code>
+|-
+| rowspan="2" | adm || Integer || Returns true if the country has a [[ruler]] with an administrative skill of at least X. || Country ||<code>adm = 3</code>
+|-
+<!-- adm -->| Tag, Scope || Returns true if the country has a ruler with at least as high administrative skill as the ruler of the specified country. || Country ||<code>adm = GEO</code>
+|-
+| rowspan="2" | adm_power || Integer || Returns true if the country has at least X [[administrative power]]. || Country ||<code>adm_power = 600</code>
+|-
+<!-- adm_power -->| Tag, Scope || Returns true if the country has at least as much administrative power as the specified country. || Country ||<code>adm_power = FIN</code>
+|-
+| adm_tech || Integer, Scope || Returns true if the country has an [[administrative technology]] of at least X or the target scope. || Country ||<code>adm_tech = 4</code>adm_tech = ROOT
+|-
+| advisor || Identifier || Returns true if the country has an [[advisor]] of the specified type. || Country ||<code>advisor = trader</code>
+|-
+| advisor_exists || Advisor ID<ref name="advisor">The advisor ids can be found in the files in {{path|history/advisors}}.</ref>|| Returns true if the [[advisor]] X exists. || Country ||<code>advisor_exists = 225</code>
+|-
+| ai || Boolean || Returns true if the country is controlled by the [[AI]]. || Country ||<code>ai = yes</code>
+|-
+| ai_attitude || Clause || Returns true if the country has the specified [[attitude]] towards country X. || Country ||<pre>ai_attitude = {
+	who = FROM
+	attitude = attitude_hostile
+}</pre>
+|-
+|all_regiments_morale_percent
+|Float
+|Returns true if all regiments controlled by the country have a morale percentage at least that of the specified value.
+|Country
+|<code>all_regiments_morale_percent = 90</code>
+|-
+| alliance_with || Tag, Scope || Returns true if the country has an [[alliance]] with X. || Country ||<code>alliance_with = FRA</code>
+|-
+| allows_female_emperor || Boolean || Returns true if females can become [[Holy Roman Empire#Emperor|emperor]]. || Anywhere ||<code>allows_female_emperor = no</code>
+|-
+| always || Boolean || Returns true under all circumstances if set to yes, returns false under all circumstances if set to no. || Anywhere ||<code>always = no</code>
+|-
+| area || Identifier || Returns true if the province is part of the [[area]] X. || Province ||<code>area = amazon_area</code>
+|-
+| rowspan="2" | army_size || Integer || Returns true if the country has an army of at least X k soldiers. || Country ||<code>army_size = 15</code>
+|-
+<!-- army_size -->| Tag, Scope || Returns true if the country has an army with at least as many soldiers as the specified country. || Country ||<code>army_size = SPA</code>
+|-
+| army_size_percentage|| Float || Returns true if the total army size of the country is at least X% of its [[land force limit]]. || Country ||<code>army_size_percentage = 0.6</code>
+|-
+| army_strength || Clause || Returns true, if the country's army strength is at least X times the army strength of the specified country. It is unknown how the strength gets calculated. Both the army size and mil tech play a role, but there might be more factors || Country ||<pre>army_strength = {
+	who = FRA
+	value = 0.66
+}</pre>
+|-
+| army_professionalism || Float || Returns true if the country's [[army professionalism]] is of at least X. || Country ||<code> army_professionalism = 0.10 </code>
+|-
+| rowspan="2" | army_tradition || Integer || Returns true if the country has an [[army tradition]] of at least X. || Country ||<code>army_tradition = 75</code>
+|-
+<!-- army_tradition -->| Tag, Scope || Returns true if the country has an at least as high army tradition as the specified country. || Country ||<code>army_tradition = RUS</code>
+|-
+| artillery_fraction || Float || Returns true if the ratio of the [[artillery]] fraction to the army size of the country is at least X. || Country ||<code>artillery_fraction = 0.6</code>
+|-
+| rowspan="2" | artillery_in_province || Integer || Returns true if there are at least X [[artillery]] units in the province. || Province ||<code>artillery_in_province = 5</code>
+|-
+<!-- artillery_in_province -->| Tag, Scope || Returns true if there are artillery units from the specified country in the province. || Province ||<code>artillery_in_province = OMA</code>
+|-
+| at_war_with_religious_enemy || Boolean || Returns true if the country is at [[war]] with any country of a different [[religion]]. || Country ||<code>at_war_with_religious_enemy = yes</code>
+|-
+| rowspan="2" | authority || Integer || Returns true if the [[Inti]] country has at least X authority. || Country ||<code>authority = 5</code>
+|-
+<!-- authority -->| Tag, Scope || Returns true if the Inti country has at least as much authority as the specified country. || Country ||<code>authority = MCA</code>
+|-
+| average_autonomy || Integer || Returns true if the country has an average [[autonomy]] in its provinces of at least X. || Country ||<code>average_autonomy = 5</code>
+|-
+| average_autonomy_above_min || Integer ||''Needs description''|| Country ||<code>average_autonomy_above_min = 40</code>
+|-
+| average_effective_unrest || Integer ||''Needs description''|| Country ||<code>average_effective_unrest = 2</code>
+|-
+| average_home_autonomy || Integer || Returns true if the country has an average [[autonomy]] in its provinces excluding overseas provinces is at least X. || Country ||<code>average_home_autonomy = 5</code>
+|-
+| average_unrest || Integer || Returns true if the country has an average [[unrest]] in its provinces of at least X. || Country ||<code>average_unrest = 2</code>
+|-
+| rowspan="2" | base_manpower || Integer || Returns true if the [[base manpower]] of the province is at least X. || Province ||<code>base_manpower = 3</code>
+|-
+|Clause
+|Returns true if the [[base manpower]] of the province is at least is at least the value of the variable. Variable name must be in quotes.
+|Province
+|<code>base_manpower = "province_mil_var"</code>
+|-
+| rowspan="2" | base_production || Integer || Returns true if the [[base production]] of the province is at least X. || Province ||<code>base_production = 5</code>
+|-
+|Clause
+|Returns true if the [[base production]] of the province is at least is at least the value of the variable. Variable name must be in quotes.
+|Province
+|<code>base_production = "province_dip_var"</code>
+|-
+| rowspan="2" | base_tax || Integer || Returns true if the [[base tax]] of the province is at least X. || Province ||<code>base_tax = 5</code>
+|-
+|Clause
+|Returns true if the [[base tax]] of the province is at least the value of the variable. Variable name must be in quotes or the trigger will always be true.
+|Province
+|<code>base_tax = "province_adm_var"</code>
+|-
+| blockade || Float || Returns true if the [[blockade]] penalty of the country is at least X%. || Country ||<code>blockade = 0.75</code>
+|-
+| border_distance || Clause || Returns true if distance between the borders of the countries is at least X. || Country ||<pre>border_distance = {
+	who = FRA
+	distance = 100
+}</pre>
+|-
+| calc_true_if || Clause || Returns true if at least ''amount'' number of sub-triggers are true. Triggers can be listed explicitly as individual triggers or selected by an <code>all_</code> scope (must be an <code>all_</code> scope to work properly).<br>Warning: Many triggers return the value they checked instead of <code>true</code> or <code>false</code>. This can lead to unintuitive behaviour.<br>For example, <code>monthly_adm = 10</code> will return the amount of monthly admin points instead of <code>true</code> when the value is 10 or greater.<br>This can be solved by wrapping triggers that should count only once within an<code>OR</code> trigger. All triggers within will only count once. Note that the returned value will pass through an <code>AND</code> trigger, and that may also need to be nested inside an <code>OR</code>.<br>Accepts the <code>desc = <loc_key></code> argument which will append the loc key to the end of the trigger description. || Anywhere ||<pre>calc_true_if = {
+	all_country = {
+		religion = protestant
+	}
+	amount = 10
+        desc = <loc_key>
+}</pre>
+|-
+| can_be_overlord || Identifier || Returns true, if country meets the conditions defined in the subject type's <code>is_potential_overlord</code> section. || Country ||<pre>MNG = { can_be_overlord = tributary_state }</pre>
+|-
+| can_build || Identifier || Returns true if the specified building can be built in the province. || Province ||<code>can_build = armory</code>
+|-
+| can_create_vassals || yes || Returns true if the country can create a vassal.<br>Warning: Interprets anything after ‘=’ as “yes”.<br>Note: Works only for independent countries. || Country ||<code>can_create_vassals = yes</code>
+|-
+| can_heir_be_child_of_consort || Boolean || Returns true if the country’s heir can potentially be the consort’s child. || Country ||<code>can_heir_be_child_of_consort = yes</code>
+|-
+| can_justify_trade_conflict || Tag, Scope || Returns true if the country can justify a trade conflict against country X. || Country ||<code>can_justify_trade_conflict = FROM</code>
+|-
+| can_migrate || Boolean || Returns true if the country can migrate to another province. Doesn't return true if the timer is still counting down. || Country ||<code>can_migrate = yes</code>
+|-
+| can_spawn_rebels || Identifier || Returns true if the specified [[rebel faction]] is a valid rebel faction of the province. || Province ||<code>can_spawn_rebels = catholic_rebels</code>
+|-
+|can_use_crown_land_interaction
+|Identifier
+|Returns true if the specified estate interaction can be used.
+|Country
+|<code>can_use_crown_land_interaction = seize_land</code>
+|-
+|can_use_peace_treaty
+|Clause
+|Returns true if the country can use the specified peace treaty. 
+
+Appears to only be in use in cbs file.
+|Country
+|<pre>
+can_use_peace_treaty = {
+	who = FROM
+	treaty = po_join_empire
+}
+</pre>
+|-
+| capital || Province ID || Returns true if the country's [[capital]] is the province with the ID X. || Country ||<code>capital = 151</code>
+|-
+| capital_distance || Clause || Returns true if distance between the capitals of the countries is at least X. || Country||<pre>capital_distance = {
+	who = FRA
+	distance = 100
+}</pre>
+|-
+| cavalry_fraction || Float || Returns true if the ratio of the [[cavalry]] fraction to the army size of the country is at least X. || Country ||<code>cavalry_fraction = 0.5</code>
+|-
+| rowspan="2" | cavalry_in_province || Integer || Returns true if there are at least X [[cavalry]] units in the province. || Province ||<code>cavalry_in_province = 10</code>
+|-
+<!-- cavalry_in_province -->| Tag, Scope || Returns true if there are cavalry units from the specified country in the province. || Province ||<code>cavalry_in_province = ORI</code>
+|-
+| province_has_center_of_trade_of_level|| Integer || Returns true if the province has a center of trade of at least this level. || Province ||<code>province_has_center_of_trade_of_level = 2</code>
+|-
+| check_variable || Clause || Returns true if the specified variable is at least X. || ||<pre>check_variable = {
+	which = grand_embassy
+	value = 6
+}</pre>
+|-
+| rowspan="2" | church_power || Integer || Returns true if the country has at least X [[church power]]. || Country ||<code>church_power = 20</code>
+|-
+<!-- church_power -->| Tag, Scope || Returns true if the country has at least as much church power as the specified country. || Country ||<code>church_power = SAX</code>
+|-
+| coalition_target || Tag, Scope || Returns true if the country is the target of a [[coalition]]. || Country ||<code>coalition_target = FRA</code>
+|-
+| colonial_claim_by_anyone_of_religion ||''Type needed''|| Returns true if ... ''has gotten a colonial grant for the scope's colonial region from any potential pope-like entities.''||''Scope needed' ''|| {''Example needed''
+|-
+| colonial_region || Identifier || Returns true if the province is part of the [[colonial region]] X. || Province ||<code>colonial_region = colonial_colombia</code>
+|-
+| colony || Integer || Returns true if country has at least that many colonial subjects. || Country ||<code>colony = 5</code>
+|-
+| colony_claim || Tag || Returns true if country has claim on colony || Country ||<code>colony_claim = SPA</code>
+|-
+| colonysize || Integer || Returns true if colony is at least size X. || Province ||<code>colonysize = 600</code>
+|-
+| consort_adm || Integer || Returns true if the country has a [[consort]] with an administrative skill of at least X. || Country ||<code>consort_adm = 5</code>
+|-
+| consort_age || Integer || Returns true if the country’s [[consort]] has an age of at least X.<br>Note: Always returns false if there is no consort. || Country ||<code>consort_age = 43</code>
+|-
+| consort_dip || Integer || Returns true if the country has a [[consort]] with an diplomatic skill of at least X. || Country ||<code>consort_dip = 5</code>
+|-
+| consort_culture || Identifier, Scope || Returns true, if the country's consort has the specified culture. Can utilise [[Variables|Event Scope Values]]. || Country ||<code>consort_culture = prussian</code>
+|-
+| consort_has_personality || Identifier || Returns true if the country’s [[consort]] has the specified [[personality]]. || Country ||<code>consort_has_personality = cruel_personality</code>
+|-
+| consort_mil || Integer || Returns true if the country has a [[consort]] with an military skill of at least X. || Country ||<code>consort_mil = 5</code>
+|-
+| consort_religion || Identifier, Scope || Returns true, if the country's consort has the specified religion. Can utilise [[Variables|Event Scope Values]]. || Country ||<code>consort_religion = catholic</code>
+|-
+| construction_progress || Float || Returns true if the construction progress is at least X%. || Province ||<code>construction_progress = 0.5</code>
+|-
+| continent || Identifier, Tag, Scope, Province ID || Returns true if the province is located on [[continent]] X. || Province ||<code>continent = north_america</code>
+|-
+| controlled_by || Tag, Scope || Returns true if the province is controlled by X. || Province ||<code>controlled_by = TUR</code>
+|-
+| controls || Province ID || Returns true if the province with id X is controlled by the country. || Country ||<code>controls = 151</code>
+|-
+| claim || Tag, Scope || Returns true if the country has a [[claim]] or permanent claim on any province owned by country X. || Country ||<code>claim = FRA</code>
+|-
+| core_claim || Tag, Scope || Returns true if the country has a [[core]] on any province owned by country X. || Country ||<code>core_claim = FRA</code>
+|-
+| core_percentage|| Float || Returns true if the country has [[cored]] at least X% of its provinces. || Country||<code>core_percentage = 0.55</code>
+|-
+| corruption || Float || Returns true if the country has a [[corruption]] of at least X. || Country||<code>corruption = 1</code>
+|-
+| council_position || Identifier || Returns true if X is the country's council position in the Council of Trent. || Country||<code>council_position = concilatory</code>
+|-
+| country_or_non_sovereign_subject_holds || Tag, Scope || Returns true if the province is part of the specified country or its non-tributary subjects. || Province ||<code>country_or_non_sovereign_subject_holds = ROOT</code>
+|-
+| country_or_subject_holds || Tag, Scope || Returns true if the province is part of the specified country or its [[subjects]].<br /> The old <code>country_or_vassal_holds</code> term maps to the new one for compatiblity. || Province ||<code>country_or_subject_holds = ROOT</code>
+|-
+| crown_land_share|| Identifier, Integer || Returns true if the % of the country's development is held by the Crown Land. If an estate is declared, returns true if % of Crown Land is higher than land owned by the estate. || Country ||<code>crown_land_share = 50</code><code>crown_land_share = estate_nobles</code>
+|-
+| culture || Identifier, Scope || Returns true if the province culture is X. || Province ||<code>culture = basque</code>
+|-
+| culture_group || Identifier, Scope || Returns true if the country/province has a culture of the specified [[culture group]]. || Country<br>Province ||<code>culture_group = iberian</code>
+|-
+| culture_group_claim || Tag || Returns true if country's primary culture is the same culture group as any province owned by country X. || Country ||<code>culture_group_claim = FROM</code>
+|-
+| current_age || Identifier || Returns true, if the current age is X. || Anywhere ||<code>current_age = age_of_discovery</code>
+|-
+| current_bribe || Identifier || Returns true, if the seat in the province wants bribe X. Bribes are found in common/parliament_bribes.|| Province ||<code>current_bribe = diplomatic_support</code>
+|-
+| current_debate || Identifier || Returns true if the parliament of the country [[debate]]s about X. || Country ||<code>current_debate = quartering_of_troops</code>
+|-
+| current_icon || Identifier || Returns true, if the country has the specified (orthodox) icon. || Country ||<code>current_icon = icon_eleusa</code>
+|-
+| current_income_balance || Float || Returns true if the current income balance is X. || Country ||<code>current_income_balance = 5</code>
+|-
+| current_institution || Float || Returns true if the current institution (technically the first unembraced meaning in case you have two unembraced, it would be the older one) progress is at least X || Province ||<code>current_institution = 55</code>
+|-
+| current_institution_growth || Float || Returns true, if the country/province has a annual (whereas monthly is printed in province screen) institution growth of at least X for the first not embraced institution. || Country, Province ||<code>current_institution_growth = 12</code>
+|-
+| current_size_of_parliament || Integer || Returns true if the [[parliament]] of the country has a least X seats. || Country ||<code>current_size_of_parliament = 20</code>
+|-
+| custom_trigger_tooltip || Clause || Hides the enclosed trigger so that it is still required but cannot be seen by human players and displays the specified tooltip in its place. || Anywhere ||<pre>custom_trigger_tooltip = {
+	tooltip = EST_CRUSHED_NOMADIC_TRIBES
+	NOT = { has_country_flag = nomadic_tribes_estate_in_power
+	}
+}</pre>
+|-
+| defensive_war_with || Tag, Scope || Returns true if the country is in a defensive [[war]] with country X. || Country ||<code>defensive_war_with = TUR</code>
+|-
+| devastation || Integer || Returns true if the [[devastation]] of the province is at least X. || Province ||<code>devastation = 1</code>
+|-
+| development || Integer, Scope || Returns true if the [[development]] of the province is at least X. Does not accept base scopes as of 1.32. || Province ||<code>development = 9</code>
+|-
+| development_in_provinces || Clause || Returns true, if the owned provinces that fulfil the conditions have a total of X development || Country ||<pre>development_in_provinces = {
+	value = 200
+	region = korea_region
+}</pre>
+|-
+| development_of_overlord_fraction || Float || Returns true, if the country has X percent of its overlord's development || Country ||<code>development_of_overlord_fraction = 0.33</code>
+|-
+| rowspan="2" | devotion || Integer || Returns true if the country has at least X [[devotion]]. || Country ||<code>devotion = 75</code>
+|-
+<!-- devotion -->| Tag, Scope || Returns true if the country has at least as much devotion as the specified country. || Country ||<code>devotion = KOL</code>
+|-
+| rowspan="2" | dip || Integer || Returns true if the country has a [[ruler]] with a diplomatic skill of at least X. || Country ||<code>dip = 6</code>
+|-
+<!-- dip -->| Tag, Scope || Returns true if the country has a ruler with at least as high diplomatic skill as the ruler of the specified country. || Country ||<code>dip = GRM</code>
+|-
+| rowspan="2" | diplomatic_reputation || Integer || Returns true if the country has a [[diplomatic reputation]] of at least X. || Country ||<code>diplomatic_reputation = 10</code>
+|-
+<!-- diplomatic_reputation -->| Tag, Scope || Returns true if the country has at least as much diplomatic reputation as the specified country. || Country ||<code>diplomatic_reputation = CAS</code>
+|-
+| rowspan="2" | dip_power || Integer || Returns true if the country has at least X [[diplomatic power]]. || Country ||<code>dip_power = 600</code>
+|-
+<!-- dip_power -->| Tag, Scope|| Returns true if the country has at least as much diplomatic power as the specified country. || Country ||<code>dip_power = TEU</code>
+|-
+| dip_tech || Integer, Scope || Returns true if the country has an [[diplomatic technology]] of at least level X or the target scope. || Country ||<code>dip_tech = 4</code><code>dip_tech = ROOT</code>
+|-
+| dominant_culture || Identifier, Capital || Returns true if the [[dominant culture]] in the country is X. || Country ||<code>dominant_culture = turkish</code>
+|-
+| dominant_religion || Identifier, Capital || Returns true if the dominant religion in the country is X. || Country ||<code>dominant_religion  = catholic</code>
+|-
+| rowspan="2" | doom || Integer || Returns true if the country has at least X doom. || Country ||<code>doom = 30</code>
+|-
+<!-- doom -->| Tag, Scope || Returns true if the country has at least as much doom as the specified country. || Country ||<code>doom = ROOT</code>
+|-
+| rowspan="2" | dynasty || Name || Returns true if the ruling [[dynasty]] of the country is X. || Country ||<code>dynasty = "von Habsburg"</code>
+|-
+<!-- dynasty -->| Tag, Scope || Returns true if both countries are ruled by the same dynasty. || Country ||<code>dynasty = CAS</code>
+|-
+| empire_of_china_reform_passed || Identifier(?) || Returns true, if X Empire of China reform is enacted. || Anywhere ||<code>empire_of_china_reform_passed = establish_gaituguiliu_decision</code>
+|-
+|empire_of_china_num_reforms_passed
+|Integer
+|Returns true if the Emperor of China has passed at least X reforms.
+|Anywhere
+|<code>empire_of_china_num_reforms_passed = 2</code>
+|-
+|empire_of_china_has_active_decree
+|Boolean, Identifier
+|Returns true if the Emperor of China has an active reform, or the specified X reform.
+|Anywhere
+|<code>empire_of_china_has_active_decree = increase_tariff_control</code>
+|-
+| employed_advisor || Clause || Returns true if the country has employed an [[advisor]] with the specified characteristics.<br>(Any combinations are permitted.) || Country ||<pre>employed_advisor = {
+	category = ADM | DIP | MIL
+	is_male = yes
+	religion = reformed
+	culture = basque
+	type = treasurer
+        skill = <int>
+        name = "string"
+        is_discounted = <yes/no>
+}</pre>
+|-
+| estate_influence || Clause || Returns true if the [[estate]] X in the country has at least Y influence.
+
+NOTE: '''all''' can be used instead of a specific estate to check if all active estates of a country have at least Y influence. 
+
+<nowiki>*</nowiki>NOTE: does not work correctly with negative all estate influence modifiers 
+| Country ||<pre>estate_influence = {
+    estate = estate_church
+    influence = 80
+}</pre>
+|-
+|estate_led_regency_influence
+|Integer
+|Returns true if the [[Estates|estate]] leading the regency in the country has at least X influence.
+
+NOTE: the generated tooltip is not localized, and is shared with estate_led_regency_loyalty.
+|Country
+|<syntaxhighlight lang="text">
+estate_led_regency_influence = 50
+</syntaxhighlight>
+|-
+|estate_led_regency_loyalty
+|Integer
+|Returns true if the [[Estates|estate]] leading the regency in the country has at least X loyalty.
+
+NOTE: the generated tooltip is not localized, and is shared with estate_led_regency_influence.
+|Country
+|<syntaxhighlight>
+estate_led_regency_loyalty = 50
+</syntaxhighlight>
+|-
+| estate_loyalty || Clause || Returns true if the [[estate]] X in the country has at least Y loyalty. || Country ||<pre>estate_loyalty = {
+    estate = estate_burghers
+    loyalty = 50
+}</pre>
+|-
+|num_of_estate_agendas_completed
+|Clause
+|Returns true if number X of agendas have been completed for [[estate]] Y
+|Country
+|<pre>
+num_of_estate_agendas_completed = {
+    estate = estate_nobility
+    value = 3
+}
+</pre>
+|-
+| estate_territory || Clause || Returns true if the [[estate]] X in the country controls at least Y% of the total development. || Country ||<pre>estate_territory = {
+    estate = estate_nobles
+    territory = 12
+}</pre>
+|-
+|exclude_from_progress
+|Clause
+|Merges all triggers in the UI display to prevent long listing. Can be used in conjunction with custom tooltips.
+|Anywhere
+|<pre>
+exclude_from_progress = {
+	any_owned_province = {
+		is_core = ROOT
+		controlled_by = owner
+	}
+}
+</pre>
+|-
+| exiled_same_dynasty_as_current || Boolean || Returns true if an exiled ruler has the same dynasty as the current one. || Country ||<code>exiled_same_dynasty_as_current = yes</code>
+|-
+| rowspan="2" | exists || Tag || Returns true if [[country]] X exists. || Anywhere ||<code>exists = MNG</code>
+|-
+<!-- exists -->| Boolean || Returns true if the scoped [[country]] exists. || Country ||<code>exists = yes</code>
+|-
+|expelled_different_minorities
+|Integer
+|Returns true if the country has expelled X amount of minority cultures.
+|Country
+|<code>expelled_different_minorities = 5</code>
+|-
+| faction_in_power || Identifier || Returns true if the [[faction]] in power of the country is X. || Country ||<code>faction_in_power = eunuchs</code>
+|-
+| faction_influence || Clause || Returns true if the [[faction]] X of the country has at least Y influence. || Country ||<pre>faction_influence = {
+    faction = mr_aristocrats
+    influence = 50
+}</pre>
+|-
+| federation_size || Integer || Returns true if the [[federation]] with the country has at least X members. || Country ||<code>federation_size = 5</code>
+|-
+| fervor || Integer || Returns true if the country has stored at least X fervor points. || Country ||<code>fervor = 5</code>
+|-
+| fort_level || Integer || Returns true if the [[fort]] in the province has at least level X. || Province ||<code>fort_level = 1</code>
+|-
+| full_idea_group || Identifier || Returns true if the country has completed the X [[idea group]]. || Country ||<code>full_idea_group = naval_ideas</code>
+|-
+| galley_fraction || Float || Returns true if the ratio of the [[galley]] fraction to the navy size of the country is at least X. || Country ||<code>galley_fraction = 0.33</code>
+|-
+| rowspan="2" | galleys_in_province || Integer || Returns true if there are at least X [[galleys]] in the province. || Province ||<code>galleys_in_province = 10</code>
+|-
+<!-- galleys_in_province -->| Tag, Scope || Returns true if there are galleys from the specified country in the province. || Province ||<code>galleys_in_province = VEN</code>
+|-
+| garrison || Integer || Returns true if the [[garrison]] is at X men.<br>Note: The localisation is misleading. || Province ||<code>garrison = 1000</code>
+|-
+|gives_military_access_to
+|Tag, Scope
+|Returns true if the scoped country gives military access to the specified country.
+|Country
+|<pre>
+FRA = {
+        gives_military_access_to = ROOT
+}
+</pre>
+|-
+|gives_fleet_basing_rights_to
+|Tag, Scope
+|Returns true if the scoped country
+gives fleet basing rights to the specified country.
+|Country
+|<pre>
+FRA = {
+        gives_fleet_basing_rights_to = ROOT
+}
+</pre>
+|-
+| gold_income || Float || Returns true if the country has an [[income]] from [[Trade_goods#Gold_mines|Gold]] of at least X. || Country ||<code>gold_income = 6</code>
+|-
+| gold_income_percentage|| Float || Returns true if in the country the proportion of [[income]] from [[Trade_goods#Gold_mines|Gold]] is at least X. || Country ||<code>gold_income_percentage = 0.1</code>
+|-
+| governing_capacity_percentage || Float || Returns true if in the country the proportion of [[governing capacity]] used is at least X. || Country ||<code>governing_capacity_percentage = 0.9</code>
+|-
+| government || Identifier || Returns true if the country has [[government]] type X, or government reforms that alter specific mechanics (Harem, Dictatorship).<br>Identifier: monarchy, has_harem, republic, dictatorship, theocracy, tribal, native. || Country ||<code>government = monarchy</code>
+|-
+| government_power_frozen || Clause || Returns true, if the country has the specified government power for the specified government mechanic frozen. || Country || <pre>government_power_frozen = {
+	mechanic_type = russian_modernization_mechanic
+	power_type = russian_modernization
+}</pre>
+|-
+| government_rank || Integer || Returns true if the country has a [[government rank]] of X or higher. || Country ||<code>government_rank = 2</code>
+|-
+| grown_by_development || Integer || Returns true if the country's total development has grown by the specified amount || Country ||<code>grown_by_development = 50</code>
+|-
+|grown_by_states
+|Integer
+|Returns true if the country's total number of states (not areas) has grown by the specified amount. The states don't have to be fully owned and the provinces don't need full cores.
+|Country
+|<code>grown_by_states = 5</code>
+|-
+| great_power_rank || Integer || Returns true if the country has a [[great power]] rank of 2 or worse. || Country ||<code>great_power_rank = 2</code>
+|-
+| guaranteed_by || Tag, Scope || Returns true if the country is [[guarantee]]d by X. || Country ||<code>guaranteed_by = ROOT</code>
+|-
+| had_active_policy || Clause || Returns true, if the country still has and had the specified policy for at least X days. || Country ||<pre>had_active_policy = {
+	policy = the_combination_act
+	days = 365
+}</pre>
+|-
+| had_consort_flag || Clause || Returns true if the consort flag X was last set at least Y days ago || Country ||<pre>had_consort_flag = {
+	flag = my_first_consort_flag
+	days = 365
+}</pre>
+|-
+| had_country_flag || Clause || Returns true if the country flag X was last set for the country at least Y days ago. || Country ||<pre>had_country_flag = {
+	flag = bur_successor
+	days = 180
+}</pre>
+|-
+| had_global_flag || Clause || Returns true if the global flag X was last set at least Y days ago. || Anywhere ||<pre>had_global_flag = {
+	flag = inc_smallpox
+	days = 9125
+}</pre>
+|-
+| had_heir_flag || Clause || Returns true if the heir flag X was last set at least Y days ago || Country ||<pre>had_heir_flag = {
+	flag = inc_pacific_exploration
+	days = 270
+}</pre>
+|-
+| had_province_flag || Clause || Returns true if the province flag X was last set for the province at least Y days ago. || Province ||<pre>had_province_flag = {
+	flag = dutch_revolt
+	days = 1825
+}</pre>
+|-
+| had_recent_war || Integer || Returns true if the country fought a war within the last X years. || Country ||<code>had_recent_war = 10</code>
+|-
+| had_ruler_flag || Clause || Returns true if the ruler flag X was last set for the current ruler at least Y days ago || Country ||<pre>had_ruler_flag = {
+	flag = helped_rival
+	days = 730
+}</pre>
+|-
+| harmonization_progress || Integer || Returns true, if the country's current harmonization progress is at least at X. || Country ||<code>harmonization_progress = 90</code>
+|-
+| harmony || Integer || Returns true, if the country has at least X harmony. || Country ||<code>harmony = 50</code>
+|-
+| has_active_debate || Boolean || Returns true if the country has ongoing [[debate]] in parliament. || Country ||<code>has_active_debate = yes</code>
+|-
+| has_active_fervor || Boolean || Returns true if the country has activated a [[fervor]] effect.
+Can check specific fervor effects as of 1.37.
+| Country ||<code>has_active_fervor = no</code>
+<code>has_active_fervor = trade_fervor</code>
+|-
+| has_active_policy || Identifier || Returns true if country has the specified [[policy]] active. || Country ||<code>has_active_policy = noble_loyalty_act</code>
+|-
+| has_active_triggered_province_modifier || Identifier || Returns true if province has the specified province triggered modifier. Province triggered modifier does not need to be active. || Province ||<code>has_active_triggered_province_modifier = test_modifier</code>
+|-
+|has_administration_efficiency_value
+|Clause
+|Returns true if the country has at least as high administrative efficiency as specified.
+|Country
+|<code>has_administration_efficiency_value = { value = 0.1 }</code>
+|-
+| has_adopted_cult || Identifier || Returns true if the country has adopted the specified [[cult]]. || Country ||<code>has_adopted_cult = roog_cult</code>
+|-
+| has_advisor || Boolean || Returns true if the country has hired an [[advisor]].<br /> Warning: Interprets every right side argument as <code>yes</code>. || Country ||<code>has_advisor = yes</code>
+|-
+| has_age_ability || Identifier || Returns true, if the country has the specified age ability. || Country ||<code>has_age_ability = ab_justified_wars</code>
+|-
+|has_any_active_estate_agenda
+|Boolean
+|Returns true, if the country has an active estate agenda.
+|Country
+|<code>has_any_active_estate_agenda = yes</code>
+|-
+| has_any_disaster || Boolean || Returns true if the country is currently in a [[disaster]]. || Country ||<code>has_any_disaster = no</code>
+|-
+|has_assimilated_culture_group
+|Identifier, Scope
+|Returns true if the country has [[Mughals#Diwan|assimilated]] the specified culture group.
+Only works with base scopes.
+|Country
+|<code>has_assimilated_culture_group = lost_cultures_group</code>
+|-
+|has_assimilated_culture
+|Identifier, Scope
+|Returns true if the country has [[Mughals#Diwan|assimilated]] the specified culture.
+Only works with base scopes.
+|Country
+|<code>has_assimilated_culture = roman</code>
+|-
+| has_border_with_religious_enemy || yes || Returns true if the country borders any country of a different religion.<br>Warning: Interprets anything after ‘=’ as “yes”. || Country ||<code>has_border_with_religious_enemy = yes</code>
+|-
+| has_building || Identifier || Returns true if there is the specified building in the province. || Province ||<code>has_building = fort_15th</code>
+|-
+| has_cardinal || Boolean || Returns true if the province has a [[cardinal]] in the curia. || Province ||<code>has_cardinal = yes</code>
+|-
+| has_casus_belli || Clause || Returns true if the country has a [[casus belli]] of type X against country Y.|| Country ||<pre>has_casus_belli = {
+	type = cb_trade_war_triggered
+	target = TOT
+}</pre>
+|-
+| has_casus_belli_against || Tag, Scope || Returns true if the country has a [[casus belli]] against country X. || Country ||<code>has_casus_belli_against = PREV</code>
+|-
+| has_center_of_trade_of_level || Integer || Returns true if the country has a center of trade of a least level X. || Country ||<code>has_center_of_trade_of_level = 3</code>
+|-
+| has_changed_nation || Boolean || Returns true if playing as a released vassal. || Global||<code>has_changed_nation = yes</code>
+|-
+| has_church_aspect || Identifier || Returns true if the country has enabled the [[church aspect]] X. || Country ||<code>has_church_aspect = allow_usury_aspect</code>
+|-
+| has_climate || Identifier || Returns true if the province has [[climate]] X. || Province ||<code>has_climate = tropical</code>
+|-
+| has_colonial_parent || Tag || Returns true if the specified country is the colonial parent of the country. || Country ||<code>has_colonial_parent = GBR</code>
+|-
+| has_colonist || Boolean || Returns true if scoped province has an active colonist || Province ||<code>has_colonist = yes</code>
+|-
+| has_commanding_three_star || Boolean || Returns true, if country has a three star general. || Country ||<code>has_commanding_three_star = yes</code>
+|-
+| has_consort || Boolean || Returns true if the country has a [[consort]]. || Country ||<code>has_consort = yes</code>
+|-
+| has_consort_flag || Identifier || Returns true if the consort flag X is set. || Country ||<code>has_consort_flag = royal_couple_shared_adm_interests</code>
+|-
+| has_consort_regency || Boolean || Returns true if the country has a [[consort | consort regency]]. || Country ||<code>has_consort_regency = yes</code>
+|-
+| has_construction || Identifier || Returns true if there is the specified construction in progress in the province.<br>Possible values are core, culture, building, merchant, diplomat, missionary, army, navy, canal, great_project, and any specific building and great project name.<br>Note: has loading order issues in 1.35, when used in building triggers. It can only check the latest construction. If you start building a university followed by a unit, it will not be able to recognize that there is a building construction in the province. Use "can_build = university" instead. || Province ||<code>has_construction = core</code>
+|-
+| has_country_flag || Identifier || Returns true if the flag X is set for the country. || Country ||<code>has_country_flag = zan_shirazi_islam_confirmed</code>
+|-
+| has_country_modifier || Identifier || Returns true if the country has the modifier X. || Country ||<code>has_country_modifier = western_embassy_mission</code>
+|-
+| has_custom_ideas || Boolean || Returns true if the country has [[custom ideas]]. || Country ||<code>has_custom_ideas = yes</code>
+|-
+| has_disaster || Identifier || Returns true if the country is currently in the [[disaster]] X. || Country ||<code>has_disaster = time_of_troubles</code>
+|-
+| has_disaster_progress || Clause || Returns true if the [[disaster]] progress of the specified disaster is at least X in the country. || Country ||<pre>has_disaster_progress = {
+	disaster = time_of_troubles
+	value = 50
+}</pre>
+|-
+| rowspan="2" | has_discovered || Province ID, Scope || Returns true if the country has discovered the province with the ID X. || Country ||<code>has_discovered = 313</code>
+|-
+<!-- has_discovered -->| Tag, Scope || Returns true if the country X has discovered the province. || Province ||<code>has_discovered = ROOT</code>
+|-
+| has_dlc || Identifier || Returns true if the [[DLC]] X is enabled. Doesn't work for unit packs and music packs. || Anywhere ||<code>has_dlc = "The Cossacks"</code>
+|-
+| has_divert_trade || Boolean || Returns true if the [[protectorate]] has divert trade to its overlord. || (Subject) Country ||<code>has_divert_trade = yes</code>
+|-
+|has_eclipsed
+|Tag, Scope
+|Returns true if the country cannot rival the specified country.
+|Country
+|<code>has_eclipsed = GBR</code>
+|-
+|has_been_eclipsed_by
+|Tag, Scope
+|Returns true if the country cannot be rivaled by the specified country.
+|Country
+|<code>has_been_eclipsed_by = FRA</code>
+|-
+| has_embargo_rivals || Boolean || Returns true if the [[subject nation]] is embargoing overlord's rivals. || (Subject) Country ||<code>has_embargo_rivals = no</code>
+|-
+| has_empty_adjacent_province || yes || Returns true if an adjacent province is uncolonized.<br>Warning: Works only with 'yes'. || Province ||<code>has_empty_adjacent_province = yes</code>
+|-
+| has_estate || Identifier || Returns true if the country has [[estate]] X. || Country ||<code>has_estate = estate_dhimmi</code>
+|-
+| rowspan="2" | has_estate || Boolean || Returns true if the province is controlled by an [[estate]]. || Province ||<code>has_estate = no</code>
+|-
+<!-- has_estate -->| Identifier || Returns true if the province is controlled by the [[estate]] X. || Province ||<code>has_estate = estate_church</code>
+|-
+| has_estate_influence_modifier || Clause || Returns true if the [[estate]] X in the country has the influence modifier Y. || Country ||<pre>has_estate_influence_modifier = {
+	estate = estate_church
+	modifier = EST_VAL_RELIGIOUS_ZEALOTS_TRIUMPH
+}</pre>
+|-
+| has_estate_loan || Boolean || Returns true if the country has an [[estate]] [[loan]]. || Country ||<code>has_estate_loan = no</code>
+|-
+| has_estate_loyalty_modifier || Clause || Returns true if the [[estate]] X in the country has the loyalty modifier Y. || Country ||<pre>has_estate_loyalty_modifier = {
+    estate = estate_nobles
+    modifier = EST_VAL_NOT_LEGITIMATE
+}</pre>
+|-
+| has_estate_privilege || Privilege || Returns true if the country has the listed privilege. || Country ||<code>has_estate_privilege = foo</code>
+|-
+| has_faction|| Idenitifer || Returns true if the country has the specified faction. || Country ||<code>has_faction = enuchs</code>
+|-
+| has_factions || Boolean || Returns true if country has [[faction]]s. || Country ||<code>has_factions = yes</code>
+|-
+| has_female_consort || Boolean || Returns true if the country has a female [[consort]]. || Country ||<code>has_female_consort = yes</code>
+|-
+| has_female_heir || Boolean || Returns true if the country has a female [[heir]]. || Country ||<code>has_female_heir = yes</code>
+|-
+| has_first_revolution_started || Boolean || Returns true if a [[revolution]] has happened in the world. || Anywhere ||<code>has_first_revolution_started = yes</code>
+|-
+|has_flagship
+|Boolean
+|Returns true if the country has a flagship.
+|Country
+|<code>has_flagship = yes</code>
+|-
+| has_foreign_consort || Boolean || Returns true if the country has foreign [[consort]]. || Country ||<code>has_foreign_consort = no</code>
+|-
+| has_foreign_heir || Boolean || Returns true if the country has foreign [[heir]]. || Country ||<code>has_foreign_heir = no</code>
+|-
+| has_friendly_reformation_center || Boolean || Returns true if the country has a friendly [[center of reformation]]. || Country ||<code>has_friendly_reformation_center = yes</code>
+|-
+| has_game_started || Boolean || Returns true if the game has started. || Global ||<code>has_game_started = no</code>
+|-
+| has_given_consort_to || Tag, Scope || Returns true if the scoped country has given a [[consort]] to the specified country. || Country ||<code>has_given_consort_to = ROOT</code>
+|-
+| has_great_project || Clause || Returns true if the country has the specified [[great project]], or any, at the given tier or above. || Province ||<pre>has_great_project = {
+	type = alhambra
+	tier = 3
+}</pre><syntaxhighlight lang="text">
+has_great_project = {
+	type = any
+	tier = 2
+}
+</syntaxhighlight>
+|-
+| has_guaranteed || Tag, Scope || Returns true if the country has [[guarantee]]d country X. || Country ||<code>has_guaranteed = TUR</code>
+|-
+| has_global_flag || Identifier || Returns true if the specified global flag is set. || Anywhere ||<code>has_global_flag = japan_has_encountered_the_west</code>
+|-
+| has_global_modifier_value || Clause || Returns true if the value of the specified modifier is at least X for the country. || Country ||<pre>has_global_modifier_value = {
+	which = cavalry_power
+	value = 0.5
+}</pre>
+|-
+| has_government_mechanic || Identifier || Returns true, if the country uses the specified government mechanic. || Country ||<code>has_government_mechanic = russian_mechanic</code>
+|-
+| has_government_power || Clause || Returns true, if the country has the specified amount of the specified government power for the specified government mechanic. || Country || <pre>has_government_power = {
+	mechanic_type = russian_modernization_mechanic
+	power_type = russian_modernization
+	value = 10
+}</pre>
+|-
+|has_government_attribute
+|Identifier
+|Returns true if any of the country's government reforms have the specified attribute set.
+|
+|has_government_attribute = enables_estate_nobles
+|-
+| has_had_golden_age || Boolean || Returns true, if the country has a [[golden age]]. || Country || has_had_golden_age = yes
+|-
+| has_harmonized_with || Identifier, Scope || Returns true, if the country has harmonized with the specified religion or religion group. || Country ||<code>has_harmonized_with = tengri_pagan_reformed</code>
+|-
+| has_harsh_treatment || Boolean ||''Description needed''||''Scope needed''||<code>has_harsh_treatment = yes</code>
+|-
+| has_heir || Boolean, Name || Returns true if the country has an [[heir]] (named X). || Country ||<code>has_heir = yes</code>
+|-
+| has_heir_flag || Identifier || Returns true if the heir flag X is set. || Country ||<code>has_heir_flag = suspected_bastard</code>
+|-
+| has_heir_leader_from || Tag, Scope || Returns true if an army in the province is led by an heir from X. || Province ||<code>has_heir_leader_from = ROOT</code>
+|-
+| has_hostile_reformation_center || Boolean || Returns true if the country has a hostile [[center of reformation]]. || Country ||<code>has_hostile_reformation_center = yes</code>
+|-
+| has_idea || Identifier || Returns true if the country has the X [[idea]]. || Country ||<code>has_idea = grand_navy</code>
+|-
+| has_idea_group || Identifier || Returns true if the country has chosen the X [[idea group]]. || Country ||<code>has_idea_group = humanist_ideas</code>
+|-
+| has_influencing_fort || Boolean || Returns true if the province in the Zone of control of a [[fort]]. || Province ||<code>has_influencing_fort = yes</code>
+|-
+| has_institution || Identifier || Returns true if the country has the specified [[institution]]. || Country ||<code>has_institution = feudalism</code>
+|-
+| has_latent_trade_goods|| Identifier || Returns true if the province has the specified latent trade good. || Province ||<code>has_latent_trade_goods = coal</code>
+|-
+| has_leader || Identifier || Returns true if the country has the leader "X". || Country ||<code>has_leader = "János Hunyadi"</code>
+|-
+| has_leader_with || Clause || Returns true if the country has a [[Military leader|leader]] with at least the specified stats.<br>Also supports <code>admiral = yes</code>, <code>general = yes</code> and <code>is_monarch_leader = yes</code> || Country ||<pre>has_leader_with = {
+	fire = 3
+	shock = 3
+	manuever = 2
+	siege = 1
+	total_pips = 11
+}</pre>
+|-
+|has_leaders
+|Clause
+|Returns true if the country has at least X amount of generals. Used to exclude heirs and monarchs from the count. 
+Also supports <code>type = admiral</code>.
+|Country
+|<pre>
+has_leaders = {
+	value = 1
+        type = general
+	include_monarch = no
+	include_heir = no
+}
+</pre>
+|-
+| has_local_modifier_value || Clause || Returns true if the value of the specified modifier is at least X for the province. || Province ||<pre>has_local_modifier_value = {
+	which = local_production_efficiency
+	value = 0.15
+}</pre>
+|-
+| rowspan="2" | has_matching_religion || Identifier || Returns true if the country has the specified religion or syncretic faith. || Country ||<code>has_matching_religion = mahayana</code>
+|-
+<!-- has_matching_religion -->| Scope || Returns true if the countries have the same religion or syncretic faith. || Country ||<code>has_matching_religion = ROOT</code>
+|-
+| has_merchant || Tag, Scope || Returns true if the scoped country has an active [[merchant]] in the [[trade node]]. || Province<br>(Trade node) ||<code>has_merchant = PREV</code>
+|-
+| has_mission || Identifier || Returns true if the country has the specified mission. || Country ||<code>has_mission = rus_patriarchate_mission</code>
+|-
+| has_missionary || Boolean || Returns true if the province has an active [[missionary]]. || Province ||<code>has_missionary = yes</code>
+|-
+| has_monsoon || Identifier || Returns true if the province has [[monsoon]] X. || Province ||<code>has_monsoon = normal_monsoon</code>
+|-
+| has_most_province_trade_power || Tag, Scope || Returns true if the country X has most amount of trade power in [[trade node]]. || Province<br>(Trade node) ||<code>has_most_province_trade_power = ROOT</code>
+|-
+|has_naval_doctrine
+|Identifier, <code>any</code>
+|Returns true if the province has naval doctrine X. Note: the trigger localisation is broken. It requires <code>$TYPE$</code>instead of <code>$NAME$</code>.
+|Country
+|<code>has_naval_doctrine = merchant_navy</code>
+|-
+|has_neighbor
+|Boolean
+|Returns true if the country has a neighboring country.
+|Country
+|<code>has_neighbor = yes</code>
+|-
+| has_new_dynasty || Boolean || Returns true if the country has a dynasty which is not the same as the first dynasty in its history file. || Country ||<code>has_new_dynasty = yes</code>
+|-
+|has_num_flagships
+|Integer
+|Returns true if the country has at least X flagships.
+|Country
+|<code>has_num_flagships = 1</code>
+|-
+| has_opinion || Clause || Returns true if the country has at least ''value'' opinion of the country specified by ''who''. || Country ||<pre>has_opinion = {
+	who = ROOT
+	value = 10
+}</pre>
+|-
+| has_opinion_modifier || Clause || Returns true if the country has the opinion modifier ''modifier'' towards the country specified by ''who''.<br>Can also specify a value of the modifier (but it is not displayed). || Country ||<pre>has_opinion_modifier = {
+	who = ROOT
+	modifier = embraced_absolutism
+}</pre>
+|-
+| has_or_building_flagship || Boolean || Returns true if the scoped country has or is building a [[flagship]] || Country || <code>has_or_building_flagship = yes</code>
+|-
+| has_owner_accepted_culture || Boolean || Returns true if the [[culture]] of the province is an accepted culture(NOT primary!) of its owner. || Province ||<code>has_owner_accepted_culture = yes</code>
+|-
+| has_owner_culture || Boolean || Returns true if the province has the primary [[culture]] of its owner. || Province ||<code>has_owner_culture = no</code>
+|-
+| has_owner_religion || Boolean ||Returns true if the province has the [[religion]] of its owner. || Province ||<code>has_owner_religion = yes</code>
+|-
+|has_owner_secondary_religion
+|Boolean
+|Returns true if the province has the secondary religion of its owner.
+|Province
+|<code>has_owner_secondary_religion = yes</code>
+|-
+| has_pasha || Boolean || Returns true if the province has a [[pasha]]. || Province ||<code>has_pasha = yes</code>
+|-
+| has_parliament || Boolean || Returns true if the country has a [[parliament]]. || Country ||<code>has_parliament = yes</code>
+|-
+| has_personal_deity || Identifier || Returns true if the ruler of the country has picked the specified [[personal deity]]. || Country ||<code>has_personal_deity = shakti</code>
+|-
+|has_pillaged_capital_against
+|Tag, Scope
+|Returns true if the country has used the [[Leviathan|Pillage Capital]] peace treaty against the specified country.
+|Country
+|<syntaxhighlight lang="text">
+has_pillaged_capital_against = FRA
+</syntaxhighlight>
+|-
+| has_port || Boolean || Returns true if it is a coastal province. || Province ||<code>has_port = yes</code>
+|-
+| has_privateers || Boolean || Returns true if the country has [[privateers]] in any trade node. || Country ||<code>has_privateers = yes</code>
+|-
+| has_privateer_share_in_trade_node || Clause || Returns true if the country has a certain percentage of the trade in a given node through [[privateers]]. || Province<br>(Trade node) ||<pre>has_privateer_share_in_trade_node = {
+    who = ROOT
+    share = 10
+}</pre>
+|-
+|has_protecting_trade_share_in_trade_node
+|Clause
+|Returns true if the country has a certain percentage of the trade in a given node through protecting trade.
+|Province<br>(Trade node)
+|<pre>has_protecting_trade_share_in_trade_node = {
+    who = ROOT
+    share = 10
+}</pre>
+|-
+| has_promote_investments || Identifier || Returns true if the country is promoting investments in the specified [[trade company]] (region). || Country ||<code>has_promote_investments = trade_company_moluccas</code>
+|-
+| has_province_flag || Identifier || Returns true if the province has the province flag X. || Province ||<code>has_province_flag = bur_succession_province</code>
+|-
+| has_province_modifier || Identifier || Returns true if province has the province modifier X. || Province ||<code>has_province_modifier = local_christian_mission</code>
+|-
+| rowspan="2" | has_rebel_faction || Identifier || Returns true if the province is controlled by (the specified) rebel faction. || Province ||<code>has_rebel_faction = pretender_rebels</code>
+|-
+|| REB || Used by Paradox, doesn't seem to work though (in EU4 version 1.25). || Province ||<code>has_rebel_faction = REB</code>
+|-
+| has_regency || Boolean || Returns true if the country has a [[regency]]. || Country ||<code>has_regency = no</code>
+|-
+| has_reform || Identifier || Returns true if the country has the specific government reform.
+Does not work in run files
+| Country ||<code>has_reform = ottoman_government</code>
+|-
+| government_reform_progress || Float || Returns true if the country has x or more reform progress saved up. || Country ||<code>government_reform_progress = 5</code>
+|-
+| has_removed_fow || Boolean || Returns true if the country has lifted the fog of war from the specified country. || Country ||<code>FRA = { has_removed_fow = yes }</code>
+|-
+| has_revolution_in_province || Boolean || Returns true if the revolution is present in the province. || Province ||<code>has_revolution_in_province = yes </code>
+|-
+| has_ruler || Name || Returns true if the country has a ruler named "X". || Country ||<code>has_ruler = "Pachacuti"</code>
+|-
+| has_ruler_flag || Identifier || Returns true if the ruler flag X is set for the country. || Country ||<code>has_ruler_flag = helped_rival</code>
+|-
+| has_ruler_leader_from || Tag, Scope || Returns true if an army in the province is led by a ruler from X. || Province ||<code>has_ruler_leader_from = ROOT</code>
+|-
+| has_ruler_modifier || Identifier || Returns true the country has the modifier X until the ruler changes. || Country ||<code>has_ruler_modifier = inside_man</code>
+|-
+| has_saved_event_target || Identifier || Returns true if the specified event target has been saved. || Anywhere||<code>has_saved_event_target = muslim_neighbor</code>
+|-
+|has_saved_global_event_target
+|Identifier
+|Returns true if the specified global event target has been saved.
+|Anywhere
+|<code>has_saved_global_event_target = EmperorOfChina</code>
+|-
+| has_scutage || Boolean || Returns true if the [[vassal]] pays scutage. || (Subject) Country ||<code>has_scutage = yes</code>
+|-
+| has_seat_in_parliament || Boolean || Returns true if the province has a seat in [[parliament]]. || Province ||<code>has_seat_in_parliament = no</code>
+|-
+| has_secondary_religion || Boolean || Returns true if the county has a [[secondary religion]]. || Country ||<code>has_secondary_religion = yes</code>
+|-
+| has_send_officers || Boolean || Returns true if the [[protectorate]] has received officers. || (Subject) Country ||<code>has_send_officers = yes</code>
+|-
+| has_siege || Boolean || Returns true if the province has [[siege]]. || Province ||<code>has_siege = yes</code>
+|-
+| has_spawned_rebels || Identifier || Returns true if [[rebels]] of the specified type are active in the country. || Country ||<code>has_spawned_rebels = particularist_rebels</code>
+|-
+| has_spawned_supported_rebels || Scope || Returns true if [[rebels]] which were supported by the specified country are active in the country. || Country ||<code>has_spawned_supported_rebels = FROM</code>
+|-
+| has_spy_network_from || Clause || Returns true if the country X has a [[spy network]] of at least the specified size in the country. || Country ||<pre>has_spy_network_from = {
+	who = ROOT
+	value = 25
+}</pre>
+|-
+| has_spy_network_in || Clause || Returns true if the country has a [[spy network]] of at least the specified size in country X. || Country ||<pre>has_spy_network_in = {
+	who = ROOT
+	value = 25
+}</pre>
+|-
+| has_state_edict || Identifier || Returns true if the state has X [[edict]] enabled. || State ||<code>has_state_edict = edict_of_absolutism</code>
+|-
+| has_state_patriach || Boolean || Returns true, if the province has any state patriarch. || Province ||<code>has_state_patriach = yes</code>
+|-
+| has_subsidize_armies || Boolean || Returns true if the march has [[subsidizes armies]]. || (Subject) Country ||<code>has_subsidize_armies = yes</code>
+|-
+| has_supply_depot || Tag, Scope || Returns true if the province has a supply depot built by X || Province ||<code>has_supply_depot = ROOT</code>
+|-
+| has_support_loyalists || Boolean || Returns true if the [[subject nation]] receives support for loyalists. || (Subject) Country ||<code>has_support_loyalists = yes</code>
+|-
+| has_subject_of_type || Identifier || Returns true if the country has at least one [[subject]] of the specified [[subject]] type. || Country ||<code>has_subject_of_type = tributary_state</code>
+|-
+| has_switched_nation || Boolean || Returns true if the player has changed nation by playing as a [[Vassal#Release_a_nation|released vassal]]. || Anywhere ||<code>has_switched_nation = no</code>
+|-
+| has_terrain || Identifier || Returns true if the province has terrain X. Terrains are listed in base game file terrains.txt || Province ||<code>has_terrain = marsh</code>
+|-
+| has_trade_company_investment_in_area || Clause || Returns true if the specified investor has the specified [[trade company]] investment in the area. || Province ||<pre>has_trade_company_investment_in_area  = {
+	investment = officers_mess
+	investor = ROOT
+}</pre>
+|-
+| has_trade_modifier || Clause || Returns true the specified country has the trade modifier X in the trade node. || Province<br>(Trade node) ||<pre>has_trade_modifier = {
+	who = ROOT
+	key = income_bonanza
+}</pre>
+|-
+| has_trader || Tag, Scope || Returns true if the specified country has a [[merchant]] in the trade node. || Province<br>(Trade node) ||<code>has_trader = VEN</code>
+|-
+| has_truce || Boolean|| Returns true if the country has a [[truce]]. || Country ||<code>has_truce = yes</code>
+|-
+| has_unembraced_institution || Identifier || Returns true if the country has not embraced the specified [[institution]]. || Country ||<code>has_unembraced_institution = feudalism</code>
+|-
+| has_unified_culture_group || Boolean || Returns true, if the country or its subjects own all provinces of its culture group. || Country ||<code>has_unified_culture_group = yes</code>
+|-
+| has_unit_type || Identifier || Returns true if the country has selected unit type X as preferable unit. || Country ||<code>has_unit_type = polish_winged_hussar</code>
+|-
+| has_unlocked_cult || Identifier || Returns true if the country has unlocked the specified [[cult]]. || Country ||<code>has_unlocked_cult = jewish_cult</code>
+|-
+| has_wartaxes || Boolean || Returns true if the country has raised [[war taxes]]. || Country ||<code>has_wartaxes = yes</code>
+|-
+| has_winter || Identifier || Returns true if the province has [[winter]] X. || Province ||<code>has_winter = normal_winter</code>
+|-
+| has_won_war_against || Clause || Returns true the country has won a war against the specified country during the last X years. || Country ||<pre>has_won_war_against = {
+	who = PREV
+	max_years_since = 100
+}</pre>
+|-
+| have_had_reform || Identifier || Returns true if the country has previously had the specific government reform. || Country ||<code>have_had_reform = ottoman_government</code>
+|-
+| heavy_ship_fraction || Float || Returns true if the ratio of the [[heavy ship]] fraction to the navy size of the country is at least X. || Country ||<code>heavy_ship_fraction = 0.33</code>
+|-
+| rowspan="2" | heavy_ships_in_province || Integer || Returns true if there are at least X [[heavy ships]] in the province. || Province ||<code>heavy_ships_in_province = 2</code>
+|-
+<!-- heavy_ships_in_province -->| Tag, Scope || Returns true if there are heavy ships from the specified country in the province. || Province ||<code>heavy_ships_in_province = TUN</code>
+|-
+| heir_adm || Integer || Returns true if the country has an [[heir]] with an administrative skill of at least X. || Country ||<code>heir_adm = 5</code>
+|-
+| heir_age || Integer || Returns true if the country has an heir that is at least X years old.<br>Note: Always returns false if there is no heir. || Country ||<code>heir_age = 15</code>
+|-
+| heir_dip || Integer || Returns true if the country has an [[heir]] with a diplomatic skill of at least X. || Country ||<code>heir_dip = 5</code>
+|-
+| heir_claim || Integer || Returns true if the country has an heir with a claim strength of at least X. || Country ||<code>heir_claim = 90</code>
+|-
+| heir_culture || Identifier, Scope || Returns true, if the country's heir has the specified culture. Can utilise [[Variables|Event Scope Values]]. || Country ||<code>heir_culture = prussian</code>
+|-
+| heir_has_consort_dynasty || Boolean || Returns true if the country’s [[heir]] and [[consort]] have the same [[dynasty]]. || Country ||<code> heir_has_consort_dynasty = yes</code>
+|-
+| heir_has_personality || Identifier || Returns true if the country’s [[heir]] has the specified [[personality]]. || Country ||<code>heir_has_personality = intricate_web_weaver_personality</code>
+|-
+| heir_has_ruler_dynasty || Boolean || Returns true if the country’s [[heir]] and [[ruler]] have the same [[dynasty]]. || Country ||<code> heir_has_ruler_dynasty = yes</code>
+|-
+| heir_mil || Integer || Returns true if the country has an [[heir]] with a military skill of at least X. || Country ||<code>heir_mil = 5</code>
+|-
+| heir_nationality || Tag, Scope || Returns true if the country has an [[heir]] with nationality X. || Country ||<code>heir_nationality = PREV</code>
+|-
+| heir_religion || Identifier, Scope || Returns true, if the country's heir has the specified religion. Can utilise [[Variables|Event Scope Values]]. || Country ||<code>heir_religion = catholic</code>
+|-
+| hidden_trigger || Clause || Hides the enclosed triggers so that they are still required but cannot be seen by human players. || Anywhere ||<pre>hidden_trigger = {
+	NOT = {
+		estate_influence = {
+			estate = estate_nomadic_tribes
+			influence = 85
+		}
+	}
+}</pre>
+|-
+|higher_development_than
+|Identifier, Scope
+|Returns true if the scope has a higher development than the province
+|Province
+|<syntaxhighlight>
+101 = {
+	higher_development_than = 20
+}
+</syntaxhighlight>
+|-
+| highest_value_trade_node || Boolean || Returns true if the [[trade node]] is the highest valued trade node in the world.<br>The value is calculated as total trade value minus outgoing trade value. || Province<br>(Trade node) ||<code>highest_value_trade_node = yes</code>
+|-
+| historical_friend_with || Tag, Scope || Returns true if the countries are [[historical friend]]s. || Country ||<code>historical_friend_with = FROM</code>
+|-
+| historical_rival_with || Tag, Scope || Returns true if the countries are [[historical rival]]s|| Country ||<code>historical_rival_with = TEU</code>
+|-
+|holy_order
+|Identifier
+|Returns true if the province has the specific Holy Order active.
+|Province
+|<pre>
+holy_order = jesuit_order
+</pre>
+|-
+| rowspan="2" | horde_unity || Integer || Returns true if the country has a [[horde unity]] of at least X. || Country ||<code>horde_unity = 50</code>
+|-
+<!-- horde_unity -->| Tag, Scope || Returns true if the country has at least as much horde unity as the specified country. || Country ||<code>horde_unity = GOL</code>
+|-
+| hre_heretic_religion || Identifier, Scope || Returns true if the specified religion is the opposition religion of the [[HRE]].<br>Note: No localisation for the negation. || Anywhere ||<code>hre_heretic_religion = catholic</code>
+|-
+| hre_leagues_enabled || Boolean || Returns true [[religious leagues]] are enabled. || Anywhere ||<code>hre_leagues_enabled = yes</code>
+|-
+| hre_reform_passed || Identifier|| Returns true if the specific [[imperial reform]] is enacted. || Anywhere ||<code>hre_reform_passed = emperor_privilegia_de_non_appelando</code>
+|-
+| hre_religion || Identifier, Scope || Returns true if the specified religion is the dominant faith of the HRE. || Anywhere ||<code>hre_religion = catholic</code>
+|-
+| hre_religion_locked || Boolean || Returns true if an official faith of the HRE has been permanently established. || Anywhere ||<code>hre_religion_locked = no</code>
+|-
+| hre_religion_treaty || Boolean || Returns true if the treaty of religious peace in the HRE has been signed. || Anywhere ||<code>hre_religion_treaty = no</code>
+|-
+| hre_size || Integer || Returns true if the [[HRE]] contains at least X members. || Anywhere ||<code>hre_size = 10</code>
+|-
+|humiliated_by
+|Tag, Scope
+|Returns true if the current country scope has been humiliated by the specified country.
+|Country
+|<pre>
+ENG = {
+    humiliated_by = FRA
+}
+</pre>
+|-
+| imperial_influence || Integer || Returns true if the emperor of the HRE has an [[imperial authority]] of at least X. || Anywhere ||<code>imperial_influence = 25</code>
+|-
+| imperial_mandate || Integer || Returns true, if the emperor of China has at least X mandate. || Anywhere ||<code>imperial_mandate = 80</code>
+|-
+| in_golden_age || Boolean || Returns true, if the country currently is in a golden age. || Country ||<code>in_golden_age = yes</code>
+|-
+| infantry_fraction || Float || Returns true if the ratio of the [[infantry]] fraction to the army size of the country is at least X. || Country ||<code>infantry_fraction = 0.6</code>
+|-
+| rowspan="2" | infantry_in_province || Integer || Returns true if there are at least X [[infantry]] units in the province. || Province ||<code>infantry_in_province = 17</code>
+|-
+<!-- infantry_in_province -->| Tag, Scope || Returns true if there are infantry units from the specified country in the province. || Province ||<code>infantry_in_province = SHL</code>
+|-
+| rowspan="2" | inflation || Float || Returns true if the country has an [[inflation]] of at least X || Country ||<code>inflation = 10</code>
+|-
+<!-- inflation -->| Tag, Scope || Returns true if the country has at least as much inflation as the country X. || Country ||<code>inflation = NOV</code>
+|-
+| incident_variable_value || Clause || Returns true, if the value of the specified incident is at least X. || Country ||<pre>incident_variable_value = {
+	incident = incident_neo_confucianism
+	value = 10
+}</pre>
+|-
+| innovativeness || Integer || Returns true if the countries has at least X [[innovativeness]]. || Country ||<code>innovativeness = 15</code>
+|-
+| institution_difference || Clause || Returns true if the country has embraced at least X more [[institutions]] than the specified country. || Country ||<pre>institution_difference = {
+	who = SWE
+	value = 2
+}</pre>
+|-
+| invested_papal_influence || Integer || Returns true if the country has invested at least X [[papal influence]] in the election of the next papal controller. || Country ||<code>invested_papal_influence = 50</code>
+|-
+| in_league || Identifier || Returns true if the countries is in the X [[league]]. || Country ||<code>in_league = protestant</code>
+|-
+| ironman || Boolean || Returns true if the [[ironman]] mode is enabled || Anywhere ||<code>ironman = yes</code>
+|-
+| is_advisor_employed || Advisor ID<ref name="advisor" />|| Returns true if the [[advisor]] with the ID X is employed. || ||<code>is_advisor_employed = 562</code>
+|-
+|is_ahead_of_time_in_technology
+|Clause
+|Returns true if the country if ahead in the specified technology.
+|Country
+|<code>is_ahead_of_time_in_technology = { tech = dip }</code>
+|-
+| is_all_concessions_in_council_taken || Boolean || Returns true if all concessions in the Council of Trent have been taken. || Global ||<code>is_all_concessions_in_council_taken = yes</code>
+|-
+| is_at_war || Boolean || Returns true if the country is at [[war]]. || Country ||<code>is_at_war = yes</code>
+|-
+|is_any_heresy_enabled
+|Boolean
+|Returns true if the religion of the current scope has a heretical religion enabled.
+|Country<br>Province
+|<code>is_any_heresy_enabled = yes</code>
+|-
+| is_backing_current_issue || Boolean || Returns true if the province is backing the current issue in the [[parliament]]. || Province ||<code>is_backing_current_issue = yes</code>
+|-
+| is_bankrupt || Boolean || Returns true if the country is [[bankrupt]]. || Country ||<code>is_bankrupt = yes</code>
+|-
+| is_blockaded || Boolean || Returns true if the province is [[blockaded]]. || Province||<code>is_blockaded = yes</code>
+|-
+|is_blockaded_by
+|Tag, Scope
+|Returns true if the province is [[blockaded]] by the specified country.
+|Province
+|<pre>
+is_blockaded_by = SPA
+</pre>
+|-
+| is_capital || Boolean || Returns true if the province is a [[capital]]. || Province ||<code>is_capital = yes</code>
+|-
+| is_capital_of || Tag, Scope || Returns true if the province the [[capital]] of the specified country. || Province ||<code>is_capital_of = ROOT</code>
+|-
+| is_city || Boolean || Returns true if the province is a [[city]], i.e. has a population of at least 1000. || Province ||<code>is_city = yes</code>
+|-
+| rowspan="2" | is_claim || Province ID, Scope || Returns true if the country has a [[claim]] on the province with the ID X. || Country ||<code>is_claim = 337</code>
+|-
+<!-- is_claim -->| Tag, Scope || Returns true if the specified country has a [[claim]] on the province. || Province ||<code>is_claim = MCH</code>
+|-
+| rowspan="2" | is_permament_claim || Province ID, Scope || Returns true if the country has a [[permanent claim]] on the province with the ID X. || Country ||<code>is_permament_claim = 337</code>
+|-
+<!-- is_permanent_claim -->| Tag, Scope || Returns true if the specified country has a [[permanent claim]] on the province. || Province ||<code>is_permanent_claim = MCH</code>
+|-
+| is_client_nation || Boolean || Returns true if the country is a [[client state]]. || Country ||<code>is_client_nation = yes</code>
+|-
+| is_client_nation_of || Tag, Scope || Returns true if the country is a [[client state]] of X. || Country ||<code>is_client_nation_of = ROOT</code>
+|-
+| is_colonial_nation || Boolean || Returns true if the country is a non-independent [[colonial nation]]. || Country ||<code>is_colonial_nation = yes</code>
+|-
+| is_colonial_nation_of || Tag, Scope || Returns true if the country is a [[colonial nation]] of X. || Country ||<code>is_colonial_nation_of = ROOT</code>
+|-
+| is_colony || Boolean || Returns true if the province is a [[colony]]. || Province ||<code>is_colony = yes</code>
+|-
+| rowspan="2" | is_core || Province ID || Returns true if the country has a [[core]] on the province with the ID X. || Country ||<code>is_core = 950</code>
+|-
+<!-- is_core -->| Tag, Scope || Returns true if the country X has a core on the province. || Province ||<code>is_core = NED</code>
+|-
+| is_council_enabled || Boolean || Returns true if the Council of Trent has started. || Global ||<code>is_council_enabled = yes</code>
+|-
+| is_crusade_target || Boolean || Returns true if the country is the target of a [[crusade]]. || Country ||<code>is_crusade_target = yes</code>
+|-
+| is_defender_of_faith || Boolean || Returns true if the country is the [[defender of the faith]]. || Country ||<code>is_defender_of_faith = yes</code>
+|-
+| is_defender_of_faith_of_tier || Integer || Returns true if the country is the [[defender of the faith]] of at least tier X. Works even without the Emperor DLC, even though the tier is not shown in game in that case.|| Country ||<code>is_defender_of_faith_of_tier = 4</code>
+|-
+| is_dynamic_tag || Boolean || Returns true, if the country is a dynamically created tag (e.g. client states). || Country ||<code>is_dynamic_tag = yes</code>
+|-
+| is_elector || Boolean || Returns true if the country is an [[elector]] of the HRE. || Country ||<code>is_elector = yes</code>
+|-
+| is_emperor || Boolean || Returns true if the country is the [[Holy Roman Empire#Emperor|emperor]] of the HRE. || Country ||<code>is_emperor = yes</code>
+|-
+| is_emperor_of_china || Boolean || Returns true if the country is the [[emperor of China]]. || Country ||<code>is_emperor_of_china = yes</code>
+|-
+| is_empty || Boolean || Returns true if province is empty || Province ||<code>is_empty = yes</code>
+|-
+| is_enemy || Boolean || Returns true if country X has rivalled the country. || Country ||<code>is_enemy = ROOT</code>
+|-
+| is_excommunicated || Boolean || Returns true if the ruler of the country is [[excommunicated]]. || Country ||<code>is_excommunicated = yes</code>
+|-
+| is_federation_leader || Boolean || Returns true if the country is a [[federation leader]]. || Country ||<code>is_federation_leader = yes</code>
+|-
+|is_federation_nation
+|Boolean
+|Returns true if the country is a [[federation leader|federation member]].
+|Country
+|<code>is_federation_nation = yes</code>
+|-
+| is_female || Boolean || Returns true if ruler of the country is female. || Country ||<code>is_female = yes</code>
+|-
+| is_force_converted || Boolean || Returns true if country has been [[force-converted]] via either religious rebels or an Enforce Religion peace treaty.<br>Note: The subject interaction Enforce Religion does not cause the subject to be considered as force-converted. || Country ||<code>is_force_converted = no</code>
+|-
+| is_former_colonial_nation || Boolean || Returns true if the country is a [[colonial nation]] that has gained independence. || Country ||<code>is_former_colonial_nation = no</code>
+|-
+|is_foreign_claim
+|Boolean
+|returns true if the province is a (permanent) claim of any country which is not the owner of the province
+|Province
+|<pre>
+is_foreign_claim = yes
+</pre>
+|-
+| is_great_power || Boolean || Returns true if the country is a [[great power]]. || Country ||<code>is_great_power = yes</code>
+|-
+| is_harmonizing_with || Identifier, Scope || Returns true, if the country is currently harmonizing with the specified religion or religion group. || Country ||<code>is_harmonizing_with = tengri_pagan_reformed</code>
+|-
+| is_heir_leader || Boolean || Returns true if the heir of the country is a [[general]].<br>Note: Proper localisation for the negation only with <code>NOT = …</code>. || Country ||<code>is_heir_leader = yes</code>
+|-
+| is_hegemon || Boolean || Returns true if the country is considered one of the three Hegemon types. || Country ||<code>is_hegemon = yes</code>
+|-
+|is_hegemon_of_type
+|Identifier
+|Returns true if the country holds the specific Hegemony.
+|Country
+|<pre>
+is_hegemon_of_type = naval_hegemon
+</pre>
+|-
+|is_hiring_condottiere_from
+|Boolean
+|Returns true if the country is hiring condottiere from the specified country.
+|Country
+|<code>is_hiring_condottiere_from = FRA</code>
+|-
+|hegemon_strength
+|Integer
+|Returns true if the country has X amount of progress towards hegemony
+|Country
+|<code>hegemon_strength = 100</code>
+|-
+| is_imperial_ban_allowed || Boolean || Returns true if the [[Holy Roman Empire#Emperor|emperor]] has a casus belli on occupiers of the Empire.<br>Note: Enabled/Disabled with [[Call for Reichsreform]].|| Anywhere ||<code>is_imperial_ban_allowed = yes</code>
+|-
+| rowspan="2" | is_incident_active || Identifier || Returns true, if the specified incident is active. || Country ||<code>is_incident_active = incident_neo_confucianism</code>
+|-
+<!-- is_incident_active -->|| Boolean, any, none || Returns true, if any/none incident is active. || Country ||<code>is_incident_active = any</code>
+|-
+| is_incident_happened || Identifier || Returns true, if the specified incident already happened. || Country ||<code>is_incident_happened = incident_neo_confucianism</code>
+|-
+| is_incident_possible || Identifier || Returns true, if the specified incident can possibly happen. || Country ||<code>is_incident_possible = incident_neo_confucianism</code>
+|-
+| is_incident_potential || Identifier || Returns true, if the specified incident is visible and therefor can happen in the future. || Country ||<code>is_incident_potential = incident_neo_confucianism</code>
+|-
+| is_institution_enabled || Identifier || Returns true if the specified [[institution]] has been discovered.|| Anywhere ||<code>is_institution_enabled = renaissance</code>
+|-
+| is_institution_origin || Identifier || Returns true if the province is the origin of the specified [[institution]].|| Province ||<code>is_institution_origin = printing_press</code>
+|-
+| is_in_capital_area || Boolean || Returns true if the province is connected (i.e. has a land connection including straits) to the capital of its owner. || Province ||<code>is_in_capital_area = yes</code>
+|-
+| is_in_coalition || Boolean || Returns true if the country is in a [[coalition]]. || Country ||<code>is_in_coalition = no</code>
+|-
+| is_in_coalition_war || Boolean || Returns true if the country is fighting a [[coalition war]]. || Country ||<code>is_in_coalition_war = yes</code>
+|-
+| is_in_deficit || Boolean || Returns true if the country is running a deficit. || Country ||<code>is_in_deficit = yes</code>
+|-
+|is_in_extended_regency
+|Boolean
+|Returns true if the country is inside the period an extended regency.
+|Country
+|<syntaxhighlight>
+is_in_extended_regency = yes
+</syntaxhighlight>
+|-
+| is_in_league_war || Boolean || Returns true if the country is in a religious [[league]] war. || Country ||<code>is_in_league_war = yes</code>
+|-
+| is_in_trade_league || Boolean || Returns true if the country is a member of a [[trade league]]. || Country ||<code>is_in_trade_league = yes</code>
+|-
+| is_in_trade_league_with || Tag, Scope || Returns true if the country is a member of the same [[trade league]] as country X. || Country ||<code>is_in_trade_league_with = VEN</code>
+|-
+| is_in_war || Clause || Returns true if the country is at [[war]] and the mentioned conditions are fulfilled.<br>Possible conditions are:<br>
+*<code>attacker_leader</code>
+*<code>defender_leader</code>
+*<code>casus_belli</code>
+*<code>defenders</code>
+*<code>attackers</code>
+*<code>participants</code>
+*<code>war_score</code>
+*<code>start_date</code>
+*<code>duration</code>
+*<code>war_goal_province</code>
+|| Country ||<pre>is_in_war = {
+    attacker_leader = ROOT
+    attackers = FRA # Is the tag an attacker?
+    defenders = BOH # Is the tag a defender?
+    participants = AUS # Is the tag on either side?
+    duration = 1875
+}</pre>
+|-
+| is_island || Boolean || Returns true if the province is an [[Island#is_island|island]], i.e. has no neighboring land province and no reachable province via a [[strait]]. || Province ||<code>is_island = yes</code>
+|-
+| is_league_enemy || Scope || Returns true if country X is league enemy of the country('s league). || Country ||<code>is_league_enemy = ROOT</code>
+|-
+| is_lacking_institutions || Boolean || Returns true if the country is lacking any institution. || Country ||<code>is_lacking_institutions = yes</code>
+|-
+| is_league_friend|| Scope || Returns true, if the country is in the same religious [[league]] as the specified country. || Country ||<code>is_league_friend = ROOT</code>
+|-
+| is_league_leader || Boolean || Returns true if the country leads a religious [[league]]. || Country ||<code>is_league_leader = yes</code>
+|-
+| is_lesser_in_union|| Boolean || Returns true if the country is the lesser partner in a [[personal union]]. || Country ||<code>is_lesser_in_union = no</code>
+|-
+| is_looted || Boolean || Returns true if the province is [[looted]]. || Province ||<code>is_looted = yes</code>
+|-
+| is_monarch_leader || Boolean || Returns true if the rulerof the country is a [[general]].<br>Note: Proper localisation for the negation only with <code>NOT = …</code>. || Country ||<code>is_monarch_leader = yes</code>
+|-
+| is_month || Integer || Returns true if the current month is at least X (zero based). || Anywhere ||<code>is_month = 1 # February or later</code>
+|-
+| is_march || Boolean || Returns true if the country is a [[march]]. || Country ||<code>is_march = yes</code>
+|-
+|is_migratory_tribe
+|Boolean
+|Returns true if the country is a migratory tribe.
+|Country
+|<code>is_migratory_tribe = yes</code>
+|-
+|is_most_powerful_estate
+|Identifier
+|Returns true if the most powerful estate in the country is the specified estate.
+|Country
+|<code>is_most_powerful_estate = estate_nobles</code>
+|-
+| is_neighbor_of || Tag, Scope || Returns true if the country is neighbor of X. Can now be used in province scope as well as country scope. || Country
+Province 
+|<code>is_neighbor_of  = FRA</code>
+|-
+|is_neighbor_of_province
+|Province ID, Scope
+|Returns true if the current scope neighbors the specified.
+|Country
+Province 
+|<code>is_neighbor_of  = 229</code><code>is_neighbor_of  = PREV</code>
+|-
+| is_node_in_trade_company_region || Boolean || Returns true, if the province's trade node is in a trade company region. || Province ||<code>is_node_in_trade_company_region = yes</code>
+|-
+| is_nomad || Boolean || Returns true if country's government is nomadic.<br>(Note: Only the [[Steppe Nomads]] government is flagged as nomadic.) || Country ||<code>is_nomad = yes</code>
+|-
+| is_orangists_in_power || Boolean || Returns true if in the country the [[orangists]] are in power. || Country ||<code>is_orangists_in_power = yes</code>
+|-
+| is_origin_of_consort || Tag, Scope || Returns true if the specified country is the origin country of the scoped country’s [[consort]]. || Country ||<code>is_origin_of_consort = ROOT</code>
+|-
+|is_or_was_tag
+|Clause
+|Returns true if the current scope is or has been the specified tag.
+|Country
+|<code>is_or_was_tag = { tag = ARL }</code>
+|-
+| is_overseas || Boolean || Returns true if the province is [[overseas]]|| Province ||<code>is_overseas = yes</code>
+|-
+| is_overseas_subject || Boolean || Returns true if the [[subject]] is [[overseas]]. || Country (subject) ||<code>is_overseas_subject = yes</code>
+|-
+| is_owned_by_trade_company || Boolean || Returns true if the province belongs to a [[trade company]]. || Province ||<code>is_owned_by_trade_company = yes</code>
+|-
+| is_papal_controller || Boolean || Returns true if the country is the [[papal controller]]. || Country ||<code>is_papal_controller = yes</code>
+|-
+| is_part_of_hre || Boolean || Returns true if the country/province is part of the [[HRE]]. || Country<br>Province ||<code>is_part_of_hre = yes</code>
+|-
+| is_playing_custom_nation || Boolean || Returns true if the country is a player-designed [[custom nation]]. || Country ||<code>is_playing_custom_nation = yes</code>
+|-
+| is_possible_march || Tag, Scope || Returns true if [[vassal]] X is a possible [[march]] of the country. || Country ||<code>is_possible_march = ROOT</code>
+|-
+| is_possible_vassal || Tag, Scope || Returns true if country X is releasable as [[vassal]] of the country. || Country ||<code>ENG = { is_possible_vassal = CRN }</code>
+|-
+| is_previous_papal_controller || Boolean || Returns true if the country is the previous [[papal controller]]. || Country ||<code>is_previous_papal_controller = yes</code>
+|-
+| is_prosperous || Boolean || Returns true if the province is prosperous. NOTE: Does not have a tooltip. || Province ||<code> is_prosperous  = yes</code>
+|-
+| is_protectorate || Boolean || Returns true if the country is a [[protectorate]]|| Country ||<code>is_protectorate = yes</code>
+|-
+| is_random_new_world || Boolean || Returns true if playing with a [[random New World]]. || Anywhere ||<code>is_random_new_world = no</code>
+|-
+|is_reform_available
+|Identifier
+|Returns true if the specified government reform is available to the current country scope.
+|Country
+|<code>is_reform_available = plutocratic_reform</code>
+|-
+| is_reformation_center || Boolean || Returns true if the province is a [[reformation center]]. || Global ||<code>is_reformation_center = no</code>
+|-
+| is_religion_grant_colonial_claim || Boolean, Tag, Scope || Returns true if the province has been granted to any country, to no country or to a specific country. || Province ||<code>is_religion_grant_colonial_claim = ROOT</code>
+|-
+| is_religion_enabled || Identifier || Returns true if the specified [[religion]] is enabled. || Anywhere ||<code>is_religion_enabled = reformed</code>
+|-
+| is_religion_reformed || Boolean || Returns true if the country has [[Pagan denominations#Mesoamerican_and_South_American_religions|reformed their religion]]. || Country ||<code>is_religion_reformed = yes</code>
+|-
+| is_renting_condottieri_to || Tag || Returns true if the country is renting [[condottieri]] to the specified country. || Country ||<code>is_renting_condottieri_to = ENG</code>
+|-
+| is_revolution_target || Boolean || Returns true if the country is the [[revolution target]]. || Country ||<code>is_revolution_target = yes</code>
+|-
+| is_revolutionary || Boolean || Returns true if the country has embraced the [[revolution]]. || Country ||<code>is_revolutionary = yes</code>
+|-
+| is_rival || Tag, Scope || Returns true if country X is a [[rival]] of the country. || Country ||<code>is_rival = FRA</code>
+|-
+| is_ruler_commanding_unit || Boolean || Returns true if the unit is commanded by the owner's ruler, heir or consort. || Unit ||<code>is_ruler_commanding_unit = yes</code>
+|-
+| is_sea || Boolean || Returns true if the province is sea.<br>Mostly used for [[trade nodes]]. || Province ||<code>is_sea = yes</code>
+|-
+| is_state || Boolean || Returns true if the province is in a [[state]]. || Province ||<code>is_state = yes</code>
+|-
+| rowspan="2" | is_state_core || Province ID || Returns true if the country has a state [[core]] on the province with the ID X. || Country ||<code>is_state_core = 950</code>
+|-
+<!-- is_state_core -->| Tag, Scope || Returns true if the country X has a state core on the province. || Province ||<code>is_state_core = NED</code>
+|-
+| is_statists_in_power || Boolean || Returns true if in the country the [[statists]] are in power. || Province ||<code>is_statists_in_power = yes</code>
+|-
+| is_strongest_trade_power || Tag, Scope || Returns true if the specified country has the most trade power in the area. || Province<br>(Trade node) ||<code>is_strongest_trade_power = POR</code>
+|-
+| is_subject || Boolean || Returns true if the country is a [[subject]]. || Country ||<code>is_subject = yes</code>
+|-
+| is_subject_of || Tag || Returns true if the country is a [[subject]] of X. || Country ||<code>is_subject_of = FRA</code>
+|-
+| is_subject_of_type || Identifier || Returns true if the country is a [[subject]] of [[subject]] type. || Country ||<code>is_subject_of_type = tributary_state</code>
+|-
+| is_subject_of_type_with_overlord || Clause|| Returns true if the country is a [[subject]] of [[subject]] type of the specified overlord. <code>who</code> can use scopes like ROOT, but the tooltip only works with tags. || Country ||
+ is_subject_of_type_with_overlord = {
+ 	who = MNG
+ 	type = tributary_state
+ }
+|-
+| is_supporting_independence_of || Tag, Scope || Returns true if the country is supporting the [[Diplomacy#Support_independence|independence]] of the specified country. || Country ||<code>is_supporting_independence_of = SWI</code>
+|-
+| rowspan="2" | is_territorial_core || Province ID || Returns true if the country has a [[territorial core]] on the province with the ID X. || Country ||<code>is_territorial_core = 950</code>
+|-
+<!-- is_territorial_core -->| Tag, Scope || Returns true if the country X has a territorial core on the province. || Province ||<code>is_territorial_core = NED</code>
+|-
+| is_territory || Boolean || Returns true if the province is in a [[territory]]. || Province ||<code>is_territory = no</code>
+|-
+| is_threat || Tag, Scope || Returns true if the country is [[threatened]] by country X. || Country ||<code>is_threat = FRA</code>
+|-
+| is_trade_league_leader || Boolean || Returns true if the country is the leader of a [[trade league]]. || Country ||<code>is_trade_league_leader = yes</code>
+|-
+| is_tribal || Boolean || Returns true if the country has a [[tribal government]].<br>Essentially the same as "government = tribal" || Country ||<code>is_tribal = yes</code>
+|-
+| is_vassal || Boolean || Returns true if the country is a [[vassal]]. || Country ||<code>is_vassal = yes</code>
+|-
+| is_variable_equal || Clause || Returns true if the specified variable is equal to X. || ||<pre>is_variable_equal = {
+	which = myvar
+	value = 5
+}</pre>
+|-
+| is_wasteland || Boolean || Returns true if the province is [[wasteland]]. || Province ||<code>is_wasteland = yes</code>
+|-
+| is_year || Integer || Returns true if the current year is at least X. || Anywhere ||<code>is_year = 1750</code>
+|-
+| island || Boolean || Returns true if the province is an [[Island#island|island]], i.e. has no neighboring land provinces. || Province ||<code>island = yes</code>
+|-
+| isolationism || Integer || Returns true, if the country has an isolationism level of at least X. || Country ||<code>isolationism = 2</code>
+|-
+| janissary_percentage || Float|| Returns true if the country has an army of at least X k janissaries.<br> {{icon|CoC}} Available only with the [[Cradle of Civilization]] DLC enabled.
+ || Country ||<code>janissary_percentage = 0.3</code>
+|-
+| rowspan="2" |num_of_janissaries
+|Integer
+|Returns true if the country has at least X Janissaries.
+|Country
+|<code>num_of_janissaries = 10</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many janissaries as the specified country.
+|Country
+|<code>num_of_janissaries = TUR</code>
+|-
+| junior_union_with || Tag, Scope || Returns true if the country is the junior partner in a [[personal union]] under country X. || Country ||<code>junior_union_with = ENG</code>
+|-
+| rowspan="2" | karma || Integer || Returns true if the country has a [[karma]] of at least X. || Country ||<code>karma = -50</code>
+|-
+<!-- karma -->| Tag, Scope || Returns true if the country has at least as much karma as the specified country. || Country ||<code>karma = DAI</code>
+|-
+| knows_country || Tag. Scope || Returns true if the country has knowledge of country X. || Country ||<code>knows_country = INC</code>
+|-
+| rowspan="2" | land_forcelimit || Integer || Returns true if the country has a [[land force limit]] of at least X. || Country ||<code>land_forcelimit = 32</code>
+|-
+<!-- land_forcelimit -->| Tag, Scope || Returns true if the country has a land force limit of at least as many regiments as the specified country. || Country ||<code>land_forcelimit = ROOT</code>
+|-
+| land_maintenance || Float || Returns true if the country has set its [[land maintenance]] to X. || Country ||<code>land_maintenance = 0.90</code>
+|-
+| rowspan="2" | land_morale || Float || Returns true if the country has a [[morale of armies]] of at least X. || Country ||<code>land_morale = 3.5</code>
+|-
+<!-- land_morale -->| Tag, Scope|| Returns true if the country has an at least as high morale of armies as the specified country. || Country ||<code>land_morale = PRU</code>
+|-
+| last_mission || Identifier || Returns true if the last [[mission]] of the country was the specified mission. || Country ||<code>NOT = { last_mission = conquer_finland }</code>
+|-
+| rowspan="2" | legitimacy || Integer || Returns true if the country has at least X [[legitimacy]]. || Country ||<code>legitimacy = 100</code>
+|-
+<!-- legitimacy -->| Tag, Scope || Returns true if the country has at least as much legitimacy as the specified country. || Country ||<code>legitimacy = ENG</code>
+|-
+| rowspan="2" | legitimacy_equivalent || Integer || Returns true, if the country's legitimacy equivalent (legitimacy, republican tradition, devotion, horde unity, meritocracy etc.) is at least X. || Country ||<code>legitimacy_equivalent = 80</code>
+|-
+<!-- legitimacy_equivalent -->|| Tag, Scope || Returns true, if the country has at least as much legitimacy equivalent (legitimacy, republican tradition, devotion, horde unity, meritocracy etc.) as the specified country. || Country ||<code>legitimacy_equivalent = FRA</code>
+|-
+| rowspan="2" | legitimacy_or_horde_unity || Integer || Returns true if the country has at least X [[legitimacy]] or [[horde unity]]. || Country ||<code>legitimacy_or_horde_unity = 90</code>
+|-
+<!-- legitimacy_or_horde_unity -->| Tag, Scope || Returns true if the country has at least as much legitimacy or horde unity as the specified country. || Country ||<code>legitimacy_or_horde_unity = ROOT</code>
+|-
+| liberty_desire || Integer || Return true if the subject has a [[liberty desire]] of at least X. || Country (subject)||<code>liberty_desire = 50</code>
+|-
+| light_ship_fraction || Float || Returns true if the ratio of the [[light ship]] fraction to the navy size of the country is at least X. || Country ||<code>light_ship_fraction = 0.3</code>
+|-
+| rowspan="2" | light_ships_in_province || Integer || Returns true if there are at least X [[light ships]] in the province. || Province ||<code>light_ships_in_province = 10</code>
+|-
+<!-- light_ships_in_province -->| Tag, Scope || Returns true if there are light ships from the specified country in the province. || Province ||<code>light_ships_in_province = ROOT</code>
+|-
+| likely_rebels || Identifier || Returns true if the province has the specified [[rebel faction]] as likely rebels. || Province ||<code>likely_rebels = revolutionary_rebels</code>
+|-
+| local_autonomy || Integer || Returns true if the province has a [[local autonomy]] of at least X. || Province ||<code>local_autonomy = 50</code>
+|-
+| local_autonomy_above_min || Float || Returns true, if the province's local autonomy is at least X above the province's minimum local autonomy. || Province ||<code>local_autonomy_above_min = 10</code>
+|-
+| luck || Boolean || Returns true if the country is a [[lucky nation]]. (AI controlled counties only.) || Country ||<code>luck = yes</code>
+|-
+| march_of || Tag, Scope || Returns true if the country is a [[march]] under country X. || Country ||<code>march_of = PAP</code>
+|-
+| manpower || Integer || Returns true if the country has at least <math>\text{X}\cdot1000</math> available [[manpower]]. || Country ||<code>manpower = 22</code>
+|-
+| manpower_percentage || Float || Returns true if the country has a [[manpower]] level of at least X%. || Country ||<code>manpower_percentage = 0.50</code>
+|-
+| marriage_with || Tag, Scope || Returns true if the country has a [[royal marriage]] with X. || Country ||<code>marriage_with = ROOT</code>
+|-
+| max_manpower || Integer || Returns true if the country has at least <math>\text{X}\cdot1000</math> maximum manpower. || Country ||<code>max_manpower = 5</code>
+|-
+| rowspan="2" | mercantilism || Float || Returns true if the country's [[mercantilism]] is at least X. || Country ||<code>mercantilism = 5</code>
+|-
+<!-- mercantilism -->| Tag, Scope || Returns true if the country has at least as much [[mercantilism]] as the specified country. || Country ||<code>mercantilism = ENG<code>
+|-
+| meritocracy || Integer || Returns true, if the country has a meritocracy value of at least X. || Country ||<code>meritocracy = 80</code>
+|-
+| rowspan="2" | mil || Integer || Returns true if the country has a [[ruler]] with a military skill of at least X. || Country ||<code>mil = 6</code>
+|-
+<!-- mil -->| Tag, Scope || Returns true if the country has a ruler with at least as high military skill as the ruler of the specified country. || Country ||<code>mil = HJO</code>
+|-
+| militarised_society || Integer || Returns true if the country has a [[militarization of country]] of at least X. || Country ||<code>militarized_society = 20</code>
+|-
+| rowspan="2" | mil_power || Integer || Returns true if the country has at least X [[military power]]. || Country ||<code>mil_power = 333</code>
+|-
+<!-- mil_power -->| Tag, Scope|| Returns true if the country has at least as much military power as the specified country. || Country ||<code>mil_power = MAM</code>
+|-
+| mil_tech || Integer, Scope || Returns true if the country has an [[military technology]] of at least level X or the target scope. || Country ||<code>mil_tech = 4</code><code>mil_tech = ROOT</code>
+|-
+| mission_completed || Identifier || Returns true if the country has completed mission X. || Country ||<code>mission_completed = eng_mighty_army</code>
+|-
+| rowspan="2" | monthly_income || Integer || Returns true if the country has a monthly [[income]] of at least X. || Country ||<code>monthly_income = 5</code>
+|-
+<!-- monthly_income -->| Tag, Scope|| Returns true if the country has monthly income at least as high as the specified country. || Country ||<code>monthly_income = MAM</code>
+|-
+| rowspan="2" |monthly_trade_income
+|Integer
+|Returns true if the country has a monthly trade [[income]] of at least X.
+|Country
+|<code>monthly_trade_income = 5</code>
+|-
+| Tag, Scope || Returns true if the country has monthly trade income at least as high as the specified country. || Country ||<code>monthly_trade_income = MAM</code>
+|-
+| monthly_dip || Integer || Returns true if the country gains at least X dip power every month. || Country ||<code>monthly_dip = 3</code>
+|-
+| monthly_mil || Integer || Returns true if the country gains at least X mil power every month. || Country ||<code>monthly_mil = 3</code>
+|-
+| months_of_ruling || Integer || Returns true if the country has a [[ruler]] that has ruled for at least X months. || Country ||<code>months_of_ruling = 12</code>
+|-
+| months_since_defection || Integer || Returns true if the province defected within the last X months. || Province ||<code>months_since_defection = 12</code>
+|-
+| military_strength || Clause || Returns true, if the country's military strength (army size & navy size combined) is at least the size of X times the military strength of the specified country || Country ||<pre>military_strength = {
+	who = FROM
+	value = 2.0
+}</pre>
+|-
+| nationalism || Integer || Returns true if province has at least X years of [[separatism]] remaining. || Province ||<code>nationalism = 5</code>
+|-
+| nationalism_debug || Integer || || Province ||<code>nationalism_debug = 1</code>
+|-
+| national_focus || Identifier || Returns true if country has set the [[national focus]] to X. || Country ||<code>national_focus = ADM</code>
+|-
+| nation_designer_points || Identifier || Returns true if at least X points were used when creating the [[custom nation]]. || Country ||<code>nation_designer_points = 802</code>
+|-
+| native_ferocity || Integer || Returns true if ferocity of natives in the province is at least X. || Province ||<code>native_ferocity = 3</code>
+|-
+| native_hostileness || Integer || Returns true if hostileness of natives in the province is at least X. || Province ||<code>native_hostileness = 2</code>
+|-
+|native_policy
+|Identifier
+|Returns true if country has the specified native policy.
+|Country
+|<pre>
+native_policy = native_policy_trade
+</pre>
+|-
+| native_size || Integer || Returns true if size of natives in the province is at least X. || Province ||<code>native_size = 30</code>
+|-
+| rowspan="2" | naval_forcelimit || Integer || Returns true if the country has a [[naval force limit]] of at least X. || Country ||<code>naval_forcelimit = 24</code>
+|-
+<!-- naval_forcelimit -->| Tag, Scope|| Returns true if the country has a naval force limit of at least as many ships as the specified country. || Country ||<code>naval_forcelimit = SWE</code>
+|-
+| naval_maintenance || Float || Returns true if the country's [[naval maintenance]] slider is at least X fraction of maximum. || Country ||<code>naval_maintenance = 0.33</code>
+|-
+| rowspan="2" | naval_morale || Float || Returns true if the country has a [[morale of navies]] of at least X. || Country ||<code>naval_morale = 2.5</code>
+|-
+<!-- naval_morale -->| Tag, Scope|| Returns true if the country has an at least as high morale of navies as the specified country. || Country ||<code>naval_morale = GBR</code>
+|-
+| rowspan="2" | navy_size || Integer || Returns true if the current scope has a navy of at least X [[ship]]s. || Country ||<code>navy_size = 300</code>
+|-
+<!-- navy_size -->| Tag, Scope || Returns true if the current scope has a navy at least as large as the specified country. || Country ||<code>navy_size = SPA</code>
+|-
+| navy_size_percentage || Integer || Returns true if the ratio of the total navy size of the country to its [[naval force limit]] is at least X. || Country ||<code>navy_size_percentage = 0.50</code>
+|-
+| naval_strength || Clause || Returns true, if the country's navy size is at least the size of X times the navy size of the specified country. || Country ||<pre>naval_strength = {
+	who = ENG
+	value = 0.5
+}</pre>
+|-
+| rowspan="2" | navy_tradition || Integer || Returns true if the country has a [[navy tradition]] of at least X. || Country ||<code>navy_tradition = 95</code>
+|-
+<!-- navy_tradition -->| Tag, Scope || Returns true if the country has an at least as high navy tradition as specified country. || Country ||<code>navy_tradition = GBR</code>
+|-
+| normal_or_historical_nations || Boolean || Returns true if game is set to use [[Options#Nations|normal or historical nations]]. || Anywhere ||<code>normal_or_historical_nations = yes</code>
+|-
+| normal_province_values || Boolean || Returns true if game is set to use [[Options#Province_Tax_and_Manpower|normal province values]]. || Anywhere ||<code>normal_province_values = yes</code>
+|-
+| num_accepted_cultures || Integer || Returns true, if the country has at least X accepted cultures. || Country ||<code>num_accepted_cultures = 1</code>
+|-
+| num_free_building_slots || Integer || Returns true if the province has at least X [[building slots]] remaining.|| Province ||<code>num_free_building_slots = 1</code>
+|-
+| num_investments_in_trade_company_region || Clause || Returns true if there are at least X trade company investments in the trade company region.|| Province ||<pre>num_investments_in_trade_company_region = { 
+	investment = company_administration
+	value = 3
+}</pre>
+|-
+| num_of_active_blessings || Integer || Returns true if the country has enabled at least X [[blessing]]s. || Country ||<code>num_of_active_blessings = 5</code>
+|-
+| rowspan="2" | num_of_admirals || Integer || Returns true if the country has at least X [[admiral]]s. || Country ||<code>num_of_admirals = 2</code>
+|-
+<!-- num_of_admirals -->| Tag, Scope || Returns true if the country has at least as many admirals as the specified country. || Country ||<code>num_of_admirals = SPA</code>
+|-
+| num_of_admirals_with_traits || Integer || Returns true if the country has at least X [[admirals]] with traits. || Country ||<code>num_of_admirals_with_traits = 1</code>
+|-
+| rowspan="2" | num_of_allies || Integer || Return true if the country has at least X [[allies]]. || Country ||<code>num_of_allies = 7</code>
+|-
+<!-- num_of_allies  -->| Tag, Scope || Returns true if the country has at least as many allies as the specified country. || Country ||<code>num_of_allies = ARA</code>
+|-
+| rowspan="2" | num_of_artillery || Integer || Returns true if the country has at least X artillery regiments. || Country ||<code>num_of_artillery = 12</code>
+|-
+<!-- num_of_artillery -->| Tag, Scope || Returns true if the country has at least as many artillery regiments as the specified country. || Country ||<code>num_of_artillery = FRA</code>
+|-
+| rowspan="2" | num_of_aspects || Integer || Returns true if the country has at least X [[church aspects]]. || Country ||<code>num_of_aspects = 2</code>
+|-
+<!-- num_of_aspects -->| Tag, Scope || Returns true if the country has at least as many church aspects as the specified country. || Country ||<code>num_of_aspects = SWE</code>
+|-
+| rowspan="2" | num_of_banners || Integer || Returns true, if the country has at least X banner units. || Country ||<code>num_of_banners = 3</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many banners as the specified country.
+|Country
+|<code>num_of_banners = MCH</code>
+|-
+|num_of_buildings_in_province
+|Integer
+|Returns true, if the province has at least X buildings
+|Province
+|<code>num_of_buildings_in_province = 3</code>
+|-
+| num_of_captured_ships_with_boarding_doctrine || Integer || Returns true if the country has captured at least X ships while having the ‘Ship Boarding’ [[naval doctrine]]. || Country ||<code>num_of_captured_ships_with_boarding_doctrine = 20</code>
+|-
+| num_of_centers_of_trade || Integer || Returns true if the country has at least X centers of trade. || Country ||<code>num_of_centers_of_trade = 5</code>
+|-
+| rowspan="2" | num_of_cardinals || Integer || Returns true if the country has at least X [[cardinals]] in the Holy See. || Country ||<code>num_of_cardinals = 3</code>
+|-
+<!-- num_of_cardinals -->| Tag, Scope || Returns true if the country has at least as many cardinals as the specified country. || Country ||<code>num_of_cardinals = FRA</code>
+|-
+| rowspan="2" |num_of_caravel
+|Integer
+|Returns true if the country has at least X caravel ships.
+|Country
+|<code>num_of_caravel = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many caravel regiments as the specified country.
+|Country
+|<code>num_of_caravel = SPA</code>
+|-
+| rowspan="2" | num_of_cavalry || Integer || Returns true if the country has at least X cavalry regiments. || Country ||<code>num_of_cavalry = 23</code>
+|-
+<!-- num_of_cavalry -->| Tag, Scope || Returns true if the country has at least as many cavalry regiments as the specified country. || Country ||<code>num_of_cavalry = FRA</code>
+|-
+| rowspan="2" |num_of_cawa
+|Integer
+|Returns true if the country has at least X cawa regiments.
+|Country
+|<code>num_of_cawa = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many cawa as the specified country.
+|Country
+|<code>num_of_cawa = ETH</code>
+|-
+| rowspan="2" |num_of_carolean
+|Integer
+|Returns true if the country has at least X carolean regiments.
+|Country
+|<code>num_of_carolean = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many caroleans as the specified country.
+|Country
+|<code>num_of_carolean = SWE</code>
+|-
+| rowspan="2" | num_of_cities || Integer || Returns true if the country owns at least X [[cities]]. || Country ||<code>num_of_cities = 15</code>
+|-
+<!-- num_of_cities -->| Tag, Scope || Returns true if the country owns at least as many cities as the specified country. || Country ||<code>num_of_cities = ROOT</code>
+|-
+| num_of_coalition_members || Integer || Returns true if the country is in a [[coalition]] of at least X members. || Country ||<code>num_of_coalition_members = 6</code>
+|-
+| rowspan="2" | num_of_colonies || Integer || Returns true if the country has at least X unfinished [[colonies]]. || Country ||<code>num_of_colonies = 2</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many X unfinished [[colonies]] as the specified country.
+|Country
+|<code>num_of_colonies = ENG</code>
+|-
+| num_of_colonists || Integer || Returns true if the country has at least X [[colonists]]. || Country ||<code>num_of_colonists = 2</code>
+|-
+| rowspan="2" | num_of_conquistadors || Integer || Returns true if the country has at least X [[conquistador]]s. || Country ||<code>num_of_conquistadors = 2</code>
+|-
+<!-- num_of_conquistadors -->| Tag, Scope || Returns true if the country has at least as many conquistadors as the specified country. || Country ||<code>num_of_conquistadors = ROOT</code>
+|-
+| num_of_consorts || Integer || Returns true, if the ruler of the country had at least X separate consorts. || Country ||<code>num_of_consorts = 6</code>
+|-
+| num_of_continents || Integer || Returns true, if the country owns provinces on at least X continents. Only provinces owned by the country itself are taken into account, not provinces owned by subjects. || Country ||<code>num_of_continents = 3</code>
+|-
+| rowspan="2" | num_of_cossacks || Integer || Returns true, if the country has at least X cossack units. || Country ||<code>num_of_cossacks = 3</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many cossack regiments as the specified country.
+|Country
+|<code>num_of_cossacks = ZAZ</code>
+|-
+| num_of_custom_nations || Integer || Returns true if there are at least X [[custom nation]]s in the game. || Country ||<code>num_of_custom_nations = 1</code>
+|-
+|num_of_different_religions_in_court
+|Integer
+|Returns true if there are at least X possible advisors with a different religion to the country in court.
+|Country
+|<code>num_of_different_religions_in_court = 4</code>
+|-
+|num_of_different_cultures_in_court
+|Integer
+|Returns true if there are at least X possible advisors with a different culture to the primary culture of the country in court.
+|Country
+|<code>num_of_different_cultures_in_court = 4</code>
+|-
+| num_of_diplomatic_relations || Integer || Returns true if the country has at least X [[diplomatic relations]]. || Country ||<code>num_of_diplomatic_relations = 3</code>
+|-
+| num_of_diplomats || Integer || Returns true if the country has at least X [[diplomats]]. || Country ||<code>num_of_diplomats = 2</code>
+|-
+| num_of_electors || Integer || Returns true if there are at least X [[electors]] of the HRE. || Anywhere ||<code>num_of_electors = 7</code>
+|-
+| num_of_estate_privileges || Clause || Returns true if the country has granted at least X [[privileges]] to the specified [[estate]]. || Country ||<pre>num_of_estate_privileges = {
+	estate = estate_brahmins
+	value = 2
+}</pre>
+|-
+| rowspan="2" | num_of_explorers || Integer || Returns true if the country has at least X [[explorer]]s. || Country ||<code>num_of_explorers = 1</code>
+|-
+<!-- num_of_explorers -->| Tag, Scope || Returns true if the country has at least as many explorers as the specified country. || Country ||<code>num_of_explorers = ENG</code>
+|-
+|num_federation_advancements
+|Integer
+|Returns true if the country has at least as many federation advancements.
+|Country
+|<code>num_federation_advancements = 4</code>
+|-
+| num_of_foreign_hre_provinces || Integer || Returns true if there are at least X provinces owned by non-member states or subjects of non-member states. || Anywhere ||<code>num_of_foreign_hre_provinces = 2</code>
+|-
+| num_of_free_diplomatic_relations || Integer || Returns true if the country has at least X free [[diplomatic relations]] slots. || Country ||<code>num_of_free_diplomatic_relations = 1</code>
+|-
+| rowspan="2" | num_of_galley || Integer || Returns true if the country has at least X [[galleys]]. || Country ||<code>num_of_galley = 20</code>
+|-
+<!-- num_of_galley -->| Tag, Scope || Returns true if the country has at least as many galleys as the specified country. || Country ||<code>num_of_galley = VEN</code>
+|-
+| rowspan="2" |num_of_galleon
+|Integer
+|Returns true if the country has at least X galleon ship units.
+|Country
+|<code>num_of_galleon = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many galleon ships as the specified country
+|Country
+|<code>num_of_galleon = SPA</code>
+|-
+| rowspan="2" |num_of_galleass
+|Integer
+|Returns true if the country has at least X galleass ship units.
+|Country
+|<code>num_of_galleass = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many galleass ships as the specified country.
+|Country
+|<code>num_of_galleass = VEN</code>
+|-
+| rowspan="2" | num_of_generals || Integer || Returns true if the country has at least X [[general]]s. || Country ||<code>num_of_generals = 2</code>
+|-
+<!-- num_of_generals -->| Tag, Scope || Returns true if the country has at least as many generals as the specified country. || Country ||<code>num_of_generals = FROM</code>
+|-
+| num_of_generals_with_traits || Integer || Returns true if the country has at least X [[generals]] with traits. || Country ||<code>num_of_generals_with_traits = 1</code>
+|-
+| rowspan="2" |num_of_geobukseon
+|Integer
+|Returns true if the country has at least X geobukseon units.
+|Country
+|<code>num_of_geobukseon = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many geobukseon units as the specified country.
+|Country
+|<code>num_of_geobukseon = KOR</code>
+|-
+| num_of_harmonized || Integer || Returns true, if the country has harmonized with at least X religions or religion groups. || Country ||<code>num_of_harmonized = 2</code>
+|-
+| rowspan="2" | num_of_heavy_ship || Integer || Returns true if the country has at least X [[heavy ships]]. || Country ||<code>num_of_heavy_ship = 20</code>
+|-
+<!-- num_of_heavy_ship-->| Tag, Scope || Returns true if the country has at least as many heavy ships as the specified country. || Country ||<code>num_of_heavy_ship = ENG</code>
+|-
+| rowspan="2" |num_of_hussars
+|Integer
+|Returns true if the country has at least X hussars.
+|Country
+|<code>num_of_hussars = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many hussars as the specified country.
+|Country
+|<code>num_of_hussars = POL</code>
+|-
+| rowspan="2" | num_of_infantry || Integer || Returns true if the country has at least X infantry regiments. || Country ||<code>num_of_infantry = 300</code>
+|-
+<!-- num_of_infantry -->| Tag, Scope || Returns true if the country has at least as many infantry regiments as the specified country. || Country ||<code>num_of_infantry = FROM</code>
+|-
+| rowspan="2" | num_of_light_ship || Integer || Returns true if the country has at least X [[light ships]]. || Country ||<code>num_of_light_ship = 20</code>
+|-
+<!-- num_of_light_ship-->| Tag, Scope || Returns true if the country has at least as many light ships as the specified country. || Country ||<code>num_of_light_ship = GEN</code>
+|-
+| rowspan="2" | num_of_loans || Integer || Returns true if the country has at least X [[loans]]. || Country ||<code>num_of_loans = 15</code>
+|-
+<!-- num_of_loans -->| Tag, Scope || Returns true if the country has taken at least as many loans as the specified country. || Country ||<code>num_of_loans = LIT</code>
+|-
+| rowspan="2" |num_of_mamluks
+|Integer
+|Returns true if the country has at least X mamluks regiments.
+|Country
+|<code>num_of_mamluks = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many mamluks as the specified country.
+|Country
+|<code>num_of_mamluks = MAM</code>
+|-
+| rowspan="2" |num_of_man_of_war
+|Integer
+|Returns true if the country has at least X man of war heavy ships.
+|Country
+|<code>num_of_man_of_war = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many man of war ships as the specified country.
+|Country
+|<code>num_of_man_of_war = GBR</code>
+|-
+| rowspan="2" | num_of_marches || Integer || Returns true if the country has at least X [[marches]]. || Country ||<code>num_of_marches = 2</code>
+|-
+<!-- num_of_marches -->| Tag, Scope || Returns true if the country has at least as many marches as the specified country. || Country ||<code>num_of_marches = POL</code>
+|-
+| rowspan="2" | num_of_marines || Integer || Returns true if the country has enabled at least X marines. || Country ||<code>num_of_marines = 5</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many marines as the specified country.
+|Country
+|<code>num_of_marines = GBR</code>
+|-
+| rowspan="2" | num_of_mercenaries|| Integer || Returns true if the country has at least X [[mercenary]] regiments. || Country ||<code>num_of_mercenaries = 10</code>
+|-
+<!-- num_of_mercenaries -->| Tag, Scope || Returns true if the country has at least as many mercenary regiments as the specified country. || Country ||<code>num_of_mercenaries = TUR</code>
+|-
+| num_of_merchants || Integer || Returns true if the country has at least X [[merchants]]. || Country ||<code>num_of_merchants = 3</code>
+|-
+| num_of_missionaries || Integer || Returns true if the country has at least X [[missionaries]]. || Country ||<code>num_of_missionaries = 2</code>
+|-
+| rowspan="2" |num_of_musketeers
+|Integer
+|Returns true if the country has at least X musketeers units.
+|Country
+|<code>num_of_musketeers = 10</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many musketeers as the specified country.
+|Country
+|<code>num_of_musketeers = FRA</code>
+|-
+| num_of_owned_and_controlled_institutions || Integer || Returns true, if the country owns and controls at least X provinces that are institution origins. || Country ||<code>num_of_owned_and_controlled_institutions = 2</code>
+|-
+| num_of_owned_provinces_with || Clause || Returns true if at least X provinces of the scoped country match the specified condition(s). || Country ||<pre>num_of_owned_provinces_with = {
+	value = 15
+	has_owner_accepted_culture = no
+	NOT = { culture = root }
+	is_overseas = no
+}</pre>
+|-
+|num_of_pashas
+|Integer
+|Returns true if the country has at least X pashas.
+|Country
+|<code>num_of_pashas = 20</code>
+|-
+| rowspan="2" | num_of_ports || Integer || Returns true if country owns at least X [[home port]]s (in lands contiguously connected to the capital). || Country ||<code>num_of_ports = 20</code>
+|-
+<!-- num_of_ports -->| Tag, Scope || Returns true if the country has at least as many home ports as the specified country. || Country ||<code>num_of_ports = MNG</code>
+|-
+| num_of_ports_blockading || Integer || Returns true if the country blockades at least X ports. || Country ||<code>num_of_ports_blockading = 10</code>
+|-
+| num_of_powerful_estates || Integer || Returns true if the country has at least X [[estates]] with at least 70 influence. || Country ||<code>num_of_powerful_estates = 2</code>
+|-
+| rowspan="2" | num_of_protectorates || Integer || Returns true if the country has at least X [[protectorates]]. Obsolete since 1.20. || Country ||<code>num_of_protectorates = 2</code>
+|-
+<!-- num_of_protectorates -->| Tag, Scope || Returns true if the country has at least as many protectorates as the specified country. Obsolete since 1.20. || Country ||<code>num_of_protectorates = POR</code>
+|-
+| num_of_provinces_in_states || Integer || Returns true if the country has at least X provinces in [[states]]. || Country ||<code>num_of_provinces_in_states = 14</code>
+|-
+| num_of_provinces_in_territories || Integer || Returns true if the country has at least X provinces in [[territories]]. || Country ||<code>num_of_provinces_in_territories = 12</code>
+|-
+| num_of_provinces_owned_or_owned_by_non_sovereign_subjects_with|| Clause|| Returns true if there are at least X provinces that fulfill the declared conditions owned by the country and its non-tributary subjects. || Country ||<pre>num_of_provinces_owned_or_owned_by_non_sovereign_subjects_with = {
+	value = 1
+	colonial_region = colonial_the_carribean
+	is_city = yes
+}</pre>
+|-
+| num_of_provinces_owned_or_owned_by_subjects_with|| Clause|| Returns true if there are at least X provinces that fulfill the declared conditions owned by the country and its subjects. || Country ||<pre>num_of_provinces_owned_or_owned_by_subjects_with = {
+	value = 8
+	region = sahel_region
+}</pre>
+|-
+| rowspan="2" |num_of_qizilbash
+|Integer
+|Returns true if the country has at least X qizilbash regiments.
+|Country
+|<code>num_of_qizilbash = 3</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many qizilbash as the specified country.
+|Country
+|<code>num_of_qizilbash = PER</code>
+|-
+| rowspan="2" | num_of_rajput || Integer || Returns true if the country has at least X [[rajput regiment]]s. || Country ||<code>num_of_rajput = 20</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many rajputs as the specified country.
+|Country
+|<code>num_of_rajput = RJP</code>
+|-
+|num_of_regiments_at_full_drill
+|Integer
+|Returns true if the country has at least X regiments at full drill
+|Country
+|<code>num_of_regiments_at_full_drill = 100</code>
+|-
+| rowspan="2" | num_of_rebel_armies || Integer || Returns true if the number of [[rebel]] armies in the country is at least X. || Country ||<code>num_of_rebel_armies = 3</code>
+|-
+<!-- num_of_rebel_armies -->| Tag, Scope || Returns true if there are at least as many rebel armies in the country as the specified country. || Country ||<code>num_of_rebel_armies = SWI</code>
+|-
+| rowspan="2" | num_of_rebel_controlled_provinces || Integer || Returns true if the number of [[rebel]] controlled provinces in the country is at least X. || Country ||<code>num_of_rebel_controlled_provinces = 3</code>
+|-
+<!-- num_of_rebel_controlled_provinces -->| Tag, Scope || Returns true if the country has at least as many rebel-controlled provinces as the specified country. || Country ||<code>num_of_rebel_controlled_provinces = TIM</code>
+|-
+| num_of_religion || Clause || Float value: Returns true if the ratio of the provinces with the specified religion to the total provinces of the country is at least X.<br>Integer value: Returns true if the country has at least X provinces with the specified religion.<br>It is also possible to specify the secondary religion by <code>secondary = yes</code>. || Country ||<pre>num_of_religion = {
+	religion = animism
+	value = 0.3
+}</pre>
+|-
+| rowspan="2" | num_of_revolts || Integer || Returns true if the number of revolts in the country is at least X.<br>''The same as ‘num_of_rebel_controlled_provinces’.''|| Country ||<code>num_of_revolts = 3</code>
+|-
+<!--  num_of_revolts -->| Tag, Scope || Returns true if the country has at least as many rebel controlled provinces as the specified country. || Country ||<code>num_of_revolts = TIM</code>
+|-
+| rowspan="2" |num_of_revolutionary_guard
+|Integer
+|Returns true if the country has at least X revolutionary guard units
+|Country
+|<code>num_of_revolutionary_guard = 10</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many revolutionary guards as the specified country
+|Country
+|<code>num_of_revolutionary_guard = FRA</code>
+|-
+| rowspan="2" | num_of_royal_marriages || Integer || Returns true if the country has at least X [[royal marriages]]. || Country ||<code>num_of_royal_marriages  = 2</code>
+|-
+<!--  num_of_royal_marriages -->| Tag, Scope || Returns true if the country has at least as many royal marriages as the specified country. || Country ||<code>num_of_royal_marriages = ENG</code>
+|-
+| rowspan="2" |num_of_samurai
+|Integer
+|Returns true if the country has at least X samurai regiments.
+|Country
+|<code>num_of_samurai = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many samurai regiments as the specified country.
+|Country
+|<code>num_of_samurai = JAP</code>
+|-
+|num_of_special_units
+|Clause
+|Returns true if the country has at least X special regiments of <type>
+Accepts all special units listed [[Effects#Military|here.]]
+|Country
+|<pre>
+num_of_special_units = { 
+	special_unit_category = man_of_war
+	type = heavy_ship 
+	value = 40
+}
+</pre>
+|-
+| rowspan="2" | num_of_streltsy || Integer || Returns true, if the country has at least X streltsy units. || Country ||<code>num_of_streltsy = 3</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many streltsy as the specified country.
+|Country
+|<code>num_of_streltsy = RUS</code>
+|-
+| num_of_states || Integer || Returns true if the country has at least X [[states]]. || Country ||<code>num_of_states = 8</code>
+|-
+| num_of_strong_trade_companies || Integer || Returns true if the country has at least X strong [[trade companies]]. || Country ||<code>num_of_strong_trade_companies = 4</code>
+|-
+| num_of_subjects || Integer || Returns true if the country is the overlord of at least X subject countries of any type. || Country ||<code>num_of_subjects = 1</code>
+|-
+| rowspan="2" |num_of_tercio
+|Integer
+|Returns true if the country has at least X tercio regiments.
+|Country
+|<code>num_of_tercio = 10</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many tercios as the specified country.
+|Country
+|<code>num_of_tercio = SPA</code>
+|-
+| num_of_territories || Integer || Returns true, if the country has at least X territories (areas that aren't states). || Country ||<code>num_of_territories = 10</code>
+|-
+| num_of_times_improved || Integer || Returns true if the [[development]] of the province was improved at least X times. || Province ||<code>num_of_times_improved = 5</code>
+|-
+| num_of_times_improved_by_owner || Integer || Returns true if the [[development]] of the province was improved at least X times by the current owner. || Province ||<code>num_of_times_improved_by_owner = 5</code>
+|-
+|num_of_times_used_pillage_capital
+|Integer
+|Returns true if the country has used the [[Leviathan|Pillage Capital]] peace treaty at least X times.
+|Country
+|<syntaxhighlight>
+num_of_times_used_pillage_capital = 10
+</syntaxhighlight>
+|-
+|num_of_times_used_transfer_development
+|Integer
+|Returns true if the country has used the [[Leviathan|Concentrate Development]] action at least X times.
+|Country
+|<syntaxhighlight lang="text">
+num_of_times_used_transfer_development = 5
+</syntaxhighlight>
+|-
+|num_of_times_expanded_infrastructure
+|Integer
+|Returns true if the province has had its infrastructure expanded at least X times.
+|Province
+|<code>num_of_times_expanded_infrastructure  = 2</code>
+|-
+| rowspan="2" | num_of_total_ports || Integer || Returns true if the country owns at least X total ports (anywhere in the world). || Country ||<code>num_of_total_ports  = 20</code>
+|-
+<!-- num_of_total_ports -->| Tag, Scope || Returns true if the country owns at least as many total ports as the specified country. || Country ||<code>num_of_total_ports = JAP</code>
+|-
+| num_of_trade_companies || Integer || Returns true if the country has at least X [[trade companies]]. || Country ||<code>num_of_trade_companies = 3</code>
+|-
+| num_of_trade_embargos || Integer || Returns true if the country has at least X trade [[embargo]]s. || Country ||<code>num_of_trade_embargos = 3</code>
+|-
+| num_of_trading_bonuses || Integer || Returns true if the country hasat least X ‘[[trading in]]’ bonuses. || Country ||<code>num_of_trading_bonuses = 7</code>
+|-
+| rowspan="2" | num_of_transport || Integer || Returns true if the country has at least X [[transports]]. || Country ||<code>num_of_transport = 24</code>
+|-
+<!-- num_of_transport -->| Tag, Scope || Returns true if the country has at least as many transports as the specified country. || Country ||<code>num_of_transport = DEN</code>
+|-
+| num_of_trusted_allies || Integer || Returns true if the country has at least X [[allies]] with 100 [[trust]]. || Country ||<code>num_of_trusted_allies = 3</code>
+|-
+|personal_union
+|Integer
+|Returns true if the country has at least X [[personal unions]].
+|Country
+|<code>personal_union = 3</code>
+|-
+| num_of_units_in_province || Clause || Returns true if the specified country has at least X units of the specified type in the province. (<code>type</code> and <code>who</code> are not needed, if not included will default to all.) || Province ||<pre>num_of_units_in_province = {
+    who =
+    type =
+    amount =
+}</pre>
+|-
+| num_of_unlocked_cults || Integer || Returns true if the country has unlocked at least X [[cults]]. || Country ||<code> num_of_unlocked_cults = 13</code>
+|-
+| rowspan="2" |num_of_voc_indiamen
+|Integer
+|Returns true if the country has at least X voc indiamen units.
+|Country
+|<code> num_of_voc_indiamen = 100</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many voc indiamen units as the specified country.
+|Country
+|<code> num_of_voc_indiamen = NED</code>
+|-
+| rowspan="2" | num_of_war_reparations || Integer || Returns true if the country receives [[war reparations]] from at least X countries. || Country ||<code>num_of_war_reparations = 4</code>
+|-
+<!-- num_of_war_reparations -->| Tag, Scope || Returns true if the country receives war reparations from at least as many countries as the specified country. || Country ||<code>num_of_war_reparations = ROOT</code>
+|-
+|num_mothballed_forts
+|Integer
+|Returns true if the country has at least as many mothballed forts as the specified value.
+|Country
+|<code>num_mothballed_forts = 1</code>
+|-
+| rowspan="2" | num_ships_privateering || Integer || Returns true if country has at least X ships [[privateering]]. || Country ||<code>num_ships_privateering = 20</code>
+|-
+<!-- num_ships_privateering -->| Tag, Scope || Returns true if the country has at least as many ships privateering as the specified country. || Country ||<code>num_ships_privateering = HSA</code>
+|-
+| rowspan="2" |num_ships_protecting_trade
+|Integer
+|Returns true if country has at least X ships protecting trade.
+|Country
+|<code>num_ships_protecting_trade = 20</code>
+|-
+|Tag, Scope
+|Returns true if the country has at least as many ships protecting trade as the specified country.
+|Country
+|<code>num_ships_protecting_trade = HSA</code>
+|-
+| offensive_war_with || Tag, Scope || Returns true if the country is in an offensive war with country X. || Country ||<code>offensive_war_with = ROOT</code>
+|-
+| overextension_percentage || Float || Returns true if country has at least X% [[overextension]]. || Country ||<code>overextension_percentage = 0.75</code>
+|-
+| overlord_of || Tag, Scope || Returns true if the country is the [[overlord]] of X. || Country ||<code>overlord_of = FRA</code>
+|-
+| overseas_provinces_percentage || Float || Returns true if the country has X percentage of [[overseas]] provinces. || Country ||<code>overseas_provinces_percentage = 0.05</code>
+|-
+|owes_favors
+|Integer
+|Returns true if the scoped country owes favours to the specified country.
+|Country
+|<pre>
+owes_favors = { 
+         who = FRA 
+         value = 10 
+}
+</pre>
+|-
+| owned_by || Tag, Scope || Returns true if the province is owned by the country X. || Province ||<code>owned_by = TUR</code>
+|-
+| owns || Province ID || Returns true if the country owns the specified province. || Country ||<code>owns = 236</code>
+|-
+| owns_all_provinces || Clause || Returns true if the country or its non-tributary subjects own all provinces with the specified conditions. || Country ||<pre>owns_all_provinces = {
+	continent = asia
+	has_terrain = grasslands
+}</pre>
+|-
+| owns_core_province || Province ID || Returns true if the country owns and has a [[core]] on the specified province. || Country ||<code>owns_core_province = 217</code>
+|-
+| owns_or_non_sovereign_subject_of || Province ID || Returns true, if the country or a subject that is not categorized as "sovereign" (e.g. tributary states are excluded) owns the specified province. || Country ||<code>owns_or_non_sovereign_subject_of = 151</code>
+|-
+| owns_or_subject_of || Province ID, Scope || Returns true, if the country or a subject owns the specified province. || Country ||<code>owns_or_subject_of = 151</code>
+|-
+|owned_by_subject_of
+|Tag, Scope
+|Returns true if the current province scope is owned by a subject of country X.
+|Province
+|<code>owned_by_subject_of = FRA</code>
+|-
+| papacy_active || Boolean || Returns true if the [[papacy]] is active. || Anywhere ||<code>papacy_active = yes</code>
+|-
+| rowspan="2" | papal_influence || Integer || Returns true if the country's [[papal influence]] is at least X. || Country ||<code>papal_influence = 100</code>
+|-
+<!-- papal_influence -->| Tag, Scope || Returns true if the country has at least as much papal influence as the specified country. || Country ||<code>papal_influence = KID</code>
+|-
+| patriarch_authority || Float || Returns true if the country's [[patriarch authority]] is at least X. || Country ||<code>patriarch_authority = 0.75</code>
+|-
+| percentage_backing_issue || Float || Returns true if at least the Xth part of the seats in the [[parliament]] is backing for the current issue. || Country ||<code>percentage_backing_issue = 0.5</code>
+|-
+| personality || Identifier || Returns true if the country has a [[ruler]] which [[personality]] is X. Is limited to ai_personalities listed in base game file 'common/ai_personalities/00_ai_personalities.txt'. For ruler personality, use ruler_has_personality || Country ||<code>personality = ai_militarist</code>
+|-
+| rowspan="2" | piety || Float || Returns true if the country's [[piety]] is at least X. || Country ||<code>piety = -0.75</code>
+|-
+<!-- piety -->| Tag, Scope || Returns true if the country has at least as much piety as the specified country. || Country ||<code>piety = MOR</code>
+|-
+| preferred_emperor || Tag, Scope || Returns true if an elector has the country X is the preferred emperor. || Country (Elector) ||<code>preferred_emperor = HAB</code>
+|-
+|possible_buildings
+|Integer
+|Returns true if the province has at least X building slots, including occupied ones.
+|Province
+|<code>possible_buildings = 3</code>
+|-
+| rowspan="2" | prestige || Integer || Return true if the country has a [[prestige]] of at least X. || Country ||<code>prestige = 99</code>
+|-
+<!-- prestige -->| Tag, Scope || Returns true if the country has at least as much prestige as the specified country. || Country ||<code>prestige = ADA</code>
+|-
+| previous_owner || Tag, Scope || Returns true if the previous owner of the province was X. || Province ||<code>previous_owner = HUN</code>
+|-
+| power_projection || Integer || Returns true if country has a [[Power_projection]] of at least X. Appeared in 1.30 || Country ||<code>power_projection = 90</code>
+|-
+| primary_culture || Identifier, Scope || Returns true if the country's primary culture is X. || Country ||<code>primary_culture = dutch</code>
+|-
+| primitives || Boolean || Returns true if the country is [[primitive]]. || Country ||<code>primitives = yes</code>
+|-
+| privateer_power || Clause || Returns true if the country has at least X trade power from [[privateering]] in the trade node. || Province<br>(Trade node) ||<pre>1744 = { #Antwerpen
+	privateer_power = {
+		country = FROM
+		share = 25
+	}
+}</pre>
+|-
+| rowspan="2" | production_efficiency || Float || Returns true if the country has a [[production efficiency]] of at least X. || Country ||<code>production_efficiency = 0.10</code>
+|-
+<!-- production_efficiency -->| Tag, Scope || Returns true if the country has an at least as high production efficiency as the specified country. || Country ||<code>production_efficiency = AAC</code>
+|-
+| production_income_percentage || Float || Returns true if the ratio of production income to total income is at least X. || Country ||<code>production_income_percentage = 0.10</code>
+|-
+| production_leader || Clause || Returns true if the country is the [[production leader]] of the [[trade good]] X. || Country ||<pre>production_leader = {
+	trade_goods = coffee
+}</pre>
+|-
+| province_distance || Clause || Returns true, if the distance between specified provinces is at least X. || Province ||<pre>any_owned_province = {
+	province_distance = {
+		who = 151
+		distance = 50
+	}
+}</pre>
+|-
+| province_id || Integer,Scope || Returns true if the province has the ID X. || Province ||<code>province_id = 1</code>
+|-
+| province_is_on_an_island || Boolean || Returns true if the province is [[Island#province_is_on_an_island|on an island]]. || Province ||<code>province_is_on_an_island = yes</code>
+|-
+| province_getting_expelled_minority || Boolean || Returns true if the province is getting minorities. || Province ||<code>province_getting_minorities = yes</code>
+|-
+| province_group || Identifier || Returns true if the province belongs to the specified [[province group]]. || Province ||<code>province_group = my_province_group</code>
+|-
+| province_size || Integer || Returns true if the province, in '''provinces.bmp''', contains X pixels. || Province ||<code>province_size = 100</code>
+|-
+| province_trade_power || Integer || Returns true if [[trade power]] generated by the province is at least X. || Province ||<code>province_trade_power = 5</code>
+|-
+|provinces_on_continent
+|Scope
+|Returns true if the current scope has provinces on the specified continent.
+|Country
+|<code>provinces_on_continent = europe</code>
+|-
+| provinces_on_capital_continent_of || Scope || Returns true if the country has a province on the continent with the capital of the specified country. || Country ||<code>provinces_on_capital_continent_of = ROOT</code>
+|-
+| pure_unrest || Integer || Returns true if the province has a base [[unrest]] of at least X. || Province ||<code>pure_unrest = 2</code>
+|-
+| range || Tag, Scope || Returns true if the province is within the range of the specified country.
+This will not take into account whether the province is within range due to subject or overlord borders, not even if they have extend_trading_range = yes.
+| Province ||<code>range = TUR</code>
+|-
+| real_day_of_year || Integer || Returns true, if today is at least X (January 1st &#8793; 0). Refers to the actual real day (probably takes system time). || Anywhere ||''Example needed''
+|-
+| real_month_of_year || Integer || Returns true if the month of the year in reality is at least X (January &#8793; 0) || Anywhere ||<code>real_month_of_year = 6 # Mai</code>
+|-
+|rebel_progress_at_least
+|Integer
+|Returns true if the specified rebel faction has at least X progress towards revolting. Will default to any faction if unspecified. 
+|Country
+|<pre>
+rebel_progress_at_least = {
+    rebel_type = nationalist_rebels
+    value = 50
+}
+</pre>
+|-
+| reform_desire || Float || Returns true if the [[reform desire]] is at least X%. || Anywhere ||<code>reform_desire = 0.95</code>
+|-
+|receives_military_access_from
+|Tag, Scope
+|Returns true if the scoped country receives military access from the specified country.
+|Country
+|<pre>
+owner = {
+        receives_military_access_from = FRA
+}
+</pre>
+|-
+|receives_fleet_basing_rights_from
+|Tag, Scope
+|Returns true if the scoped country receives fleet basing rights from the specified country.
+|Country
+|<pre>
+owner = {
+        receives_fleet_basing_rights_from = FRA
+}
+</pre>
+|-
+|recent_treasure_ship_passage
+|Bool
+|Returns true if a treasure fleet recently passed through the provinces' trade node (set by define, default = 365 days).
+|Province
+|<code>recent_treasure_ship_passage = yes</code>
+|-
+|reform_level
+|Identifier
+|Retrurn true if the country has reached at least X levels of government reforms.
+|Country
+|<code>reform_level = 5</code>
+|-
+| region || Identifier || Returns true if the province is part of the [[region]] X. || Province ||<code>region = west_india_region</code>
+|-
+| religion || Identifier, Scope || Returns true if the country/province has religion X.|| Country<br>Province ||<code>religion = catholic</code>
+|-
+| religion_group || Identifier, Scope || Returns true if the country/province has a religion of the specified [[religious group]]. || Country<br>province ||<code>religion_group = christian</code>
+|-
+| religion_years || Clause || Returns true if the specified religion is enabled for at least X years. || Anywhere ||<code>religion_years = { confucianism = 100 }</code>
+|-
+| religious_school || Clause || Returns true, if the country has the specified religious school. || Country ||<pre>religious_school = {
+	group = muslim
+	school = hanbali_school
+}</pre>
+|-
+| religious_unity || Float || Returns true if the country's [[religious unity]] is at least X. || Country ||<code>religious_unity = 0.99</code>
+|-
+| republican_tradition || Integer || Returns true if country's [[republican tradition]] is at least X. || Country ||<code>republican_tradition = 90</code>
+|-
+| revanchism || Integer || Returns true if country's [[revanchism]] is at least X. || Country ||<code>revanchism = 10</code>
+|-
+| reverse_has_opinion || Clause || Returns true if the country specified by ''who'' has at least ''value'' opinion of the country. || Country ||<pre>reverse_has_opinion = {
+	who = DAN
+	value = 80
+}</pre>
+|-
+| reverse_has_opinion_modifier || Clause || Returns true if the country specified by ''who'' has the opinion modifier ''modifier'' towards the country.<br>Can also specify a value of the modifier (but it is not displayed). || Country ||<pre>reverse_has_opinion_modifier = {
+	who = ROOT
+	modifier = opinion_spurned_pu
+}</pre>
+|-
+| revolt_percentage || Float || Returns true if at least the Xth part of the provinces of the country have [[revolts]]. || Country ||<code>revolt_percentage = 0.1</code>
+|-
+| revolution_target_exists || Boolean || Returns true if there is a [[revolutionary target]] in the world. || Global||<code>revolution_target_exists  = yes</code>
+|-
+|revolution_spread
+|Float
+|Checks the % spread of revolutionary ideas in the country
+|Country
+|revolution_spread = 0.5
+|-
+| ruler_age || Integer || Returns true if the country has a [[ruler]] that is at least X years old. || Country ||<code>ruler_age = 40</code>
+|-
+| ruler_consort_marriage_length || Integer ||''Needs description''|| Country ||<code>ruler_consort_marriage_length = 10</code>
+|-
+| ruler_culture || Identifier, Scope || Returns true, if the country's ruler has the specified culture. Can utilise [[Variables|Event Scope Values]]. || Country ||<code>ruler_culture = prussian</code>
+|-
+| ruler_has_personality || Identifier || Returns true if the country’s [[ruler]] has the specified [[personality]]. || Country ||<code>ruler_has_personality = malevolent_personality</code>
+|-
+| ruler_is_foreigner || Boolean || Returns true if the country has foreign [[ruler]]. || Country ||<code>ruler_is_foreigner = no</code>
+|-
+| ruler_religion || Identifier, Scope || Returns true, if the country's ruler has the specified religion. Can utilise [[Variables|Event Scope Values]]. || Country ||<code>ruler_religion = catholic</code>
+|-
+| sailors || Integer || Returns true if the country has at least X [[sailors]]. || Country ||<code>sailors = 2500</code>
+|-
+| sailors_percentage || Float || Returns true if the country has a [[sailor]] level of at least X%. || Country ||<code>sailors_percentage = 0.50</code>
+|-
+| max_sailors<ref>Not documented, no localisation.</ref>|| Integer || Returns true if the country has at least X maximum sailors. || Country ||<code>max_sailors = 5000</code>
+|-
+| same_continent || Integer, Scope || Returns true, if specified province is on the same continent as the province. If used in country scope, capitals are checked. || Country, Province ||<pre>FRA = {
+	same_continent = ROOT
+}</pre>
+<pre>all_owned_province = {
+	same_continent = capital
+}</pre>
+|-
+|same_trade_node_as
+|Scope
+|Returns true if the current province scope is in the same trade node as the specified province scope.
+|Province
+|<pre>
+capital_scope = {
+    same_trade_node_as = event_target:my_trade_port
+}
+</pre>
+|-
+|same_home_trade_node_as
+|Scope
+|Returns true if the current country scope has the same home trade node as the specified country scope.
+|Country
+|<code>same_home_trade_node_as = FRA</code>
+|-
+| secondary_religion || Identifier || Returns true the [[secondary religion]] of the country is X. || Country ||<code>secondary_religion = ibadi</code>
+|-
+|secondary_religion_group
+|Identifier
+|Returns true if the secondary religion of the country is in X religion group.
+|Country
+|<code>secondary_religion_group = muslim</code>
+|-
+| senior_union_with || Tag, Scope || Returns true if the country is the senior partner in a [[personal union]] over country X. || Country ||<code>senior_union_with = HAB</code>
+|-
+| sieged_by || Tag, Scope || Returns true if the province is being besieged by X. || Province ||<code>sieged_by = ROOT</code>
+|-
+| splendor || Integer || Returns true, if the country has at least X splendor. || Country ||<code>splendor = 800</code>
+|-
+| rowspan="2" | stability || Integer || Returns true if the country has a [[stability]] of at least X. || Country ||<code>stability = 1</code>
+|-
+<!-- stability -->| Tag, Scope || Returns true if the country has at least as much stability as the specified country. || Country ||<code>stability = HAB</code>
+|-
+| start_date || Date || Returns true if the [[start date]] of the campaign is X. || Anywhere ||<code>start_date = 1776.7.4</code>
+|-
+| started_in || Date || Returns true if the [[start date]] of the campaign is X or after. || Anywhere ||<code>started_in = 1776.7.4</code>
+|-
+| statists_vs_orangists || Float || Returns true if [[Statists]] vs [[Orangists]] is at least X. || Country ||<code>statists_vs_orangists = 0.9</code>
+|-
+| subsidised_percent_amount || Float || Returns true if the [[country]] receives [[subsidies]] of at least X% of its monthly income. || Country ||<syntaxhighlight lang="text">
+subsidised_percent_amount = { 
+	value = 0.5
+}
+</syntaxhighlight>
+|-
+|subject_owns
+|Scope
+|Returns true if a subject owns the specified province scope
+|Country
+|<code>subject_owns = 183</code>
+|-
+| succession_claim || Tag, Scope || Returns true if the country has [[claim throne|claimed the throne]] of the country X. || Country ||<code>succession_claim = FROM</code>
+|-
+| superregion || Identifier || Returns true if the province belongs to the [[superregion]] X. || Province ||<code>superregion = east_indies_superregion</code>
+|-
+| rowspan="2" |supply_limit
+|Integer
+|Returns true if the country has a supply limit of at least X.
+|Province
+|<code>supply_limit = 10</code>
+|-
+|Tag, Scope
+|Returns true if the scoped province has a has a supply limit at least as high as the specified scope.
+|Province
+|<code>supply_limit = PREV</code>
+|-
+| tag || Tag, Scope || Returns true if the [[country]] is the specified country. || Country ||<code>tag = HAB</code>
+|-
+| tariff_value || Float || Returns true if the [[colonial nation]] pays at least X% tariffs. || Country ||<code>tariff_value = 0.25</code>
+|-
+| tax_income_percentage || Float || Returns true if the ratio of tax income to total income is at least X. || Country ||<code>tax_income_percentage = 0.2</code>
+|-
+| tech_difference || Integer || Returns true if the scoped country is at least X technologies ahead (compared to the country). || Country ||<pre>any_neighbor_country = {
+	tech_difference = 3
+} </pre>
+|-
+| rowspan="2" | technology_group || Identifier || Returns true if the country has the [[technology group]] X. || Country ||<code>technology_group = western</code>
+|-
+<!-- technology_group -->| Scope || Returns true if the countries have the same technology group. || Country ||<code>technology_group = PREV</code>
+|-
+| tolerance_to_this || Integer || Returns true if the country has a tolerance of at least X towards the religion of the country or scoped province. || Country Province ||<code>tolerance_to_this = 0</code>
+|-
+| rowspan="2" | total_base_tax || Integer || Returns true if the [[base tax]] of the country's provinces totals at least X. || Country ||<code>total_base_tax = 75</code>
+|-
+<!-- total_base_tax -->| Tag, Scope || Returns true if the country has at least as much total base tax as the specified country. || Country ||<code>total_base_tax = MNG</code>
+|-
+| rowspan="2" | total_development || Integer || Returns true if the country has a [[total development]] of at least X. || Country ||<code>total_development = 200</code>
+|-
+<!-- total_development -->| Tag, Scope|| Returns true if the country has more [[total development]] than the specified country. || Country ||<code>total_development = HUN</code>
+|-
+| total_number_of_cardinals || Integer || Returns true if the total number of [[cardinals]] is at least X. || Anywhere ||<code>total_number_of_cardinals = 49</code>
+|-
+| total_losses_in_won_wars || Clause || Returns true if the country specified by ''looser'' has lost at least the amount of troops specified by ''casualties'' in wars lost against the country specified by ''winner''. Both have to be primary targets. || Anywhere ||<pre>total_losses_in_won_wars = {
+	winner = NPL
+	looser = PRU
+	casualties = 100000
+} </pre>
+|-
+| trade_league_embargoed_by || Tag, Scope ||''Description needed''|| Country ||<code>trade_league_embargoed_by = FROM</code>
+|-
+| rowspan="2" |total_own_and_non_tributary_subject_development
+|Integer
+|Returns true if the country and its [[Subject nation|non-tributary subjects]] have at least X Total development.
+|Country
+|<code>total_own_and_non_tributary_subject_development = 300</code>
+|-
+|Tag, Scope
+|Returns true if the country and its non-tributary subjects have more [[Total development]] than the specified country and its non-tributary subjects.
+|Country
+|<code>total_own_and_non_tributary_subject_development = FRA</code>
+|-
+| rowspan="2" | transports_in_province || Integer || Returns true if there are at least X [[transports]] in the province. || Province ||<code>transports_in_province = 10</code>
+|-
+<!-- transports_in_province -->| Tag, Scope || Returns true if there are transports from the specified country in the province. || Province ||<code>transports_in_province = TER</code>
+|-
+| trade_company_region || Identifier || Returns true if the [[province]] is in the [[trade company]] region. || Province ||<code>trade_company_region = trade_company_moluccas</code>
+|-
+| trade_company_size || Integer || Returns true if the [[trade company]] has at least X provinces. || Province ||<code>trade_company_size = 5</code>
+|-
+| trade_efficiency || Float || Returns true if the country has a [[trade efficiency]] over X. || Country ||<code>trade_efficiency = 0.50</code>
+|-
+| trade_embargoing || Tag, Scope || Returns true if the country is [[embargo]]ing country X. || Country ||<code>trade_embargoing = HAB</code>
+|-
+| trade_embargo_by || Tag, Scope || Returns true if country X is [[embargo]]ing the country. || Country ||<code>trade_embargo_by = HAB</code>
+|-
+| trade_goods || Identifier || Returns true if the province is producing the [[trade good]] X. || Province ||<code>trade_goods = fur</code>
+|-
+|trade_goods_produced_amount
+|Clause
+|Returns true if country X is producing amount Y of [[trade good]] Z.
+|Country
+|<syntaxhighlight>
+trade_goods_produced_amount = {
+	trade_goods = grain
+	amount = 25
+}
+</syntaxhighlight>
+|-
+| trade_income_percentage || Float || Returns true if the ratio of trade income to total income is at least X. || Country ||<code>trade_income_percentage = 0.10</code>
+|-
+|trade_node_value
+|Float
+|Returns true if [[Trade#Total trade value|total trade value]] in the node is at least X.
+|Province (Trade Node)
+|<pre>1744 = { #Antwerpen
+	trade_node_value = 50
+}</pre>
+|-
+| trade_range || Tag, Scope || Returns true if the trade node is within the [[trade range]] of the specified country. || Province<br>(Trade node) ||<code>trade_range = ENG</code>
+|-
+| trade_share || Clause || Returns true if the country controls at least X% of the [[trade]] in the specified [[trade node]]. || Province<br>(Trade node) ||<pre>1744 = { #Antwerpen
+	trade_share = {
+		country = NED
+		share = 25
+	}
+}</pre>
+|-
+| trading_bonus || Clause || Returns true if the country has the ‘[[trading in]]’ bonus of the specified trade good. || Country ||<pre>trading_bonus = {
+	trade_goods = coffee
+	value = yes
+}</pre>
+|-
+| trading_part || Clause || Returns true if the country has access to X% of the world market of the specified [[trade good]]. || Country ||<pre>trading_part = {
+	trade_goods = cocoa
+	value = 0.05
+}</pre>
+|-
+| trading_policy_in_node || Clause || Returns true, if the country has the specified trading policy in the specified trade node. Can also use "policy = any". || Country ||<pre>any_active_trade_node = {
+	ROOT = {
+		trading_policy_in_node = {
+			node = PREV
+			policy = propagate_religion
+		}
+	}
+}</pre>
+|-
+| transport_fraction || Float || Returns true if the ratio of the [[transport]] fraction to the navy size of the country is at least X. || Country ||<code>transport_fraction = 0.55</code>
+|-
+|transfers_trade_power_to
+|Tag, Scope
+|Returns true if the country transfers trade power to country X.
+|Country
+|<code>transfers_trade_power_to = FRA</code>
+|-
+| rowspan="2" | treasury || Integer || Returns true if country's treasury contains at least X ducats. || Country ||<code>treasury = 100</code>
+|-
+<!-- treasury -->| Tag, Scope || Returns true if the country has at least as much ducats in its treasury as the specified country. || Country ||<code>treasury = ROOT</code>
+|-
+| tribal_allegiance || Integer || Returns true, if the country has a tribal allegiance of at least X. || Country ||<code>tribal_allegiance = 10</code>
+|-
+| rowspan="2" | tribal_development || Integer || Returns true, if the country or province has at least X tribal development || Province, Country || <code>tribal_development = 50</code>
+|-
+<!-- tribal_development -->| Tag, Scope || Returns true, if the country has more development than the specified country || Country || <code>tribal_development = DAN</code>
+|-
+| tribal_land_of || Tag, Scope || Returns true, if the province is tribal land of the specified country<br>Anything that is not a valid tag will check for 'not tribal land' || Province || <code>tribal_land_of = ROOT</code>
+|-
+| truce_with || Tag, Scope || Returns true if the country has a [[truce]] with X. || Country ||<code>truce_with = FRA</code>
+|-
+| trust || Tag, Scope || Returns true if the current scope has a trust level of at least X with the specified tag. || Country ||<code>trust = { who = FRA value = 50 }</code>
+|-
+| unit_has_leader || yes || Returns true if any unit is in the province has a leader.<br>Warning: Works only with 'yes'. || Province ||<code>unit_has_leader = yes</code>
+|-
+| unit_in_battle || Boolean || Returns true if any unit in the province is in a battle. || Province ||<code>unit_in_battle = no</code>
+|-
+| unit_in_siege || Boolean || Returns true if any unit in the province is in a siege. || Province ||<code>unit_in_siege = yes</code>
+|-
+| rowspan="2" | units_in_province || Integer || Returns true if there are at least X units in the province. || Province ||<code>units_in_province = 1</code>
+|-
+<!-- units_in_province -->| Tag, Scope || Returns true if the specified country has units in the province. || Province ||<code>units_in_province = RUS</code>
+|-	
+| unit_type|| Identifier|| Returns true if the country has units of type X. || Country ||<code>unit_type = sub_saharan</code>
+|-
+| unrest || Integer || Returns true if the [[unrest]] in the province is at least X. If it is used in a country scope, it checks for the global_unrest modifier || Province, Country ||<code>unrest = 3</code>
+|-
+| uses_authority || Boolean || Returns true if the country uses [[Pagan denominations#Inti|authority]] mechanics. || Country ||<code>uses_authority = yes</code>
+|-
+| uses_church_aspects || Boolean || Returns true if the country uses [[church aspects]] mechanics. || Country ||<code>uses_church_aspects = yes</code>
+|-
+| uses_blessings || Boolean || Returns true if the country uses [[blessing]]s mechanics. || Country ||<code>uses_blessings = yes</code>
+|-
+| uses_cults || Boolean || Returns true if the country uses [[cults]] mechanics. || Country ||<code>uses_cults = yes</code>
+|-
+| uses_devotion || Boolean || Returns true, if the country uses devotion instead of legitimacy. || Country ||<code>uses_devotion = yes</code>
+|-
+| uses_doom || Boolean || Returns true if the country uses [[doom]] mechanics. || Country ||<code>uses_doom = yes</code>
+|-
+| uses_fervor || Boolean || Returns true if the country uses [[fervor]] mechanics. || Country ||<code>uses_fervor = yes</code>
+|-
+| uses_isolationism || Boolean || Returns true, if the country uses the isolationism mechanic. || Country ||<code>uses_isolationism = yes</code>
+|-
+| uses_karma || Boolean || Returns true if the country uses [[karma]] mechanics. || Country ||<code>uses_karma = yes</code>
+|-
+| uses_papacy || Boolean || Returns true if the country uses [[papacy]] mechanics. || Country ||<code>uses_papacy = yes</code>
+|-
+| uses_patriarch_authority || Boolean || Returns true if the country uses [[patriarch authority]] mechanics. || Country ||<code>uses_patriarch_authority = yes</code>
+|-
+| uses_personal_deities || Boolean || Returns true if the country uses [[personal deity|personal deities]] mechanics. || Country ||<code>uses_personal_deities = yes</code>
+|-
+| uses_piety || Boolean || Returns true if the country uses [[piety]] mechanics. || Country ||<code>uses_piety = yes</code>
+|-
+| uses_religious_icons || Boolean || Returns true, if the country uses religious icons. || Country ||<code>uses_religious_icons = yes</code>
+|-
+| uses_syncretic_faiths || Boolean || Returns true if the country uses [[syncretic faith]]s mechanics. || Country ||<code>uses_syncretic_faiths = yes</code>
+|-
+| variable_arithmetic_trigger || Clause || Can use variable effects and triggers to compare or change and compare modifier and trigger values. "variable_arithmetic_trigger" sections can include more "variable_arithmetic_trigger" sections. This has to be done for effects such as "change_variable" or effects of "if" sections inside the "variable_arithmetic_trigger", since the game may crash otherwise. || Anywhere ||<pre>variable_arithmetic_trigger = {
+	custom_tooltip = from_total_development_is_10_times_bigger_than_ours
+	export_to_variable = {
+		which = our_total_development
+		value = trigger_value:total_development
+	}
+	export_to_variable = {
+		which = from_total_development
+		value = trigger_value:total_development
+		who = FROM
+	}
+	multiply_variable = { which = from_total_development value = 10 }
+	
+	check_variable = { which = from_total_development which = our_total_development }
+}</pre>
+|-
+| vassal_of || Tag, Scope || Returns true if the country is a [[vassal]] of country X. || Country ||<code>vassal_of = ROOT</code>
+|-
+| rowspan="2" | war_exhaustion || Integer || Returns true if the country has a [[war exhaustion]] of at least X. || Country ||<code>war_exhaustion = 8</code>
+|-
+<!-- war_exhaustion -->| Tag, Scope || Returns true if the country has at least as much war exhaustion as the specified country. || Country ||<code>war_exhaustion = NPL</code>
+|-
+| war_score || Integer || Returns true if the coutry has a [[warscore]] of at least X%. || Country ||<code>war_score = 100</code>
+|-
+| war_score_against || Clause || Returns true if the coutry has a [[warscore]] of at least X against the specified country. || Country ||<pre>war_score_against = {
+	who = INC
+	value = 75
+}</pre>
+|-
+| war_with || Tag, Scope || Returns true if the country is at [[war]] with country X. || Country ||<code>war_with = INC</code>
+|-
+| was_player || Boolean || Returns true if the country was controlled by a human player. || Country ||<code>was_player = no</code>
+|-
+| was_tag || Country || Returns true if the country was a particular tag. || Country ||<code>was_tag = MUG</code>
+|-
+| will_back_next_reform || Boolean || Returns true if the member of the HRE is backing the next [[imperial reform]]. || Country ||<code>will_back_next_reform = yes</code>
+|-
+| yearly_corruption_increase || Float || Returns true if the country has a yearly [[corruption]] increase of at least X. || Country ||<code>NOT = { yearly_corruption_increase = 0.001 }</code>
+|-
+| years_in_union_under || Clause || Returns true if the country is in a [[personal union]] under the specified country for at least X years. || Country ||<pre>years_in_union_under = {
+	who = ROOT
+	years = 50
+}</pre>
+|-
+| years_in_vassalage_under || Clause || Returns true if the country is a [[vassal]] of the specified country for at least X years. || Country ||<pre>years_in_vassalage_under = {
+	who = ROOT
+	years = 10
+}</pre>
+|-
+| rowspan="2" | years_of_income || Float || Returns true if the country's treasury contains ducats of at least X times their yearly income. || Country ||<code>years_of_income = 1.0</code>
+|-
+|Tag, Scope
+| Returns true if the country's treasury contains ducats of at least the yearly income of the specified country. || Country || <code>years_of_income = SER</code>
+|-
+|years_of_manpower
+|Float
+|Returns true if the country's manpower pool contains at least X years of manpower.
+|Country
+|<code>years_of_manpower = 2.5</code>
+|-
+|years_of_sailors
+|Float
+|Returns true if the country's sailor pool contains at least X years of sailors.
+|Country
+|<code>years_of_sailors = 2.5</code>
+|-
+| rowspan="0" | is_mod_active || Identifier || Returns true if the specified mod is currently enabled. Specified via either the mod's name or ID. || Anywhere ||<code>is_mod_active = "2164202838"</code>
+|}
+
+== Scripted triggers ==
+{{SVersion|1.32}}
+To script triggers means to bundle two or more of them together, making it possible to use them together with a single string, as opposed to typing them all individually every time. This is useful if you need to use the same triggers on multiple occasions, especially if it might be edited later.
+Scripted triggers are in "common/scripted_triggers" folder. Here is an example of a scripted trigger:
+ example_scripted_trigger = {
+ 	primary_culture = irish
+ 	religion = catholic
+ }
+To now check whether a country has Irish as its primary culture and is Catholic, the following string can be used:
+ example_scripted_trigger = yes
+Province-scope scripted triggers can also be added.
+
+As of Version 1.23 it is possible to add arguments to scripted triggers:
+ is_subject_of_scripted_trigger = {
+ 	is_subject_of = $overlord$
+ 	is_subject_of_type = $subject_type$
+ }
+
+In a trigger section you can now use the scripted trigger and set overlord and subject_type to matching values/types:
+ is_subject_of_scripted_trigger = {
+ 	overlord = FRA
+ 	subject_type = tributary_state
+ }
+
+The arguments can be chosen freely and there is no maximum amount of arguments that a scripted trigger can have. Every call to the scripted effect must supply exactly the arguments it expects.
+
+== References ==
+<references/> 
+
+{{Modding navbox}}
+
+[[Category:Modding]]

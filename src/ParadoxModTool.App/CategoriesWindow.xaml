@@ -1,0 +1,72 @@
+<Window x:Class="ParadoxModTool.App.CategoriesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kategorien verwalten"
+        Height="520" Width="760" MinHeight="460" MinWidth="680"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <DockPanel Margin="12">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Standard wiederherstellen" Padding="10,2" Margin="0,0,16,0" Click="RestoreDefaults_Click"
+                    ToolTip="Setzt die Liste auf die sieben eingebauten Kategorien mit ihren Standardregeln und -farben zurück (eigene Kategorien entfallen)" />
+            <Button Content="OK" Width="70" Margin="0,0,6,0" Click="Ok_Click" IsDefault="True" />
+            <Button Content="Abbrechen" Width="80" IsCancel="True" />
+        </StackPanel>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <DockPanel Grid.Column="0">
+                <TextBlock DockPanel.Dock="Top" Text="Kategorien (Reihenfolge = Priorität der Regeln)" TextWrapping="Wrap" Margin="0,0,0,6" />
+                <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
+                    <Button Content="Neu" Padding="8,2" Margin="0,0,4,0" Click="New_Click" />
+                    <Button x:Name="DeleteButton" Content="Löschen" Padding="8,2" Margin="0,0,4,0" Click="Delete_Click" />
+                    <Button x:Name="UpButton" Content="▲" Padding="8,2" Margin="0,0,4,0" Click="Up_Click" ToolTip="Nach oben (höhere Priorität)" />
+                    <Button x:Name="DownButton" Content="▼" Padding="8,2" Click="Down_Click" ToolTip="Nach unten (niedrigere Priorität)" />
+                </WrapPanel>
+                <ListBox x:Name="CategoryList" SelectionChanged="CategoryList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="12" Height="12" Margin="0,0,6,0" Background="{Binding Brush}"
+                                        BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="1" />
+                                <TextBlock Text="{Binding Name}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <StackPanel Grid.Column="2" x:Name="EditPanel">
+                <TextBlock Text="Name" Margin="0,0,0,2" />
+                <TextBox x:Name="NameBox" TextChanged="NameBox_TextChanged" Margin="0,0,0,10" />
+
+                <TextBlock x:Name="ColorLabel" Text="Farbe (Hex, z. B. #1E90FF)" Margin="0,0,0,2" />
+                <Grid Margin="0,0,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition Width="30" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="ColorBox" Grid.Column="0" Margin="0,0,4,0" TextChanged="ColorBox_TextChanged" />
+                    <Border x:Name="ColorPreview" Grid.Column="1" Margin="0,2,4,2" BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="1" />
+                    <Button Grid.Column="2" Content="🎨" Padding="0" FontSize="12" Click="PickColor_Click" ToolTip="Farbe auswählen" />
+                </Grid>
+                <TextBlock x:Name="ColorHint" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" Margin="0,0,0,10" />
+
+                <TextBlock Text="Dateiendungen (mit Komma getrennt, z. B. .txt, .gui)" Margin="0,0,0,2" />
+                <TextBox x:Name="ExtensionsBox" TextChanged="ExtensionsBox_TextChanged" Margin="0,0,0,10" />
+
+                <TextBlock Text="Muster (eines pro Zeile, * = beliebig viele Zeichen, ? = ein Zeichen)" Margin="0,0,0,2" />
+                <TextBox x:Name="PatternsBox" TextChanged="PatternsBox_TextChanged" AcceptsReturn="True" TextWrapping="NoWrap"
+                         VerticalScrollBarVisibility="Auto" Height="90" Margin="0,0,0,4" />
+                <TextBlock x:Name="RulesHint" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}"
+                           Text="Ein Muster gilt ab einer beliebigen Ordnergrenze, z. B. 'events/*' oder '*_decisions.txt'. Ohne Endung und Muster wird die Kategorie nur manuell vergeben. Die erste passende Kategorie in der Liste gewinnt; eine manuelle Zuweisung schlägt jede Regel." />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Session</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Categories\ParadoxModTool.Categories.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Storage\ParadoxModTool.Storage.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Editor</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Paketversion nicht gegen nuget.org geprüft, siehe README.md ("Bekannte Unsicherheiten"). -->
+    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Categories\ParadoxModTool.Categories.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ScriptDocs\ParadoxModTool.ScriptDocs.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Scopes\ParadoxModTool.Scopes.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GuiDesign\ParadoxModTool.GuiDesign.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

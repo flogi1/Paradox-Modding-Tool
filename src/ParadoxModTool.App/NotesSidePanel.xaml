@@ -1,0 +1,198 @@
+<UserControl x:Class="ParadoxModTool.App.NotesSidePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:notes="clr-namespace:ParadoxModTool.Notes;assembly=ParadoxModTool.Notes">
+    <!--
+        Rechtes Panel "Notizen, Lesezeichen & Bugs" (Nutzer-Feedback): zeigt für das aktive Dokument die
+        persönliche Notiz (Vorschau), alle Lesezeichen mit Kommentar und (Paket 12c) die Mod-Bugs. Leere Bereiche
+        blenden sich aus; ist alles leer, blendet das Hauptfenster das ganze Panel aus (siehe
+        MainWindow.NotesPanel.cs) oder zeigt einen Hinweis, wenn es ständig sichtbar sein soll.
+    -->
+    <DockPanel Margin="6">
+        <TextBlock x:Name="HeaderText" DockPanel.Dock="Top" FontWeight="Bold" TextTrimming="CharacterEllipsis" Margin="0,0,0,6" />
+
+        <TextBlock x:Name="EmptyHint" DockPanel.Dock="Top" Text="Keine Notiz, keine Lesezeichen und keine Bugs." TextWrapping="Wrap"
+                   Foreground="{DynamicResource Theme.TextMuted}" Visibility="Collapsed" />
+
+        <Border x:Name="NoteSection" DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,6">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top">
+                    <Button DockPanel.Dock="Right" Content="Bearbeiten" Padding="6,0" Click="EditNote_Click" />
+                    <TextBlock Text="🗒 Notiz" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </DockPanel>
+                <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                    <TextBox x:Name="NoteText" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                             TextWrapping="Wrap" FontFamily="Consolas" FontSize="12" />
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Scope am Cursor, gespeicherte Scopes und Scope-Warnungen der Datei (Einstellung "Scope im Notiz-Panel anzeigen"). -->
+        <Border x:Name="ScopeSection" DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="0,0,0,1"
+                Padding="0,0,0,6" Margin="0,0,0,6" Visibility="Collapsed">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="🧭 Scope" FontWeight="SemiBold" />
+                <ScrollViewer MaxHeight="280" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                    <StackPanel>
+                        <TextBlock x:Name="ScopeCurrentText" TextWrapping="Wrap" FontWeight="SemiBold" />
+                        <TextBlock x:Name="ScopeFieldText" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}" />
+                        <TextBlock x:Name="ScopeSavedHeader" Text="Gespeicherte Scopes" FontWeight="SemiBold" FontSize="11" Margin="0,6,0,0"
+                                   ToolTip="Namen, die an dieser Stelle mit scope:name benutzt werden können, samt Typ. Aus der Datei (save_scope_as) oder aus den gelernten Regeln (vom Spiel bereitgestellt)." />
+                        <TextBlock x:Name="ScopeSavedText" TextWrapping="Wrap" FontFamily="Consolas" FontSize="11" />
+                        <TextBlock x:Name="ScopeIssuesHeader" FontWeight="SemiBold" FontSize="11" Margin="0,6,0,2"
+                                   Foreground="{DynamicResource Theme.Danger}" />
+                        <ListBox x:Name="ScopeIssuesList" MaxHeight="130" HorizontalContentAlignment="Stretch"
+                                 MouseDoubleClick="ScopeIssuesList_MouseDoubleClick"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ToolTip="Doppelklick springt zur Stelle">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextWrapping="Wrap" FontSize="11">
+                                        <Run Text="Zeile " /><Run Text="{Binding Line, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding Message, Mode=OneWay}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Lesezeichen und Bugs teilen sich den Rest der Höhe; ein ausgeblendeter Bereich gibt seine Zeile frei
+             (siehe Refresh: Zeilenhöhe 0 statt Stern). -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="BookmarksRow" Height="*" />
+                <RowDefinition x:Name="BugsRow" Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel x:Name="BookmarksSection" Grid.Row="0" Margin="0,0,0,6">
+                <TextBlock DockPanel.Dock="Top" Text="🔖 Lesezeichen" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
+                    <Button Content="Kommentar" Padding="6,0" Margin="0,0,6,0" Click="EditBookmark_Click" />
+                    <Button Content="Entfernen" Padding="6,0" Click="RemoveBookmark_Click" />
+                </StackPanel>
+                <ListBox x:Name="BookmarksList" HorizontalContentAlignment="Stretch"
+                         MouseDoubleClick="BookmarksList_MouseDoubleClick"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ToolTip="Doppelklick springt zur Stelle">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,2">
+                                <TextBlock Text="{Binding LineText}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Comment}" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Comment}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Preview}" Foreground="{DynamicResource Theme.TextMuted}" FontFamily="Consolas" FontSize="11" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <DockPanel x:Name="BugsSection" Grid.Row="1">
+                <DockPanel.Resources>
+                    <BooleanToVisibilityConverter x:Key="BugBoolToVisibility" />
+                </DockPanel.Resources>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+                    <CheckBox x:Name="ShowDoneCheckBox" DockPanel.Dock="Right" Content="{x:Static notes:BugTexts.PanelShowClosed}" VerticalAlignment="Center" IsChecked="True"
+                              Click="ShowDone_Click" ToolTip="{x:Static notes:BugTexts.PanelShowClosedTip}" />
+                    <WrapPanel VerticalAlignment="Center">
+                        <TextBlock Text="{x:Static notes:BugTexts.PanelHeader}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <RadioButton x:Name="BugScopeFileRadio" GroupName="BugScope" IsChecked="True" Margin="0,0,6,0" VerticalAlignment="Center"
+                                     Content="{x:Static notes:BugTexts.PanelThisFile}" ToolTip="{x:Static notes:BugTexts.PanelThisFileTip}" Click="BugScope_Click" />
+                        <RadioButton x:Name="BugScopeProjectRadio" GroupName="BugScope" VerticalAlignment="Center"
+                                     Content="{x:Static notes:BugTexts.PanelProject}" ToolTip="{x:Static notes:BugTexts.PanelProjectTip}" Click="BugScope_Click" />
+                    </WrapPanel>
+                </DockPanel>
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
+                    <Button Content="{x:Static notes:BugTexts.PanelNew}" Padding="6,0" Margin="0,0,6,0" Click="NewBug_Click" ToolTip="{x:Static notes:BugTexts.PanelNewTip}" />
+                    <Button Content="{x:Static notes:BugTexts.PanelEdit}" Padding="6,0" Click="EditBug_Click" ToolTip="{x:Static notes:BugTexts.PanelEditTip}" />
+                </StackPanel>
+                <ListBox x:Name="BugsList" HorizontalContentAlignment="Stretch"
+                         MouseDoubleClick="BugsList_MouseDoubleClick"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ToolTip="{x:Static notes:BugTexts.PanelListTip}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding SourceIcon}" VerticalAlignment="Top" Margin="0,1,6,0" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsClosed}" Value="True">
+                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsUnseen}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Preview}" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Preview}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding LocationText}" FontSize="11" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource Theme.TextMuted}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding LocationText}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsClosed}" Value="True">
+                                                    <Setter Property="Opacity" Value="0.5" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="6,0,0,0">
+                                    <Button Content="✓" Padding="4,0" FontSize="10" Margin="0,0,2,0" Click="BugDone_Click"
+                                            ToolTip="{x:Static notes:BugTexts.DoneTip}" Visibility="{Binding IsOpen, Converter={StaticResource BugBoolToVisibility}}" />
+                                    <Button Content="⊘" Padding="4,0" FontSize="10" Margin="0,0,2,0" Click="BugReject_Click"
+                                            ToolTip="{x:Static notes:BugTexts.RejectTip}" Visibility="{Binding IsOpen, Converter={StaticResource BugBoolToVisibility}}" />
+                                    <Button Content="↺" Padding="4,0" FontSize="10" Margin="0,0,2,0" Click="BugReopen_Click"
+                                            ToolTip="{x:Static notes:BugTexts.ReopenTip}" Visibility="{Binding IsClosed, Converter={StaticResource BugBoolToVisibility}}" />
+                                    <Button Content="✕" Padding="4,0" FontSize="10" Click="BugDelete_Click"
+                                            ToolTip="{x:Static notes:BugTexts.DeleteTip}" Visibility="{Binding IsLocal, Converter={StaticResource BugBoolToVisibility}}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

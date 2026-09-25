@@ -1,0 +1,15 @@
+<UserControl x:Class="ParadoxModTool.Editor.VanillaIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="14" Height="14" SnapsToDevicePixels="True">
+    <!-- Eigenes Symbol für Vanilla-Dateien: goldene Raute mit einem "P" (angelehnt an die Idee einer
+         Verlagsmarke, aber bewusst eine eigene Zeichnung und kein Nachbau eines geschützten Logos).
+         Füllung aus der Ressource Icon.Vanilla (TabIconBrushes, pro Theme wählbar), Rand und "P" fest. -->
+    <Viewbox Stretch="Uniform">
+        <Grid Width="14" Height="14">
+            <Path Data="M7,0.75 L13.25,7 L7,13.25 L0.75,7 Z" Fill="{DynamicResource Icon.Vanilla}" Stroke="#1B2A49" StrokeThickness="1" StrokeLineJoin="Round" />
+            <TextBlock Text="P" FontFamily="Segoe UI" FontWeight="ExtraBold" FontSize="8.5" Foreground="#1B2A49"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-0.5,0,0" />
+        </Grid>
+    </Viewbox>
+</UserControl>
