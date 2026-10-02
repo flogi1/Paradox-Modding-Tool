@@ -14,7 +14,7 @@
     <StartupObject>ParadoxModTool.App.Program</StartupObject>
     <!-- Versionsnummer des Programms: erscheint im Startbild, im Über-Fenster, im Update-Vergleich und im
          Fehlerbericht. Bei jedem veröffentlichten Release hier hochzählen (und den Git-Tag "v<Version>" setzen). -->
-    <Version>0.9.1</Version>
+    <Version>0.9.2</Version>
     <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 

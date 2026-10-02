@@ -19,13 +19,14 @@ public sealed class UiTextTests : IDisposable
     public void Dispose() => Directory.Delete(_temp, recursive: true);
 
     [Fact]
-    public void SelectedLanguageThenGermanThenCodeFallback()
+    public void SelectedLanguageThenCodeFallback()
     {
         var table = UiTextTable.Load(_temp, "en");
 
         Assert.Equal("en", table.Language);
         Assert.Equal("Hello", table.Get("a.key", "x"));
-        Assert.Equal("Nur Deutsch", table.Get("b.key", "x"));
+        // Nur de.json hat den Text: Deutsch ist kein Rückfall (außer Deutsch ist gewählt), also kommt der Text aus dem Code.
+        Assert.Equal("x", table.Get("b.key", "x"));
         Assert.Equal("Rückfall", table.Get("missing", "Rückfall"));
         Assert.Equal("-", table.Get("_comment", "-"));
     }

@@ -9,7 +9,7 @@ without touching any code. Test your file in your own copy of PMT, then send it 
   copy after the language code, for example `fr.json`, `pt-br.json` or `zh-hans.json`.
 - **Existing language:** start from its current file in `locales/`.
 
-German (`de.json`) is the source language. English is the recommended template, and missing texts are shown in English.
+German (`de.json`) is the source language and is only used when German is chosen. English is the recommended template and the fallback language: missing texts are shown in English.
 
 ## 2. Put the file in the translation folder
 

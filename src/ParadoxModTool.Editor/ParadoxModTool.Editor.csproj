@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Paketversion nicht gegen nuget.org geprüft, siehe README.md ("Bekannte Unsicherheiten"). -->
+    <!-- Paketversion nicht gegen nuget.org geprüft, siehe docs/legacy-readme-de.md ("Bekannte Unsicherheiten"). -->
     <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
   </ItemGroup>
 

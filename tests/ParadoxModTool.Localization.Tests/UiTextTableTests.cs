@@ -24,7 +24,7 @@ public sealed class UiTextTableTests : IDisposable
     public void Dispose() => Directory.Delete(_root, recursive: true);
 
     [Fact]
-    public void ChainIsSelectedThenEnglishThenGermanThenInline()
+    public void ChainIsSelectedThenEnglishThenInline()
     {
         File.WriteAllText(Path.Combine(_program, "fr.json"), "{\"a\":\"Bonjour\"}");
 
@@ -33,8 +33,35 @@ public sealed class UiTextTableTests : IDisposable
         Assert.Equal("fr", table.Language);
         Assert.Equal("Bonjour", table.Get("a", "x"));
         Assert.Equal("Only English", table.Get("c", "x"));
-        Assert.Equal("Nur Deutsch", table.Get("b", "x"));
+        // de.json ist nur die Sprache für Deutsch, kein Rückfall: ein Text, den weder fr noch en haben, kommt aus dem Code.
+        Assert.Equal("x", table.Get("b", "x"));
         Assert.Equal("Rückfall", table.Get("missing", "Rückfall"));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void NoLanguageChosenUsesEnglish(string? language)
+    {
+        var table = UiTextTable.Load(_sources, language);
+
+        Assert.Equal("en", table.Language);
+        Assert.Equal("Hello", table.Get("a", "x"));
+        Assert.Equal("x", table.Get("b", "x"));
+    }
+
+    [Fact]
+    public void TableWithoutLoadedTextsReportsEnglish()
+    {
+        Assert.Equal("en", UiTextTable.Empty.Language);
+    }
+
+    [Fact]
+    public void GermanSelectionStillReadsGerman()
+    {
+        Assert.Equal("Hallo", UiTextTable.Load(_sources, "de").Get("a", "x"));
+        Assert.Equal("Nur Deutsch", UiTextTable.Load(_sources, "de").Get("b", "x"));
     }
 
     [Fact]
@@ -62,7 +89,7 @@ public sealed class UiTextTableTests : IDisposable
         var table = UiTextTable.Load(_sources, "fr");
 
         Assert.Equal("Only English", table.Get("c", "x"));
-        Assert.Equal("Nur Deutsch", table.Get("b", "x"));
+        Assert.Equal("x", table.Get("b", "x"));
     }
 
     [Fact]

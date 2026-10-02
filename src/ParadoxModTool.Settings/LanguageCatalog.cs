@@ -32,9 +32,9 @@ public static class LanguageCatalog
                 .Where(code => code.Length > 0 && !code.StartsWith('_'))
             : Enumerable.Empty<string>();
 
-    /// <summary>Leer wird zur Quellsprache, sonst Kleinbuchstaben ohne Leerzeichen.</summary>
+    /// <summary>Leer wird zur Standardsprache (Englisch), sonst Kleinbuchstaben ohne Leerzeichen.</summary>
     public static string Normalize(string? code) =>
-        string.IsNullOrWhiteSpace(code) ? UiText.SourceLanguage : code.Trim().ToLowerInvariant();
+        string.IsNullOrWhiteSpace(code) ? UiText.DefaultLanguage : code.Trim().ToLowerInvariant();
 
     /// <summary>Name der Sprache in ihr selbst (Deutsch, English, Français); unbekannte Codes bleiben stehen.</summary>
     public static string DisplayName(string code)

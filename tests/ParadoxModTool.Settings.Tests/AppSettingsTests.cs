@@ -79,7 +79,7 @@ public sealed class AppSettingsTests
         ExplorerSearchFoldersOnly = true,
         ExplorerHideUgcReferences = false,
         CompatchDefaultView = "C",
-        UiLanguage = "en",
+        UiLanguage = "de",
         SettingsWindowCategory = "Hotkeys",
         SettingsWindowBounds = new WindowBoundsState { Left = 10, Top = 20, Width = 700, Height = 500 },
         ErrorLogStandalone = true,

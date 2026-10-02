@@ -258,8 +258,8 @@ public sealed class AppSessionState
     /// <summary>Aufteilung der Designer-Bereiche (siehe GuiSettings.Layout); null = Standard.</summary>
     public string? GuiDesignerLayout { get; set; }
 
-    /// <summary>Sprache der Oberflächentexte (Datei locales/&lt;sprache&gt;.json). Standard: de.</summary>
-    public string UiLanguage { get; set; } = "de";
+    /// <summary>Sprache der Oberflächentexte (Datei locales/&lt;sprache&gt;.json). Standard: en.</summary>
+    public string UiLanguage { get; set; } = "en";
 
     /// <summary>Brotkrumen-Leiste über dem Code von .gui-Dateien. Standard: an.</summary>
     public bool GuiBreadcrumbEnabled { get; set; } = true;

@@ -61,7 +61,7 @@ public partial class App : Application
         var sessionAtStart = GameContext.Session.State;
         ThemeManager.Initialize(sessionAtStart);
 
-        // Oberflächentexte (locales/<sprache>.json aus User- und Programmordner, Rückfall Englisch, dann Deutsch) vor dem ersten Fenster laden.
+        // Oberflächentexte (locales/<sprache>.json aus User- und Programmordner, Rückfall Englisch, sonst die Texte im Code) vor dem ersten Fenster laden.
         ParadoxModTool.Localization.UiText.Load(ParadoxModTool.Localization.LocaleSources.Default(), sessionAtStart?.UiLanguage);
 
         // Dateikategorien (frei editierbar) müssen vor dem Hauptfenster feststehen, weil beim Wiederherstellen der Session

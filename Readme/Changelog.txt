@@ -3,6 +3,13 @@ New
 Changed
 Fixed
 
+v0.9.2 (02.10.2026)
+New
+- README.md mentions that compatibility for Victoria 3, Stellaris and Hearts of Iron IV is planned.
+- README.md is now the English feature summary plus the installation guide (the old German developer README moved to docs/legacy-readme-de.md, which is not published).
+- Fixed: two tests failed the Tests step of the release tool: one GuiDesign test still expected German as a fallback language, and the scope search timing test (2 s, but 0.2 s alone) failed when all test projects ran at once. The timing limit is now a 10 s guard against gross regressions.
+- The default interface language is now English (new installs and empty settings), and English is the fallback language: a text missing in the chosen language is shown in English, and German (de.json) is only used when German is chosen. An already saved language choice stays. German remains selectable under Settings > Language.
+
 v0.9.1 (02.10.2026)
 New
 - Fixed: the release tool aborted at the "Tests" step because the real-save load test compared a 236 MB save against a 3 s limit while all test projects ran at once (6.5 s under load, 1 s alone). The limit is now a 15 s guard against gross regressions.

@@ -32,7 +32,7 @@ public static class Program
 
     private static int RunSteamUploadHelper(string requestFile)
     {
-        // Der Hilfsprozess startet ohne App.OnStartup: die Meldungen, die er zurückgibt, wären sonst immer deutsch.
+        // Der Hilfsprozess startet ohne App.OnStartup: die Meldungen, die er zurückgibt, wären sonst immer in der Standardsprache.
         GlobalUiLanguage.Load(ParadoxModTool.Session.SessionRepository.CreateDefault());
 
         using var output = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true };

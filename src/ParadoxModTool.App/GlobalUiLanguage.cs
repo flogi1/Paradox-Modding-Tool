@@ -11,11 +11,11 @@ namespace ParadoxModTool.App;
 /// </summary>
 internal static class GlobalUiLanguage
 {
-    /// <summary>Lädt die Oberflächentexte (locales/&lt;sprache&gt;.json) in der global eingestellten Sprache; ohne lesbare Einstellung Deutsch.</summary>
+    /// <summary>Lädt die Oberflächentexte (locales/&lt;sprache&gt;.json) in der global eingestellten Sprache; ohne lesbare Einstellung Englisch.</summary>
     public static void Load(SessionRepository repository) =>
         UiText.Load(LocaleSources.Default(), Read(repository));
 
-    /// <summary>Die Sprache aus settings.json; <see langword="null"/> (= Deutsch), wenn die Datei fehlt oder nicht lesbar ist.</summary>
+    /// <summary>Die Sprache aus settings.json; <see langword="null"/> (= Englisch), wenn die Datei fehlt oder nicht lesbar ist.</summary>
     public static string? Read(SessionRepository repository)
     {
         try

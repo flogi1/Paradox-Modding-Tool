@@ -33,8 +33,8 @@ public sealed class SettingsWindowModelTests
     }
 
     [Theory]
-    [InlineData(null, "de")]
-    [InlineData("", "de")]
+    [InlineData(null, "en")]
+    [InlineData("", "en")]
     [InlineData(" EN ", "en")]
     [InlineData("de", "de")]
     public void LanguageIsNormalized(string? stored, string expected)
@@ -48,13 +48,20 @@ public sealed class SettingsWindowModelTests
     }
 
     [Fact]
+    public void ANewSessionStartsInEnglish()
+    {
+        Assert.Equal("en", new AppSessionState().UiLanguage);
+        Assert.Equal("en", new AppSettings().UiLanguage);
+    }
+
+    [Fact]
     public void ChangingLanguageAndCategoryRaisesChanged()
     {
         var settings = new AppSettings();
         var names = new List<string>();
         settings.Changed += (_, name) => names.Add(name);
 
-        settings.UiLanguage = "en";
+        settings.UiLanguage = "de";
         settings.SettingsWindowCategory = "Themes";
         settings.SettingsWindowCategory = "Themes";
 

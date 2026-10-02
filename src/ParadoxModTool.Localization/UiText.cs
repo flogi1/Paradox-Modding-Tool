@@ -31,7 +31,7 @@ public sealed class UiTextTable
         LoadError = loadError;
     }
 
-    public static UiTextTable Empty { get; } = new(UiText.SourceLanguage, [], null);
+    public static UiTextTable Empty { get; } = new(UiText.DefaultLanguage, [], null);
 
     public string Language { get; }
 
@@ -42,7 +42,7 @@ public sealed class UiTextTable
 
     public static UiTextTable Load(LocaleSources sources, string? language)
     {
-        var chosen = string.IsNullOrWhiteSpace(language) ? UiText.SourceLanguage : language.Trim();
+        var chosen = string.IsNullOrWhiteSpace(language) ? UiText.DefaultLanguage : language.Trim();
         var selected = sources.Resolve(chosen)?.Path;
         var paths = new List<string>();
         if (selected is not null)
@@ -50,12 +50,8 @@ public sealed class UiTextTable
             paths.Add(selected);
         }
 
-        if (chosen != UiText.SourceLanguage)
-        {
-            paths.Add(sources.ProgramFile(FallbackLanguage));
-        }
-
-        paths.Add(sources.ProgramFile(UiText.SourceLanguage));
+        // Rückfall ist Englisch; Deutsch (de.json) gilt nur, wenn Deutsch gewählt ist. Was auch Englisch nicht hat, kommt aus dem Code.
+        paths.Add(sources.ProgramFile(chosen == UiText.SourceLanguage ? UiText.SourceLanguage : FallbackLanguage));
 
         LocaleParseError? loadError = null;
         var chain = new List<IReadOnlyDictionary<string, string>>();
@@ -156,7 +152,11 @@ public sealed class UiTextTable
 /// <summary>Die Texte der laufenden Sitzung. Die App lädt sie beim Start (<see cref="Load"/>); ohne Laden gelten die Rückfalltexte.</summary>
 public static class UiText
 {
+    /// <summary>Die Sprache der Rückfalltexte im Code und von de.json (immer vollständig).</summary>
     public const string SourceLanguage = "de";
+
+    /// <summary>Die Sprache, solange nichts gewählt ist (neue Installation, leere oder fehlende Einstellung).</summary>
+    public const string DefaultLanguage = "en";
 
     public static UiTextTable Current { get; private set; } = UiTextTable.Empty;
 

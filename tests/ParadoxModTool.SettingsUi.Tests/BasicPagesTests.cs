@@ -14,10 +14,10 @@ public sealed class BasicPagesTests
         var host = new FakeHost();
         using var page = new LanguagePage(host);
 
-        Assert.True(UiFind.Radio(page, "Deutsch").IsChecked);
-        UiFind.Choose(UiFind.Radio(page, "English"));
+        Assert.True(UiFind.Radio(page, "English").IsChecked);
+        UiFind.Choose(UiFind.Radio(page, "Deutsch"));
 
-        Assert.Equal("en", host.Settings.UiLanguage);
+        Assert.Equal("de", host.Settings.UiLanguage);
         Assert.Contains(SettingsTexts.LanguageHint, UiFind.Texts(page));
     });
 
@@ -27,10 +27,10 @@ public sealed class BasicPagesTests
         var host = new FakeHost();
         using var page = new LanguagePage(host);
 
-        host.Settings.UiLanguage = "en";
+        host.Settings.UiLanguage = "de";
 
-        Assert.True(UiFind.Radio(page, "English").IsChecked);
-        Assert.False(UiFind.Radio(page, "Deutsch").IsChecked);
+        Assert.True(UiFind.Radio(page, "Deutsch").IsChecked);
+        Assert.False(UiFind.Radio(page, "English").IsChecked);
     });
 
     [Fact]
@@ -189,10 +189,10 @@ public sealed class BasicPagesTests
         var page = new LanguagePage(host);
         page.Dispose();
 
-        host.Settings.UiLanguage = "en";
+        host.Settings.UiLanguage = "de";
 
         Assert.True(page.IsDisposed);
-        Assert.True(UiFind.Radio(page, "Deutsch").IsChecked);
+        Assert.True(UiFind.Radio(page, "English").IsChecked);
     });
 
     [Fact]
