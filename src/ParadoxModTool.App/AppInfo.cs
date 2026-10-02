@@ -17,6 +17,12 @@ public static class AppInfo
 
     public static string RepositoryUrl => $"https://github.com/{GitHubRepository}";
 
+    /// <summary>Spendenseite (GitHub Sponsors); Menü "Unterstützen" und Über-Fenster.</summary>
+    public const string SponsorUrl = "https://github.com/sponsors/flogi1";
+
+    /// <summary>Spendenseite (Ko-fi); Menü "Unterstützen" und Über-Fenster.</summary>
+    public const string KofiUrl = "https://ko-fi.com/flogi";
+
     /// <summary>Version aus der Assembly (<c>&lt;Version&gt;</c> der .csproj); 0.0.0, falls sie sich nicht lesen lässt.</summary>
     public static AppVersion Version { get; } = ReadVersion();
 

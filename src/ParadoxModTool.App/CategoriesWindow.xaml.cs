@@ -106,11 +106,11 @@ public partial class CategoriesWindow : Window
             RulesHint.Visibility = Visibility.Visible;
 
             ColorHint.Text = CategoryDefaults.IsBuiltIn(row.Definition.Id)
-                ? "Eingebaute Kategorie: die Farbe gilt für das aktuelle Theme."
-                : "Eigene Kategorie: die Farbe gilt in allen Themes.";
+                ? MiscWindowTexts.CategoriesColorHintBuiltIn
+                : MiscWindowTexts.CategoriesColorHintCustom;
             if (isOther)
             {
-                ColorHint.Text += " 'Sonstige' erhält alle Dateien ohne passende Regel und hat selbst keine Regeln.";
+                ColorHint.Text += " " + MiscWindowTexts.CategoriesColorHintOther(row.Definition.Name);
             }
 
             DeleteButton.IsEnabled = !isOther;
@@ -177,7 +177,7 @@ public partial class CategoriesWindow : Window
 
     private void New_Click(object sender, RoutedEventArgs e)
     {
-        var definition = new CategoryDefinition { Id = CategoryMatcher.NewCustomId(), Name = "Neue Kategorie", ColorHex = "#E06C75" };
+        var definition = new CategoryDefinition { Id = CategoryMatcher.NewCustomId(), Name = MiscWindowTexts.CategoriesNewName, ColorHex = "#E06C75" };
         var index = Math.Max(0, _rows.Count - 1);
         _rows.Insert(index, new Row(definition, definition.ColorHex));
         CategoryList.SelectedIndex = index;
@@ -246,7 +246,7 @@ public partial class CategoriesWindow : Window
         {
             if (string.IsNullOrWhiteSpace(row.Definition.Name))
             {
-                MessageBox.Show("Jede Kategorie braucht einen Namen.", "Kategorien");
+                MessageBox.Show(MiscWindowTexts.CategoriesNameRequired, MiscWindowTexts.CategoriesMessageTitle);
                 CategoryList.SelectedItem = row;
                 NameBox.Focus();
                 return;
@@ -254,7 +254,7 @@ public partial class CategoriesWindow : Window
 
             if (!CategoryMatcher.IsValidHex(row.ColorHex))
             {
-                MessageBox.Show($"Ungültiger Farbcode für '{row.Definition.Name}': \"{row.ColorHex}\"\nBitte einen Hex-Farbcode angeben, z. B. #1E90FF.", "Ungültige Farbe");
+                MessageBox.Show(MiscWindowTexts.CategoriesInvalidColor(row.Definition.Name, row.ColorHex), MiscWindowTexts.CategoriesInvalidColorTitle);
                 CategoryList.SelectedItem = row;
                 ColorBox.Focus();
                 return;
@@ -264,7 +264,7 @@ public partial class CategoriesWindow : Window
         var names = _rows.GroupBy(r => r.Definition.Name.Trim(), StringComparer.CurrentCultureIgnoreCase).FirstOrDefault(g => g.Count() > 1);
         if (names is not null)
         {
-            MessageBox.Show($"Der Name '{names.Key}' kommt mehrfach vor. Bitte eindeutige Namen wählen.", "Kategorien");
+            MessageBox.Show(MiscWindowTexts.CategoriesDuplicateName(names.Key), MiscWindowTexts.CategoriesMessageTitle);
             CategoryList.SelectedItem = names.First();
             NameBox.Focus();
             return;

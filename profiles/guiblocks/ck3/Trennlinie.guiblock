@@ -1,0 +1,8 @@
+# block: Trennlinie
+# group: Anzeige
+# description: Waagrechte Trennlinie über die volle Breite; heller: divider_light. Senkrecht: divider = { layoutpolicy_vertical = expanding }. Vorbild: gui/debug/window_component_library.gui, gui/shared/windows.gui
+# requires: divider
+
+divider = {
+	layoutpolicy_horizontal = expanding
+}

@@ -16,14 +16,17 @@ call :run_test tests\ParadoxModTool.VanillaDiff.Tests
 call :run_test tests\ParadoxModTool.ModCompat.Tests
 call :run_test tests\ParadoxModTool.UndoRedo.Tests
 call :run_test tests\ParadoxModTool.Session.Tests
+call :run_test tests\ParadoxModTool.Localization.Tests
 call :run_test tests\ParadoxModTool.Settings.Tests
 call :run_test tests\ParadoxModTool.SettingsUi.Tests
 call :run_test tests\ParadoxModTool.Editor.Tests
 call :run_test tests\ParadoxModTool.SearchReplace.Tests
 call :run_test tests\ParadoxModTool.Notes.Tests
+call :run_test tests\ParadoxModTool.BugTracking.Tests
 call :run_test tests\ParadoxModTool.Tools.Tests
 call :run_test tests\ParadoxModTool.LaunchControl.Tests
 call :run_test tests\ParadoxModTool.Explorer.Tests
+call :run_test tests\ParadoxModTool.Desync.Tests
 call :run_test tests\ParadoxModTool.GuiDesign.Tests
 call :run_test tests\ParadoxModTool.Updates.Tests
 

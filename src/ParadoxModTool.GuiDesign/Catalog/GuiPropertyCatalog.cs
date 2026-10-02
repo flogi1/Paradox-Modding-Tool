@@ -95,13 +95,17 @@ public sealed class GuiWidgetStats
     public Dictionary<string, GuiPropertyStats> Properties { get; set; } = new(StringComparer.Ordinal);
 }
 
+/// <summary>Ein Vanilla-Ausdruck als Beispiel (<c>[Country.GetCapital.GetName]</c>) mit relativem Dateipfad.</summary>
+public sealed record GuiExample(string Expression, string File);
+
 /// <summary>
 /// Aus Vanilla gelernt: welche Eigenschaften je Engine-Widget vorkommen (gezählt nach Auflösung auf das Basis-Widget), in welcher
 /// Wertform, und welche Datenbindungen unter welchem <c>datacontext</c> stehen. Wird als JSON zwischengespeichert.
 /// </summary>
 public sealed class GuiPropertyCatalog
 {
-    public const int CurrentVersion = 1;
+    /// <summary>2: Beispiele je Datentyp-Eintrag und Elementtypen von Listen (GUI-Daten-Helfer).</summary>
+    public const int CurrentVersion = 2;
 
     public int Version { get; set; } = CurrentVersion;
 
@@ -111,6 +115,21 @@ public sealed class GuiPropertyCatalog
 
     /// <summary>datacontext-Wert ("" = ohne) → Ausdruck → Anzahl.</summary>
     public Dictionary<string, Dictionary<string, int>> Bindings { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Vanilla-Beispiele je Datentyp-Eintrag: Schlüssel ist der erste Bezeichner einer Kette (<c>Country</c>), die ersten beiden (<c>Country.GetCapital</c>)
+    /// oder der Name einer globalen Funktion (<c>Not</c>); höchstens fünf, die häufigsten zuerst.
+    /// </summary>
+    public Dictionary<string, List<GuiExample>> Examples { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>Elementtyp der Einträge einer Liste: <c>datamodel</c>-Ausdruck ohne Klammern (<c>Province.GetLocations</c>) → Typ (<c>Location</c>).</summary>
+    public Dictionary<string, string> ListItemTypes { get; set; } = new(StringComparer.Ordinal);
+
+    public IReadOnlyList<GuiExample> ExamplesFor(string key) =>
+        Examples.TryGetValue(key, out var examples) ? examples : Array.Empty<GuiExample>();
+
+    public string? ItemTypeOf(string datamodelExpression) =>
+        ListItemTypes.GetValueOrDefault(DataTypes.DataExpression.Strip(datamodelExpression));
 
     public bool IsKnownEngineWidget(string name) => Widgets.ContainsKey(name);
 

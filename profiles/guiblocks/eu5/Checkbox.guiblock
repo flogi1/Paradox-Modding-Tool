@@ -1,0 +1,20 @@
+# block: Checkbox
+# group: Bedienelemente
+# description: Umschalter mit Beschriftung; der Zustand liegt in einer Variablen (GetVariableSystem.Toggle), abfragen mit GetVariableSystem.Exists. Vorbild: in_game/gui/ui_library.gui, in_game/gui/agenda_view.gui
+# param: var | Variable | my_option
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_OPTION
+# requires: checkbox_square_alt, text_single
+
+hbox = {
+	spacing = 10
+
+	checkbox_square_alt = {
+		onclick = "[GetVariableSystem.Toggle( '$var$' )]"
+		down = "[GetVariableSystem.Exists( '$var$' )]"
+		tooltip_enabled = no
+	}
+
+	text_single = {
+		text = "$text$"
+	}
+}

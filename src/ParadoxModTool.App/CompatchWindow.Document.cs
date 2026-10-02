@@ -18,7 +18,7 @@ public sealed partial class CompatchWindow
     private readonly Controls.StackPanel _docSourceRows = new();
     private readonly Controls.WrapPanel _docButtons = new() { Margin = new Thickness(0, 4, 0, 0) };
     private readonly Controls.Button _docEqual = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0), ToolTip = CompatchTexts.ApplyToEqualTip, Visibility = Visibility.Collapsed };
-    private readonly Controls.CheckBox _docSeen = new() { Content = CompatchTexts.Seen, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+    private readonly Controls.CheckBox _docSeen = new() { Content = new Controls.TextBlock { Text = CompatchTexts.Seen }, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
     private IReadOnlyList<MergeAction> _docOrder = Array.Empty<MergeAction>();
     private IReadOnlyList<DocLine> _docLineData = Array.Empty<DocLine>();
     private string? _docActionId;
@@ -52,7 +52,7 @@ public sealed partial class CompatchWindow
         var sourcePanel = new Controls.StackPanel();
         sourcePanel.Children.Add(new Controls.TextBlock { Text = CompatchTexts.DocSources, FontWeight = FontWeights.Bold });
         sourcePanel.Children.Add(_docSourceHeader);
-        sourcePanel.Children.Add(new Controls.ScrollViewer { Content = _docSourceRows, MaxHeight = 220, HorizontalScrollBarVisibility = Controls.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Controls.ScrollBarVisibility.Auto });
+        sourcePanel.Children.Add(new Controls.ScrollViewer { Content = _docSourceRows, MaxHeight = 220, HorizontalScrollBarVisibility = Controls.ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = Controls.ScrollBarVisibility.Auto });
         sourcePanel.Children.Add(_docButtons);
         sources.Child = sourcePanel;
         root.Children.Add(sources);
@@ -65,6 +65,8 @@ public sealed partial class CompatchWindow
         var listTitle = new Controls.TextBlock { Text = CompatchTexts.DocDocuments, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) };
         Controls.DockPanel.SetDock(listTitle, Controls.Dock.Top);
         listPanel.Children.Add(listTitle);
+        Controls.DockPanel.SetDock(_searchSlotDocument, Controls.Dock.Top);
+        listPanel.Children.Add(_searchSlotDocument);
         listPanel.Children.Add(_docTree);
         grid.Children.Add(listPanel);
         var splitter = new Controls.GridSplitter { Width = 6, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };

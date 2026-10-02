@@ -139,7 +139,7 @@ public partial class RulesWindow : Window
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, ex.Message, "Zählregeln", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ex.Message, TemplateWindowTexts.RulesTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         Dispatcher.BeginInvoke(new Action(Refresh));
@@ -175,7 +175,7 @@ public partial class RulesWindow : Window
 
     private void New_Click(object sender, RoutedEventArgs e)
     {
-        var rule = CountingRule.Create("Neue Regel");
+        var rule = CountingRule.Create(TemplateWindowTexts.NewRuleName);
         var edited = RuleEditWindow.Edit(this, rule, ChosenLayer, _layerChoices(), _games(), _snippet, _showHelp, out var layer);
         if (edited is not null)
         {
@@ -192,7 +192,7 @@ public partial class RulesWindow : Window
 
         if (row.IsShipped)
         {
-            MessageBox.Show(this, "Mitgelieferte Regeln lassen sich nicht ändern. Mit „Kopie erstellen“ legst du eine eigene Fassung an.", "Zählregeln", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, TemplateWindowTexts.ShippedNotEditable, TemplateWindowTexts.RulesTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -210,7 +210,7 @@ public partial class RulesWindow : Window
             return;
         }
 
-        ShowLayerMenu(CopyButton, "Kopie auf ", null, layer => Run(() => _workspace.Modify(layer, f => RuleEditing.AddCopy(f, row.Rule, row.Layer))));
+        ShowLayerMenu(CopyButton, TemplateWindowTexts.CopyTo, null, layer => Run(() => _workspace.Modify(layer, f => RuleEditing.AddCopy(f, row.Rule, row.Layer))));
     }
 
     private void Move_Click(object sender, RoutedEventArgs e)
@@ -220,14 +220,14 @@ public partial class RulesWindow : Window
             return;
         }
 
-        ShowLayerMenu(MoveButton, "Verschieben nach ", row.Layer, layer => Run(() =>
+        ShowLayerMenu(MoveButton, TemplateWindowTexts.MoveTo, row.Layer, layer => Run(() =>
         {
             var moved = row.Rule.Clone();
             _workspace.Modify(layer, f =>
             {
                 if (f.Rules.Any(r => r.Id == moved.Id))
                 {
-                    throw new InvalidOperationException("Auf der Zielebene gibt es diese Regel schon.");
+                    throw new InvalidOperationException(TemplateWindowTexts.AlreadyOnTarget);
                 }
 
                 RuleEditing.Add(f, moved);
@@ -243,7 +243,7 @@ public partial class RulesWindow : Window
             return;
         }
 
-        if (MessageBox.Show(this, $"Die Regel „{row.Name}“ ({row.LayerText}) löschen?", "Zählregeln", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        if (MessageBox.Show(this, TemplateWindowTexts.ConfirmDeleteRule(row.Name, row.LayerText), TemplateWindowTexts.RulesTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
             Run(() => _workspace.Modify(row.Layer, f => RuleEditing.Delete(f, row.Rule.Id)));
         }
@@ -266,13 +266,13 @@ public partial class RulesWindow : Window
     }
 
     /// <summary>Zeigt unter dem Button ein Menü mit den Ebenen (ohne <paramref name="exclude"/>) und ruft bei der Wahl <paramref name="chosen"/> auf.</summary>
-    private void ShowLayerMenu(Button anchor, string prefix, RuleLayer? exclude, Action<RuleLayer> chosen)
+    private void ShowLayerMenu(Button anchor, Func<string, string> header, RuleLayer? exclude, Action<RuleLayer> chosen)
     {
         var menu = new ContextMenu { PlacementTarget = anchor, Placement = PlacementMode.Bottom };
         foreach (var choice in _layerChoices().Where(c => c.Layer != exclude))
         {
             var layer = choice.Layer;
-            var item = new MenuItem { Header = prefix + choice.Text };
+            var item = new MenuItem { Header = header(choice.Text) };
             item.Click += (_, _) => chosen(layer);
             menu.Items.Add(item);
         }

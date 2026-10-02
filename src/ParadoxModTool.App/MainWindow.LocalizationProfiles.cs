@@ -40,8 +40,8 @@ public partial class MainWindow
 
         MessageBox.Show(
             this,
-            result is null ? "Die Lokalisierungs-Profile konnten nicht gelernt werden." : result.Summary + (result.Learned ? $"\n\nDauer: {result.Duration.TotalSeconds:0.0} s" : string.Empty),
-            "Lokalisierungs-Profile",
+            result is null ? TemplateWindowTexts.LocProfilesLearnFailed : result.Summary + (result.Learned ? TemplateWindowTexts.LocProfilesDuration(result.Duration.TotalSeconds) : string.Empty),
+            TemplateWindowTexts.LocProfilesTitle,
             MessageBoxButton.OK,
             result is null ? MessageBoxImage.Warning : MessageBoxImage.Information);
     }

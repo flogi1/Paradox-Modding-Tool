@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using ParadoxModTool.Localization;
 using MessageBox = System.Windows.MessageBox;
 
 namespace ParadoxModTool.App;
@@ -13,8 +14,10 @@ public partial class AboutWindow : Window
     {
         InitializeComponent();
         VersionText.Text = $"Version {AppInfo.Version}";
-        CreatorText.Text = $"Erstellt von {AppInfo.Creator}";
+        CreatorText.Text = MiscWindowTexts.AboutCreatedBy(AppInfo.Creator);
         LicenseBox.Text = ReadLicenseText();
+        SponsorLinkText.Text = AppInfo.SponsorUrl;
+        KofiLinkText.Text = AppInfo.KofiUrl;
 
         if (AppInfo.HasRepository)
         {
@@ -43,15 +46,21 @@ public partial class AboutWindow : Window
         }
     }
 
-    private void RepositoryLink_Click(object sender, RoutedEventArgs e)
+    private void RepositoryLink_Click(object sender, RoutedEventArgs e) => OpenInBrowser(AppInfo.RepositoryUrl);
+
+    private void SponsorLink_Click(object sender, RoutedEventArgs e) => OpenInBrowser(AppInfo.SponsorUrl);
+
+    private void KofiLink_Click(object sender, RoutedEventArgs e) => OpenInBrowser(AppInfo.KofiUrl);
+
+    private void OpenInBrowser(string url)
     {
         try
         {
-            Process.Start(new ProcessStartInfo(AppInfo.RepositoryUrl) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
         {
-            MessageBox.Show(this, $"Der Browser konnte nicht geöffnet werden: {ex.Message}", "Fehler");
+            MessageBox.Show(this, MiscWindowTexts.AboutBrowserFailed(ex.Message), CommonTexts.Error);
         }
     }
 }

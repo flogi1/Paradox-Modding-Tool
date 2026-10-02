@@ -82,13 +82,64 @@ internal static class EffectiveCombiner
             return baseEntries;
         }
 
-        // Ob INJECT vorhandene Teilschlüssel überschreibt, ist nicht dokumentiert: dann unsicher, angehängt wird trotzdem.
-        var existing = EntryUnits.Build(baseBlock.Entries).Select(u => u.BaseKey).ToHashSet(StringComparer.Ordinal);
-        if (EntryUnits.Build(injected.Entries).Any(u => existing.Contains(u.BaseKey)))
+        // INJECT überschreibt einen vorhandenen Teilschlüssel an seiner Stelle und hängt neue an (gemessen 2026-10-02 in Europa Universalis V:
+        // INJECT:build_gravel_road = { gold = 999 } über Vanilla gold = 10 ergibt 999). Gemessen ist nur ein einfacher Wert: Ob das Spiel einen
+        // Unterblock ganz ersetzt oder tiefer zusammenführt, ist offen, ebenso wiederholte Schlüssel. Solche Fälle bleiben unsicher.
+        var baseByKey = EntryUnits.Build(baseBlock.Entries).GroupBy(u => u.BaseKey).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+        var injectedUnits = EntryUnits.Build(injected.Entries);
+        var replacements = new Dictionary<string, List<ScriptEntry>>(StringComparer.Ordinal);
+        foreach (var unit in injectedUnits)
         {
-            uncertain = true;
+            if (!baseByKey.TryGetValue(unit.BaseKey, out var old))
+            {
+                continue;
+            }
+
+            if (unit.Kind != EntryUnit.UnitKind.Statement || old.Any(o => o.Kind != EntryUnit.UnitKind.Statement))
+            {
+                // Listen und GUI-Rümpfe: angehängt wie bisher, Wirkung unbekannt.
+                uncertain = true;
+                continue;
+            }
+
+            if (old.Count > 1 || injectedUnits.Count(u => u.BaseKey == unit.BaseKey) > 1 || unit.Value is ScriptBlock || old.Any(o => o.Value is ScriptBlock))
+            {
+                uncertain = true;
+            }
+
+            if (!replacements.TryGetValue(unit.BaseKey, out var list))
+            {
+                replacements[unit.BaseKey] = list = new List<ScriptEntry>();
+            }
+
+            list.Add(unit.Entry);
         }
 
-        return new ScriptEntry[] { EntryUnits.WithBlockValue(baseStatement, new ScriptBlock { Entries = baseBlock.Entries.Concat(injected.Entries).ToList() }) };
+        var removed = new Dictionary<ScriptEntry, string>(ReferenceEqualityComparer.Instance);
+        foreach (var key in replacements.Keys)
+        {
+            foreach (var unit in baseByKey[key])
+            {
+                removed[unit.Entry] = key;
+            }
+        }
+
+        var consumed = replacements.Values.SelectMany(l => l).ToHashSet(ReferenceEqualityComparer.Instance);
+        var placed = new HashSet<string>(StringComparer.Ordinal);
+        var result = new List<ScriptEntry>();
+        foreach (var entry in baseBlock.Entries)
+        {
+            if (!removed.TryGetValue(entry, out var key))
+            {
+                result.Add(entry);
+            }
+            else if (placed.Add(key))
+            {
+                result.AddRange(replacements[key]);
+            }
+        }
+
+        result.AddRange(injected.Entries.Where(e => !consumed.Contains(e)));
+        return new ScriptEntry[] { EntryUnits.WithBlockValue(baseStatement, new ScriptBlock { Entries = result }) };
     }
 }

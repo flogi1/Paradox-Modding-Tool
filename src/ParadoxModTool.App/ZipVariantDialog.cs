@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Mods;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -25,7 +26,7 @@ public sealed class ZipVariantDialog : Window
     private ZipVariantDialog(GitHubZipVariant? initial)
     {
         _enabled = initial?.Enabled ?? true;
-        Title = initial is null ? "ZIP-Variante hinzufügen" : "ZIP-Variante bearbeiten";
+        Title = initial is null ? PublishTexts.ZipAddTitle : PublishTexts.ZipEditTitle;
         Width = 520;
         SizeToContent = SizeToContent.Height;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -42,18 +43,18 @@ public sealed class ZipVariantDialog : Window
 
         var ok = new Button { Content = "OK", Width = 90, Margin = new Thickness(0, 0, 6, 0), IsDefault = true };
         ok.Click += (_, _) => Confirm();
-        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        var cancel = new Button { Content = CommonTexts.Cancel, Width = 90, IsCancel = true };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
         buttons.Children.Add(ok);
         buttons.Children.Add(cancel);
 
         var panel = new StackPanel { Margin = new Thickness(12) };
         Add(panel, "Name:", _name, null);
-        Add(panel, "Dateiname:", _format, "Platzhalter: {mod}, {version}, {tag}, {variant}. \".zip\" wird bei Bedarf ergänzt.");
-        Add(panel, "Zusätzlich ausgeschlossene Ordner (nach Name, an beliebiger Tiefe):", _folders, "Ein Ordnername je Zeile, z. B. docs");
-        Add(panel, "Zusätzlich ausgeschlossene Dateien (Name oder *.Endung):", _patterns, "Ein Eintrag je Zeile, z. B. *.psd");
-        Add(panel, "Nur diese Ordner (relativ zum Mod-Ordner; leer = alles):", _only, "Ein Ordner je Zeile, z. B. common oder gfx/icons");
-        Add(panel, "Wurzelordner im Archiv (optional):", _root, "Leer = die Dateien liegen direkt im Archiv");
+        Add(panel, PublishTexts.ZipFileName, _format, PublishTexts.ZipFileNameHint);
+        Add(panel, PublishTexts.ZipExcludedFolders, _folders, PublishTexts.ZipExcludedFoldersHint);
+        Add(panel, PublishTexts.ZipExcludedFiles, _patterns, PublishTexts.ZipExcludedFilesHint);
+        Add(panel, PublishTexts.ZipOnlyFolders, _only, PublishTexts.ZipOnlyFoldersHint);
+        Add(panel, PublishTexts.ZipRootFolder, _root, PublishTexts.ZipRootFolderHint);
         panel.Children.Add(_error);
         panel.Children.Add(buttons);
         Content = panel;
@@ -87,7 +88,7 @@ public sealed class ZipVariantDialog : Window
     {
         if (string.IsNullOrWhiteSpace(_name.Text))
         {
-            _error.Text = "Der Name fehlt.";
+            _error.Text = PublishTexts.ZipNameMissing;
             return;
         }
 

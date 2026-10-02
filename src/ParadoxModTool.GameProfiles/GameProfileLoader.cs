@@ -21,6 +21,6 @@ public static class GameProfileLoader
     public static GameProfile LoadFromJson(string json)
     {
         var profile = JsonSerializer.Deserialize<GameProfile>(json, Options);
-        return profile ?? throw new InvalidDataException("Spielprofil konnte nicht gelesen werden (leeres Ergebnis).");
+        return profile ?? throw new InvalidDataException(GameProfileTexts.EmptyResult);
     }
 }

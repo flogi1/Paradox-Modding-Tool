@@ -46,7 +46,7 @@ public partial class ScriptDocsWindow : Window
                 Content = ScriptDocLogFiles.DisplayNameOf(kind),
                 IsChecked = true,
                 Margin = new Thickness(0, 0, 10, 0),
-                ToolTip = $"{ScriptDocLogFiles.DisplayNameOf(kind)}-Einträge ein-/ausblenden",
+                ToolTip = MiscWindowTexts.ScriptDocsKindToggleTip(ScriptDocLogFiles.DisplayNameOf(kind)),
             };
             box.Checked += Filter_Changed;
             box.Unchecked += Filter_Changed;
@@ -62,7 +62,7 @@ public partial class ScriptDocsWindow : Window
             ApplyFilter();
         };
 
-        ScopeCombo.Items.Add("(alle Scopes)");
+        ScopeCombo.Items.Add(MiscWindowTexts.ScriptDocsAllScopes);
         ScopeCombo.SelectedIndex = 0;
         ClearDetails();
 
@@ -74,7 +74,7 @@ public partial class ScriptDocsWindow : Window
     private async Task ReloadAsync()
     {
         ReloadButton.IsEnabled = false;
-        StatusText.Text = "Datenbank wird geladen…";
+        StatusText.Text = MiscWindowTexts.ScriptDocsLoading;
         _loading = true;
         try
         {
@@ -105,11 +105,11 @@ public partial class ScriptDocsWindow : Window
             var outdated = _database.Entries.Count(_database.IsOutdated);
             var isNew = _database.Entries.Count(_database.IsNew);
             var source = result.IsWikiSourced
-                ? $"Quelle: Wiki, Stand {(result.WikiFetchedUtc?.ToLocalTime().ToString("g") ?? "unbekannt")}"
-                : $"Stand vom {latest.ImportedUtc.ToLocalTime():g}";
+                ? MiscWindowTexts.ScriptDocsSourceWiki(result.WikiFetchedUtc?.ToLocalTime().ToString("g") ?? MiscWindowTexts.ScriptDocsUnknown)
+                : MiscWindowTexts.ScriptDocsAsOf(latest.ImportedUtc.ToLocalTime());
             StatusText.Text =
-                (result.Imported ? "Neu eingelesen. " : string.Empty) +
-                $"{_database.Entries.Count:N0} Einträge · {source} · {outdated:N0} veraltet · {isNew:N0} neu";
+                (result.Imported ? MiscWindowTexts.ScriptDocsReloaded + " " : string.Empty) +
+                MiscWindowTexts.ScriptDocsStatus(_database.Entries.Count, source, outdated, isNew);
         }
 
         ReloadButton.Visibility = result.IsWikiSourced ? Visibility.Collapsed : Visibility.Visible;
@@ -118,10 +118,8 @@ public partial class ScriptDocsWindow : Window
         if (result.IsWikiSourced)
         {
             HintText.Text = !result.WikiFileFound || _database.Entries.Count == 0
-                ? "Die mit PMT mitgelieferte Wiki-Datei für dieses Spiel fehlt oder ist beschädigt. Die Script-Datenbank bleibt deshalb leer. " +
-                  "Eine Neuinstallation von PMT stellt die Datei wieder her."
-                : "Diese Script-Datenbank stammt aus der offiziellen Spiel-Wiki (mit PMT mitgeliefert), nicht aus Doku-Logs des Spiels. " +
-                  "Eine Aktualisierung erfolgt durch ein neues PMT-Release, nicht durch \"Neu einlesen\".";
+                ? MiscWindowTexts.ScriptDocsHintWikiMissing
+                : MiscWindowTexts.ScriptDocsHintWikiSource;
             HintBorder.Visibility = Visibility.Visible;
             return;
         }
@@ -133,10 +131,8 @@ public partial class ScriptDocsWindow : Window
         }
 
         HintText.Text = result.Folder is null
-            ? "Der Ordner mit den Doku-Logs des Spiels ist unbekannt. Wähle ihn über \"Ordner wählen\"."
-            : $"Im Ordner {result.Folder} liegen keine Doku-Logs (modifiers.log, triggers.log, effects.log …). " +
-              "Das Spiel schreibt diese Dateien selbst: Starte es einmal (bei Europa Universalis V ggf. im Debug-Modus) und klicke danach auf \"Neu einlesen\", " +
-              "oder wähle den richtigen Ordner über \"Ordner wählen\".";
+            ? MiscWindowTexts.ScriptDocsHintFolderUnknown
+            : MiscWindowTexts.ScriptDocsHintNoLogs(result.Folder);
         HintBorder.Visibility = Visibility.Visible;
     }
 
@@ -144,7 +140,7 @@ public partial class ScriptDocsWindow : Window
     {
         var previous = ScopeCombo.SelectedItem as string;
         ScopeCombo.Items.Clear();
-        ScopeCombo.Items.Add("(alle Scopes)");
+        ScopeCombo.Items.Add(MiscWindowTexts.ScriptDocsAllScopes);
         foreach (var scope in ScriptDocQuery.AllScopes(_database))
         {
             ScopeCombo.Items.Add(scope);
@@ -193,7 +189,7 @@ public partial class ScriptDocsWindow : Window
 
         var keep = _selected;
         EntryList.ItemsSource = rows;
-        CountText.Text = $"{entries.Count:N0} von {_database.Entries.Count:N0} Einträgen";
+        CountText.Text = MiscWindowTexts.ScriptDocsCount(entries.Count, _database.Entries.Count);
 
         var row = keep is null ? null : rows.FirstOrDefault(r => ReferenceEquals(r.Entry, keep));
         if (row is not null)
@@ -206,7 +202,7 @@ public partial class ScriptDocsWindow : Window
     private EntryRow ToRow(ScriptDocEntry entry)
     {
         var outdated = _database.IsOutdated(entry);
-        var status = outdated ? " · veraltet" : _database.IsNew(entry) ? " · neu" : string.Empty;
+        var status = outdated ? " · " + MiscWindowTexts.ScriptDocsOutdated : _database.IsNew(entry) ? " · " + MiscWindowTexts.ScriptDocsNew : string.Empty;
         var scopes = entry.Scopes.Count == 0 ? string.Empty : " · " + string.Join(", ", entry.Scopes);
         return new EntryRow(
             entry,
@@ -242,7 +238,7 @@ public partial class ScriptDocsWindow : Window
     {
         _selected = null;
         NameBox.Text = string.Empty;
-        MetaText.Text = "Wähle links einen Eintrag.";
+        MetaText.Text = MiscWindowTexts.ScriptDocsSelectEntry;
         DescriptionBox.Text = string.Empty;
         InsertButton.IsEnabled = false;
         UsageButton.IsEnabled = false;
@@ -264,21 +260,21 @@ public partial class ScriptDocsWindow : Window
         var parts = new List<string> { ScriptDocLogFiles.DisplayNameOf(entry.Kind) };
         if (_database.IsOutdated(entry))
         {
-            parts.Add("veraltet (stand im letzten Einlesen nicht mehr in den Logs)");
+            parts.Add(MiscWindowTexts.ScriptDocsOutdatedDetail);
         }
         else if (_database.IsNew(entry))
         {
-            parts.Add("neu seit dem vorletzten Einlesen");
+            parts.Add(MiscWindowTexts.ScriptDocsNewDetail);
         }
 
         if (entry.Scopes.Count > 0)
         {
-            parts.Add((entry.Kind == ScriptDocKind.Modifier ? "Kategorien: " : "Scopes: ") + string.Join(", ", entry.Scopes));
+            parts.Add(entry.Kind == ScriptDocKind.Modifier ? MiscWindowTexts.ScriptDocsCategories(string.Join(", ", entry.Scopes)) : "Scopes: " + string.Join(", ", entry.Scopes));
         }
 
         if (entry.Targets.Count > 0)
         {
-            parts.Add((entry.Kind == ScriptDocKind.EventTarget ? "Ergebnis: " : "Ziele: ") + string.Join(", ", entry.Targets));
+            parts.Add(entry.Kind == ScriptDocKind.EventTarget ? MiscWindowTexts.ScriptDocsResult(string.Join(", ", entry.Targets)) : MiscWindowTexts.ScriptDocsTargets(string.Join(", ", entry.Targets)));
         }
 
         foreach (var (key, value) in entry.Extra)
@@ -288,7 +284,7 @@ public partial class ScriptDocsWindow : Window
 
         MetaText.Text = string.Join("  ·  ", parts);
         DescriptionBox.Text = entry.Kind == ScriptDocKind.CustomLocalization && entry.Description.Length > 0
-            ? "Einträge:\n" + entry.Description
+            ? MiscWindowTexts.ScriptDocsEntries + "\n" + entry.Description
             : entry.Description;
 
         InsertButton.IsEnabled = true;
@@ -315,9 +311,9 @@ public partial class ScriptDocsWindow : Window
         var saved = _service.SearchStore.TryLoad(entry.Kind, entry.Name);
         if (saved is null)
         {
-            UsageHeader.Text = "Noch keine Beispielsuche für diesen Eintrag.";
+            UsageHeader.Text = MiscWindowTexts.ScriptDocsNoExampleSearch;
             HitsList.ItemsSource = null;
-            UsageButton.Content = "Beispiele suchen";
+            UsageButton.Content = MiscWindowTexts.ScriptDocsFindExamples;
             return;
         }
 
@@ -327,10 +323,10 @@ public partial class ScriptDocsWindow : Window
     private void ShowUsage(UsageSearchResult result)
     {
         UsageHeader.Text =
-            $"Gesucht am {result.SearchedUtc.ToLocalTime():g}: {result.Hits.Count:N0} Treffer" +
-            (result.Truncated ? $" (gekürzt auf {UsageSearch.MaxHits:N0})" : string.Empty);
+            MiscWindowTexts.ScriptDocsSearchedAt(result.SearchedUtc.ToLocalTime(), result.Hits.Count) +
+            (result.Truncated ? " " + MiscWindowTexts.ScriptDocsTruncated(UsageSearch.MaxHits) : string.Empty);
         HitsList.ItemsSource = result.Hits.Select(h => new HitRow(h.FilePath, $"{ShortPath(h.FilePath, result.Roots)}:{h.Line}", h.Text, h.Line)).ToList();
-        UsageButton.Content = "Neu suchen";
+        UsageButton.Content = MiscWindowTexts.ScriptDocsSearchAgain;
     }
 
     private static string ShortPath(string path, IEnumerable<string> roots)
@@ -354,8 +350,8 @@ public partial class ScriptDocsWindow : Window
         {
             MessageBox.Show(
                 this,
-                "Es sind noch keine Vanilla- oder Mod-Ordner bekannt. Stelle den Spielpfad ein oder füge im Explorer einen Mod-Ordner hinzu.",
-                "Beispiele suchen",
+                MiscWindowTexts.ScriptDocsNoRoots,
+                MiscWindowTexts.ScriptDocsFindExamples,
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;
@@ -367,7 +363,7 @@ public partial class ScriptDocsWindow : Window
         CancelUsageButton.Visibility = Visibility.Visible;
         HitsList.ItemsSource = null;
 
-        var progress = new Progress<string>(file => UsageHeader.Text = "Suche… " + file);
+        var progress = new Progress<string>(file => UsageHeader.Text = MiscWindowTexts.ScriptDocsSearching(file));
         try
         {
             var result = await Task.Run(
@@ -392,7 +388,7 @@ public partial class ScriptDocsWindow : Window
         {
             if (ReferenceEquals(_selected, entry))
             {
-                UsageHeader.Text = "Suche abgebrochen.";
+                UsageHeader.Text = MiscWindowTexts.ScriptDocsSearchCancelled;
             }
         }
         finally
@@ -428,11 +424,12 @@ public partial class ScriptDocsWindow : Window
     {
         using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "Ordner mit den Doku-Logs des Spiels wählen (der Ordner \"docs\" mit modifiers.log, triggers.log …)",
+            Description = MiscWindowTexts.ScriptDocsFolderDialog,
             UseDescriptionForTitle = true,
-            InitialDirectory = _service.DocsFolder is { } current && Directory.Exists(current) ? current : string.Empty,
+            InitialDirectory = _service.DocsFolder is { } current && Directory.Exists(current) ? ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(current) : string.Empty,
         };
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("scriptdocs.folder");
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
         {
             return;

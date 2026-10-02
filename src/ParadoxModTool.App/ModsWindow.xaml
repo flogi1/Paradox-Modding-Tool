@@ -1,6 +1,8 @@
 <Window x:Class="ParadoxModTool.App.ModsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:ParadoxModTool.Localization;assembly=ParadoxModTool.Localization"
+        xmlns:mods="clr-namespace:ParadoxModTool.Mods;assembly=ParadoxModTool.Mods"
         Title="Mods" Height="460" Width="780" MinHeight="320" MinWidth="600"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <!--
@@ -9,7 +11,7 @@
     -->
     <DockPanel Margin="12">
         <TextBlock x:Name="InfoText" DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{DynamicResource Theme.TextMuted}" TextWrapping="Wrap"
-                   Text="Die Mod-Daten liegen in den Programmdaten, nie im Mod-Ordner (Steam lädt den ganzen Ordner hoch)." />
+                   Text="{x:Static mods:ModsTexts.WindowInfo}" />
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -18,28 +20,28 @@
             </Grid.ColumnDefinitions>
 
             <DockPanel Grid.Column="0">
-                <TextBlock DockPanel.Dock="Top" Text="Mods dieses Spiels" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static mods:ModsTexts.WindowModsHeader}" FontWeight="Bold" Margin="0,0,0,4" />
                 <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                    <Button Content="Hinzufügen" Padding="8,2" Margin="0,0,6,4" Click="AddMod_Click"
-                            ToolTip="Einen Ordner als neue Mod anlegen" />
-                    <Button x:Name="RenameButton" Content="Umbenennen" Padding="8,2" Margin="0,0,6,4" Click="Rename_Click" />
-                    <Button x:Name="RemoveModButton" Content="Entfernen" Padding="8,2" Margin="0,0,6,4" Click="RemoveMod_Click"
-                            ToolTip="Die Mod aus der Verwaltung entfernen (die Dateien der Mod bleiben unberührt)" />
-                    <Button x:Name="ReleasesButton" Content="Mod hochladen" Padding="8,2" Margin="0,0,6,4" Click="Releases_Click"
-                            ToolTip="Release-Versionen und Changelog der gewählten Mod verwalten und auf Steam hochladen" />
-                    <Button x:Name="AssignProjectButton" Content="Projekt zuordnen" Padding="8,2" Margin="0,0,6,4" Click="AssignProject_Click"
-                            ToolTip="Die gewählte Mod einem Projekt zuordnen (Dev-Branch oder Submod eines Hauptmods) oder daraus lösen" />
-                    <Button x:Name="LockButton" Content="Sperren" Padding="8,2" Margin="0,0,6,4" Click="Lock_Click"
-                            ToolTip="Aus gesperrten Mods überträgt PMT nichts und schreibt auch nichts hinein (Übertragen, Abgleich)" />
-                    <Button x:Name="SyncButton" Content="Abgleich" Padding="8,2" Margin="0,0,6,4" Click="Sync_Click"
-                            ToolTip="Die Mod ordnerweit mit einer anderen Mod ihres Projekts abgleichen" />
-                    <Button x:Name="CompatButton" Content="Kompatibilität" Padding="8,2" Margin="0,0,0,4" Click="Compat_Click"
-                            ToolTip="Die gewählte Mod ins Kompatibilitätsset aufnehmen und das Fenster Mod-Kompatibilität öffnen" />
+                    <Button Content="{x:Static mods:ModsTexts.Add}" Padding="8,2" Margin="0,0,6,4" Click="AddMod_Click"
+                            ToolTip="{x:Static mods:ModsTexts.AddTip}" />
+                    <Button x:Name="RenameButton" Content="{x:Static mods:ModsTexts.Rename}" Padding="8,2" Margin="0,0,6,4" Click="Rename_Click" />
+                    <Button x:Name="RemoveModButton" Content="{x:Static loc:CommonTexts.Remove}" Padding="8,2" Margin="0,0,6,4" Click="RemoveMod_Click"
+                            ToolTip="{x:Static mods:ModsTexts.RemoveModTip}" />
+                    <Button x:Name="ReleasesButton" Content="{x:Static mods:ModsTexts.Upload}" Padding="8,2" Margin="0,0,6,4" Click="Releases_Click"
+                            ToolTip="{x:Static mods:ModsTexts.UploadTip}" />
+                    <Button x:Name="AssignProjectButton" Content="{x:Static mods:ModsTexts.AssignProject}" Padding="8,2" Margin="0,0,6,4" Click="AssignProject_Click"
+                            ToolTip="{x:Static mods:ModsTexts.AssignProjectTip}" />
+                    <Button x:Name="LockButton" Content="{x:Static mods:ModsTexts.Lock}" Padding="8,2" Margin="0,0,6,4" Click="Lock_Click"
+                            ToolTip="{x:Static mods:ModsTexts.LockTip}" />
+                    <Button x:Name="SyncButton" Content="{x:Static mods:ModsTexts.Sync}" Padding="8,2" Margin="0,0,6,4" Click="Sync_Click"
+                            ToolTip="{x:Static mods:ModsTexts.SyncTip}" />
+                    <Button x:Name="CompatButton" Content="{x:Static mods:ModsTexts.Compat}" Padding="8,2" Margin="0,0,0,4" Click="Compat_Click"
+                            ToolTip="{x:Static mods:ModsTexts.CompatTip}" />
                 </WrapPanel>
                 <ListBox x:Name="ModList" SelectionChanged="ModList_SelectionChanged">
                     <ListBox.ContextMenu>
                         <ContextMenu Opened="ModContextMenu_Opened">
-                            <MenuItem Header="Zum Kompatibilitätsset hinzufügen" Click="Compat_Click" />
+                            <MenuItem Header="{x:Static mods:ModsTexts.AddToCompatSet}" Click="Compat_Click" />
                             <Separator />
                             <MenuItem x:Name="SetCompatchMenuItem" Click="SetCompatch_Click" />
                             <MenuItem x:Name="ClearCompatchMenuItem" Click="ClearCompatch_Click" />
@@ -55,13 +57,13 @@
             </DockPanel>
 
             <DockPanel Grid.Column="2">
-                <TextBlock DockPanel.Dock="Top" Text="Ordner der gewählten Mod" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static mods:ModsTexts.FoldersHeader}" FontWeight="Bold" Margin="0,0,0,4" />
                 <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                    <Button x:Name="AddPathButton" Content="Ordner hinzufügen" Padding="8,2" Margin="0,0,6,4" Click="AddPath_Click"
-                            ToolTip="Einen weiteren Ordner derselben Mod hinzufügen, z. B. die Steam-Kopie" />
-                    <Button x:Name="RelinkButton" Content="Neu verknüpfen" Padding="8,2" Margin="0,0,6,4" Click="Relink_Click"
-                            ToolTip="Den gewählten Ordner durch einen anderen ersetzen, wenn er verschoben oder umbenannt wurde" />
-                    <Button x:Name="RemovePathButton" Content="Ordner entfernen" Padding="8,2" Margin="0,0,0,4" Click="RemovePath_Click" />
+                    <Button x:Name="AddPathButton" Content="{x:Static mods:ModsTexts.AddFolder}" Padding="8,2" Margin="0,0,6,4" Click="AddPath_Click"
+                            ToolTip="{x:Static mods:ModsTexts.AddFolderTip}" />
+                    <Button x:Name="RelinkButton" Content="{x:Static mods:ModsTexts.Relink}" Padding="8,2" Margin="0,0,6,4" Click="Relink_Click"
+                            ToolTip="{x:Static mods:ModsTexts.RelinkTip}" />
+                    <Button x:Name="RemovePathButton" Content="{x:Static mods:ModsTexts.RemoveFolder}" Padding="8,2" Margin="0,0,0,4" Click="RemovePath_Click" />
                 </WrapPanel>
                 <ListBox x:Name="PathList" DisplayMemberPath="Display" SelectionChanged="PathList_SelectionChanged" />
             </DockPanel>

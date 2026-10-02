@@ -148,6 +148,120 @@ public static class BugTexts
 
     public static string WindowLinksTip => T("bugs.window.links.tip", "Doppelklick öffnet die Datei an der Zeile");
 
+    // Abruf und Quellen (Plan 2)
+    public static string RefreshTitle => T("bugs.refresh.title", "Bugreports abrufen");
+
+    public static string RefreshProgress => T("bugs.refresh.progress", "Quellen");
+
+    public static string RefreshSummary(int added, int changed, int removed) => F("bugs.refresh.summary", "{0} neu, {1} geändert, {2} entfernt.", added, changed, removed);
+
+    public static string RefreshSourceError(string source, string reason) => F("bugs.refresh.sourceError", "{0}: {1}", source, reason);
+
+    public static string RefreshFailedTip => T("bugs.refresh.failedTip", "Der letzte Abruf der Bugreports ist fehlgeschlagen. Details im Bugtracker.");
+
+    public static string GhMissing => T("bugs.source.ghMissing", "gh (GitHub CLI) ist nicht eingerichtet. Richte es in den Einstellungen unter Bugtracker ein.");
+
+    public static string SourceUnknown => T("bugs.source.unknown", "Die Quelle dieser Meldung ist nicht mehr mit dem Projekt verknüpft.");
+
+    public static string StatusFailed(string reason) => F("bugs.status.failed", "Der Status konnte nicht gesetzt werden: {0}", reason);
+
+    public static string WindowSources => T("bugs.window.sources", "Quellen");
+
+    public static string WindowSourcesTip => T("bugs.window.sources.tip", "GitHub-Repositories oder Discord-Foren dieses Projekts als Quelle für Bugreports verknüpfen");
+
+    public static string WindowLastError(string errors) => F("bugs.window.lastError", "Letzter Abruf mit Fehlern: {0}", errors);
+
+    public static string WindowLoadDiscussion => T("bugs.window.loadDiscussion", "Diskussion laden");
+
+    public static string WindowNoDiscussion => T("bugs.window.noDiscussion", "Keine Antworten.");
+
+    public static string SourcesTitle => T("bugs.sources.title", "Quellen für Bugreports");
+
+    public static string SourcesProject(string name) => F("bugs.sources.project", "Projekt {0}", name);
+
+    public static string SourcesEmpty => T("bugs.sources.empty", "Noch keine Quelle verknüpft.");
+
+    public static string SourcesRepo => T("bugs.sources.repo", "GitHub-Repository (owner/name)");
+
+    public static string SourcesAdd => T("bugs.sources.add", "Hinzufügen");
+
+    public static string SourcesEnabled => T("bugs.sources.enabled", "Abrufen");
+
+    public static string SourcesLabels => T("bugs.sources.labels", "Labels, durch Komma getrennt (leer = alle Issues)");
+
+    public static string SourcesPickLabels => T("bugs.sources.pickLabels", "Labels wählen");
+
+    public static string SourcesRemove => T("bugs.sources.remove", "Entfernen");
+
+    public static string SourcesInvalidRepo(string repo) => F("bugs.sources.invalidRepo", "\"{0}\" ist kein Repository (erwartet owner/name).", repo);
+
+    public static string SourcesDuplicate(string repo) => F("bugs.sources.duplicate", "Das Repository {0} ist schon verknüpft.", repo);
+
+    public static string SourcesSetupHint => T("bugs.sources.setupHint", "GitHub-Issues holt PMT über gh, Discord-Beiträge über deinen Bot. Einrichten geht in den Einstellungen.");
+
+    public static string SourcesOpenSettings => T("bugs.sources.openSettings", "Einstellungen öffnen");
+
+    public static string LabelsTitle(string repo) => F("bugs.labels.title", "Labels von {0}", repo);
+
+    public static string LabelsNone => T("bugs.labels.none", "Das Repository hat keine Labels.");
+
+    // Discord (Plan 3)
+    public static string DiscordNotSetUp => T("bugs.discord.notSetUp", "Der Discord-Bot ist nicht eingerichtet. Trage den Token in den Einstellungen unter Bugtracker ein.");
+
+    public static string DiscordTokenInvalid => T("bugs.discord.tokenInvalid", "Discord lehnt den Bot-Token ab. Prüfe ihn in den Einstellungen unter Bugtracker.");
+
+    public static string DiscordForbidden => T("bugs.discord.forbidden", "Dem Bot fehlt ein Recht in diesem Channel (Kanäle ansehen, Nachrichtenverlauf lesen, Threads verwalten).");
+
+    public static string DiscordNotFound => T("bugs.discord.notFound", "Discord kennt den Server, den Channel oder den Beitrag nicht (mehr).");
+
+    public static string DiscordFailed(int status, string reason) => F("bugs.discord.failed", "Discord meldet Fehler {0}: {1}", status, reason);
+
+    public static string DiscordNetwork(string reason) => F("bugs.discord.network", "Discord ist nicht erreichbar: {0}", reason);
+
+    public static string DiscordTagMissing(string status) => F("bugs.discord.tagMissing", "Den Tag für {0} gibt es im Forum nicht mehr. Verknüpfe das Forum im Bugtracker unter Quellen neu.", status);
+
+    public static string DiscordTooManyTags => T("bugs.discord.tooManyTags", "Der Beitrag hätte mehr als 5 Tags. Entferne in Discord einen Tag und versuche es erneut.");
+
+    public static string PermissionName(ulong permission) => permission switch
+    {
+        1UL << 10 => T("bugs.permission.view", "Kanäle ansehen"),
+        1UL << 16 => T("bugs.permission.history", "Nachrichtenverlauf lesen"),
+        _ => T("bugs.permission.manageThreads", "Threads verwalten"),
+    };
+
+    public static string SourcesAddDiscord => T("bugs.sources.addDiscord", "Discord-Forum hinzufügen");
+
+    public static string SourcesDiscordFilter(int count) => F("bugs.sources.discordFilter", "Filter: {0} Tags", count);
+
+    public static string ForumTitle => T("bugs.forum.title", "Discord-Forum verknüpfen");
+
+    public static string ForumServer => T("bugs.forum.server", "Server");
+
+    public static string ForumChannel => T("bugs.forum.channel", "Forum-Channel");
+
+    public static string ForumLoading => T("bugs.forum.loading", "Lade Daten von Discord");
+
+    public static string ForumNoServers => T("bugs.forum.noServers", "Der Bot ist noch auf keinem Server. Lade ihn über den Einladungslink in den Einstellungen ein.");
+
+    public static string ForumNoForums => T("bugs.forum.noForums", "Der Bot sieht auf diesem Server keinen Forum-Channel.");
+
+    public static string ForumTag(BugStatus status) => F("bugs.forum.tag", "Tag für {0}", Status(status));
+
+    public static string ForumFilter => T("bugs.forum.filter", "Nur Beiträge mit einem dieser Tags holen (keiner gewählt = alle)");
+
+    public static string ForumArchive => T("bugs.forum.archive", "Erledigte und verworfene Beiträge danach archivieren");
+
+    public static string ForumChooseAll => T("bugs.forum.chooseAll", "Wähle ein Forum und drei verschiedene Tags für Offen, Erledigt und Verworfen.");
+
+    public static string ForumMissingRights(string rights) => F("bugs.forum.missingRights", "Dem Bot fehlen in diesem Channel Rechte: {0}", rights);
+
+    // Anhänge
+    public static string WindowAttachments => T("bugs.window.attachments", "Anhänge");
+
+    public static string WindowImageFailed => T("bugs.window.imageFailed", "Bild nicht ladbar. Aktualisieren holt neue Links.");
+
+    public static string ImageTitle(string name) => F("bugs.image.title", "Bild: {0}", name);
+
     private static string T(string key, string fallback) => UiText.Get(key, fallback);
 
     private static string F(string key, string fallback, params object?[] args) => UiText.Format(key, fallback, args);

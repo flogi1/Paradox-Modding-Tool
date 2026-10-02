@@ -46,9 +46,11 @@ public static class CompatchEngine
     }
 
     /// <summary>Wendet Entscheidungen und Formwahl neu an. Automatische Aktionen wechseln dabei zwischen "automatisch" und "nicht nötig".</summary>
-    public static void Replan(CompatchRun run, CompatchInput input, PatchTarget target, IReadOnlyDictionary<string, MergeDecision>? decisions, IReadOnlyDictionary<EntryAddress, PatchForm>? forms, IReadOnlyDictionary<EntryAddress, IReadOnlyList<ScriptEntry>>? overrides = null)
+    /// <param name="changed">Adressen, an denen sich seit der letzten Planung etwas geändert hat; nur sie werden neu zusammengeführt (die übrigen
+    /// kommen aus <see cref="CompatchRun.Applied"/>). <see langword="null"/> = alles neu. Der Patch-Plan wird immer ganz neu erstellt.</param>
+    public static void Replan(CompatchRun run, CompatchInput input, PatchTarget target, IReadOnlyDictionary<string, MergeDecision>? decisions, IReadOnlyDictionary<EntryAddress, PatchForm>? forms, IReadOnlyDictionary<EntryAddress, IReadOnlyList<ScriptEntry>>? overrides = null, IReadOnlySet<EntryAddress>? changed = null)
     {
-        run.Applied = DecisionApplier.Apply(run.Resolved, run.Actions, decisions, input, overrides);
+        run.Applied = DecisionApplier.Apply(run.Resolved, run.Actions, decisions, input, overrides, changed is null ? null : run.Applied, changed);
         run.Plan = PatchPlanner.Plan(run.Resolved, run.Applied, input, target, forms);
         foreach (var action in run.Actions.Where(a => a.Stage is MergeStage.Automatic or MergeStage.NotNeeded))
         {

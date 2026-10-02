@@ -91,7 +91,7 @@ public sealed class GuiWorkspace
                 progress?.Report((finished, files.Count));
             }
         });
-        var index = GuiIndex.FromDocuments(files, documents);
+        var index = GuiIndex.FromDocuments(files, documents, options.Rules.Layout);
 
         var fingerprint = GuiSourceSet.ComputeFingerprint(files.Where(f => f.Layer == GuiLayer.Vanilla));
         GuiPropertyCatalog? catalog = null;
@@ -127,7 +127,7 @@ public sealed class GuiWorkspace
             }
         }
 
-        var textures = new GuiTextureLocator(GuiTextureLocator.ContextRootsFor(options.InstallDirectory, options.DependencyRoots, options.ModRoot));
+        var textures = new GuiTextureLocator(GuiTextureLocator.ContextRootsFor(options.InstallDirectory, options.DependencyRoots, options.ModRoot, options.Rules.Layout.Contexts));
         return new GuiWorkspace(options, index, catalog, textures, reused, fromCache, watch.Elapsed);
     }
 

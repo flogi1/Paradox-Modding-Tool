@@ -99,7 +99,8 @@ public static class ScopeRuleLearner
         int docsImportId,
         DateTime nowUtc,
         CancellationToken cancellation = default,
-        IProgress<(int Done, int Total)>? progress = null)
+        IProgress<(int Done, int Total)>? progress = null,
+        string? defaultEventType = null)
     {
         var started = DateTime.UtcNow;
         var files = EnumerateFiles(roots);
@@ -139,11 +140,13 @@ public static class ScopeRuleLearner
                     .GroupBy(c => c.Key!)
                     .ToDictionary(g => g.Key, g => g.First().Scalar!);
 
-                // Ereignisse heißen nach ihrer Kennung; ihre Art steht im Feld type (country_event …) und bildet den Pfad.
+                // Ereignisse heißen nach ihrer Kennung; ihre Art steht im Feld type (country_event …, ohne type der Standard des Spiels) und bildet
+                // den Pfad. Ein Event mit eigenem Root-Scope (scope = artifact) stimmt nicht mit ab.
                 string path;
                 if (file.Folder == "events")
                 {
-                    if (!siblings.TryGetValue("type", out var eventType))
+                    var eventType = siblings.GetValueOrDefault("type") ?? ScopeEngine.DefaultTypeFor(obj.Key, defaultEventType);
+                    if (eventType is null || siblings.ContainsKey("scope"))
                     {
                         continue;
                     }
@@ -170,6 +173,8 @@ public static class ScopeRuleLearner
             Fingerprint = ComputeFingerprint(files),
             DocsImportId = docsImportId,
             FilesScanned = files.Count,
+            DefaultEventType = defaultEventType,
+            ScriptValues = ScriptValueNames.FromFiles(files.Where(f => f.Folder == ScriptValueNames.Folder).Select(f => f.Path)).ToList(),
         };
 
         foreach (var (path, tally) in tallies)

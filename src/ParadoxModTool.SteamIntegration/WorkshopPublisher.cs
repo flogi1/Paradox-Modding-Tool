@@ -65,7 +65,7 @@ public sealed class WorkshopPublisher
 
         try
         {
-            progress?.Report("Dateien werden zusammengestellt …");
+            progress?.Report(SteamTexts.Staging);
             Directory.CreateDirectory(work);
             try
             {
@@ -73,7 +73,7 @@ public sealed class WorkshopPublisher
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                return new WorkshopPublishResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), "Die Dateien konnten nicht zusammengestellt werden: " + ex.Message, null);
+                return new WorkshopPublishResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), SteamTexts.StagingFailed(ex.Message), null);
             }
 
             var includeListing = first || request.UpdateListing;
@@ -110,12 +110,12 @@ public sealed class WorkshopPublisher
     {
         if (string.IsNullOrWhiteSpace(request.AppId) || !request.AppId.All(char.IsAsciiDigit))
         {
-            throw new ArgumentException("Die AppID muss eine Zahl sein.", nameof(request));
+            throw new ArgumentException(SteamTexts.AppIdNotNumber, nameof(request));
         }
 
         if (!string.IsNullOrWhiteSpace(request.WorkshopId) && !request.WorkshopId.Trim().All(char.IsAsciiDigit))
         {
-            throw new ArgumentException("Die Workshop-ID muss eine Zahl sein.", nameof(request));
+            throw new ArgumentException(SteamTexts.WorkshopIdMustBeNumber, nameof(request));
         }
     }
 

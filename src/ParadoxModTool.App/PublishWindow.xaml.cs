@@ -21,7 +21,7 @@ namespace ParadoxModTool.App;
 public partial class PublishWindow : Window
 {
     private const string FallbackPreview = "thumbnail.png";
-    private const string Caption = "Auf Steam veröffentlichen";
+    private static string Caption => PublishTexts.SteamTitle;
 
     private readonly ModRegistry _registry;
     private readonly ModInfo _mod;
@@ -68,8 +68,8 @@ public partial class PublishWindow : Window
         ApplyMethod();
         _log = ReleaseLog.Load(registry.DataDirectory(mod.Id));
 
-        TitleText.Text = "Auf Steam veröffentlichen: " + mod.Name;
-        AppIdText.Text = $"Spiel: {host.GameName}   ·   Steam-AppID: {host.SteamAppId ?? "—"}";
+        TitleText.Text = PublishTexts.SteamTitleFor(mod.Name);
+        AppIdText.Text = PublishTexts.SteamGameLine(host.GameName, host.SteamAppId ?? "—");
         WorkshopIdBox.Text = mod.SteamWorkshopId ?? string.Empty;
         UserBox.Text = _settings.UserName ?? string.Empty;
         if (string.IsNullOrWhiteSpace(UserBox.Text) && DetectSteamAccount() is { } account)
@@ -100,7 +100,7 @@ public partial class PublishWindow : Window
             if (_publishing)
             {
                 e.Cancel = true;
-                Report("Der Upload läuft noch. Brich ihn ab oder warte, bis er fertig ist.");
+                Report(PublishTexts.UploadRunning);
             }
             else if (!ConfirmLeaveMeta())
             {
@@ -156,7 +156,7 @@ public partial class PublishWindow : Window
                 _metaOriginal = string.Empty;
                 MetaBox.Text = string.Empty;
                 MetaBox.IsReadOnly = true;
-                MetaErrorText.Text = "Es wurde keine lesbare metadata.json im Ordner der Mod gefunden.";
+                MetaErrorText.Text = PublishTexts.MetaMissing;
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
@@ -164,7 +164,7 @@ public partial class PublishWindow : Window
             _metaOriginal = string.Empty;
             MetaBox.Text = string.Empty;
             MetaBox.IsReadOnly = true;
-            MetaErrorText.Text = "metadata.json konnte nicht gelesen werden: " + ex.Message;
+            MetaErrorText.Text = PublishTexts.MetaReadFailed(ex.Message);
         }
         finally
         {
@@ -265,7 +265,7 @@ public partial class PublishWindow : Window
 
         if (!VersionNumber.TryParse(version, out _))
         {
-            MetaErrorText.Text = "Das ist keine gültige Version (erwartet z. B. 2.0.6).";
+            MetaErrorText.Text = PublishTexts.VersionInvalid;
             SyncVersionBox();
             return;
         }
@@ -299,7 +299,7 @@ public partial class PublishWindow : Window
 
         if (ModMetadataEditor.Validate(MetaBox.Text) is { } error)
         {
-            MetaErrorText.Text = error + " Die Datei wurde nicht gespeichert.";
+            MetaErrorText.Text = PublishTexts.MetaNotSaved(error);
             return false;
         }
 
@@ -307,7 +307,7 @@ public partial class PublishWindow : Window
         {
             var onDisk = ModTextFile.Read(_metadataPath).Text;
             if (onDisk != _metaOriginal
-                && MessageBox.Show(this, "Die metadata.json wurde von außen geändert.\nTrotzdem überschreiben?", Caption, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                && MessageBox.Show(this, PublishTexts.MetaChangedOutside, Caption, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             {
                 return false;
             }
@@ -318,7 +318,7 @@ public partial class PublishWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            MetaErrorText.Text = "Die Datei konnte nicht gespeichert werden: " + ex.Message;
+            MetaErrorText.Text = PublishTexts.MetaSaveFailed(ex.Message);
             return false;
         }
 
@@ -335,7 +335,7 @@ public partial class PublishWindow : Window
             return true;
         }
 
-        var answer = MessageBox.Show(this, "Die metadata.json hat ungespeicherte Änderungen.\nJetzt speichern?", Caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        var answer = MessageBox.Show(this, PublishTexts.MetaUnsaved, Caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         switch (answer)
         {
             case MessageBoxResult.Yes:
@@ -374,7 +374,7 @@ public partial class PublishWindow : Window
 
         LoadChangelog();
         RefreshAll();
-        Report($"Das Banner für Version {number.Text} steht jetzt oben im Changelog. Trage die Änderungen im Fenster \"Releases\" ein (Textfeld rechts).");
+        Report(PublishTexts.SteamBannerCreated(number.Text));
     }
 
     // ---- Prüfungen, Umfang, Changenote
@@ -413,8 +413,8 @@ public partial class PublishWindow : Window
         }
 
         var shown = string.Join(", ", _scope.Excluded.Take(6));
-        var more = _scope.Excluded.Count > 6 ? $" … (+{_scope.Excluded.Count - 6} weitere)" : string.Empty;
-        ScopeText.Text = $"Dateien: {_scope.FileCount:N0} ({FormatBytes(_scope.TotalBytes)}). Ausgeschlossen: {(shown.Length == 0 ? "nichts" : shown + more)}";
+        var more = _scope.Excluded.Count > 6 ? PublishTexts.ScopeMore(_scope.Excluded.Count - 6) : string.Empty;
+        ScopeText.Text = PublishTexts.ScopeText(_scope.FileCount, FormatBytes(_scope.TotalBytes), shown.Length == 0 ? PublishTexts.ScopeNothing : shown + more);
     }
 
     private static string FormatBytes(long bytes) =>
@@ -428,8 +428,8 @@ public partial class PublishWindow : Window
         }
 
         var lines = _scope.Excluded.Take(60).ToList();
-        var more = _scope.Excluded.Count > lines.Count ? $"\n… und {_scope.Excluded.Count - lines.Count} weitere" : string.Empty;
-        Report(lines.Count == 0 ? "Es wird nichts ausgeschlossen." : "Nicht hochgeladen werden:\n\n" + string.Join("\n", lines) + more);
+        var more = _scope.Excluded.Count > lines.Count ? "\n" + PublishTexts.AndMore(_scope.Excluded.Count - lines.Count) : string.Empty;
+        Report(lines.Count == 0 ? PublishTexts.ScopeNothingExcluded : PublishTexts.ScopeExcludedList(string.Join("\n", lines) + more));
     }
 
     private string? PreviewFullPath()
@@ -478,7 +478,7 @@ public partial class PublishWindow : Window
             WorkshopIdOwner: OtherModWithWorkshopId()));
 
         HintList.ItemsSource = _readiness.Hints.Select(h => new HintRow(h.Text, h.Blocking ? Danger : Muted)).ToList();
-        PublishButton.Content = IsFirstPublish ? "Veröffentlichen" : "Update";
+        PublishButton.Content = IsFirstPublish ? PublishTexts.Publish : "Update";
         PublishButton.IsEnabled = _readiness.CanPublish && !_publishing;
         NewBannerButton.Visibility = _entries is not null && !hasSection && versionText is not null && VersionNumber.TryParse(versionText, out _)
             ? Visibility.Visible
@@ -509,7 +509,7 @@ public partial class PublishWindow : Window
     private void UpdateNoteCount()
     {
         var length = NoteBox.Text.Length;
-        NoteCountText.Text = $"{length:N0} / {ChangeNoteFormatter.MaxLength:N0} Zeichen";
+        NoteCountText.Text = PublishTexts.NoteCount(length, ChangeNoteFormatter.MaxLength);
         NoteCountText.Foreground = ChangeNoteFormatter.IsTooLong(NoteBox.Text) ? Danger : Muted;
     }
 
@@ -611,7 +611,7 @@ public partial class PublishWindow : Window
     {
         if (_metadata is null || string.IsNullOrWhiteSpace(_host.SteamAppId))
         {
-            Report("Ohne lesbare metadata.json und ohne Steam-AppID im Spielprofil kann ich nicht suchen.");
+            Report(PublishTexts.FindNeedsMetadata);
             return;
         }
 
@@ -642,7 +642,7 @@ public partial class PublishWindow : Window
 
         if (local.Count > 1)
         {
-            if (WorkshopPickWindow.Pick(this, "Mehrere abonnierte Workshop-Mods passen zu dieser Mod. Wähle die richtige:", local) is { } chosenLocal)
+            if (WorkshopPickWindow.Pick(this, PublishTexts.FindSeveralLocal, local) is { } chosenLocal)
             {
                 UseFound(chosenLocal);
             }
@@ -653,13 +653,13 @@ public partial class PublishWindow : Window
         var user = ReadLoginUser(UserBox.Text);
         if (user is null)
         {
-            Report("Lokal wurde keine passende Workshop-Seite gefunden, und auf diesem Rechner ist kein Steam-Konto bekannt.\n\nTrage die ID von Hand ein oder füge die Adresse der Workshop-Seite in das Feld ein.");
+            Report(PublishTexts.FindNoAccount);
             return;
         }
 
         var ask = MessageBox.Show(
             this,
-            $"Lokal wurde keine passende Workshop-Seite gefunden.\n\nSoll ich die öffentliche Workshop-Seite des Profils „{user.PersonaName}“ auf steamcommunity.com abrufen?\n(steamcommunity.com/profiles/{user.SteamId64}/myworkshopfiles)\n\nEs wird keine Anmeldung und kein Cookie benutzt. Als „Nur ich“ oder „Versteckt“ hochgeladene Seiten sind dort nicht sichtbar.",
+            PublishTexts.FindAskProfile(user.PersonaName, user.SteamId64),
             Caption,
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -678,13 +678,13 @@ public partial class PublishWindow : Window
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            Report("Die Workshop-Seite konnte nicht abgerufen werden: " + ex.Message);
+            Report(PublishTexts.FindFetchFailed(ex.Message));
             return;
         }
 
         if (items.Count == 0)
         {
-            Report($"Auf dem öffentlichen Profil „{user.PersonaName}“ gibt es keine Workshop-Seiten für dieses Spiel. Vielleicht ist die Seite nur für dich sichtbar.\n\nTrage die ID von Hand ein oder füge die Adresse der Workshop-Seite in das Feld ein.");
+            Report(PublishTexts.FindNoPages(user.PersonaName));
             return;
         }
 
@@ -696,8 +696,8 @@ public partial class PublishWindow : Window
         }
 
         var header = exact.Count > 1
-            ? "Mehrere Seiten haben genau den Titel der Mod. Wähle die richtige:"
-            : "Keine Seite hat genau den Titel der Mod. Wähle die richtige oder brich ab:";
+            ? PublishTexts.FindSeveralExact
+            : PublishTexts.FindNoExact;
         if (WorkshopPickWindow.Pick(this, header, exact.Count > 1 ? exact : items) is { } chosen)
         {
             UseFound(chosen);
@@ -707,7 +707,7 @@ public partial class PublishWindow : Window
     private void UseFound(WorkshopMatch match)
     {
         WorkshopIdBox.Text = match.Id;
-        ResultText.Text = $"Workshop-ID {match.Id} übernommen: „{match.Title}“ ({match.Source}). Sie wird gespeichert, sobald du hochlädst.";
+        ResultText.Text = PublishTexts.FindTaken(match.Id, match.Title, match.Source);
         ResultText.Foreground = Muted;
     }
 
@@ -722,10 +722,10 @@ public partial class PublishWindow : Window
         }
 
         _clientProblem = _clientDll is null
-            ? "Die Steamworks-Bibliothek des Spiels wurde nicht gefunden. Ist das Spiel installiert?"
-            : !SteamClientStatus.IsSteamRunning() ? "Steam läuft nicht. Starte Steam und melde dich an." : null;
+            ? SteamTexts.ApiDllMissing
+            : !SteamClientStatus.IsSteamRunning() ? PublishTexts.SteamNotRunning : null;
         ClientStatusText.Text = _clientProblem
-            ?? $"Bereit: Steam läuft. Der Upload nutzt deine bestehende Steam-Anmeldung, es ist nichts einzurichten. Steam zeigt dich nur solange der Upload läuft als \"{_host.GameName} spielend\" an; starte das Spiel nicht gleichzeitig.";
+            ?? PublishTexts.ClientReady(_host.GameName);
     }
 
     private void ApplyMethod()
@@ -755,8 +755,8 @@ public partial class PublishWindow : Window
         var exe = SteamCmdLocator.Find(_settings);
         var user = UserBox.Text.Trim();
         SteamStatusText.Text = exe is null
-            ? "SteamCMD ist nicht eingerichtet. Lade es herunter oder wähle eine vorhandene steamcmd.exe."
-            : $"SteamCMD: {exe}" + (user.Length == 0 ? string.Empty : $"\nBenutzer: {user} (ob die Anmeldung gilt, zeigt sich beim Upload)");
+            ? PublishTexts.SteamCmdMissing
+            : $"SteamCMD: {exe}" + (user.Length == 0 ? string.Empty : "\n" + PublishTexts.SteamCmdUser(user));
         DownloadButton.Visibility = exe is null ? Visibility.Visible : Visibility.Collapsed;
         LoginButton.IsEnabled = exe is not null && user.Length > 0 && !user.Any(c => char.IsWhiteSpace(c) || c == '"');
         OpenPageButton.IsEnabled = !IsFirstPublish;
@@ -767,9 +767,8 @@ public partial class PublishWindow : Window
         var folder = SteamCmdInstaller.DefaultFolder;
         var answer = MessageBox.Show(
             this,
-            "SteamCMD wird von Valve heruntergeladen.\n\nDatei: steamcmd.zip\nQuelle: steamcdn-a.akamaihd.net (Valve)\nGröße: ca. 3 MB\nZiel: " + folder
-            + "\n\nBeim ersten Start lädt sich SteamCMD noch selbst nach (ca. 100 MB).\n\nFortfahren?",
-            "SteamCMD herunterladen",
+            PublishTexts.SteamCmdDownloadConfirm(folder),
+            PublishTexts.SteamCmdDownload,
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
         if (answer != MessageBoxResult.Yes)
@@ -788,7 +787,7 @@ public partial class PublishWindow : Window
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            Report("Der Download ist fehlgeschlagen: " + ex.Message);
+            Report(PublishTexts.DownloadFailed(ex.Message));
         }
         finally
         {
@@ -803,9 +802,10 @@ public partial class PublishWindow : Window
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "steamcmd.exe wählen",
-            Filter = "steamcmd.exe|steamcmd.exe|Programme (*.exe)|*.exe",
+            Title = PublishTexts.SteamCmdPickTitle,
+            Filter = PublishTexts.SteamCmdPickFilter,
         };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("publish.steamcmd");
         if (dialog.ShowDialog(this) != true)
         {
             return;
@@ -856,11 +856,11 @@ public partial class PublishWindow : Window
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
-            Report("SteamCMD konnte nicht gestartet werden: " + ex.Message);
+            Report(SteamTexts.CmdStartFailed(ex.Message));
             return;
         }
 
-        Report("SteamCMD wurde in einem eigenen Fenster gestartet.\n\nGib dort dein Passwort und den Steam-Guard-Code ein (das Programm sieht sie nicht). Warte, bis „Logged in OK“ erscheint, und schließe das Fenster mit dem Befehl quit.\n\nBeim allerersten Start lädt SteamCMD sich zuerst selbst nach; das kann einige Minuten dauern.");
+        Report(PublishTexts.SteamCmdLoginStarted);
     }
 
     // ---- Upload
@@ -896,7 +896,7 @@ public partial class PublishWindow : Window
         var exe = _useClient ? null : SteamCmdLocator.Find(_settings);
         if (_readiness is not { CanPublish: true } || _metadata is null || (_useClient ? _clientDll is null : exe is null))
         {
-            Report("Der Upload ist noch nicht möglich. Die roten Hinweise unter \"Prüfungen\" zeigen, was fehlt.");
+            Report(PublishTexts.SteamNotReady);
             return;
         }
 
@@ -905,21 +905,21 @@ public partial class PublishWindow : Window
         var note = NoteBox.Text.Trim();
         if (ChangeNoteFormatter.IsTooLong(note))
         {
-            Report($"Die Changenote ist zu lang ({note.Length:N0} von {ChangeNoteFormatter.MaxLength:N0} Zeichen). Kürze sie.");
+            Report(PublishTexts.NoteTooLong(note.Length, ChangeNoteFormatter.MaxLength));
             return;
         }
 
         if (note.Length == 0
-            && MessageBox.Show(this, "Die Changenote ist leer. Trotzdem hochladen?", Caption, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            && MessageBox.Show(this, PublishTexts.NoteEmpty, Caption, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
 
         var visibility = SelectedVisibility() ?? (first ? WorkshopVisibility.Private : null);
-        var confirm = $"Version {version} von „{_metadata.Name}“ auf Steam hochladen?\n\n"
-            + (first ? "Es wird eine neue Workshop-Seite angelegt." : $"Die Workshop-Seite {WorkshopIdBox.Text.Trim()} wird aktualisiert.")
-            + $"\nSichtbarkeit: {(visibility is null ? "unverändert" : VisibilityBox.Text)}"
-            + $"\nDateien: {_scope?.FileCount:N0}";
+        var confirm = PublishTexts.SteamConfirm(version, _metadata.Name) + "\n\n"
+            + (first ? PublishTexts.ConfirmNewPage : PublishTexts.ConfirmUpdatePage(WorkshopIdBox.Text.Trim()))
+            + "\n" + PublishTexts.ConfirmVisibility(visibility is null ? PublishTexts.ConfirmVisibilityUnchanged : VisibilityBox.Text)
+            + "\n" + PublishTexts.ConfirmFiles(_scope?.FileCount);
         if (MessageBox.Show(this, confirm, Caption, MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
         {
             return;
@@ -988,7 +988,7 @@ public partial class PublishWindow : Window
             }
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or IOException or UnauthorizedAccessException)
             {
-                problems.Add("Die Workshop-ID konnte nicht gespeichert werden: " + ex.Message);
+                problems.Add(PublishTexts.WorkshopIdSaveFailed(ex.Message));
             }
         }
 
@@ -1005,14 +1005,14 @@ public partial class PublishWindow : Window
             }
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or IOException or UnauthorizedAccessException)
             {
-                problems.Add("Der Vermerk in den Releases konnte nicht gespeichert werden: " + ex.Message);
+                problems.Add(PublishTexts.ReleaseMarkFailed(ex.Message));
             }
         }
 
         var message = result.Message;
         if (result.Outcome != WorkshopPublishOutcome.Success && first && result.WorkshopId is not null)
         {
-            message += $" Die Workshop-Seite {result.WorkshopId} wurde schon angelegt; ein erneuter Versuch aktualisiert sie.";
+            message += " " + PublishTexts.PageAlreadyCreated(result.WorkshopId);
         }
 
         ResultText.Text = string.Join("\n", new[] { message }.Concat(problems));
@@ -1022,7 +1022,7 @@ public partial class PublishWindow : Window
         if (result.NeedsLegalAgreement
             && MessageBox.Show(
                 this,
-                "Steam verlangt, dass du der Workshop-Vereinbarung zustimmst, bevor die Seite sichtbar wird. Das machst du selbst auf der Steam-Seite.\n\nSeite jetzt öffnen?",
+                PublishTexts.LegalAgreement,
                 Caption,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question) == MessageBoxResult.Yes)

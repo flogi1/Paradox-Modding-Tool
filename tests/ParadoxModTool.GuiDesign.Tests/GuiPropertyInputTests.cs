@@ -84,9 +84,25 @@ public class GuiPropertyInputTests
     [InlineData(GuiValueEditor.Color, "[Country.GetColor]", false, "\"[Country.GetColor]\"")]
     [InlineData(GuiValueEditor.Color, "1 0", false, null)]
     [InlineData(GuiValueEditor.Block, "a = b", false, null)]
+    [InlineData(GuiValueEditor.Bool, "[GetVariableSystem.HasValue( 'iv2_var_system_tabs', 'iv2_tabs_ideagroups' )]", false, "\"[GetVariableSystem.HasValue( 'iv2_var_system_tabs', 'iv2_tabs_ideagroups' )]\"")]
+    [InlineData(GuiValueEditor.Enum, "[Country.IsPlayer]", false, "\"[Country.IsPlayer]\"")]
+    [InlineData(GuiValueEditor.Number, "[Country.GetTax]", false, "\"[Country.GetTax]\"")]
     public void ValueTextWritesValidCode(GuiValueEditor editor, string input, bool wasQuoted, string? expected)
     {
         Assert.Equal(expected, GuiPropertyInput.ValueText(editor, input, wasQuoted));
+    }
+
+    [Fact]
+    public void DataExpressionsAreOfferedWhereVanillaUsesThemOrTheValueIsOne()
+    {
+        var catalog = Catalog();
+        catalog.Widgets["button"].Properties["enabled"] = new GuiPropertyStats { Name = "enabled", Count = 12, Forms = { [GuiValueForm.Bool] = 9, [GuiValueForm.Binding] = 3 } };
+
+        Assert.True(GuiPropertyInput.AcceptsDataExpression("visible", "button", catalog, "yes"));
+        Assert.True(GuiPropertyInput.AcceptsDataExpression("enabled", "button", catalog, "no"));
+        Assert.True(GuiPropertyInput.AcceptsDataExpression("alpha", "button", catalog, "[Country.GetAlpha]"));
+        Assert.False(GuiPropertyInput.AcceptsDataExpression("alpha", "button", catalog, "0.5"));
+        Assert.False(GuiPropertyInput.AcceptsDataExpression("unknown", "button", catalog, string.Empty));
     }
 
     [Fact]

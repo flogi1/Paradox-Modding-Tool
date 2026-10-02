@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Mods;
 using MessageBox = System.Windows.MessageBox;
 
@@ -30,7 +31,7 @@ public partial class BranchSyncWindow : Window
         RightCombo.ItemsSource = members;
         LeftCombo.SelectedItem = members.FirstOrDefault(m => m.Id == start.Id) ?? members[0];
         RightCombo.SelectedItem = members.FirstOrDefault(m => m.Id != start.Id && m.Role != ModRole.Submod) ?? members.FirstOrDefault(m => m.Id != start.Id);
-        Title = $"Abgleich — Projekt {ModProjects.Root(registry, start).Name}";
+        Title = MainTexts.SyncWindowTitle(ModProjects.Root(registry, start).Name);
         Closed += (_, _) => _cts?.Cancel();
         Activated += (_, _) => RefreshLocks();
         UpdateButtons();
@@ -75,10 +76,10 @@ public partial class BranchSyncWindow : Window
         var left = _leftMod ?? SelectedLeft;
         var right = _rightMod ?? SelectedRight;
 
-        ToRightButton.Content = new System.Windows.Controls.TextBlock { Text = $"Nach {right?.Name ?? "rechts"} übernehmen", TextTrimming = TextTrimming.CharacterEllipsis };
-        ToLeftButton.Content = new System.Windows.Controls.TextBlock { Text = $"Nach {left?.Name ?? "links"} übernehmen", TextTrimming = TextTrimming.CharacterEllipsis };
-        ToRightButton.ToolTip = $"Die gewählten Dateien von \"{left?.Name}\" nach \"{right?.Name}\" kopieren (vorhandene Dateien werden vorher gesichert, gesperrte übersprungen)";
-        ToLeftButton.ToolTip = $"Die gewählten Dateien von \"{right?.Name}\" nach \"{left?.Name}\" kopieren (vorhandene Dateien werden vorher gesichert, gesperrte übersprungen)";
+        ToRightButton.Content = new System.Windows.Controls.TextBlock { Text = MainTexts.SyncApplyTo(right?.Name ?? MainTexts.SyncRightLower), TextTrimming = TextTrimming.CharacterEllipsis };
+        ToLeftButton.Content = new System.Windows.Controls.TextBlock { Text = MainTexts.SyncApplyTo(left?.Name ?? MainTexts.SyncLeftLower), TextTrimming = TextTrimming.CharacterEllipsis };
+        ToRightButton.ToolTip = MainTexts.SyncApplyTip(left?.Name ?? string.Empty, right?.Name ?? string.Empty);
+        ToLeftButton.ToolTip = MainTexts.SyncApplyTip(right?.Name ?? string.Empty, left?.Name ?? string.Empty);
 
         // Die Sperren live prüfen (nicht aus den Zeilen): sie können im Hauptfenster geändert worden sein. Eine gesperrte Datei geht weder als Quelle noch als Ziel.
         bool Transferable(SyncRow row, bool toRight) =>
@@ -100,7 +101,7 @@ public partial class BranchSyncWindow : Window
 
         if (left.Id == right.Id)
         {
-            StatusText.Text = "Links und rechts sind dieselbe Mod.";
+            StatusText.Text = MainTexts.SyncSameMod;
             return;
         }
 
@@ -108,7 +109,7 @@ public partial class BranchSyncWindow : Window
         var rightFolder = BranchTransfer.WorkingFolder(right);
         if (leftFolder is null || rightFolder is null)
         {
-            MessageBox.Show(this, $"Der Ordner der Mod \"{(leftFolder is null ? left.Name : right.Name)}\" wurde nicht gefunden.", "Abgleich", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, MainTexts.ModFolderMissing(leftFolder is null ? left.Name : right.Name), MainTexts.SyncTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -116,7 +117,7 @@ public partial class BranchSyncWindow : Window
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         SetBusy(true);
-        StatusText.Text = "Vergleiche Ordner…";
+        StatusText.Text = MainTexts.SyncComparing;
         try
         {
             _all = await Task.Run(() => FolderComparer.Compare(ModFileIndex.Build(leftFolder, null, token), ModFileIndex.Build(rightFolder, null, token), token), token);
@@ -128,12 +129,12 @@ public partial class BranchSyncWindow : Window
         }
         catch (OperationCanceledException)
         {
-            StatusText.Text = "Abgebrochen.";
+            StatusText.Text = CommonTexts.Cancelled;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             StatusText.Text = string.Empty;
-            MessageBox.Show(this, "Der Abgleich ist fehlgeschlagen:\n" + ex.Message, "Abgleich", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, MainTexts.SyncFailed(ex.Message), MainTexts.SyncTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
         {
@@ -175,7 +176,7 @@ public partial class BranchSyncWindow : Window
 
         var counts = _all.GroupBy(d => d.Kind).ToDictionary(g => g.Key, g => g.Count());
         int Count(DifferenceKind kind) => counts.TryGetValue(kind, out var n) ? n : 0;
-        StatusText.Text = $"{Count(DifferenceKind.OnlyLeft)} nur links, {Count(DifferenceKind.OnlyRight)} nur rechts, {Count(DifferenceKind.Different)} unterschiedlich, {Count(DifferenceKind.Same)} gleich. Angezeigt: {rows.Count}.";
+        StatusText.Text = MainTexts.SyncSummary(Count(DifferenceKind.OnlyLeft), Count(DifferenceKind.OnlyRight), Count(DifferenceKind.Different), Count(DifferenceKind.Same), rows.Count);
         UpdateButtons();
     }
 
@@ -248,16 +249,16 @@ public partial class BranchSyncWindow : Window
 
         public bool LockedRight { get; }
 
-        public string LockText => LockedLeft && LockedRight ? "beide" : LockedLeft ? "links" : LockedRight ? "rechts" : string.Empty;
+        public string LockText => LockedLeft && LockedRight ? MainTexts.SyncBoth : LockedLeft ? MainTexts.SyncLeftLower : LockedRight ? MainTexts.SyncRightLower : string.Empty;
 
         public string Path => Difference.RelativePath;
 
         public string StatusText => Difference.Kind switch
         {
-            DifferenceKind.OnlyLeft => "Nur links",
-            DifferenceKind.OnlyRight => "Nur rechts",
-            DifferenceKind.Different => "Unterschiedlich",
-            _ => "Gleich",
+            DifferenceKind.OnlyLeft => MainTexts.SyncOnlyLeft,
+            DifferenceKind.OnlyRight => MainTexts.SyncOnlyRight,
+            DifferenceKind.Different => MainTexts.SyncDifferent,
+            _ => MainTexts.SyncSame,
         };
 
         public string LeftSize => Format(Difference.Left?.Size);

@@ -18,4 +18,19 @@
     <ProjectReference Include="..\..\src\ParadoxModTool.ErrorLog\ParadoxModTool.ErrorLog.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\profiles\errorlog\eu5.json" Link="profiles\errorlog\eu5.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\eu5.json" Link="profiles\eu5.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\errorlog\ck3.json" Link="profiles\errorlog\ck3.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ck3\*.log">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

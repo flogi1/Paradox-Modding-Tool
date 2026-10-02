@@ -16,9 +16,7 @@ public sealed class VanillaMergeBaselineResult
 /// Vanilla-Fassung als Snapshot der aktuellen Version auf (falls noch nicht geschehen) und
 /// meldet, ob zusätzlich ein ÄLTERER Snapshot vorliegt, der als "alte Vanilla-Fassung" für
 /// <see cref="VanillaMergeWorkflow.ComputeMerge"/> dienen kann. Bei mehreren älteren Snapshots
-/// wird bewusst nur "existiert mindestens einer" geprüft, nicht welcher unmittelbar vorherige
-/// - für den ersten Entwurf ausreichend, da ein Merge typischerweise direkt nach einem
-/// Spiel-Update erfolgt (siehe Spec, "Offene, nicht durch diesen Spec klärbare Punkte").
+/// gilt die neueste Version unter der aktuellen (<see cref="VanillaBaseVersion.Choose"/>).
 /// </summary>
 public static class VanillaMergeBaseline
 {
@@ -26,7 +24,7 @@ public static class VanillaMergeBaseline
         VanillaHistoryStore store, string relativePath, string currentVersion, string currentVanillaFileFullPath)
     {
         var recordedVersions = store.ListRecordedVersions(relativePath);
-        var olderVersion = recordedVersions.FirstOrDefault(v => v != currentVersion);
+        var olderVersion = VanillaBaseVersion.Choose(recordedVersions, currentVersion, null, null);
 
         if (!store.HasSnapshot(relativePath, currentVersion))
         {

@@ -7,4 +7,14 @@
     <RootNamespace>ParadoxModTool.LaunchControl</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- launcher-v2.sqlite (EU IV, CK3) nur lesen; winsqlite3 ist Teil von Windows, deshalb keine mitgelieferte native DLL. -->
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="8.0.11" />
+    <PackageReference Include="SQLitePCLRaw.bundle_winsqlite3" Version="2.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
 </Project>

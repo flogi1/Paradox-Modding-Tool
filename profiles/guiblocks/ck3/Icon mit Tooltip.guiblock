@@ -1,0 +1,15 @@
+# block: Icon mit Tooltip
+# group: Anzeige
+# description: Icon mit einfachem Tooltip aus einem Lokalisierungsschlüssel; Icons liegen in gfx/interface/icons/flat_icons. Vorbild: gui/window_situation_list.gui, gui/frontend_main.gui
+# param: name | Name | my_icon
+# param: texture | Icon (Texturpfad) | gfx/interface/icons/flat_icons/development.dds
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_ICON_TT
+# param: size | Größe | 32
+
+icon = {
+	name = "$name$"
+	size = { $size$ $size$ }
+	texture = "$texture$"
+	tooltip = "$tooltip$"
+	alwaystransparent = no
+}

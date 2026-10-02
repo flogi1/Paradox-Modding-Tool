@@ -95,6 +95,65 @@ public sealed class WorkspacePagesTests
     });
 
     [Fact]
+    public void ModifierHoverCheckBoxSwitchesTheSetting() => Sta.Run(() =>
+    {
+        ModifierValueSettings.SetHoverEnabled(true);
+        using var page = new WorkspacePage(new FakeHost());
+
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ModifierHover));
+
+        Assert.False(ModifierValueSettings.HoverEnabled);
+        ModifierValueSettings.SetHoverEnabled(true);
+    });
+
+    [Fact]
+    public void CustomLocalizationSuggestionsAreOffByDefaultAndTheCheckBoxSwitchesThem() => Sta.Run(() =>
+    {
+        ScriptHintSettings.SetCompleteCustomLocalizations(false);
+        using var page = new WorkspacePage(new FakeHost());
+        var box = UiFind.CheckBox(page, SettingsTexts.CompleteCustomLocalizations);
+
+        Assert.False(box.IsChecked);
+
+        UiFind.Toggle(box);
+
+        Assert.True(ScriptHintSettings.CompleteCustomLocalizations);
+        ScriptHintSettings.SetCompleteCustomLocalizations(false);
+    });
+
+    [Fact]
+    public void ModifierNamesCheckBoxSwitchesTheSetting() => Sta.Run(() =>
+    {
+        ModifierValueSettings.SetNamesEnabled(true);
+        using var page = new WorkspacePage(new FakeHost());
+
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ModifierNames));
+
+        Assert.False(ModifierValueSettings.NamesEnabled);
+        ModifierValueSettings.SetNamesEnabled(true);
+    });
+
+    [Fact]
+    public void ModifierReloadButtonRequestsAReload() => Sta.Run(() =>
+    {
+        var requests = 0;
+        EventHandler handler = (_, _) => requests++;
+        ModifierValueSettings.ReloadRequested += handler;
+        try
+        {
+            using var page = new WorkspacePage(new FakeHost());
+
+            UiFind.Click(UiFind.Button(page, SettingsTexts.ToolbarItemLabel(ToolbarItemIds.ModifierReload)));
+
+            Assert.Equal(1, requests);
+        }
+        finally
+        {
+            ModifierValueSettings.ReloadRequested -= handler;
+        }
+    });
+
+    [Fact]
     public void WorkspacePageFollowsExternalEditorSettingChanges() => Sta.Run(() =>
     {
         ScriptHintSettings.SetAutoCompleteEnabled(true);

@@ -7,4 +7,10 @@
     <RootNamespace>ParadoxModTool.ErrorLog</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SaveGames\ParadoxModTool.SaveGames.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Scopes\ParadoxModTool.Scopes.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -13,6 +13,9 @@ public enum SkipReason
 
     /// <summary>PMT-eigene Patch-Datei der Basis-Mod (Ziel "Basis-Mod"); sie gehört nicht zum Spielzustand ohne Patch.</summary>
     OwnPatch,
+
+    /// <summary>Nicht Teil des Laufs (Update-Modus: nur die Dateien, die an die neue Vanilla-Fassung angepasst werden).</summary>
+    NotInRun,
 }
 
 public sealed record SkippedFile(string RelativePath, SkipReason Reason, string Kind);
@@ -37,12 +40,15 @@ public sealed class CompatchFileFilter
 
     private readonly Dictionary<string, string> _hidden;
     private readonly List<string> _locked;
+    private readonly HashSet<string>? _onlyPaths;
 
-    public CompatchFileFilter(IReadOnlyDictionary<string, string> hiddenExtensions, IEnumerable<string> lockedPaths, bool skipLocked)
+    /// <param name="onlyPaths">Nur diese Dateien lesen (Update-Modus); <see langword="null"/> = alle.</param>
+    public CompatchFileFilter(IReadOnlyDictionary<string, string> hiddenExtensions, IEnumerable<string> lockedPaths, bool skipLocked, IReadOnlyCollection<string>? onlyPaths = null)
     {
         _hidden = new Dictionary<string, string>(hiddenExtensions, StringComparer.OrdinalIgnoreCase);
         _locked = lockedPaths.Select(Normalize).Distinct().ToList();
         SkipLocked = skipLocked;
+        _onlyPaths = onlyPaths?.Select(Normalize).ToHashSet(StringComparer.Ordinal);
     }
 
     public static CompatchFileFilter Default => new(DefaultHiddenExtensions, Array.Empty<string>(), skipLocked: false);
@@ -53,13 +59,20 @@ public sealed class CompatchFileFilter
 
     public IReadOnlyList<string> LockedPaths => _locked;
 
+    public IReadOnlyCollection<string>? OnlyPaths => _onlyPaths;
+
     /// <summary>Grund, warum die Datei nicht gelesen wird, oder <see langword="null"/>.</summary>
     public SkippedFile? Check(string relativePath)
     {
         var path = Normalize(relativePath);
-        if (!path.Contains('/') || path.StartsWith(".metadata/", StringComparison.Ordinal))
+        if (ParadoxModTool.Mods.ModMetadata.IsDescriptionFile(path))
         {
             return new SkippedFile(relativePath, SkipReason.Metadata, "Metadaten");
+        }
+
+        if (_onlyPaths is not null && !_onlyPaths.Contains(path))
+        {
+            return new SkippedFile(relativePath, SkipReason.NotInRun, "Update");
         }
 
         if (_hidden.TryGetValue(Path.GetExtension(path), out var kind))
@@ -71,6 +84,13 @@ public sealed class CompatchFileFilter
     }
 
     public bool IsHiddenKind(string relativePath) => _hidden.ContainsKey(Path.GetExtension(relativePath));
+
+    /// <summary>Dateiart nach <see cref="DefaultHiddenExtensions"/> ("Grafik", "Audio" …) oder <see langword="null"/> für Skript- und Textdateien.</summary>
+    public static string? KindOf(string relativePath) => DefaultHiddenExtensions.TryGetValue(Path.GetExtension(relativePath), out var kind) ? kind : null;
+
+    /// <summary>Gehört die Datei zu einer der ausgeblendeten Dateiarten (Dateilisten des Compare und Update Tools, Update-Lauf)?</summary>
+    public static bool IsHiddenKind(string relativePath, IEnumerable<string> hiddenKinds) =>
+        KindOf(relativePath) is { } kind && hiddenKinds.Contains(kind, StringComparer.Ordinal);
 
     /// <summary>Liegt der Pfad in einem gesperrten Pfad? Ein Ordner sperrt alles darunter, ein leerer Eintrag die ganze Mod.</summary>
     public bool IsLocked(string relativePath)

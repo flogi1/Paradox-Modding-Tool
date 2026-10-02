@@ -20,8 +20,14 @@ obj/
 # Brainstorming-Mockups (superpowers Visual Companion) — lokal, nicht versioniert
 /.superpowers/
 
-# Ausgabe von release.ps1 (Publish-Ordner, ZIP, Manifest, Signatur)
+# Ausgabe des Release-Werkzeugs (Publish-Ordner, ZIP, Manifest, Signatur)
 /release-output/
+
+# Veröffentlichtes Release-Werkzeug (build-release-tool.bat)
+/release-tool/
 
 # Persönliche Backlog-Übersicht, nur lokal
 /Backlog.txt
+
+# Verknuepfung auf die gebaute exe (create-shortcut.ps1, lokal erzeugt)
+/ParadoxModTool.lnk

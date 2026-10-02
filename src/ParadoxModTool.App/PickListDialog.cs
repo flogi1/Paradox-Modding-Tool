@@ -1,4 +1,5 @@
 using System.Windows;
+using ParadoxModTool.Localization;
 using Button = System.Windows.Controls.Button;
 using ListBox = System.Windows.Controls.ListBox;
 using Orientation = System.Windows.Controls.Orientation;
@@ -38,7 +39,7 @@ public sealed class PickListDialog : Window
 
         var panel = new System.Windows.Controls.DockPanel { Margin = new Thickness(14) };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
-        var ok = new Button { Content = "OK", Width = 80, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
+        var ok = new Button { Content = CommonTexts.Ok, Width = 80, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
         ok.Click += (_, _) =>
         {
             if (_list.SelectedItems.Count > 0)
@@ -46,7 +47,7 @@ public sealed class PickListDialog : Window
                 DialogResult = true;
             }
         };
-        var cancel = new Button { Content = "Abbrechen", Width = 80, IsCancel = true };
+        var cancel = new Button { Content = CommonTexts.Cancel, Width = 80, IsCancel = true };
         buttons.Children.Add(ok);
         buttons.Children.Add(cancel);
         System.Windows.Controls.DockPanel.SetDock(buttons, System.Windows.Controls.Dock.Bottom);

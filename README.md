@@ -650,6 +650,14 @@ unten).
   prüfen, ob der Werkzeugleisten-Button bei voller Fensterbreite sichtbar ist, und falls nicht, ob
   ein Fenster-Breiter-Ziehen ihn wieder erscheinen lässt (würde die Overflow-Theorie bestätigen).
 
+## Übersetzungen (Translations)
+
+Die Oberflächentexte liegen als eine JSON-Datei pro Sprache in `locales/` (Quellsprache `de.json`). Wie man eine Sprache ergänzt oder
+korrigiert, steht auf Englisch in [TRANSLATING.md](TRANSLATING.md). Eingesandte Dateien nach `locales/` kopieren und `test.bat`
+ausführen: `ShippedLocalesTests` prüft JSON, Keys und Platzhalter.
+
+UI texts live in `locales/`, one JSON file per language. To add or improve a translation, see [TRANSLATING.md](TRANSLATING.md).
+
 ## Ordnerstruktur
 
 ```
@@ -674,12 +682,17 @@ und `update-manifest.json.sig`; PMT installiert nur Pakete mit gültiger Signatu
    Nie ins Repository. Geht der Schlüssel verloren, bekommen bestehende Installationen keine automatischen Updates mehr.
 4. `gh auth login` und `git remote add origin https://github.com/flogi1/Paradox-Modding-Tool.git`.
 
-**Pro Release:** `release.bat` doppelklicken. Das Skript fragt Version, Notizen und das Schlüsselpasswort, baut, testet, signiert und
-fragt vor Commit, Tag, Push und Upload noch einmal nach.
+**Changelog:** `Readme/Changelog.txt` (Englisch) sammelt unter "Unreleased" in den Gruppen New, Changed und Fixed die Änderungen seit dem
+letzten Release. Die Datei kommt neben die exe und öffnet sich in PMT über "Hilfe → Changelog".
+
+**Pro Release:** Einmal (und nach Änderungen am Werkzeug) `build-release-tool.bat` ausführen, dann `release-tool\PMT-Release.exe` starten.
+Das Fenster prüft die Vorbedingungen, zeigt Version und Changelog zum Bearbeiten, baut und testet, signiert nach Eingabe des
+Schlüsselpassworts und fragt vor Commit, Tag, Push und Upload noch einmal nach. Die GitHub-Notizen sind der Changelog-Text der Version.
 
 **Öffentlicher Verlauf:** Der lokale `master` wird nie gepusht. GitHub bekommt pro Release genau einen Commit "Release v<Version>" (lokaler
 Branch `public`, auf GitHub `main`) mit dem Dateistand ohne `docs/` und der verborgenen GitHub-Adresse als Autor.
 
-**Lokal testen ohne GitHub:** `release.bat -LocalFeed C:\pmt-feed` baut ein Debug-Paket in einen lokalen Feed. Ein Debug-Build von PMT mit
+**Lokal testen ohne GitHub:** Im Release-Werkzeug "Nur lokaler Test-Feed" anhaken und einen Ordner wählen (z.B. `C:\pmt-feed`); es
+baut ein Debug-Paket in diesen lokalen Feed. Ein Debug-Build von PMT mit
 der Umgebungsvariable `PMT_UPDATE_FEED=C:\pmt-feed` holt Updates dann von dort. `PMT_UPDATE_SKIP_MARKER=1` lässt die neue Version kein
 Startsignal schreiben, damit sich der Rückfall prüfen lässt.

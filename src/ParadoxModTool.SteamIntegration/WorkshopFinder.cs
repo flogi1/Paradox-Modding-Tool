@@ -75,7 +75,7 @@ public static class LocalWorkshopScanner
                 var byId = !string.IsNullOrWhiteSpace(modId) && string.Equals(metadataId, modId.Trim(), StringComparison.OrdinalIgnoreCase);
                 if (byName || byId)
                 {
-                    matches.Add(new WorkshopMatch(id, string.IsNullOrWhiteSpace(name) ? id : name, "abonniert (lokal)"));
+                    matches.Add(new WorkshopMatch(id, string.IsNullOrWhiteSpace(name) ? id : name, SteamTexts.SourceSubscribed));
                 }
             }
         }
@@ -151,7 +151,7 @@ public static class WorkshopProfilePage
         {
             if (items.All(i => i.Id != id))
             {
-                items.Add(new WorkshopMatch(id, WebUtility.HtmlDecode(title).Trim(), "Steam-Profil"));
+                items.Add(new WorkshopMatch(id, WebUtility.HtmlDecode(title).Trim(), SteamTexts.SourceProfile));
             }
         }
 
@@ -196,12 +196,12 @@ public static class WorkshopProfileClient
     {
         if (string.IsNullOrEmpty(steamId64) || !steamId64.All(char.IsAsciiDigit))
         {
-            throw new ArgumentException("Die SteamID muss eine Zahl sein.", nameof(steamId64));
+            throw new ArgumentException(SteamTexts.SteamIdNotNumber, nameof(steamId64));
         }
 
         if (string.IsNullOrEmpty(appId) || !appId.All(char.IsAsciiDigit))
         {
-            throw new ArgumentException("Die AppID muss eine Zahl sein.", nameof(appId));
+            throw new ArgumentException(SteamTexts.AppIdNotNumber, nameof(appId));
         }
 
         var all = new List<WorkshopMatch>();

@@ -4,8 +4,37 @@ using System.Text.RegularExpressions;
 
 namespace ParadoxModTool.LaunchControl;
 
-/// <summary>Datei (und Zeile), die ein Spiel PMT als externem Editor übergibt (Spec "PMT als externer Editor des Spiels").</summary>
-public sealed record EditorRequest(string Path, int? Line);
+/// <summary>Was eine Weitergabe an ein laufendes PMT tun soll.</summary>
+public enum HandOffKind
+{
+    /// <summary>Datei (und Zeile) öffnen, wie vom Spiel als externem Editor.</summary>
+    OpenFile,
+
+    /// <summary>Mod aktiv machen und ihren Ordner im Explorer zeigen (Übersicht "Meine Mods").</summary>
+    OpenMod,
+
+    /// <summary>Releases-Fenster der Mod öffnen.</summary>
+    OpenReleases,
+
+    /// <summary>Bugtracker auf das Projekt der Mod stellen, optional einen Bug auswählen.</summary>
+    OpenBug,
+}
+
+/// <summary>
+/// Datei (und Zeile), die ein Spiel PMT als externem Editor übergibt (Spec "PMT als externer Editor des Spiels"), oder ein Befehl der Übersicht
+/// "Meine Mods" (<see cref="Kind"/> ungleich <see cref="HandOffKind.OpenFile"/>, dann ist <see cref="Path"/> leer).
+/// </summary>
+public sealed record EditorRequest(string Path, int? Line)
+{
+    public HandOffKind Kind { get; init; } = HandOffKind.OpenFile;
+
+    public string? ModId { get; init; }
+
+    public string? BugId { get; init; }
+
+    public static EditorRequest ForMod(HandOffKind kind, string modId, string? bugId = null) =>
+        new(string.Empty, null) { Kind = kind, ModId = modId, BugId = bugId };
+}
 
 /// <summary>
 /// Liest Datei und Zeile aus den Startargumenten (Plan 4 Ruling 1). Wie das Spiel den Editor aufruft, ist unbekannt; erkannt werden die Datei als
@@ -112,18 +141,49 @@ public static class EditorArguments
         int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var number) && number > 0 ? number : null;
 }
 
-/// <summary>Nachricht über die Pipe zwischen zwei PMT-Prozessen: die <see cref="EditorRequest"/> als JSON.</summary>
+/// <summary>
+/// Nachricht über die Pipe zwischen zwei PMT-Prozessen: die <see cref="EditorRequest"/> als JSON. Eine Datei-Anfrage hat kein <c>Kind</c> und sieht
+/// damit aus wie vor den Befehlen; ältere PMT-Versionen verstehen sie weiter.
+/// </summary>
 public static class EditorHandOffMessage
 {
-    public static string Encode(EditorRequest request) => JsonSerializer.Serialize(new Wire(request.Path, request.Line));
+    private static readonly JsonSerializerOptions Options = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
 
-    /// <summary>Null bei leerem oder kaputtem Text und ohne Pfad; eine Zeile unter 1 gilt als keine.</summary>
+    public static string Encode(EditorRequest request) => JsonSerializer.Serialize(
+        new Wire(
+            request.Kind == HandOffKind.OpenFile ? request.Path : null,
+            request.Kind == HandOffKind.OpenFile ? request.Line : null,
+            request.Kind == HandOffKind.OpenFile ? null : request.Kind.ToString(),
+            request.ModId,
+            request.BugId),
+        Options);
+
+    /// <summary>
+    /// Null bei leerem oder kaputtem Text, unbekanntem Befehl und fehlenden Angaben: eine Datei braucht einen Pfad (eine Zeile unter 1 gilt als keine),
+    /// jeder Befehl eine Mod-ID; die Bug-ID ist freiwillig.
+    /// </summary>
     public static EditorRequest? Decode(string text)
     {
         try
         {
             var wire = JsonSerializer.Deserialize<Wire>(text);
-            return wire?.Path is { Length: > 0 } path ? new EditorRequest(path, wire.Line is > 0 ? wire.Line : null) : null;
+            if (wire is null)
+            {
+                return null;
+            }
+
+            if (wire.Kind is null)
+            {
+                return wire.Path is { Length: > 0 } path ? new EditorRequest(path, wire.Line is > 0 ? wire.Line : null) : null;
+            }
+
+            if (!Enum.TryParse<HandOffKind>(wire.Kind, ignoreCase: false, out var kind) || kind == HandOffKind.OpenFile || !Enum.IsDefined(kind)
+                || wire.ModId is not { Length: > 0 } modId)
+            {
+                return null;
+            }
+
+            return EditorRequest.ForMod(kind, modId, wire.BugId is { Length: > 0 } bugId && kind == HandOffKind.OpenBug ? bugId : null);
         }
         catch (JsonException)
         {
@@ -131,5 +191,5 @@ public static class EditorHandOffMessage
         }
     }
 
-    internal sealed record Wire(string? Path, int? Line);
+    internal sealed record Wire(string? Path, int? Line, string? Kind = null, string? ModId = null, string? BugId = null);
 }

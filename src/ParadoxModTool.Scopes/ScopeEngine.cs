@@ -30,7 +30,7 @@ public enum ScopeCheck
 /// <param name="Supported">Die Scopes, in denen der Name gilt.</param>
 public sealed record ScopeIssue(int Start, int Length, string Command, string Scope, IReadOnlyList<string> Supported)
 {
-    public string Message => $"{Command} gilt nur in {string.Join(", ", Supported)} – hier: {Scope}";
+    public string Message => ScopeTexts.IssueOnlyIn(Command, string.Join(", ", Supported), Scope);
 }
 
 /// <summary>Der Scope an einer Stelle im Skript samt dem Weg dorthin.</summary>
@@ -107,13 +107,13 @@ public sealed class ScopeEngine
     {
         if (_rules is null)
         {
-            return ScopeContext.None("Scope-Regeln noch nicht gelernt");
+            return ScopeContext.None(ScopeTexts.RulesNotLearned);
         }
 
         var folder = FolderOf(filePath);
         if (folder is null)
         {
-            return ScopeContext.None("Datei liegt nicht in common oder events");
+            return ScopeContext.None(ScopeTexts.NotInScriptFolder);
         }
 
         var chain = new List<ScriptNode>();
@@ -126,12 +126,12 @@ public sealed class ScopeEngine
 
         if (chain.Count == 0 || chain[0].Key is null)
         {
-            return ScopeContext.None("außerhalb eines Objekts");
+            return ScopeContext.None(ScopeTexts.OutsideObject);
         }
 
         var obj = chain[0];
         var scalars = ScalarsOf(obj);
-        if (!TryObjectPath(folder, scalars, out var path, out var pathProblem))
+        if (!TryObjectPath(folder, obj.Key, scalars, out var path, out var pathProblem))
         {
             return ScopeContext.None(pathProblem!);
         }
@@ -149,7 +149,7 @@ public sealed class ScopeEngine
         return new ScopeContext
         {
             CurrentScope = state.Current,
-            UnknownReason = state.Current is null ? state.Reason ?? "Scope unbekannt" : null,
+            UnknownReason = state.Current is null ? state.Reason ?? ScopeTexts.ScopeUnknown : null,
             FieldPath = state.Path,
             StartScope = state.StartScope,
             StartSupport = state.StartSupport,
@@ -183,7 +183,7 @@ public sealed class ScopeEngine
             }
 
             var scalars = ScalarsOf(obj);
-            if (TryObjectPath(folder, scalars, out var path, out _))
+            if (TryObjectPath(folder, obj.Key, scalars, out var path, out _))
             {
                 WalkChildren(obj.Children!, Start(path, scalars, withFrames: false), 1, scalars, issues);
             }
@@ -231,7 +231,14 @@ public sealed class ScopeEngine
     /// Der Feldpfad des Objekts. Ereignisse heißen nach ihrer Kennung ("mod.1"); ihre Art steht im Feld type (country_event, character_event …)
     /// und bildet den Pfad. Ohne type gibt es keinen Pfad.
     /// </summary>
-    private static bool TryObjectPath(string folder, IReadOnlyDictionary<string, string> scalars, out string path, out string? problem)
+    /// <summary>
+    /// Die Art eines Objekts ohne <c>type</c> in einer Eventdatei: der Standard des Spiels, aber nur für Event-Kennungen der Form <c>namespace.1234</c>.
+    /// CK III definiert in Eventdateien auch <c>scripted_trigger</c>/<c>scripted_effect</c>; die sind keine Events.
+    /// </summary>
+    public static string? DefaultTypeFor(string? objectKey, string? defaultEventType) =>
+        objectKey is not null && objectKey.Contains('.') ? defaultEventType : null;
+
+    private bool TryObjectPath(string folder, string? objectKey, IReadOnlyDictionary<string, string> scalars, out string path, out string? problem)
     {
         problem = null;
         if (folder != "events")
@@ -240,14 +247,15 @@ public sealed class ScopeEngine
             return true;
         }
 
-        if (scalars.TryGetValue("type", out var eventType))
+        // Ohne type gilt der Standard des Spiels (CK III: character_event), sofern die Regeln einen kennen.
+        if ((scalars.GetValueOrDefault("type") ?? DefaultTypeFor(objectKey, _rules?.DefaultEventType)) is { } eventType)
         {
             path = $"events/{eventType}";
             return true;
         }
 
         path = string.Empty;
-        problem = "Ereignis ohne type";
+        problem = ScopeTexts.EventWithoutType;
         return false;
     }
 
@@ -420,6 +428,12 @@ public sealed class ScopeEngine
 
     private (string? Scope, double Support) RuleScope(string path, IReadOnlyDictionary<string, string> scalars)
     {
+        // Ein Event mit eigenem Root-Scope (CK III: scope = artifact) gilt überall in diesem Scope; "none" oder ein unbekannter Typ bleibt unbekannt.
+        if (path.StartsWith("events/", StringComparison.Ordinal) && scalars.TryGetValue("scope", out var rootScope))
+        {
+            return _db.IsScopeType(rootScope) ? (ScopeName.Normalize(rootScope), 1.0) : (null, 0);
+        }
+
         if (_rules!.Discriminators.TryGetValue(path, out var discriminator))
         {
             // Der Scope hängt vom Geschwisterfeld ab: ein Wert, den die Vanilla-Dateien nicht eindeutig einem Scope zuordnen, bleibt unbekannt.
@@ -446,7 +460,7 @@ public sealed class ScopeEngine
     }
 
     private string UnresolvedReason(string path) =>
-        _rules!.Fields.ContainsKey(path) ? $"Start-Scope von {path} nicht eindeutig" : $"keine Regel für {path}";
+        _rules!.Fields.ContainsKey(path) ? ScopeTexts.StartScopeAmbiguous(path) : ScopeTexts.NoRule(path);
 
     /// <summary>Scope und Grund beim Betreten eines Blocks.</summary>
     private (string? Scope, string? Reason) Enter(
@@ -466,25 +480,25 @@ public sealed class ScopeEngine
             case KeyKind.This:
                 return (current, reason);
             case KeyKind.Root:
-                return fieldScope is null ? (null, "root unbekannt") : (fieldScope, null);
+                return fieldScope is null ? (null, ScopeTexts.RootUnknown) : (fieldScope, null);
             case KeyKind.Prev:
-                return previous.Count > 0 && previous[^1] is { } p ? (p, null) : (null, "prev unbekannt");
+                return previous.Count > 0 && previous[^1] is { } p ? (p, null) : (null, ScopeTexts.PrevUnknown);
             case KeyKind.From:
-                return (null, $"{key} ist nicht bestimmbar");
+                return (null, ScopeTexts.NotDeterminable(key));
             case KeyKind.Chain:
                 return ResolveChain(key, current, fieldScope, previous, saved, path);
             case KeyKind.Iterator:
             {
                 var targets = _db.GetCommand(key)!.Targets;
-                return targets.Count == 1 ? (targets.First(), null) : (null, $"{key} hat mehrere Ziele");
+                return targets.Count == 1 ? (targets.First(), null) : (null, ScopeTexts.SeveralTargets(key));
             }
 
             case KeyKind.EventTarget:
                 return Output(key, current);
             case KeyKind.Parameter:
-                return (null, $"Parameterblock von {key}");
+                return (null, ScopeTexts.ParameterBlock(key));
             default:
-                return (null, $"unbekannter Block {key}");
+                return (null, ScopeTexts.UnknownBlock(key));
         }
     }
 
@@ -515,13 +529,13 @@ public sealed class ScopeEngine
             else
             {
                 scope = null;
-                reason = $"Typ von scope:{name} unbekannt";
+                reason = ScopeTexts.SavedScopeTypeUnknown(name);
             }
         }
         else if (first.Equals("root", StringComparison.OrdinalIgnoreCase))
         {
             scope = fieldScope;
-            reason = scope is null ? "root unbekannt" : null;
+            reason = scope is null ? ScopeTexts.RootUnknown : null;
         }
         else if (first.Equals("this", StringComparison.OrdinalIgnoreCase))
         {
@@ -530,12 +544,12 @@ public sealed class ScopeEngine
         else if (first.Equals("prev", StringComparison.OrdinalIgnoreCase))
         {
             scope = previous.Count > 0 ? previous[^1] : null;
-            reason = scope is null ? "prev unbekannt" : null;
+            reason = scope is null ? ScopeTexts.PrevUnknown : null;
         }
         else if (first.Contains(':') || first.Equals("from", StringComparison.OrdinalIgnoreCase) || first.Equals("fromfrom", StringComparison.OrdinalIgnoreCase))
         {
             scope = null;
-            reason = $"{first} ist nicht bestimmbar";
+            reason = ScopeTexts.NotDeterminable(first);
         }
         else
         {
@@ -547,17 +561,17 @@ public sealed class ScopeEngine
             (scope, reason) = Output(parts[i], scope);
         }
 
-        return (scope, scope is null ? reason ?? "Kette nicht auflösbar" : null);
+        return (scope, scope is null ? reason ?? ScopeTexts.ChainUnresolved : null);
     }
 
     private (string? Scope, string? Reason) Output(string name, string? from)
     {
         if (_db.GetTarget(name) is not { } target)
         {
-            return (null, $"unbekanntes Ziel {name}");
+            return (null, ScopeTexts.UnknownTarget(name));
         }
 
-        return target.Outputs.Count == 1 ? (target.Outputs.First(), null) : (null, $"{name} hat mehrere Ergebnis-Scopes");
+        return target.Outputs.Count == 1 ? (target.Outputs.First(), null) : (null, ScopeTexts.SeveralOutputScopes(name));
     }
 
     /// <summary>Merkt <c>save_scope_as = name</c> aus den Anweisungen von <paramref name="siblings"/> vor <paramref name="until"/> (bzw. vor dem Cursor).</summary>

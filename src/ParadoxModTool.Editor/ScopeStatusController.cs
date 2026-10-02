@@ -100,7 +100,7 @@ internal sealed class ScopeStatusController
     {
         if (ScopeSettings.Engine is not { } engine)
         {
-            return ("Scope: Script-Datenbank noch nicht geladen", "Theme.TextMuted", null, null, false);
+            return (EditorTexts.ScopeNotLoaded, "Theme.TextMuted", null, null, false);
         }
 
         var path = _currentFilePath();
@@ -114,12 +114,14 @@ internal sealed class ScopeStatusController
         var lines = new List<string>();
         if (context.FieldPath is not null)
         {
-            lines.Add($"Feld: {context.FieldPath}" + (context.StartScope is null ? string.Empty : $"  (Start-Scope {context.StartScope}, Zustimmung {context.StartSupport:P0})"));
+            lines.Add(context.StartScope is null
+                ? EditorTexts.ScopeField(context.FieldPath)
+                : EditorTexts.ScopeFieldWithStart(context.FieldPath, context.StartScope, context.StartSupport));
         }
 
         if (context.SavedScopes.Count > 0)
         {
-            lines.Add("Gespeichert: " + string.Join(", ", context.SavedScopes.Select(s => $"scope:{s.Key} = {s.Value ?? "?"}")));
+            lines.Add(EditorTexts.ScopeSaved(string.Join(", ", context.SavedScopes.Select(s => $"scope:{s.Key} = {s.Value ?? "?"}"))));
         }
 
         if (ScopeSettings.Info.Length > 0)

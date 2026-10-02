@@ -91,12 +91,12 @@ public static class ModCompatChecker
     {
         var a = DescribeValue(modAValue);
         var b = DescribeValue(modBValue);
-        return $"\"{path}\" wird von Mod A und Mod B unterschiedlich gesetzt: Mod A = {a}, Mod B = {b}. Bitte manuell entscheiden.";
+        return ModCompatTexts.CheckerConflict(path, a, b);
     }
 
     private static string DescribeValue(ScriptValue? value) => value switch
     {
-        null => "(entfernt)",
+        null => ModCompatTexts.Removed,
         ScriptScalar scalar => scalar.ToString(),
         ScriptBlock => "{ ... }",
         _ => "?"

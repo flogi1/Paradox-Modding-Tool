@@ -41,6 +41,25 @@ public sealed class EditorHandOffPipeTests : IDisposable
     }
 
     [Fact]
+    public async Task AClientThatNeverFinishesDoesNotBlockTheService()
+    {
+        var game = NewGameId();
+        using var stop = new CancellationTokenSource();
+        var received = new TaskCompletionSource<EditorRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var server = EditorHandOffPipe.ServeAsync(game, request => received.TrySetResult(request), stop.Token, TimeSpan.FromMilliseconds(500));
+
+        using var hanging = new System.IO.Pipes.NamedPipeClientStream(
+            ".", EditorHandOffPipe.PipeName(game), System.IO.Pipes.PipeDirection.Out, System.IO.Pipes.PipeOptions.Asynchronous | System.IO.Pipes.PipeOptions.CurrentUserOnly);
+        await hanging.ConnectAsync(5000);
+
+        Assert.True(await EditorHandOffPipe.SendAsync(game, new EditorRequest(@"C:\late.gui", 3), TimeSpan.FromSeconds(8)));
+        Assert.Equal(@"C:\late.gui", (await received.Task.WaitAsync(TimeSpan.FromSeconds(5))).Path);
+
+        stop.Cancel();
+        await server.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task NobodyListeningGivesFalseAfterTheTimeout()
     {
         var watch = System.Diagnostics.Stopwatch.StartNew();

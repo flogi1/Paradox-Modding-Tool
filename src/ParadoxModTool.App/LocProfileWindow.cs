@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Templates;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -22,7 +23,7 @@ public sealed class LocProfileWindow : Window
 
     private LocProfileWindow(ResolvedLocProfile profile, LocalizationSettings settings)
     {
-        Title = "Lokalisierungs-Profil: " + profile.Description;
+        Title = TemplateWindowTexts.LocProfileTitle(profile.Description);
         Width = 540;
         Height = 520;
         MinWidth = 420;
@@ -33,12 +34,12 @@ public sealed class LocProfileWindow : Window
         var panel = new StackPanel { Margin = new Thickness(14) };
         panel.Children.Add(new TextBlock
         {
-            Text = "Diese Auswahl gilt nur für diese Vorlage. Die Haken sind wie im Profil vorbelegt (gelernt aus den Spieldateien).",
+            Text = TemplateWindowTexts.LocProfileIntro,
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 0, 0, 10),
         });
 
-        panel.Children.Add(Heading("Schlüssel aus dem Objektnamen (Name = X)"));
+        panel.Children.Add(Heading(TemplateWindowTexts.LocProfileObjectKeys));
         foreach (var o in profile.Objects.Where(o => !o.Extra))
         {
             var label = o.Prefix + "Name" + o.Suffix + Share(o.Share);
@@ -47,21 +48,21 @@ public sealed class LocProfileWindow : Window
 
         if (profile.Fields.Count > 0)
         {
-            panel.Children.Add(Heading("Werte in Feldern (feld = Schlüssel)"));
+            panel.Children.Add(Heading(TemplateWindowTexts.LocProfileFields));
             foreach (var f in profile.Fields)
             {
                 AddBox(panel, f.Name + " = …" + Share(f.Share), LocalizationProfileResolver.FieldKey(profile.Path, f.Name), LocalizationProfileResolver.FieldKey(LocalizationProfileResolver.AllProfiles, f.Name), f.Active, f.Preselected);
             }
         }
 
-        panel.Children.Add(Heading("Weitere Endungen (durch Leerzeichen getrennt)"));
+        panel.Children.Add(Heading(TemplateWindowTexts.LocProfileExtraSuffixes));
         _extras.Text = string.Join(" ", settings.ExtraSuffixes);
-        _extras.ToolTip = "Endungen, die zusätzlich zu jedem Objektnamen als Schlüssel vorgeschlagen werden, z. B. _tooltip";
+        _extras.ToolTip = TemplateWindowTexts.LocProfileExtraSuffixesTip;
         panel.Children.Add(_extras);
 
-        var ok = new Button { Content = "OK", Width = 90, Margin = new Thickness(0, 0, 6, 0), IsDefault = true };
+        var ok = new Button { Content = CommonTexts.Ok, Width = 90, Margin = new Thickness(0, 0, 6, 0), IsDefault = true };
         ok.Click += (_, _) => DialogResult = true;
-        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        var cancel = new Button { Content = CommonTexts.Cancel, Width = 90, IsCancel = true };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 14, 0, 0) };
         buttons.Children.Add(ok);
         buttons.Children.Add(cancel);
@@ -83,7 +84,7 @@ public sealed class LocProfileWindow : Window
         return true;
     }
 
-    private static string Share(double? share) => share is { } value ? $"   ({value:P0} der Objekte)" : string.Empty;
+    private static string Share(double? share) => share is { } value ? TemplateWindowTexts.LocProfileShare(value) : string.Empty;
 
     private static TextBlock Heading(string text) => new() { Text = text, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 4) };
 

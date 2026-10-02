@@ -32,6 +32,9 @@ public static class GameProcess
 
         return result;
     }
+
+    /// <summary>Ob das Spiel läuft (Fehlerprotokoll Plan 3, Ruling 7): ein Prozess mit dem Namen der eingestellten Spiel-.exe.</summary>
+    public static bool IsRunning(string? executablePath) => RunningSince(executablePath).Count > 0;
 }
 
 /// <summary>

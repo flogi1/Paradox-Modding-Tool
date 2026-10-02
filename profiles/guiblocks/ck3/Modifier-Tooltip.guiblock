@@ -1,0 +1,29 @@
+# block: Modifier-Tooltip
+# group: Anzeige
+# description: Statische Modifikatoren (common/modifiers) des eigenen Charakters, je Zeile Icon und Name, Tooltip mit den Effekten; eine Zeile erscheint nur, wenn der Charakter den Modifikator hat. Crusader Kings III kennt in der GUI keinen Wert je Modifier-Typ wie EU V. Vorbild: gui/window_situation_list.gui, gui/window_character.gui
+# repeat: mods | Modifikatoren | 1
+# param: mods.key | Modifikator (Schlüssel aus common/modifiers) | feast_strategy_discussions_modifier
+# requires: text_single
+
+vbox = {
+	spacing = 5
+
+	$repeat mods$
+	hbox = {
+		datacontext = "[GetStaticModifier('$mods.key$')]"
+		visible = "[GetPlayer.HasStaticModifier( StaticModifier.Self )]"
+		spacing = 5
+		tooltip = "[StaticModifier.GetDescWithEffects]"
+
+		icon = {
+			size = { 25 25 }
+			texture = "[StaticModifier.GetIcon]"
+		}
+
+		text_single = {
+			text = "[StaticModifier.GetName]"
+		}
+	}
+
+	$end mods$
+}

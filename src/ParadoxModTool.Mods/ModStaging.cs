@@ -3,9 +3,9 @@ namespace ParadoxModTool.Mods;
 /// <summary>Was beim Zusammenstellen der Upload-Kopie nicht mitgeht: Ordner an beliebiger Tiefe (nach Name) und Dateien (nach Name oder Endung, <c>*.zip</c>). Groß-/Kleinschreibung zählt nicht.</summary>
 public sealed record ModStagingRules(IReadOnlyList<string> ExcludedFolders, IReadOnlyList<string> ExcludedFilePatterns, IReadOnlyList<string>? OnlyFolders = null)
 {
-    /// <summary>Versionsäste, Vanilla-Historie, Snapshots und Versionsverwaltung sowie Archive, Sicherungen und Systemdateien. <c>.metadata</c> bleibt drin.</summary>
+    /// <summary>Versionsäste, Vanilla-Historie, Patch-Rezepte, Snapshots und Versionsverwaltung sowie Archive, Sicherungen und Systemdateien. <c>.metadata</c> bleibt drin.</summary>
     public static ModStagingRules Default { get; } = new(
-        new[] { ".pmt-versions", ".pmt-vanilla-history", "snapshots", ".git", ".svn" },
+        new[] { ".pmt-versions", ".pmt-vanilla-history", ".pmt-patches", "snapshots", ".git", ".svn" },
         new[] { "*.zip", "*.orig", "*.bak", "*.tmp", "Thumbs.db", "desktop.ini" });
 
     /// <summary>Diese Regeln plus zusätzliche Ausschlüsse; <paramref name="onlyFolders"/> (nicht leer) ersetzt die bisherige Auswahl.</summary>
@@ -47,7 +47,7 @@ public static class ModStaging
     {
         if (!Directory.Exists(source))
         {
-            throw new DirectoryNotFoundException($"Der Ordner {source} existiert nicht.");
+            throw new DirectoryNotFoundException(ModsTexts.StagingFolderMissing(source));
         }
 
         if (target is not null)

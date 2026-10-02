@@ -68,6 +68,18 @@ public sealed class GuiDesignerController
         _view.ExtractTypeRequested += (_, node) => AskNewType(node, extract: true);
         _view.RetypeRequested += (_, node) => AskRetype(node);
         _view.TypeEverywhereRequested += (_, node) => EditDefinition(node);
+        _view.SaveAsBlockRequested += (_, node) =>
+        {
+            // Text aus dem angezeigten Stand; stammt der Knoten aus einem älteren Parse, ist die Stelle nicht mehr sicher.
+            if (CurrentDocument is { } document && ReferenceEquals(node.Root, document.Root))
+            {
+                SaveAsBlockRequested?.Invoke(this, document.TextOf(node));
+            }
+            else
+            {
+                _view.SetStatus(GuiTexts.EditElementGone);
+            }
+        };
         _view.DraftRequested += (_, _) =>
         {
             if (_document is not null)
@@ -91,6 +103,9 @@ public sealed class GuiDesignerController
 
     /// <summary>"Für Mod bearbeiten" im Banner des Designers.</summary>
     public event EventHandler<OpenDocument>? DraftRequested;
+
+    /// <summary>"Als Baustein speichern" im Elementbaum: der Code des Elements.</summary>
+    public event EventHandler<string>? SaveAsBlockRequested;
 
     /// <summary>"Typ überall" mit der Definition in einer anderen Datei: öffnen zum Bearbeiten (eine Vanilla-Datei als Entwurf).</summary>
     public event EventHandler<GuiLocationEventArgs>? EditLocationRequested;
@@ -163,6 +178,32 @@ public sealed class GuiDesignerController
         _parsedVersion = version;
         var document = live.Current;
         _resolver = CreateResolver(document);
+
+        // Baustein aus der Palette (Teil-2-Ruling 2): erst prüfen, ob es eine Einfügestelle gibt, dann das Fenster "Bausteine" öffnen; ohne
+        // Einfügestelle führt der Ablauf unten zu den üblichen Meldungen.
+        if (action is { Kind: GuiDesignerActionKind.Insert, Code: null, Entry: { Kind: GuiPaletteKind.Block } blockEntry })
+        {
+            GuiDesignEdit? probe;
+            try
+            {
+                probe = Compute(action with { Code = "widget = { }\n" }, shown, document, _resolver, _editor.CaretOffset);
+            }
+            catch (ArgumentException)
+            {
+                probe = null;
+            }
+
+            if (probe is { IsEmpty: false })
+            {
+                if (GuiSettings.BlockPicker?.Invoke(blockEntry.Name) is not { Length: > 0 } code)
+                {
+                    return;
+                }
+
+                action = action with { Code = code };
+            }
+        }
+
         GuiDesignEdit? edit;
         try
         {
@@ -338,7 +379,7 @@ public sealed class GuiDesignerController
         {
             Owner = Window.GetWindow(_view),
         };
-        if (window.ShowDialog() != true)
+        if (!ShowWithoutReparse(window))
         {
             return;
         }
@@ -399,10 +440,28 @@ public sealed class GuiDesignerController
         }
 
         var window = new GuiRetypeWindow(node.Name, keys, WarningFor) { Owner = Window.GetWindow(_view) };
-        if (window.ShowDialog() == true)
+        if (ShowWithoutReparse(window))
         {
             Execute(new GuiDesignerAction(GuiDesignerActionKind.Retype, node) { Name = window.NewKey });
         }
+    }
+
+    /// <summary>
+    /// Modaler Dialog ohne Neu-Einlesen dazwischen (3c-Review): <c>ShowDialog</c> lässt den 300-ms-Takt weiterlaufen, der nach frischem Tippen
+    /// sonst das Dokument ersetzt, und die Aktion meldet dann "Element steht nicht mehr so im Code". Bei OK liest <c>Execute</c> selbst neu ein; bei
+    /// Abbruch holt dies das verschobene Einlesen nach.
+    /// </summary>
+    private bool ShowWithoutReparse(Window window)
+    {
+        var pending = _reparseTimer.IsEnabled;
+        _reparseTimer.Stop();
+        var ok = window.ShowDialog() == true;
+        if (!ok && pending)
+        {
+            Reparse();
+        }
+
+        return ok;
     }
 
     private GuiLiveDocument LiveOf(OpenDocument document) => _live.GetValue(document, d => new GuiLiveDocument(d.Document.Text));
@@ -431,7 +490,7 @@ public sealed class GuiDesignerController
     /// Ersetzungen für die Aktion im frisch geparsten Dokument; null, wenn ein Knoten dort nicht sicher wiederzufinden ist.
     /// <paramref name="shown"/> ist der Stand vor dem synchronen Parse (den der Baum zeigt, sofern er schon neu aufgebaut ist).
     /// </summary>
-    private static GuiDesignEdit? Compute(GuiDesignerAction action, GuiDocument shown, GuiDocument document, GuiResolver resolver, int caret)
+    internal static GuiDesignEdit? Compute(GuiDesignerAction action, GuiDocument shown, GuiDocument document, GuiResolver resolver, int caret)
     {
         GuiNode? Fresh(GuiNode stale)
         {
@@ -453,7 +512,15 @@ public sealed class GuiDesignerController
 
         switch (action.Kind)
         {
-            case GuiDesignerActionKind.Insert when action.Entry is { Snippet: null } template:
+            case GuiDesignerActionKind.Insert when action.Code is { } code:
+                return GuiDesignerEdits.InsertionFor(target, action.Placement, action.DropY, document, resolver) is { } blockAt
+                    ? GuiDesignerEdits.Insert(document, blockAt, code)
+                    : GuiDesignEdit.None;
+
+            case GuiDesignerActionKind.Insert when action.Entry is { Kind: GuiPaletteKind.Block }:
+                return GuiDesignEdit.None;
+
+            case GuiDesignerActionKind.Insert when action.Entry is { Kind: GuiPaletteKind.Template } template:
                 return target is not null && GuiDesignerEdits.AcceptsUsing(target, resolver)
                     ? GuiDesignerEdits.AddUsing(document, target, template.Name)
                     : GuiDesignEdit.None;

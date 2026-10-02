@@ -28,6 +28,16 @@ public class UpdateTextsTests
     }
 
     [Fact]
+    public void Rueckfall_Text_verspricht_keine_vollstaendige_Sicherung()
+    {
+        // Ein halb gescheiterter Rückfall hat schon Teile zurückverschoben; die Sicherung kann auch ganz fehlen.
+        var text = UpdateTexts.RollbackFailed(@"C:\PMT\.update-backup", "update.log");
+
+        Assert.DoesNotContain("liegt vollständig", text);
+        Assert.Contains("falls vorhanden", text);
+    }
+
+    [Fact]
     public void Keine_Auslassungspunkte()
     {
         var root = FindRepositoryRoot();

@@ -1,0 +1,6 @@
+# block: Trennlinie
+# group: Anzeige
+# description: Waagrechte goldene Linie über die volle Breite (1 px, zu den Enden ausgeblendet). Senkrecht: divider_flavor_01 = { size = { 15 -1 } layoutpolicy_vertical = expanding }. Vorbild: main_menu/gui/shared/window_components.gui, in_game/gui/attribute_columns/character.gui
+# requires: divider_center_gold
+
+divider_center_gold = {}

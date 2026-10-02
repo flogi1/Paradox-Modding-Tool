@@ -13,22 +13,22 @@ public static class GitWarnings
 
         if (!state.IsClean)
         {
-            warnings.Add($"Im Mod-Ordner gibt es {state.Changes.Count} ungespeicherte Änderung(en); die ZIP enthält sie, der Tag nicht.");
+            warnings.Add(GitTexts.WarnUncommitted(state.Changes.Count));
         }
 
         if (!state.HeadPushed)
         {
-            warnings.Add("Der aktuelle Commit ist noch nicht gepusht (nicht gepusht = der Tag kann nicht auf ihn zeigen).");
+            warnings.Add(GitTexts.WarnNotPushed);
         }
 
         if (state.Behind > 0)
         {
-            warnings.Add($"Der Branch ist {state.Behind} Commit(s) hinter {state.Upstream}.");
+            warnings.Add(GitTexts.WarnBehind(state.Behind, state.Upstream));
         }
 
         if (state.Branch is null)
         {
-            warnings.Add("Der Ordner steht auf einem losgelösten HEAD (kein Branch).");
+            warnings.Add(GitTexts.WarnDetached);
         }
 
         return warnings;

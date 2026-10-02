@@ -14,7 +14,13 @@ public sealed class GuiTextureLocator
     public IReadOnlyList<string> Roots => _roots;
 
     /// <summary>Suchreihenfolge: aktuelle Mod, Abhängigkeits-Mods, dann game, jomini, clausewitz; darin je in_game, main_menu, loading_screen.</summary>
-    public static IReadOnlyList<string> ContextRootsFor(string installDirectory, IEnumerable<string> dependencyMods, string? modRoot)
+    public static IReadOnlyList<string> ContextRootsFor(string installDirectory, IEnumerable<string> dependencyMods, string? modRoot) =>
+        ContextRootsFor(installDirectory, dependencyMods, modRoot, Contexts);
+
+    /// <summary>
+    /// Wie oben mit den Kontextordnern des Spiels; ohne Kontextordner (flaches Layout, Crusader Kings III) sind die Wurzeln selbst die Suchordner.
+    /// </summary>
+    public static IReadOnlyList<string> ContextRootsFor(string installDirectory, IEnumerable<string> dependencyMods, string? modRoot, IReadOnlyList<string> contexts)
     {
         var bases = new List<string>();
         if (!string.IsNullOrEmpty(modRoot))
@@ -24,7 +30,7 @@ public sealed class GuiTextureLocator
 
         bases.AddRange(dependencyMods);
         bases.AddRange(new[] { "game", "jomini", "clausewitz" }.Select(folder => Path.Combine(installDirectory, folder)));
-        return bases.SelectMany(b => Contexts.Select(c => Path.Combine(b, c))).Where(Directory.Exists).ToList();
+        return (contexts.Count == 0 ? bases : bases.SelectMany(b => contexts.Select(c => Path.Combine(b, c)))).Where(Directory.Exists).ToList();
     }
 
     public string? Locate(string texturePath)

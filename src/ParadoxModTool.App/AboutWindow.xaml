@@ -1,7 +1,9 @@
 <Window x:Class="ParadoxModTool.App.AboutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Über Paradox Modding Tool" Width="500" SizeToContent="Height"
+        xmlns:loc="clr-namespace:ParadoxModTool.Localization;assembly=ParadoxModTool.Localization"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        Title="{x:Static local:MiscWindowTexts.AboutTitle}" Width="500" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
     <StackPanel Margin="20">
         <StackPanel Orientation="Horizontal">
@@ -14,32 +16,42 @@
         </StackPanel>
 
         <TextBlock Margin="0,16,0,0" TextWrapping="Wrap"
-                   Text="Editor und Werkzeugkasten für Mods der Paradox-Spiele (Schwerpunkt Europa Universalis V)." />
+                   Text="{x:Static local:MiscWindowTexts.AboutTagline}" />
 
         <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
-            <Run FontWeight="SemiBold" Text="Hinweis zu KI:" />
-            <Run Text="Dieses Programm wurde mit Unterstützung von KI (Claude von Anthropic) entwickelt." />
+            <Run FontWeight="SemiBold" Text="{x:Static local:MiscWindowTexts.AboutAiLabel}" />
+            <Run Text="{x:Static local:MiscWindowTexts.AboutAiText}" />
         </TextBlock>
 
         <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
-            <Run FontWeight="SemiBold" Text="Lizenz:" />
-            <Run Text="MIT-Lizenz, Copyright (c) 2026 flogi." />
+            <Run FontWeight="SemiBold" Text="{x:Static local:MiscWindowTexts.AboutLicenseLabel}" />
+            <Run Text="{x:Static local:MiscWindowTexts.AboutLicenseText}" />
         </TextBlock>
-        <Expander Header="Volltext der Lizenz" Margin="0,4,0,0">
+        <Expander Header="{x:Static local:MiscWindowTexts.AboutLicenseFull}" Margin="0,4,0,0">
             <TextBox x:Name="LicenseBox" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                      Height="150" Margin="0,4,0,0" FontFamily="Consolas" FontSize="11" />
         </Expander>
 
         <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
-            <Run FontWeight="SemiBold" Text="Verwendete Komponenten:" />
-            <Run Text="AvalonEdit (MIT-Lizenz, ICSharpCode)." />
+            <Run FontWeight="SemiBold" Text="{x:Static local:MiscWindowTexts.AboutComponentsLabel}" />
+            <Run Text="{x:Static local:MiscWindowTexts.AboutComponentsText}" />
         </TextBlock>
 
         <TextBlock x:Name="RepositoryLine" Margin="0,12,0,0" Visibility="Collapsed">
-            <Run FontWeight="SemiBold" Text="Projektseite:" />
+            <Run FontWeight="SemiBold" Text="{x:Static local:MiscWindowTexts.AboutProjectPage}" />
             <Hyperlink x:Name="RepositoryLink" Click="RepositoryLink_Click"><Run x:Name="RepositoryLinkText" /></Hyperlink>
         </TextBlock>
 
-        <Button Content="Schließen" HorizontalAlignment="Right" Padding="18,4" Margin="0,18,0,0" IsDefault="True" IsCancel="True" />
+        <TextBlock Margin="0,6,0,0" TextWrapping="Wrap">
+            <Run FontWeight="SemiBold" Text="{x:Static local:MiscWindowTexts.AboutSupport}" />
+            <Hyperlink Click="SponsorLink_Click"><Run x:Name="SponsorLinkText" /></Hyperlink>
+            <Run Text=" · " />
+            <Hyperlink Click="KofiLink_Click"><Run x:Name="KofiLinkText" /></Hyperlink>
+        </TextBlock>
+
+        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}"
+                   Text="{x:Static local:MiscWindowTexts.AboutNotAffiliated}" />
+
+        <Button Content="{x:Static loc:CommonTexts.Close}" HorizontalAlignment="Right" Padding="18,4" Margin="0,18,0,0" IsDefault="True" IsCancel="True" />
     </StackPanel>
 </Window>

@@ -69,6 +69,9 @@ public sealed class AppSessionState
     /// </summary>
     public string? PlaysetsFilePath { get; set; }
 
+    /// <summary>Vom Nutzer gewählter Logordner des Fehlerprotokolls; <see langword="null"/> = Ordner "logs" neben dem Mod-Ordner des Spiels.</summary>
+    public string? ErrorLogFolder { get; set; }
+
     /// <summary>
     /// Wurzeln der Verzeichnis-Übersicht (Nutzer-Feedback Runde 10: "eine Verzeichnis Übersicht
     /// wie bei Notepad++ ... weitere Ordnerstrukturen ... bei Bedarf hinzufügen können"). Rein
@@ -81,6 +84,15 @@ public sealed class AppSessionState
 
     /// <summary>Verzeichnis-Übersicht: Lupe und die Knöpfe für den linken und rechten Arbeitsbereich links vor dem Namen. Standard: aus (rechts).</summary>
     public bool ExplorerButtonsOnLeft { get; set; }
+
+    /// <summary>Verzeichnis-Übersicht: Fehlermarkierungen des letzten Spiellaufs hinter Dateien und Ordnern. Standard: an.</summary>
+    public bool ExplorerShowErrorMarks { get; set; } = true;
+
+    /// <summary>Verzeichnis-Übersicht: Namenssuche nur nach Ordnern. Standard: aus.</summary>
+    public bool ExplorerSearchFoldersOnly { get; set; }
+
+    /// <summary>Verzeichnis-Übersicht: Workshop-Verweise <c>ugc_*.mod</c> im Mod-Ordner ausblenden. Standard: an.</summary>
+    public bool ExplorerHideUgcReferences { get; set; } = true;
 
     /// <summary>Aufgeklappte Ordner der Verzeichnis-Übersicht; nach einem Neustart erscheinen sie wieder aufgeklappt.</summary>
     public List<string> ExplorerExpandedPaths { get; set; } = new();
@@ -112,6 +124,9 @@ public sealed class AppSessionState
     /// </summary>
     public string? VanillaDiffModRootOverride { get; set; }
 
+    /// <summary>Ordner oder Datei, in dem zuletzt im Fenster "Suchen &amp; Ersetzen" gesucht wurde; das Fenster zeigt ihn beim nächsten Öffnen wieder.</summary>
+    public string? SearchLastFolder { get; set; }
+
     /// <summary>
     /// Oberordner für Snapshots ("[Modname] Snapshots") und Vanilla-Historie ("EU V Vanilla
     /// History"), Nutzer-Feedback Task 14. <see langword="null"/> = Standard-Oberordner
@@ -131,6 +146,9 @@ public sealed class AppSessionState
     /// <summary>Pfadleiste über dem Editor (Pfad, Kopieren, Ordner öffnen, Notizen anzeigen) in beiden Arbeitsbereichen. Standard: an.</summary>
     public bool PathBarVisible { get; set; } = true;
 
+    /// <summary>Warnungen nach dem Ersetzen in einem eigenen Fenster statt im Notiz-Panel. Standard: aus.</summary>
+    public bool ReplaceWarningsInWindow { get; set; }
+
     /// <summary>Rechtes Panel "Notizen &amp; Lesezeichen" eingeschaltet (Nutzer-Feedback). Standard: an.</summary>
     public bool NotesPanelVisible { get; set; } = true;
 
@@ -148,6 +166,9 @@ public sealed class AppSessionState
 
     /// <summary>Aus der Filterleiste ausgeblendete Häkchen (Schlüssel wie "origin:External" oder "category:Text"). Leer = alle sichtbar.</summary>
     public List<string> HiddenFilterEntries { get; set; } = new();
+
+    /// <summary>Ordner-Filter der Filterleiste (Name und Ordnerbaum); gehören zum Spiel, weil die Ordner spielbezogen sind.</summary>
+    public List<FolderFilterDefinition> FolderFilters { get; set; } = new();
 
     /// <summary>Erledigte Bugs im Bug-Abschnitt des Panels zeigen. Standard: an.</summary>
     public bool ShowDoneBugs { get; set; } = true;
@@ -186,6 +207,9 @@ public sealed class AppSessionState
     /// <summary>Autovervollständigung von Script-Namen im Editor (ab 3 Zeichen und mit Strg+Leertaste). Standard: an.</summary>
     public bool ScriptAutoCompleteEnabled { get; set; } = true;
 
+    /// <summary>Custom Localizations in der Vorschlagsliste der Autovervollständigung. Standard: aus.</summary>
+    public bool ScriptCompleteCustomLocalizations { get; set; }
+
     /// <summary>Die beiden Schalter für Vorschläge und Hover-Tipps in der Werkzeugleiste anzeigen. Standard: an.</summary>
     public bool ScriptHintButtonsVisible { get; set; } = true;
 
@@ -207,6 +231,9 @@ public sealed class AppSessionState
     /// <summary>Vergleichsfenster: Blöcke einklappbar. Standard: an; aus für eine durchgehend ausgerichtete Ansicht.</summary>
     public bool DiffFoldingEnabled { get; set; } = true;
 
+    /// <summary>Compare und Update Tool: zuletzt offener Reiter, "compare" oder "update". Standard: update.</summary>
+    public string CuToolLastTab { get; set; } = "update";
+
     /// <summary>Abschnitt "Scope" im Notiz-Panel. Standard: an.</summary>
     public bool ScopePanelEnabled { get; set; } = true;
 
@@ -215,6 +242,12 @@ public sealed class AppSessionState
 
     /// <summary>Scope-Zeile ("Hier: country – erlaubt") im Hover-Tooltip. Standard: an.</summary>
     public bool ScopeHoverEnabled { get; set; } = true;
+
+    /// <summary>Tooltip "Im Spiel: +10 %" beim Hover über eine Modifier-Zahl. Standard: an.</summary>
+    public bool ModifierHoverEnabled { get; set; } = true;
+
+    /// <summary>Übersetzter Modifier-Name hinter dem Wert im Tooltip "Im Spiel: +10 %". Standard: an.</summary>
+    public bool ModifierNamesEnabled { get; set; } = true;
 
     /// <summary>GUI-Designer für .gui-Dateien anbieten (Umschalter Code | Designer | Geteilt). Standard: an.</summary>
     public bool GuiDesignerEnabled { get; set; } = true;
@@ -243,6 +276,57 @@ public sealed class AppSessionState
     /// <summary>Position und Größe des Einstellungsfensters; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
     public WindowBoundsState? SettingsWindowBounds { get; set; }
 
+    /// <summary>Fehlerprotokoll als eigenes Fenster statt über dem Hauptfenster. Standard: aus. Gilt für alle Spiele.</summary>
+    public bool ErrorLogStandalone { get; set; }
+
+    /// <summary>Position und Größe des Fensters "Fehlerprotokoll"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? ErrorLogWindowBounds { get; set; }
+
+    /// <summary>Spielstand-Explorer als eigenes Fenster statt über dem Hauptfenster. Standard: aus. Gilt für alle Spiele.</summary>
+    public bool SaveExplorerStandalone { get; set; }
+
+    /// <summary>Position und Größe des Fensters "Spielstand-Explorer"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? SaveExplorerWindowBounds { get; set; }
+
+    /// <summary>Meine Mods: Ansicht "Tiles" (Kacheln) oder "List". Gilt für alle Spiele.</summary>
+    public string MyModsView { get; set; } = "Tiles";
+
+    /// <summary>Meine Mods: "Games" (Abschnitt je Spiel) oder "All" (eine Liste). Gilt für alle Spiele.</summary>
+    public string MyModsGrouping { get; set; } = "Games";
+
+    /// <summary>Meine Mods: Sortierung "Name", "Subscribers", "OpenBugs" oder "LastRelease". Gilt für alle Spiele.</summary>
+    public string MyModsSort { get; set; } = "Name";
+
+    /// <summary>Meine Mods: absteigend sortieren. Gilt für alle Spiele.</summary>
+    public bool MyModsSortDescending { get; set; }
+
+    /// <summary>Meine Mods: Filter "Nur veröffentlichte". Gilt für alle Spiele.</summary>
+    public bool MyModsOnlyPublished { get; set; }
+
+    /// <summary>Meine Mods: Filter "Nur mit offenen Bugs". Gilt für alle Spiele.</summary>
+    public bool MyModsOnlyOpenBugs { get; set; }
+
+    /// <summary>Meine Mods: Filter "Nur mit Warnungen". Gilt für alle Spiele.</summary>
+    public bool MyModsOnlyWarnings { get; set; }
+
+    /// <summary>Meine Mods: Reihenfolge der Spiele (Kennungen) im Modus "Nach Spielen"; nicht genannte folgen danach. Gilt für alle Spiele.</summary>
+    public List<string> MyModsGameOrder { get; set; } = new();
+
+    /// <summary>Meine Mods: ausgeblendete Spiele (Kennungen). Gilt für alle Spiele.</summary>
+    public List<string> MyModsHiddenGames { get; set; } = new();
+
+    /// <summary>Meine Mods: Hinweisbereich eingeklappt. Gilt für alle Spiele.</summary>
+    public bool MyModsAlertsCollapsed { get; set; }
+
+    /// <summary>Position und Größe des Fensters "Meine Mods"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? MyModsWindowBounds { get; set; }
+
+    /// <summary>Meine Mods: ausgeblendete Hinweisarten (Kennungen aus OverviewAlertFilter.Categories). Gilt für alle Spiele.</summary>
+    public List<string> MyModsHiddenAlertKinds { get; set; } = new();
+
+    /// <summary>Meine Mods: beim Öffnen als Vollbild (maximiert) statt in der gemerkten Fenstergröße. Standard: an. Gilt für alle Spiele.</summary>
+    public bool MyModsStartMaximized { get; set; } = true;
+
     /// <summary>Knopf "Filter ▾" in der Werkzeugleiste jedes Arbeitsbereichs anzeigen. Standard: an. Gilt für alle Spiele.</summary>
     public bool WorkspaceFilterButtonVisible { get; set; } = true;
 
@@ -254,6 +338,30 @@ public sealed class AppSessionState
 
     /// <summary>Kompatch-Merge: gesperrte Dateien eigener Mods standardmäßig nicht einlesen (für alle Spiele).</summary>
     public bool CompatchSkipLocked { get; set; }
+
+    /// <summary>Kompatch-Merge: Ergebnis-Spalte ganz rechts statt in der Mitte, mit Trennlinie (für alle Spiele). Standard: aus.</summary>
+    public bool CompatchResultRight { get; set; }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Hauptmod als Basis.</summary>
+    public bool CompatchMainAsBase { get; set; }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Fehlendes aus dem Hauptmod ergänzen.</summary>
+    public bool CompatchFillMissing { get; set; }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Ergänzte fehlende Blöcke ausblenden.</summary>
+    public bool CompatchHideFilled { get; set; }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Einfach ersetzte doppelte Dateien ausblenden.</summary>
+    public bool CompatchHideReplaced { get; set; }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Erledigte ausblenden.</summary>
+    public bool CompatchHideDecided { get; set; }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Nur unsichere Stellen zeigen.</summary>
+    public bool CompatchUncertainOnly { get; set; }
+
+    /// <summary>Kompatch-Startfenster: Dateiarten nebeneinander statt als Liste untereinander. Standard: aus (Liste).</summary>
+    public bool CompatchKindsSideBySide { get; set; }
 
     /// <summary>Kompatch-Merge: Ansicht, mit der das Merge-Fenster öffnet ("A", "B" oder "C"), zugleich die zuletzt gewählte (für alle Spiele). Standard: A.</summary>
     public string CompatchDefaultView { get; set; } = "A";

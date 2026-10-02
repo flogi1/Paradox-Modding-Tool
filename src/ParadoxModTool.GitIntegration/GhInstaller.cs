@@ -46,14 +46,14 @@ public static class GhInstaller
 
             if (zipName is null || zipUrl is null || sumsUrl is null || version.Length == 0)
             {
-                throw new InvalidDataException("Die Antwort von GitHub enthält kein gh-Paket für Windows.");
+                throw new InvalidDataException(GitTexts.InstallNoPackage);
             }
 
             return new GhDownload(version, zipName, zipUrl, sumsUrl);
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {
-            throw new InvalidDataException("Die Antwort von GitHub war nicht lesbar.", ex);
+            throw new InvalidDataException(GitTexts.InstallUnreadable, ex);
         }
     }
 
@@ -68,7 +68,7 @@ public static class GhInstaller
             }
         }
 
-        throw new InvalidDataException($"Die Prüfsummen-Datei enthält keine Summe für {fileName}.");
+        throw new InvalidDataException(GitTexts.InstallNoChecksum(fileName));
     }
 
     /// <summary>Prüft die Summe, entpackt in einen Nachbarordner, verlangt <c>bin\gh.exe</c> und legt die Dateien dann in <paramref name="folder"/> ab. Scheitert etwas, bleibt nichts zurück.</summary>
@@ -76,11 +76,11 @@ public static class GhInstaller
     {
         if (!string.Equals(Convert.ToHexString(SHA256.HashData(zip)), expectedSha256, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidDataException("Die Prüfsumme der heruntergeladenen Datei stimmt nicht. Es wurde nichts installiert.");
+            throw new InvalidDataException(GitTexts.InstallChecksumMismatch);
         }
 
         var target = Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var parent = Path.GetDirectoryName(target) ?? throw new ArgumentException("Der Zielordner hat keinen Elternordner.", nameof(folder));
+        var parent = Path.GetDirectoryName(target) ?? throw new ArgumentException(GitTexts.InstallNoParent, nameof(folder));
         Directory.CreateDirectory(parent);
         var temp = Path.Combine(parent, Path.GetFileName(target) + ".partial-" + Guid.NewGuid().ToString("N")[..8]);
         try
@@ -93,12 +93,12 @@ public static class GhInstaller
             }
             catch (InvalidDataException)
             {
-                throw new InvalidDataException("Die heruntergeladene Datei ist kein gültiges ZIP-Archiv.");
+                throw new InvalidDataException(GitTexts.InstallNotZip);
             }
 
             if (!File.Exists(Path.Combine(temp, "bin", ExecutableName)))
             {
-                throw new InvalidDataException("Das Archiv enthält keine bin\\gh.exe.");
+                throw new InvalidDataException(GitTexts.InstallNoExe);
             }
 
             foreach (var file in Directory.EnumerateFiles(temp, "*", SearchOption.AllDirectories))

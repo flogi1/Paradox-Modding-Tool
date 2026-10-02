@@ -51,7 +51,7 @@ public sealed class GhSettingsStore
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            LoadWarning = "github.json war nicht lesbar; eine Kopie liegt als github.json.bad neben der Datei.";
+            LoadWarning = GitTexts.SettingsUnreadable;
             try
             {
                 File.Copy(FilePath, FilePath + ".bad", overwrite: true);

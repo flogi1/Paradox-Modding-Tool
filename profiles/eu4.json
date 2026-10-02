@@ -2,12 +2,16 @@
   "id": "eu4",
   "steamAppId": "236850",
   "displayName": "Europa Universalis IV",
+  "releaseDate": "2013-08-13",
   "engineFamily": "clausewitz",
   "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Europa Universalis IV/mod",
   "metadataFile": "*.mod",
+  "replacePathHidesEarlierMods": false,
+  "replacePathGuiCrashRoots": [ "interface" ],
   "loadOrderRule": "alphabetical-filename-wins",
   "scriptDocsSourceKind": "wiki",
   "scriptDocsWikiFile": "scriptdocs/eu4.json",
+  "modifierFormats": { "source": "wiki", "defaultDecimals": 2, "trimTrailingZeros": true, "nameLocFolders": ["localisation"], "nameKeys": ["{name}", "MODIFIER_{name}"] },
   "vanillaHistoryFolderName": "EU IV Vanilla History",
   "folderCategories": [
     { "path": "common", "label": "Common", "defaultColor": "#4A90D9", "description": "Kernspielregeln" },
@@ -30,18 +34,29 @@
     { "extension": ".lua", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" }
   ],
   "launchOptions": [
-    { "label": "Normal", "args": "" },
-    { "label": "Debug-Modus", "args": "-debug_mode" }
+    { "labelKey": "menu.launch.normal", "label": "Normal", "args": "" },
+    { "labelKey": "menu.launch.debug", "label": "Debug-Modus", "args": "-debug_mode" }
   ],
   "overrideRules": [
     { "folder": "common", "behavior": "PerKey", "certain": false },
     { "folder": "common/defines", "behavior": "PartialKeys", "certain": true },
-    { "folder": "events", "behavior": "FirstWins", "certain": false },
-    { "folder": "interface", "behavior": "LastWins", "certain": false },
+    { "folder": "common/bookmarks", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/countries", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/custom_country_colors", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/custom_gui", "behavior": "PerKey", "certain": false, "keyField": "name" },
+    { "folder": "common/dynasty_colors", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/estate_crown_land", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/region_colors", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/technologies", "behavior": "WholeFile", "certain": false },
+    { "folder": "common/units", "behavior": "WholeFile", "certain": false },
+    { "folder": "customizable_localization", "behavior": "PerKey", "certain": false, "keyField": "name" },
+    { "folder": "decisions", "behavior": "PerKey", "certain": false, "unwrap": [ "country_decisions" ] },
+    { "folder": "events", "behavior": "FirstWins", "certain": false, "keyField": "id" },
+    { "folder": "interface", "behavior": "LastWins", "certain": false, "unwrap": [ "guiTypes", "spriteTypes", "objectTypes" ], "keyField": "name" },
     { "folder": "localisation", "behavior": "LocalizationKeys", "certain": false },
     { "folder": "gfx", "behavior": "WholeFile", "certain": false },
     { "folder": "history", "behavior": "WholeFile", "certain": false },
     { "folder": "map", "behavior": "WholeFile", "certain": false }
   ],
-  "notes": "Startprofil, gegen die echte Installation (D:\\SteamLibrary, AppID 236850) und eu4.paradoxwikis.com geprüft, 2026-09-22. Bekannte Lücken: Mod-Anzeigename kommt aus dem Ordnernamen statt der externen .mod-Datei (Metadaten liegen dort außerhalb des Mod-Ordners, PMTs MetadataFile-Mechanismus erwartet sie innerhalb — siehe Backlog). Playset-Import nicht verfügbar (Playsets liegen in launcher-v2.sqlite, nicht als JSON — siehe Backlog). Override-Regeln bis auf common/defines nicht Wiki-bestätigt (EU IV hat kein INJECT/REPLACE, die Wiki dokumentiert kein Override-Verhalten) — als unsicher markiert, common/defines dagegen wiki-bestätigt (siehe eu4.paradoxwikis.com/Defines: eigene .lua-Datei unter common/defines/, kopiert von 00_dummy.lua, setzt nur einzelne NDefines.*-Schlüssel). Script-Datenbank (Modifier/Trigger/Effect/On-Action) und Scope-Viewer/Scope-Finder jetzt aus der offiziellen Wiki vorab erzeugt (siehe tools/wiki-scraper, scriptDocsWikiFile), da EU IV keine docs/*.log-Dateien wie EU V exportiert. Weiterhin unverfügbar: Event-Target (Wiki-Abdeckung nicht geprüft) und Custom-Localization (Wiki dokumentiert nur den defined_text-Mechanismus, keine feste Namensliste — Custom-Loc-Kommandos sind pro Mod definiert, nicht wiki-referenzierbar)."
+  "notes": "Startprofil, gegen die echte Installation (D:\\SteamLibrary, AppID 236850) und eu4.paradoxwikis.com geprüft, 2026-09-22. Bekannte Lücken: Mod-Anzeigename kommt aus dem Ordnernamen statt der externen .mod-Datei (Metadaten liegen dort außerhalb des Mod-Ordners, PMTs MetadataFile-Mechanismus erwartet sie innerhalb — siehe Backlog). Playsets werden aus launcher-v2.sqlite nur gelesen (Import ins Kompatibilitätsset, Fehlerprotokoll); umschalten und Mods eintragen geht nur im Paradox-Launcher. Override-Regeln bis auf common/defines nicht Wiki-bestätigt (EU IV hat kein INJECT/REPLACE, die Wiki dokumentiert kein Override-Verhalten) — als unsicher markiert, common/defines dagegen wiki-bestätigt (siehe eu4.paradoxwikis.com/Defines: eigene .lua-Datei unter common/defines/, kopiert von 00_dummy.lua, setzt nur einzelne NDefines.*-Schlüssel). Script-Datenbank (Modifier/Trigger/Effect/On-Action) und Scope-Viewer/Scope-Finder jetzt aus der offiziellen Wiki vorab erzeugt (siehe tools/wiki-scraper, scriptDocsWikiFile), da EU IV keine docs/*.log-Dateien wie EU V exportiert. Weiterhin unverfügbar: Event-Target (Wiki-Abdeckung nicht geprüft) und Custom-Localization (Wiki dokumentiert nur den defined_text-Mechanismus, keine feste Namensliste — Custom-Loc-Kommandos sind pro Mod definiert, nicht wiki-referenzierbar). replace_path blendet nur Vanilla aus, keine anderen Mods, in keiner Reihenfolge (gemessen 2026-09-30 mit zwei Test-Mods, Anführereigenschaften in common/leader_personalities). Eine .gui-Datei in einem interface/-Unterordner, auf den ein replace_path zeigt, ließ das Spiel beim Start abstürzen, auch die eigene Datei der Mod (Pfad ohne Unterordner, not found)."
 }

@@ -28,6 +28,8 @@ $projects = @(
     "src/ParadoxModTool.Session/ParadoxModTool.Session.csproj",
     "src/ParadoxModTool.SearchReplace/ParadoxModTool.SearchReplace.csproj",
     "src/ParadoxModTool.Notes/ParadoxModTool.Notes.csproj",
+    "src/ParadoxModTool.BugTracking/ParadoxModTool.BugTracking.csproj",
+    "src/ParadoxModTool.Desync/ParadoxModTool.Desync.csproj",
     "tests/ParadoxModTool.ErrorLog.Tests/ParadoxModTool.ErrorLog.Tests.csproj",
     "tests/ParadoxModTool.VersionManager.Tests/ParadoxModTool.VersionManager.Tests.csproj",
     "tests/ParadoxModTool.VanillaDiff.Tests/ParadoxModTool.VanillaDiff.Tests.csproj",
@@ -35,7 +37,9 @@ $projects = @(
     "tests/ParadoxModTool.UndoRedo.Tests/ParadoxModTool.UndoRedo.Tests.csproj",
     "tests/ParadoxModTool.Session.Tests/ParadoxModTool.Session.Tests.csproj",
     "tests/ParadoxModTool.SearchReplace.Tests/ParadoxModTool.SearchReplace.Tests.csproj",
-    "tests/ParadoxModTool.Notes.Tests/ParadoxModTool.Notes.Tests.csproj"
+    "tests/ParadoxModTool.Notes.Tests/ParadoxModTool.Notes.Tests.csproj",
+    "tests/ParadoxModTool.BugTracking.Tests/ParadoxModTool.BugTracking.Tests.csproj",
+    "tests/ParadoxModTool.Desync.Tests/ParadoxModTool.Desync.Tests.csproj"
 )
 
 foreach ($p in $projects) {

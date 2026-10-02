@@ -16,12 +16,12 @@ public static class ShippedRules
     /// <summary>Die mitgelieferten Regeln in fester Reihenfolge; jeder Aufruf liefert neue Kopien.</summary>
     public static IReadOnlyList<CountingRule> All => new List<CountingRule>
     {
-        Make(TextureFileId, "Texturdatei", RuleWhere.Anywhere, string.Empty, RuleAction.Ignore, "*.dds", "*.png", "*.tga", "*.jpg", "*.jpeg", "*.bmp", "*.psd", "*.gif"),
-        Make(TextureEntryId, "texture-Eintrag", RuleWhere.InsideKey, "texture", RuleAction.Ignore, "*"),
+        Make(TextureFileId, TemplatesTexts.ShippedTextureFile, RuleWhere.Anywhere, string.Empty, RuleAction.Ignore, "*.dds", "*.png", "*.tga", "*.jpg", "*.jpeg", "*.bmp", "*.psd", "*.gif"),
+        Make(TextureEntryId, TemplatesTexts.ShippedTextureEntry, RuleWhere.InsideKey, "texture", RuleAction.Ignore, "*"),
         Make(ButtonId, "Button", RuleWhere.Anywhere, string.Empty, RuleAction.Ignore, "*button*"),
-        Make(PositionId, "position-Eintrag", RuleWhere.InsideKey, "position", RuleAction.Ignore, "*"),
-        Make(SizeId, "size-Eintrag", RuleWhere.InsideKey, "size", RuleAction.Ignore, "*"),
-        Make(NamePrefixId, "Namenspräfix", RuleWhere.Anywhere, string.Empty, RuleAction.MarkedDoesNotCount, "iv[#]*", "iv_[#]*"),
+        Make(PositionId, TemplatesTexts.ShippedPositionEntry, RuleWhere.InsideKey, "position", RuleAction.Ignore, "*"),
+        Make(SizeId, TemplatesTexts.ShippedSizeEntry, RuleWhere.InsideKey, "size", RuleAction.Ignore, "*"),
+        Make(NamePrefixId, TemplatesTexts.ShippedNamePrefix, RuleWhere.Anywhere, string.Empty, RuleAction.MarkedDoesNotCount, "iv[#]*", "iv_[#]*"),
     };
 
     /// <summary>Die mitgelieferten Regeln als wirksame Regeln der Ebene "mitgeliefert", ohne die abgeschalteten Kennungen.</summary>

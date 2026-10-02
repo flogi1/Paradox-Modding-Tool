@@ -1,0 +1,122 @@
+# block: Fenster mit Tabs
+# group: Fenster
+# description: Fenster mit Kopfzeile und Tab-Leiste, je Tab wahlweise eine Untertab-Leiste (Anzahl 1) mit dunklen Tabs. Umschaltung über GetVariableSystem, eine Variable je Fenster und je Tab. Der Schließen-Knopf braucht noch eine Aktion (onclick). Vorbild: gui/debug/window_component_library.gui
+# param: name | Name des Fensters | my_window
+# param: title | Titel (Lokalisierungsschlüssel) | MY_WINDOW_TITLE
+# param: start_tab | Start-Tab (Kennung) | tab_1
+# repeat: tabs | Tabs | 3
+# param: tabs.id | Kennung | tab_$index$
+# param: tabs.title | Titel (Lokalisierungsschlüssel) | TAB_$index$
+# repeat: tabs.sub | Untertab-Leiste (0 = keine, 1 = mit Untertabs) | 0
+# param: tabs.sub.start | Start-Untertab (Kennung) | $tabs.id$_sub_1
+# repeat: tabs.sub.items | Untertabs | 3
+# param: tabs.sub.items.id | Kennung | $tabs.id$_sub_$index$
+# param: tabs.sub.items.title | Titel (Lokalisierungsschlüssel) | $tabs.title$_SUB_$index$
+# requires: Window_Movable, Window_Background, Window_Decoration, Window_Margins, header_pattern, button_tab, button_tab_dark, Background_Tab_Area
+
+window = {
+	name = "$name$"
+	parentanchor = center
+	size = { 800 600 }
+	layer = windows_layer
+
+	using = Window_Movable
+	using = Window_Background
+	using = Window_Decoration
+
+	state = {
+		name = _show
+		on_start = "[GetVariableSystem.Set( '$name$_tab', '$start_tab$' )]"
+	}
+
+	vbox = {
+		using = Window_Margins
+
+		header_pattern = {
+			layoutpolicy_horizontal = expanding
+
+			blockoverride "header_text" {
+				text = "$title$"
+			}
+
+			blockoverride "button_close" {
+				# onclick = "[...]"
+			}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+
+			$repeat tabs$
+			button_tab = {
+				layoutpolicy_horizontal = expanding
+				text = "$tabs.title$"
+				onclick = "[GetVariableSystem.Set( '$name$_tab', '$tabs.id$' )]"
+				$repeat tabs.sub$
+				onclick = "[GetVariableSystem.Set( '$name$_$tabs.id$', '$tabs.sub.start$' )]"
+				$end tabs.sub$
+				down = "[GetVariableSystem.HasValue( '$name$_tab', '$tabs.id$' )]"
+
+				blockoverride "icon_visible" {
+					visible = no
+				}
+			}
+
+			$end tabs$
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			background = {
+				using = Background_Tab_Area
+			}
+
+			$repeat tabs$
+			vbox = {
+				visible = "[GetVariableSystem.HasValue( '$name$_tab', '$tabs.id$' )]"
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				margin = { 10 10 }
+
+				$repeat tabs.sub$
+				hbox = {
+					layoutpolicy_horizontal = expanding
+
+					$repeat tabs.sub.items$
+					button_tab_dark = {
+						layoutpolicy_horizontal = expanding
+						text = "$tabs.sub.items.title$"
+						onclick = "[GetVariableSystem.Set( '$name$_$tabs.id$', '$tabs.sub.items.id$' )]"
+						down = "[GetVariableSystem.HasValue( '$name$_$tabs.id$', '$tabs.sub.items.id$' )]"
+
+						blockoverride "icon_visible" {
+							visible = no
+						}
+					}
+
+					$end tabs.sub.items$
+				}
+
+				$repeat tabs.sub.items$
+				vbox = {
+					visible = "[GetVariableSystem.HasValue( '$name$_$tabs.id$', '$tabs.sub.items.id$' )]"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					# Inhalt von $tabs.sub.items.id$
+				}
+
+				$end tabs.sub.items$
+				$end tabs.sub$
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					# Inhalt von $tabs.id$
+				}
+			}
+
+			$end tabs$
+		}
+	}
+}

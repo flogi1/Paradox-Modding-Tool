@@ -68,6 +68,7 @@ public static class CompatchModPicker
     public static PickedMod? FromFolder(Window owner, CompatchPickContext context)
     {
         using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = CompatchTexts.FromFolder, UseDescriptionForTitle = true };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("compatch.modFolder");
         return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? Describe(context, dialog.SelectedPath) : null;
     }
 

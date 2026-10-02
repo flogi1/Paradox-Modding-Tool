@@ -42,7 +42,7 @@ public sealed class UiTextTests : IDisposable
     [Fact]
     public void MissingOrBrokenFilesGiveTheFallbacks()
     {
-        Assert.Equal("Hallo", UiTextTable.Load(_temp, "fr").Get("a.key", "x"));
+        Assert.Equal("Hello", UiTextTable.Load(_temp, "fr").Get("a.key", "x"));
         Assert.Equal("x", UiTextTable.Load(Path.Combine(_temp, "missing"), "de").Get("a.key", "x"));
 
         var broken = Path.Combine(_temp, "broken");

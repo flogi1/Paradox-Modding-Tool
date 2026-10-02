@@ -22,6 +22,9 @@ public sealed class ModInfo
     /// <summary>Die ZIP-Varianten, die als Anhang eines GitHub-Releases in Frage kommen. Leer = eine Variante "Standard" (siehe Oberfläche).</summary>
     public List<GitHubZipVariant> GitHubZipVariants { get; set; } = new();
 
+    /// <summary>Quellen für Bugreports (GitHub-Repositories, ab Plan 3 Discord-Foren). Nur am Hauptmod eines Projekts belegt.</summary>
+    public List<BugSourceEntry> BugSources { get; set; } = new();
+
     /// <summary>ID des Hauptmods, wenn diese Mod ein Dev-Branch oder eine Submod ist; sonst <see langword="null"/>. Ein Projekt ist der Hauptmod plus alle Mods, die auf ihn zeigen (flach, keine Verschachtelung).</summary>
     public string? ParentModId { get; set; }
 

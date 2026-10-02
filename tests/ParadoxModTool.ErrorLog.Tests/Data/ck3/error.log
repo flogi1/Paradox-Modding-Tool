@@ -1,0 +1,67 @@
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/Crusader Wars.mod line: 7
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_2216754325.mod line: 7
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_2217509277.mod line: 7
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_2261468688.mod line: 6
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_2766055258.mod line: 7
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_2977969008.mod line: 7
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_2978738471.mod line: 6
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_3030427202.mod line: 8
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_3076667561.mod line: 6
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_3344161778.mod line: 8
+[11:21:13][E][dlc_descriptor.cpp:70]: Invalid supported_version in file: mod/ugc_3474910247.mod line: 9
+[11:21:25][E][pdx_localize.cpp:279]: Duplicate localization key. Key 'pmt_probe.2.a' is defined in both 'localization/english/pmt_probe_l_english.yml' and 'localization/english/pmt_probe_l_english.yml'.
+[11:21:33][E][pdx_gui_file_desc.h:43]: gui/pmt_probe.gui:5 - Duplicate property 'size'(47)
+
+[11:21:33][E][pdx_gui_factory.cpp:319]: failed reading property, at line 5 in file gui/pmt_probe.gui
+[11:21:45][E][pdx_gui_factory.cpp:715]: gui/pmt_probe.gui:5 - 'pmt_probe_invalid_property' is not a valid widget/type/property
+
+[11:21:45][E][virtualfilesystem.cpp:456]: Could not find texture due to 'VFSOpen Error: gfx/interface/pmt_probe_missing_texture.dds not found'
+[11:22:45][E][pdx_persistent_reader.cpp:216]: Error: "Unknown effect: pmt_probe_unknown_effect, near line: 12 (expanded from file: events/pmt_probe_events.txt line: 13)
+Unknown trigger: pmt_probe_unknown_trigger, near line: 15" in file: "events/pmt_probe_events.txt" near line: 15
+[11:22:45][E][jomini_eventtarget.cpp:692]: Failed to find a valid event target link 'pmt_probe_missing_value' at file: events/pmt_probe_events.txt line: 31 (pmt_probe.1:immediate)
+[11:22:45][E][jomini_scriptvalue.h:626]: Cannot read [pmt_probe_missing_value] as a script value
+[11:22:45][E][jomini_scriptvalue.h:372]: Badly read script value pmt_probe_missing_value at file: events/pmt_probe_events.txt line: 31 (pmt_probe.1:immediate:add_gold)
+[11:22:45][E][jomini_effect.cpp:784]: Inconsistent effect scopes (landed_title vs. character) infile: events/pmt_probe_events.txt line: 36 (pmt_probe.1:immediate)
+[11:22:45][E][jomini_dynamicdescription.cpp:66]: Unrecognized loc key pmt_probe.2.t. file: events/pmt_probe_events.txt line: 45 (pmt_probe.2)
+[11:22:53][E][jomini_eventtarget.cpp:692]: Failed to find a valid event target link 'pmt_probe_nonexistent_value' at file: common/script_values/pmt_probe_values.txt line: 2 (pmt_probe_bad_value)
+[11:22:53][E][jomini_scriptvalue.h:626]: Cannot read [pmt_probe_nonexistent_value] as a script value
+[11:22:53][E][jomini_scriptvalue.h:372]: Badly read script value pmt_probe_nonexistent_value at file: common/script_values/pmt_probe_values.txt line: 2 (pmt_probe_bad_value:value)
+[11:22:55][E][pdx_persistent_reader.cpp:216]: Error: "Failed to read key reference: default_nudity: default_nudity, near line: 1" in file: "save games/byzanz.ck3" near line: 1
+[11:22:56][E][jomini_effect.cpp:1161]: Variable 'pmt_probe_var_never_set' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[11:22:56][E][jomini_effect.cpp:1161]: Variable 'pmt_probe_flag_never_set' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[11:22:56][E][jomini_effect.cpp:1145]: Variable 'pmt_probe_flag_unused' is set but is never used. Note that use in localization doesn't count due to technical limitations. Use in unused scripted triggers and effects also does not count
+[11:22:56][E][jomini_effect.cpp:1145]: Variable 'pmt_probe_var_unused' is set but is never used. Note that use in localization doesn't count due to technical limitations. Use in unused scripted triggers and effects also does not count
+[11:22:56][E][jomini_effect.cpp:1161]: Event target 'pmt_probe_unset' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[11:22:59][E][jomini_eventmanager.cpp:372]: Event pmt_probe_broken.1 is orphaned
+[11:23:00][E][jomini_effect.cpp:1161]: Variable 'pmt_probe_var_never_set' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[11:23:00][E][jomini_effect.cpp:1161]: Variable 'pmt_probe_flag_never_set' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[11:23:00][E][jomini_effect.cpp:1145]: Variable 'pmt_probe_flag_unused' is set but is never used. Note that use in localization doesn't count due to technical limitations. Use in unused scripted triggers and effects also does not count
+[11:23:00][E][jomini_effect.cpp:1145]: Variable 'pmt_probe_var_unused' is set but is never used. Note that use in localization doesn't count due to technical limitations. Use in unused scripted triggers and effects also does not count
+[11:23:00][E][jomini_effect.cpp:1161]: Event target 'pmt_probe_unset' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[11:23:02][E][pdx_persistent_reader.cpp:216]: Error: "Failed to read key reference: default_nudity: default_nudity, near line: 1" in file: "save games/byzanz.ck3" near line: 1
+[11:23:02][E][pdx_persistent_reader.cpp:216]: Error: "Failed to read key reference: default_nudity: default_nudity, near line: 1" in file: "save games/byzanz.ck3" near line: 1
+[11:23:25][E][pdx_persistent_reader.cpp:216]: Error: "Failed to read key reference: default_nudity: default_nudity, near line: 1" in file: "save games/byzanz.ck3" near line: 1
+[11:23:28][E][jomini_script_system.cpp:303]: Script system error!
+  Error: Undefined event target 'pmt_probe_unset'
+  Script location: file: events/pmt_probe_events.txt line: 35 (pmt_probe.1:immediate)
+    file: common/on_action/pmt_probe_on_actions.txt line: 10 (pmt_probe_start)
+    file: common/on_action/pmt_probe_on_actions.txt line: 6 (pmt_probe_start)
+    file: common/on_action/pmt_probe_on_actions.txt line: 2 (on_game_start_after_lobby)
+
+[11:23:28][E][jomini_script_system.cpp:303]: Script system error!
+  Error: Event target link 'scope' returned an unset scope
+  Script location: file: events/pmt_probe_events.txt line: 35 (pmt_probe.1:immediate)
+    file: common/on_action/pmt_probe_on_actions.txt line: 10 (pmt_probe_start)
+    file: common/on_action/pmt_probe_on_actions.txt line: 6 (pmt_probe_start)
+    file: common/on_action/pmt_probe_on_actions.txt line: 2 (on_game_start_after_lobby)
+
+[11:23:28][E][jomini_script_system.cpp:303]: Script system error!
+  Error: add_gold effect [ Wrong scope for effect: none, expected character ]
+  Script location: file: events/pmt_probe_events.txt line: 35 (pmt_probe.1:immediate)
+    file: common/on_action/pmt_probe_on_actions.txt line: 10 (pmt_probe_start)
+    file: common/on_action/pmt_probe_on_actions.txt line: 6 (pmt_probe_start)
+    file: common/on_action/pmt_probe_on_actions.txt line: 2 (on_game_start_after_lobby)
+
+[11:23:29][E][pdx_data_factory.cpp:1437]: Could not find data system function 'GetPmtUnknownFunction' in 'ROOT.Char.GetPmtUnknownFunction'.
+[11:23:29][E][pdx_data_factory.cpp:1052]: Failed converting statement for 'ROOT.Char.GetPmtUnknownFunction'
+[11:23:29][E][pdx_data_localize.cpp:146]: Data error in loc string 'pmt_probe.2.desc'

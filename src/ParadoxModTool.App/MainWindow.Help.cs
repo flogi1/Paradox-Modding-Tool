@@ -64,6 +64,23 @@ public partial class MainWindow
         ReportBugMenuItem.IsEnabled = available;
         CheckUpdatesMenuItem.ToolTip = available ? MenuTexts.CheckUpdatesTip : MenuTexts.NoRepositoryTip;
         ReportBugMenuItem.ToolTip = available ? MenuTexts.ReportBugTip : MenuTexts.NoRepositoryTip;
+
+        // Changelog: Readme\Changelog.txt kommt über die csproj neben die exe und mit jedem Update mit.
+        var changelog = File.Exists(ReadmeFiles.ChangelogIn(AppContext.BaseDirectory));
+        ChangelogMenuItem.IsEnabled = changelog;
+        ChangelogMenuItem.ToolTip = changelog ? MenuTexts.ChangelogTip : MenuTexts.ChangelogMissingTip;
+    }
+
+    private void ChangelogMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(ReadmeFiles.ChangelogIn(AppContext.BaseDirectory)) { UseShellExecute = true });
+        }
+        catch (Win32Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, MenuTexts.Changelog, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     /// <summary>Automatische Prüfung nach dem Start: im Hintergrund, höchstens einmal täglich, Fehler bleiben still.</summary>
@@ -341,6 +358,10 @@ public partial class MainWindow
     }
 
     private void AboutMenuItem_Click(object sender, RoutedEventArgs e) => new AboutWindow { Owner = this }.ShowDialog();
+
+    private void SponsorMenuItem_Click(object sender, RoutedEventArgs e) => OpenInBrowser(AppInfo.SponsorUrl);
+
+    private void KofiMenuItem_Click(object sender, RoutedEventArgs e) => OpenInBrowser(AppInfo.KofiUrl);
 
     /// <summary>Öffnet nur GitHub-Adressen: die Adresse stammt aus einer Netzwerkantwort und wird nicht blind an die Shell gegeben.</summary>
     private void OpenReleasePage(string url)

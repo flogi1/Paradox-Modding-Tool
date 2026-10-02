@@ -42,7 +42,14 @@ public partial class EditorPane
     private readonly TextBlock _draftLabel = new() { Margin = new Thickness(8, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeights.SemiBold };
     private readonly Button _takeOverButton = new() { Margin = new Thickness(2), Padding = new Thickness(6, 2, 6, 2) };
     private readonly Button _discardButton = new() { Margin = new Thickness(2), Padding = new Thickness(6, 2, 6, 2) };
+    private readonly Button _blocksButton = new() { Margin = new Thickness(8, 2, 2, 2), Padding = new Thickness(6, 2, 6, 2) };
     private OpenDocument? _watchedGuiDocument;
+
+    /// <summary>"Baustein einfügen" (Kontextmenü, Knopf in der GUI-Leiste): Das Hauptfenster öffnet das Fenster "Bausteine".</summary>
+    public event EventHandler? GuiBlocksRequested;
+
+    /// <summary>"Als Baustein speichern" (markierter Code oder Element im Designer-Baum): Das Hauptfenster öffnet den Speichern-Dialog mit diesem Code.</summary>
+    public event EventHandler<string>? GuiSaveBlockRequested;
 
     /// <summary>"Für Mod bearbeiten" für die aktive Vanilla-.gui-Datei (Plan-Ruling 4).</summary>
     public event EventHandler<OpenDocument>? GuiDraftRequested;
@@ -104,6 +111,7 @@ public partial class EditorPane
         _guiController.LocationRequested += (_, e) => OpenLocationRequested?.Invoke(this, e);
         _guiController.EditLocationRequested += (_, e) => GuiEditDefinitionRequested?.Invoke(this, e);
         _guiController.DraftRequested += (_, document) => GuiDraftRequested?.Invoke(this, document);
+        _guiController.SaveAsBlockRequested += (_, code) => GuiSaveBlockRequested?.Invoke(this, code);
         _draftButton.Content = GuiTexts.DraftEdit;
         _draftButton.ToolTip = GuiTexts.DraftEditTip;
         _draftButton.Click += (_, _) => RaiseForActive(GuiDraftRequested);
@@ -120,6 +128,10 @@ public partial class EditorPane
         GuiModePanel.Children.Add(_draftLabel);
         GuiModePanel.Children.Add(_takeOverButton);
         GuiModePanel.Children.Add(_discardButton);
+        _blocksButton.Content = GuiTexts.BlocksButton;
+        _blocksButton.ToolTip = GuiTexts.BlocksButtonTip;
+        _blocksButton.Click += (_, _) => GuiBlocksRequested?.Invoke(this, EventArgs.Empty);
+        GuiModePanel.Children.Add(_blocksButton);
         _designer.InspectRequested += (_, node) =>
         {
             if (_guiController?.CurrentDocument is { } document)
@@ -192,7 +204,11 @@ public partial class EditorPane
 
         var draft = vanilla && document!.IsGuiDraft;
         Editor.IsReadOnly = vanilla && !draft;
-        GuiModePanel.Visibility = offered || vanilla ? Visibility.Visible : Visibility.Collapsed;
+
+        // "Bausteine" nur in bearbeitbaren .gui-Dateien mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 2 und 10), auch ohne Designer.
+        var blocks = GuiSettings.ToolsEnabled && IsGuiFile(document) && !Editor.IsReadOnly;
+        _blocksButton.Visibility = blocks ? Visibility.Visible : Visibility.Collapsed;
+        GuiModePanel.Visibility = offered || vanilla || blocks ? Visibility.Visible : Visibility.Collapsed;
         foreach (var button in new[] { GuiModeCodeButton, GuiModeDesignerButton, GuiModeSplitButton })
         {
             button.Visibility = offered ? Visibility.Visible : Visibility.Collapsed;
@@ -264,6 +280,23 @@ public partial class EditorPane
                     var item = new MenuItem { Header = GuiTexts.ContextInspect };
                     item.Click += (_, _) => GuiInspectRequested?.Invoke(this, new GuiInspectTarget(node, parsed, document?.FilePath));
                     _editorMenu.Items.Add(item);
+                }
+
+                if (!Editor.IsReadOnly)
+                {
+                    var blocks = new MenuItem { Header = GuiTexts.ContextBlocks, InputGestureText = GuiTexts.KeyBlocks };
+                    blocks.Click += (_, _) => GuiBlocksRequested?.Invoke(this, EventArgs.Empty);
+                    _editorMenu.Items.Add(blocks);
+                }
+
+                // Auch in schreibgeschützten Vanilla-Dateien: sie sind die Hauptquelle für Bausteine (Teil-2-Ruling 3). Die Auswahl gilt nach
+                // ContextOffset, das bei einem Klick außerhalb der Auswahl den Cursor versetzt.
+                if (Editor.SelectionLength > 0)
+                {
+                    var code = Editor.SelectedText;
+                    var save = new MenuItem { Header = GuiTexts.ContextSaveBlock };
+                    save.Click += (_, _) => GuiSaveBlockRequested?.Invoke(this, code);
+                    _editorMenu.Items.Add(save);
                 }
             }
             else if (GuiSettings.ShownInOffered && IsShownInFile(document?.FilePath) && WordAtOffset(offset) is { } word)

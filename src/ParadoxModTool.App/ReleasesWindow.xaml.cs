@@ -41,7 +41,7 @@ public partial class ReleasesWindow : Window
         _metadataFile = metadataFile;
         _steam = steam;
         _log = ReleaseLog.Load(registry.DataDirectory(mod.Id));
-        TitleText.Text = "Releases von " + mod.Name;
+        TitleText.Text = PublishTexts.ReleasesTitleFor(mod.Name);
 
         if (mod.ChangelogFile is null && mod.Paths.Select(ChangelogFile.Suggest).FirstOrDefault(s => s is not null) is { } suggestion)
         {
@@ -90,15 +90,15 @@ public partial class ReleasesWindow : Window
         }
 
         ChangelogPathText.Text = _mod.ChangelogFile is null
-            ? "— keine festgelegt —"
-            : ChangelogPath is null ? _mod.ChangelogFile + "  — Datei fehlt" : _mod.ChangelogFile;
+            ? PublishTexts.NoChangelogSet
+            : ChangelogPath is null ? PublishTexts.ChangelogFileMissing(_mod.ChangelogFile) : _mod.ChangelogFile;
 
         var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases);
-        StatusText.Text = $"metadata.json: {status.MetadataVersion ?? "—"}     Changelog oben: {status.ChangelogTop ?? "—"}     Neueste Release: {status.LatestRelease ?? "—"}";
+        StatusText.Text = PublishTexts.StatusLine(status.MetadataVersion ?? "—", status.ChangelogTop ?? "—", status.LatestRelease ?? "—");
         var hints = status.Hints.ToList();
         if (problem is not null)
         {
-            hints.Insert(0, "Der Changelog konnte nicht gelesen werden: " + problem);
+            hints.Insert(0, PublishTexts.ChangelogReadFailed(problem));
         }
 
         if (_log.LoadWarning is { } warning)
@@ -143,7 +143,7 @@ public partial class ReleasesWindow : Window
             ? string.Empty
             : entry is not null
                 ? entry.Text
-                : _entries is null ? "(Kein Changelog verfügbar.)" : "(Diese Version steht nicht im Changelog.)";
+                : _entries is null ? PublishTexts.NoChangelogAvailable : PublishTexts.VersionNotInChangelog;
         _loading = false;
         _editingVersion = entry is null ? null : SelectedRow!.Version;
         SetDirty(false);
@@ -181,7 +181,7 @@ public partial class ReleasesWindow : Window
             return true;
         }
 
-        var answer = MessageBox.Show(this, $"Der Text der Version {_editingVersion} wurde geändert.\nIn den Changelog schreiben?", "Releases", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        var answer = MessageBox.Show(this, PublishTexts.TextChanged(_editingVersion), "Releases", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         switch (answer)
         {
             case MessageBoxResult.Yes:
@@ -260,7 +260,7 @@ public partial class ReleasesWindow : Window
     /// <summary>Liest den Changelog frisch, wendet die Änderung an und schreibt ihn mit Sicherungskopie zurück, damit eine Änderung von außen nicht überschrieben wird.</summary>
     private void ModifyChangelog(Func<string, string> change)
     {
-        var path = ChangelogPath ?? throw new InvalidOperationException("Es ist keine Changelog-Datei festgelegt.");
+        var path = ChangelogPath ?? throw new InvalidOperationException(PublishTexts.NoChangelogFile);
         var document = ModTextFile.Read(path);
         ModTextFile.Write(path, document with { Text = change(document.Text) }, BackupDirectory);
     }
@@ -277,16 +277,17 @@ public partial class ReleasesWindow : Window
         var folder = _mod.Paths.FirstOrDefault(Directory.Exists);
         if (folder is null)
         {
-            Report("Der Ordner der Mod ist nicht vorhanden. Verknüpfe ihn zuerst im Mods-Fenster neu.");
+            Report(PublishTexts.ModFolderMissing);
             return;
         }
 
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "Changelog-Datei wählen",
+            Title = PublishTexts.PickChangelogTitle,
             InitialDirectory = Path.GetFullPath(folder),
-            Filter = "Textdateien (*.txt;*.md)|*.txt;*.md|Alle Dateien (*.*)|*.*",
+            Filter = PublishTexts.PickChangelogFilter,
         };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("releases.file");
         if (dialog.ShowDialog(this) != true)
         {
             return;
@@ -295,7 +296,7 @@ public partial class ReleasesWindow : Window
         var relative = Path.GetRelativePath(Path.GetFullPath(folder), dialog.FileName);
         if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
         {
-            Report("Die Changelog-Datei muss im Ordner der Mod liegen, damit sie mit hochgeladen wird.");
+            Report(PublishTexts.ChangelogOutsideMod);
             return;
         }
 
@@ -315,13 +316,13 @@ public partial class ReleasesWindow : Window
         var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases);
         if (status.MetadataVersion is null)
         {
-            Report("Die Metadaten-Datei der Mod enthält keine gültige Version. Trage sie dort ein (z. B. 1.0.0).");
+            Report(PublishTexts.MetadataNoVersion);
             return;
         }
 
         if (_log.Find(status.MetadataVersion) is not null)
         {
-            Report($"Die Version {status.MetadataVersion} ist schon als Release erfasst.");
+            Report(PublishTexts.AlreadyRecorded(status.MetadataVersion));
             return;
         }
 
@@ -346,7 +347,7 @@ public partial class ReleasesWindow : Window
             .ToList();
         if (missing.Count == 0)
         {
-            Report("Alle Versionen aus dem Changelog sind schon erfasst.");
+            Report(PublishTexts.AllRecorded);
             return;
         }
 
@@ -376,7 +377,7 @@ public partial class ReleasesWindow : Window
 
         var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases);
         var proposal = NextVersion(status);
-        if (TextPromptWindow.Ask(this, "Neue Version anlegen", "Nummer der neuen Version:", proposal) is not { } text)
+        if (TextPromptWindow.Ask(this, PublishTexts.NewVersion, PublishTexts.NewVersionPrompt, proposal) is not { } text)
         {
             return;
         }
@@ -387,7 +388,7 @@ public partial class ReleasesWindow : Window
         {
             if (!VersionNumber.TryParse(version, out _))
             {
-                throw new ArgumentException($"\"{version}\" ist keine Versionsnummer (erwartet z. B. 2.0.6).");
+                throw new ArgumentException(PublishTexts.NotAVersion(version));
             }
 
             ModifyChangelog(fileText => ChangelogEditor.InsertVersion(fileText, version, modName));
@@ -400,7 +401,7 @@ public partial class ReleasesWindow : Window
         {
             Reload();
             ReleaseList.SelectedItem = ReleaseList.Items.OfType<ReleaseRow>().FirstOrDefault(r => r.Version == version);
-            InfoText.Text = "Das Banner für Version " + version + " steht jetzt oben im Changelog. Trage dort die Änderungen ein (rechts im Textfeld).";
+            InfoText.Text = PublishTexts.ReleasesBannerCreated(version);
         }
     }
 
@@ -427,7 +428,7 @@ public partial class ReleasesWindow : Window
 
     private void Publish_Click(object sender, RoutedEventArgs e)
     {
-        if (!ConfirmLeave())
+        if (!ConfirmLeave() || !ConfirmNoTraces())
         {
             return;
         }
@@ -437,12 +438,25 @@ public partial class ReleasesWindow : Window
 
     private void GitHubPublish_Click(object sender, RoutedEventArgs e)
     {
-        if (!ConfirmLeave())
+        if (!ConfirmLeave() || !ConfirmNoTraces())
         {
             return;
         }
 
         new GitHubPublishWindow(_registry, _mod, _metadataFile, _steam) { Owner = this }.Show();
+    }
+
+    /// <summary>
+    /// Scope-Verfolgung: Enthält die Mod noch Spuren (<c>PMT-TRACE</c>), fragt PMT vor dem Veröffentlichen nach. Entfernen geht im
+    /// Fehlerprotokoll unter "Aktive Spuren" (dort mit Sicherung und Rückgängig).
+    /// </summary>
+    private bool ConfirmNoTraces()
+    {
+        var count = _mod.Paths
+            .Where(Directory.Exists)
+            .Sum(path => ParadoxModTool.ErrorLog.TraceMarkers.Scan(new ParadoxModTool.ErrorLog.ModSource(_mod.Name, path, IsOwn: true, LoadOrder: 0), ParadoxModTool.ErrorLog.TraceRules.Empty).Count);
+        return count == 0
+            || MessageBox.Show(this, ParadoxModTool.ErrorLog.ErrorLogTexts.PublishTracesWarning(count), Title, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }
 
     private static string Marks(ReleaseEntry entry)
@@ -473,7 +487,7 @@ public partial class ReleasesWindow : Window
             return;
         }
 
-        if (TextPromptWindow.Ask(this, "Datum ändern", "Datum der Release " + row.Version + " (JJJJ-MM-TT, leer = unbekannt):", row.Date) is { } date
+        if (TextPromptWindow.Ask(this, PublishTexts.ChangeDate, PublishTexts.DatePrompt(row.Version), row.Date) is { } date
             && Try(() => _log.SetDate(row.Version, date.Trim())))
         {
             Reload();
@@ -492,7 +506,7 @@ public partial class ReleasesWindow : Window
             return;
         }
 
-        if (MessageBox.Show(this, $"Die Release {row.Version} aus der Erfassung entfernen?\nDer Changelog bleibt unberührt.", "Releases", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (MessageBox.Show(this, PublishTexts.DeleteConfirm(row.Version), "Releases", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -509,7 +523,7 @@ public partial class ReleasesWindow : Window
         {
             Version = entry.Version;
             Date = entry.Date;
-            Display = $"{entry.Version,-12}{(entry.Date.Length == 0 ? "kein Datum" : entry.Date),-14}{Marks(entry)}{(inChangelog ? string.Empty : "nicht im Changelog")}";
+            Display = $"{entry.Version,-12}{(entry.Date.Length == 0 ? PublishTexts.NoDate : entry.Date),-14}{Marks(entry)}{(inChangelog ? string.Empty : PublishTexts.NotInChangelog)}";
         }
 
         public string Version { get; }

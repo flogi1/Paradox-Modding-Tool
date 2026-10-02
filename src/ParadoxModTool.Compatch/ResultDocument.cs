@@ -79,7 +79,7 @@ public static class ResultDocument
             }
 
             var info = run.Resolved.Addresses[address];
-            foreach (var row in ColumnAligner.Align(ActionText.Render(info.A.Entries, hideComments), ActionText.Render(entries, hideComments), ActionText.Render(info.B.Entries, hideComments), null))
+            foreach (var row in EntryAligner.Align(info.A.Entries, entries, info.B.Entries, null, hideComments))
             {
                 if (row.Result is not null)
                 {

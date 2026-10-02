@@ -50,7 +50,7 @@ public sealed class DiffOverviewBar : FrameworkElement
         Unloaded += (_, _) => ThemeManager.ThemeChanged -= onThemeChanged;
 
         Cursor = Cursors.Hand;
-        ToolTip = "Übersicht der Unterschiede - Klick springt an die Stelle";
+        ToolTip = MiscWindowTexts.DiffOverviewTip;
 
         // Die Editor-Scrollleiste hat Pfeil-Schaltflächen oben/unten und ggf. eine horizontale
         // Leiste darunter; damit beide Leisten optisch parallel laufen, richtet sich diese Leiste

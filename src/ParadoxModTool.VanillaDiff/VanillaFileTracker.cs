@@ -10,6 +10,15 @@ public sealed class OverriddenFile
 
     public required string VanillaFullPath { get; init; }
     public required string ModFullPath { get; init; }
+
+    /// <summary>Filterfeld der Dateiliste im Update-Reiter: Text im relativen Pfad (Groß-/Kleinschreibung egal); leer = alle.</summary>
+    public static IReadOnlyList<OverriddenFile> Filter(IEnumerable<OverriddenFile> files, string? text)
+    {
+        var needle = text?.Trim();
+        return string.IsNullOrEmpty(needle)
+            ? files.ToList()
+            : files.Where(f => f.RelativePath.Contains(needle, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
 }
 
 /// <summary>
@@ -39,8 +48,7 @@ public static class VanillaFileTracker
     {
         if (!string.Equals(profile.LoadOrderRule, AlphabeticalFilenameWinsRule, StringComparison.Ordinal))
         {
-            throw new NotSupportedException(
-                $"Lade-Regel \"{profile.LoadOrderRule}\" von Spielprofil \"{profile.Id}\" wird vom Vanilla-Diff-Modul noch nicht unterstützt.");
+            throw new NotSupportedException(VanillaDiffTexts.LoadRuleUnsupported(profile.LoadOrderRule, profile.Id));
         }
 
         var result = new List<OverriddenFile>();

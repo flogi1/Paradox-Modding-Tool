@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using ParadoxModTool.Localization;
 using ParadoxModTool.ModCompat;
 using ParadoxModTool.Mods;
 using MessageBox = System.Windows.MessageBox;
@@ -11,14 +12,20 @@ namespace ParadoxModTool.App;
 /// <summary>Eine Zeile der Ergebnisliste.</summary>
 internal sealed class FindingRow
 {
-    public FindingRow(CompatFinding finding)
+    public FindingRow(CompatFinding finding, bool resolved)
     {
         Finding = finding;
+        Resolved = resolved;
     }
 
     public CompatFinding Finding { get; }
 
+    /// <summary>Per Rechtsklick als gelöst markiert (grau dargestellt, wenn "Gelöste ausblenden" aus ist).</summary>
+    public bool Resolved { get; }
+
     public string SeverityText => CompatText.Severity(Finding.Severity);
+
+    public string ResolvedText => Resolved ? "\u2713" : string.Empty;
 
     public string KindText => CompatText.Kind(Finding.Kind);
 
@@ -30,18 +37,25 @@ internal sealed class FindingRow
 
     public string SuggestionText => CompatText.Suggestion(Finding.Suggestion);
 
-    public string UncertainText => Finding.Uncertain ? "unsicher" : string.Empty;
+    public string UncertainText => Finding.Uncertain ? ModCompatTexts.Uncertain : string.Empty;
 }
 
 /// <summary>Rechte Hälfte des Fensters "Mod-Kompatibilität": Prüfung, Ergebnisse, Vergleich, Bericht.</summary>
 public partial class ModCompatWindow
 {
     private IReadOnlyList<CompatFinding> _all = Array.Empty<CompatFinding>();
+    private ResolvedFindings? _resolved;
+    private readonly HashSet<CompatFinding> _resolvedFound = new();
+    private (CompatSortColumn Column, bool Descending)? _sort;
     private string _subtitle = string.Empty;
     private CancellationTokenSource? _cts;
     private bool _busy;
 
     private string RulesFile => System.IO.Path.Combine(_host.GameDirectory, "compat", "rules.json");
+
+    private string ResolvedFile => System.IO.Path.Combine(_host.GameDirectory, "compat", "resolved.json");
+
+    private ResolvedFindings Resolved => _resolved ??= ResolvedFindings.Load(ResolvedFile);
 
     /// <summary>Die Regeltabelle: ausgelieferte Tabelle des Spielprofils, darüber die Spielebene.</summary>
     private OverrideRules BuildRules()
@@ -135,31 +149,31 @@ public partial class ModCompatWindow
     {
         if (FocusCombo.SelectedItem is not MemberRow focusRow)
         {
-            StatusText.Text = "Wähle Mod 1.";
+            StatusText.Text = ModCompatWindowTexts.PickFocus;
             return;
         }
 
         var participants = BuildParticipants();
         if (participants.Count(p => !p.IsVanilla) < 2)
         {
-            StatusText.Text = "Das Set braucht mindestens zwei Mods.";
+            StatusText.Text = ModCompatWindowTexts.NeedTwoMods;
             return;
         }
 
         var focusId = CompatSet.NormalizeFolder(focusRow.Member.Folder);
         IReadOnlyCollection<string>? counterparts = null;
-        var counterText = "alle im Set";
+        var counterText = ModCompatWindowTexts.CounterAll;
         if (CounterCombo.SelectedIndex == 1)
         {
             var picked = MemberRows.Where(r => r.Member.Enabled).Select(r => CompatSet.NormalizeFolder(r.Member.Folder)).Where(id => id != focusId).ToList();
             if (picked.Count == 0)
             {
-                StatusText.Text = "Setze bei mindestens einer anderen Mod das Häkchen \"Vergleich\" für die Gegenseite.";
+                StatusText.Text = ModCompatWindowTexts.NeedCounterpart;
                 return;
             }
 
             counterparts = picked;
-            counterText = $"{picked.Count} markierte";
+            counterText = ModCompatWindowTexts.CounterMarked(picked.Count);
         }
 
         var request = new CompatRequest
@@ -171,13 +185,22 @@ public partial class ModCompatWindow
             Cache = _cache,
             Relation = Relation,
             IsCompatchFor = IsCompatchFor,
+            HiddenVanillaFolders = ReplacePaths.Of(participants.Where(p => !p.IsVanilla).Select(p => p.Folder), _host.Profile?.MetadataFile ?? string.Empty, _host.Profile?.ReplacePathRoots),
+            HiddenModFolders = HiddenModFolders(participants),
+            ReplacePathRoots = _host.Profile?.ReplacePathRoots ?? new List<string>(),
+            ReplacePathEntries = participants.Where(p => !p.IsVanilla).ToDictionary(
+                p => p.Id,
+                p => ModMetadata.Read(p.Folder, _host.Profile?.MetadataFile ?? string.Empty)?.ReplacePaths ?? Array.Empty<string>()),
+            ReplacePathGuiCrashRoots = _host.Profile?.ReplacePathGuiCrashRoots ?? new List<string>(),
         };
+        _hiddenVanillaFolders = request.HiddenVanillaFolders;
+        _hidesEarlierMods = request.HiddenModFolders.Values.Any(folders => folders.Count > 0);
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         _busy = true;
         UpdateRunButtons();
-        StatusText.Text = "Prüfe…";
+        StatusText.Text = ModCompatWindowTexts.Checking;
         var progressWindow = new ModCompatProgressWindow(() => _cts?.Cancel()) { Owner = this };
         var progress = new Progress<CompatProgress>(p =>
         {
@@ -189,17 +212,19 @@ public partial class ModCompatWindow
         {
             var result = await Task.Run(() => CompatAnalyzer.Analyze(request, progress, token), token);
             _all = result.Findings;
-            _subtitle = $"Set: {_set.Name} · Mod 1: {focusRow.Member.Name} · Gegenseite: {counterText} · {DateTime.Now:yyyy-MM-dd HH:mm}";
+            _resolvedFound.Clear();
+            _resolvedFound.UnionWith(_all.Where(Resolved.IsResolved));
+            _subtitle = ModCompatWindowTexts.Subtitle(_set.Name, focusRow.Member.Name, counterText, DateTime.Now);
             ApplyFilter();
         }
         catch (OperationCanceledException)
         {
-            StatusText.Text = "Abgebrochen.";
+            StatusText.Text = CommonTexts.Cancelled;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
             StatusText.Text = string.Empty;
-            MessageBox.Show(this, "Die Prüfung ist fehlgeschlagen:\n" + ex.Message, "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ModCompatWindowTexts.CheckFailed(ex.Message), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
         {
@@ -209,7 +234,20 @@ public partial class ModCompatWindow
         }
     }
 
-    private static bool IsSense(CompatKind kind) => kind is CompatKind.RedundantOverride or CompatKind.TooCoarse or CompatKind.AdditiveOnly or CompatKind.ReplaceNeeded;
+    /// <summary>CK III und EU V: je Mod die replace_path-Ordner der später ladenden Mods (sie blenden die Dateien der früheren aus); sonst leer.</summary>
+    private IReadOnlyDictionary<string, IReadOnlyCollection<string>> HiddenModFolders(IReadOnlyList<CompatParticipant> participants)
+    {
+        if (_host.Profile is not { ReplacePathHidesEarlierMods: true } profile)
+        {
+            return new Dictionary<string, IReadOnlyCollection<string>>();
+        }
+
+        var mods = participants.Where(p => !p.IsVanilla).ToList();
+        var replacePaths = mods.ToDictionary(p => p.Id, p => ReplacePaths.Of(new[] { p.Folder }, profile.MetadataFile, profile.ReplacePathRoots));
+        return CompatRequest.HiddenFoldersOfEarlierMods(mods.Select(p => (p.Id, p.Rank)), replacePaths);
+    }
+
+    private static bool IsSense(CompatKind kind) => kind is CompatKind.RedundantOverride or CompatKind.TooCoarse or CompatKind.AdditiveOnly or CompatKind.ValueChangeOnly or CompatKind.ReplaceNeeded;
 
     private List<CompatFinding> Filtered()
     {
@@ -220,6 +258,7 @@ public partial class ModCompatWindow
                 || (f.Severity == CompatSeverity.Info && InfoCheck.IsChecked == true))
             .Where(f => SenseCheck.IsChecked != true || IsSense(f.Kind))
             .Where(f => HideUncertainCheck.IsChecked != true || !f.Uncertain)
+            .Where(f => HideResolvedCheck.IsChecked != true || !_resolvedFound.Contains(f))
             .Where(f => text.Length == 0
                 || f.RelativePath.Contains(text, StringComparison.OrdinalIgnoreCase)
                 || f.Key.Contains(text, StringComparison.OrdinalIgnoreCase))
@@ -229,14 +268,50 @@ public partial class ModCompatWindow
     private void ApplyFilter()
     {
         var shown = Filtered();
-        ResultList.ItemsSource = shown.Select(f => new FindingRow(f)).ToList();
+        if (_sort is { } sort)
+        {
+            shown = CompatFindingSort.Sort(shown, sort.Column, sort.Descending, _resolvedFound.Contains).ToList();
+        }
+
+        ResultList.ItemsSource = shown.Select(f => new FindingRow(f, _resolvedFound.Contains(f))).ToList();
+        var hiddenResolved = HideResolvedCheck.IsChecked == true ? _resolvedFound.Count : 0;
         StatusText.Text = _all.Count == 0
-            ? "Keine Funde."
-            : $"{shown.Count} von {_all.Count} Funden angezeigt.";
+            ? ModCompatTexts.NoFindings
+            : hiddenResolved > 0
+                ? ModCompatWindowTexts.ShownCountResolved(shown.Count, _all.Count, hiddenResolved)
+                : ModCompatWindowTexts.ShownCount(shown.Count, _all.Count);
+        if (_hiddenVanillaFolders.Count > 0)
+        {
+            StatusText.Text += " · " + (_hidesEarlierMods ? ModCompatWindowTexts.HiddenVanillaAndMods(_hiddenVanillaFolders.Count) : ModCompatWindowTexts.HiddenVanilla(_hiddenVanillaFolders.Count));
+            StatusText.ToolTip = string.Join("\n", _hiddenVanillaFolders);
+        }
+        else
+        {
+            StatusText.ToolTip = null;
+        }
+
         ShowDetail();
     }
 
+    /// <summary>Vanilla-Ordner, die Mods des letzten Laufs mit replace_path ausblenden (Hinweis in der Statuszeile).</summary>
+    private IReadOnlyCollection<string> _hiddenVanillaFolders = Array.Empty<string>();
+
+    /// <summary>Blendet replace_path im letzten Lauf auch Dateien früher geladener Mods aus (CK III)?</summary>
+    private bool _hidesEarlierMods;
+
     private void Filter_Changed(object sender, RoutedEventArgs e) => ApplyFilter();
+
+    /// <summary>Klick auf eine Spaltenüberschrift sortiert danach, ein zweiter Klick kehrt die Richtung um.</summary>
+    private void ResultHeader_Click(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is not System.Windows.Controls.GridViewColumnHeader { Tag: string tag } || !Enum.TryParse<CompatSortColumn>(tag, out var column))
+        {
+            return;
+        }
+
+        _sort = (column, _sort is { } current && current.Column == column && !current.Descending);
+        ApplyFilter();
+    }
 
     private void Filter_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
@@ -247,6 +322,57 @@ public partial class ModCompatWindow
     }
 
     private CompatFinding? SelectedFinding => (ResultList.SelectedItem as FindingRow)?.Finding;
+
+    private List<CompatFinding> SelectedFindings => ResultList.SelectedItems.OfType<FindingRow>().Select(r => r.Finding).ToList();
+
+    private void ResultContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        var selected = SelectedFindings;
+        MarkResolvedMenuItem.IsEnabled = selected.Any(f => !_resolvedFound.Contains(f));
+        UnmarkResolvedMenuItem.IsEnabled = selected.Any(_resolvedFound.Contains);
+    }
+
+    private void MarkResolved_Click(object sender, RoutedEventArgs e) => ChangeResolved(mark: true);
+
+    private void UnmarkResolved_Click(object sender, RoutedEventArgs e) => ChangeResolved(mark: false);
+
+    /// <summary>Markiert die gewählten Funde als gelöst oder hebt die Markierung auf und speichert sofort (gilt für alle Sets des Spiels).</summary>
+    private void ChangeResolved(bool mark)
+    {
+        var selected = SelectedFindings;
+        if (selected.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var finding in selected)
+        {
+            if (mark)
+            {
+                Resolved.Mark(finding);
+            }
+            else
+            {
+                Resolved.Unmark(finding);
+            }
+        }
+
+        try
+        {
+            Resolved.Save(ResolvedFile);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _resolved = null;
+            MessageBox.Show(this, ModCompatWindowTexts.ResolvedSaveFailed(ex.Message), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // Unmark hebt jede Markierung derselben Stelle auf; deshalb für alle Funde neu bestimmen statt nur die Auswahl umzuschalten.
+        _resolvedFound.Clear();
+        _resolvedFound.UnionWith(_all.Where(Resolved.IsResolved));
+        ApplyFilter();
+    }
 
     private void ResultList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => ShowDetail();
 
@@ -288,21 +414,26 @@ public partial class ModCompatWindow
         }
 
         var text = new StringBuilder();
-        text.AppendLine($"{CompatText.Severity(finding.Severity)} · {CompatText.Kind(finding.Kind)}{(finding.Uncertain ? " · unsicher" : string.Empty)}");
+        text.AppendLine($"{CompatText.Severity(finding.Severity)} · {CompatText.Kind(finding.Kind)}{(finding.Uncertain ? " · " + ModCompatTexts.Uncertain : string.Empty)}");
+        if (_resolvedFound.Contains(finding))
+        {
+            text.AppendLine(ModCompatWindowTexts.ResolvedDetail);
+        }
+
         text.AppendLine(finding.Message);
         if (finding.Winner is not null)
         {
-            text.AppendLine("Gewinner: " + finding.Winner.Name);
+            text.AppendLine(ModCompatTexts.WinnerLine(finding.Winner.Name));
         }
 
         if (CompatText.Suggestion(finding.Suggestion) is { Length: > 0 } suggestion)
         {
-            text.AppendLine("Empfehlung: " + suggestion);
+            text.AppendLine(ModCompatTexts.SuggestionLine(suggestion));
         }
 
         if (finding.Note is not null)
         {
-            text.AppendLine("Hinweis: " + finding.Note);
+            text.AppendLine(ModCompatTexts.NoteLine(finding.Note));
         }
 
         text.AppendLine();
@@ -349,16 +480,17 @@ public partial class ModCompatWindow
         var shown = Filtered();
         if (_all.Count == 0 || shown.Count == 0)
         {
-            StatusText.Text = "Es gibt keine angezeigten Funde zum Speichern.";
+            StatusText.Text = ModCompatWindowTexts.NothingToSave;
             return;
         }
 
         var dialog = new SaveFileDialog
         {
-            Title = "Bericht speichern",
+            Title = ModCompatWindowTexts.SaveReport,
             Filter = "Markdown (*.md)|*.md|Text (*.txt)|*.txt",
-            FileName = $"Kompatibilitaet {StoreNames.Safe(_set.Name, "Set")}.md",
+            FileName = ModCompatWindowTexts.ReportFileName(StoreNames.Safe(_set.Name, "Set")),
         };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("modcompat.report");
         if (dialog.ShowDialog(this) != true)
         {
             return;
@@ -367,11 +499,11 @@ public partial class ModCompatWindow
         try
         {
             File.WriteAllText(dialog.FileName, CompatReport.Build(shown, new CompatReportOptions(Subtitle: _subtitle)), new UTF8Encoding(true));
-            StatusText.Text = "Bericht gespeichert: " + dialog.FileName;
+            StatusText.Text = ModCompatWindowTexts.ReportSaved(dialog.FileName);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, "Der Bericht konnte nicht gespeichert werden:\n" + ex.Message, "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ModCompatWindowTexts.ReportFailed(ex.Message), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

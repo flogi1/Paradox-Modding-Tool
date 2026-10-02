@@ -46,7 +46,7 @@ public sealed class SettingsWindowTests
     });
 
     [Fact]
-    public void ListShowsAllTwelveCategories() => Sta.Run(() =>
+    public void ListShowsAllThirteenCategories() => Sta.Run(() =>
     {
         var window = new SettingsWindow(new FakeHost());
 

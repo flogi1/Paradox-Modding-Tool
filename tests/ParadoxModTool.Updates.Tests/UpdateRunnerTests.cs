@@ -212,4 +212,19 @@ public class UpdateRunnerTests : IDisposable
         Assert.Equal("alt", CurrentExe());
         Assert.Equal(UpdateStartArguments.ForCancelled("eu4", To), Assert.Single(processes.Started).Args);
     }
+
+    [Fact]
+    public async Task Abbrechen_nach_dem_Warten_aber_vor_dem_Tausch_aendert_nichts()
+    {
+        CreateFolders();
+        var processes = new FakeProcesses { OnStartNew = WriteMarker };
+        using var cancellation = new CancellationTokenSource();
+
+        // Der Klick kommt, nachdem das Warten vorbei ist (Schreibprüfung läuft), aber bevor der Tausch beginnt.
+        var outcome = await Runner(processes, canWrite: _ => { cancellation.Cancel(); return true; }).RunAsync(new FakeUi(true), cancellation.Token);
+
+        Assert.Equal(ApplyOutcome.Cancelled, outcome);
+        Assert.Equal("alt", CurrentExe());
+        Assert.Equal(UpdateStartArguments.ForCancelled("eu4", To), Assert.Single(processes.Started).Args);
+    }
 }

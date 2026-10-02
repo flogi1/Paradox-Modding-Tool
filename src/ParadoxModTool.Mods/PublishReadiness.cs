@@ -38,17 +38,17 @@ public sealed record PublishReadiness(IReadOnlyList<PublishHint> Hints)
 
         if (string.IsNullOrWhiteSpace(input.AppId))
         {
-            hints.Add(new PublishHint("Das Spielprofil enthält keine Steam-AppID.", true));
+            hints.Add(new PublishHint(ModsTexts.PublishNoAppId, true));
         }
 
         var versionValid = false;
         if (input.Metadata is null)
         {
-            hints.Add(new PublishHint("Keine lesbare metadata.json gefunden.", true));
+            hints.Add(new PublishHint(ModsTexts.NoReadableMetadata, true));
         }
         else if (!VersionNumber.TryParse(input.Metadata.Version, out _))
         {
-            hints.Add(new PublishHint("metadata.json enthält keine gültige Version.", true));
+            hints.Add(new PublishHint(ModsTexts.NoValidVersion, true));
         }
         else
         {
@@ -57,18 +57,18 @@ public sealed record PublishReadiness(IReadOnlyList<PublishHint> Hints)
 
         if (input.MetadataUnsaved)
         {
-            hints.Add(new PublishHint("metadata.json hat ungespeicherte Änderungen. Speichere sie vor dem Veröffentlichen.", true));
+            hints.Add(new PublishHint(ModsTexts.PublishUnsaved, true));
         }
 
         var idText = input.WorkshopIdText?.Trim();
         if (!string.IsNullOrEmpty(idText) && !idText.All(char.IsAsciiDigit))
         {
-            hints.Add(new PublishHint("Die Workshop-ID muss eine Zahl sein.", true));
+            hints.Add(new PublishHint(ModsTexts.PublishWorkshopIdNumber, true));
         }
 
         if (!string.IsNullOrWhiteSpace(input.WorkshopIdOwner))
         {
-            hints.Add(new PublishHint($"Diese Workshop-ID gehört schon zur Mod „{input.WorkshopIdOwner}“. Ein Upload würde deren Workshop-Seite überschreiben.", true));
+            hints.Add(new PublishHint(ModsTexts.PublishWorkshopIdOwned(input.WorkshopIdOwner), true));
         }
 
         if (input.UseSteamClient)
@@ -82,33 +82,33 @@ public sealed record PublishReadiness(IReadOnlyList<PublishHint> Hints)
         {
             if (!input.SteamCmdReady)
             {
-                hints.Add(new PublishHint("SteamCMD ist nicht eingerichtet.", true));
+                hints.Add(new PublishHint(ModsTexts.PublishSteamCmdMissing, true));
             }
 
             if (string.IsNullOrWhiteSpace(input.UserName))
             {
-                hints.Add(new PublishHint("Der Steam-Benutzername fehlt.", true));
+                hints.Add(new PublishHint(ModsTexts.PublishSteamUserMissing, true));
             }
         }
 
         if (input.ChangelogExists && !input.ChangelogHasVersion && !string.IsNullOrWhiteSpace(input.VersionForChangelog))
         {
-            hints.Add(new PublishHint($"Im Changelog gibt es keinen Abschnitt für Version {input.VersionForChangelog}. Die Changenote bleibt sonst leer.", false));
+            hints.Add(new PublishHint(ModsTexts.PublishNoChangelogSection(input.VersionForChangelog), false));
         }
 
         if (input.IsFirstPublish && !input.PreviewExists)
         {
-            hints.Add(new PublishHint("Das Vorschaubild fehlt. Beim ersten Veröffentlichen braucht die Workshop-Seite eines (Feld picture in der metadata.json).", true));
+            hints.Add(new PublishHint(ModsTexts.PublishNoPreview, true));
         }
 
         if (versionValid && input.PublishedOnSteam)
         {
-            hints.Add(new PublishHint($"Version {input.Metadata!.Version} ist schon auf Steam veröffentlicht. Ein erneuter Upload überschreibt den Inhalt.", false));
+            hints.Add(new PublishHint(ModsTexts.PublishAlreadyPublished(input.Metadata!.Version), false));
         }
 
         if (input.NothingToUpload)
         {
-            hints.Add(new PublishHint("Der Mod-Ordner enthält nach dem Ausschluss keine Dateien.", true));
+            hints.Add(new PublishHint(ModsTexts.PublishNoFiles, true));
         }
 
         return new PublishReadiness(hints);

@@ -58,6 +58,10 @@ rem ParadoxModTool.Explorer/.Explorer.Tests (Runde 10, Verzeichnis-Übersicht) -
 rem sind komplett neu und standen noch in keiner bisherigen Projektmappe.
 dotnet sln "!SLNFILE!" add "src\ParadoxModTool.Explorer\ParadoxModTool.Explorer.csproj" >nul
 dotnet sln "!SLNFILE!" add "tests\ParadoxModTool.Explorer.Tests\ParadoxModTool.Explorer.Tests.csproj" >nul
+rem ParadoxModTool.Desync/.Desync.Tests (Runde 10.1, Desync-Analyse) - beide Projekte
+rem sind komplett neu und standen noch in keiner bisherigen Projektmappe.
+dotnet sln "!SLNFILE!" add "src\ParadoxModTool.Desync\ParadoxModTool.Desync.csproj" >nul
+dotnet sln "!SLNFILE!" add "tests\ParadoxModTool.Desync.Tests\ParadoxModTool.Desync.Tests.csproj" >nul
 echo.
 
 echo [1/3] dotnet clean ...
@@ -78,6 +82,7 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+powershell -NoProfile -ExecutionPolicy Bypass -File "create-shortcut.ps1"
 
 echo.
 echo [3/3] Alle Tests ...
@@ -93,6 +98,7 @@ call :run_test tests\ParadoxModTool.Notes.Tests
 call :run_test tests\ParadoxModTool.Tools.Tests
 call :run_test tests\ParadoxModTool.LaunchControl.Tests
 call :run_test tests\ParadoxModTool.Explorer.Tests
+call :run_test tests\ParadoxModTool.Desync.Tests
 
 if "%FAILED%"=="1" (
     echo.

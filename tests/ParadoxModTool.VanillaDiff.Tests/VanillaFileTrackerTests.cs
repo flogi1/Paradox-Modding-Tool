@@ -77,4 +77,15 @@ public class VanillaFileTrackerTests : IDisposable
 
         Assert.Throws<NotSupportedException>(() => VanillaFileTracker.FindOverriddenFiles(_vanillaRoot, _modRoot, profile));
     }
+
+    [Fact]
+    public void Filter_matches_relative_path_ignoring_case()
+    {
+        static OverriddenFile File(string path) => new() { RelativePath = path, VanillaFullPath = "v/" + path, ModFullPath = "m/" + path };
+        var files = new[] { File("common/ideas/00_basic_ideas.txt"), File("events/Government.txt") };
+
+        Assert.Equal(new[] { "common/ideas/00_basic_ideas.txt" }, OverriddenFile.Filter(files, " IDEAS ").Select(f => f.RelativePath));
+        Assert.Equal(2, OverriddenFile.Filter(files, "").Count);
+        Assert.Equal(2, OverriddenFile.Filter(files, null).Count);
+    }
 }

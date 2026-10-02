@@ -2,7 +2,7 @@ using System.Text;
 
 namespace ParadoxModTool.ModCompat;
 
-public sealed record CompatReportOptions(CompatSeverity MinSeverity = CompatSeverity.Info, string Title = "Kompatibilitätsbericht", string? Subtitle = null);
+public sealed record CompatReportOptions(CompatSeverity MinSeverity = CompatSeverity.Info, string? Title = null, string? Subtitle = null);
 
 /// <summary>Schreibt die Funde als Markdown, als Planungshilfe für einen Kompatibilitätspatch.</summary>
 public static class CompatReport
@@ -12,7 +12,7 @@ public static class CompatReport
         options ??= new CompatReportOptions();
         var shown = findings.Where(f => f.Severity >= options.MinSeverity).ToList();
         var text = new StringBuilder();
-        text.AppendLine("# " + options.Title);
+        text.AppendLine("# " + (options.Title ?? ModCompatTexts.ReportTitle));
         if (!string.IsNullOrWhiteSpace(options.Subtitle))
         {
             text.AppendLine();
@@ -20,15 +20,15 @@ public static class CompatReport
         }
 
         text.AppendLine();
-        text.AppendLine($"Funde: {Count(shown, CompatSeverity.Conflict)} Konflikte, {Count(shown, CompatSeverity.Hint)} Hinweise, {Count(shown, CompatSeverity.Info)} Infos");
+        text.AppendLine(ModCompatTexts.ReportCounts(Count(shown, CompatSeverity.Conflict), Count(shown, CompatSeverity.Hint), Count(shown, CompatSeverity.Info)));
         if (shown.Count == 0)
         {
             text.AppendLine();
-            text.AppendLine("Keine Funde.");
+            text.AppendLine(ModCompatTexts.NoFindings);
             return text.ToString();
         }
 
-        foreach (var (severity, heading) in new[] { (CompatSeverity.Conflict, "Konflikte"), (CompatSeverity.Hint, "Hinweise"), (CompatSeverity.Info, "Infos") })
+        foreach (var (severity, heading) in new[] { (CompatSeverity.Conflict, ModCompatTexts.Conflicts), (CompatSeverity.Hint, ModCompatTexts.Hints), (CompatSeverity.Info, ModCompatTexts.Infos) })
         {
             var section = shown.Where(f => f.Severity == severity).ToList();
             if (section.Count == 0)
@@ -60,7 +60,7 @@ public static class CompatReport
 
         if (finding.Uncertain)
         {
-            title += " (unsicher)";
+            title += " (" + ModCompatTexts.Uncertain + ")";
         }
 
         text.AppendLine(title);
@@ -69,22 +69,22 @@ public static class CompatReport
         if (finding.Winner is not null)
         {
             text.AppendLine();
-            text.AppendLine("- Gewinner: " + finding.Winner.Name);
+            text.AppendLine("- " + ModCompatTexts.WinnerLine(finding.Winner.Name));
         }
 
         if (CompatText.Suggestion(finding.Suggestion) is { Length: > 0 } suggestion)
         {
-            text.AppendLine("- Empfehlung: " + suggestion);
+            text.AppendLine("- " + ModCompatTexts.SuggestionLine(suggestion));
         }
 
         if (finding.Note is not null)
         {
-            text.AppendLine("- Hinweis: " + finding.Note);
+            text.AppendLine("- " + ModCompatTexts.NoteLine(finding.Note));
         }
 
         if (finding.Contributions.Count > 0)
         {
-            text.AppendLine("- Beiträge:");
+            text.AppendLine("- " + ModCompatTexts.ReportContributions);
             foreach (var c in finding.Contributions)
             {
                 var place = c.Line > 0 ? $"{c.RelativePath}:{c.Line}" : c.RelativePath;

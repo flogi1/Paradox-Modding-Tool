@@ -16,14 +16,20 @@ public sealed class ScopeService
 {
     private readonly ScopeRulesStore _store;
     private readonly Func<IReadOnlyList<string>> _getVanillaRoots;
+    private readonly Func<string?> _getDefaultEventType;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private ScopeRules? _rules;
 
-    public ScopeService(string rulesFilePath, Func<IReadOnlyList<string>> getVanillaRoots)
+    /// <param name="getDefaultEventType">Art der Events ohne <c>type</c> aus dem Spielprofil (CK III: character_event), sonst <see langword="null"/>.</param>
+    public ScopeService(string rulesFilePath, Func<IReadOnlyList<string>> getVanillaRoots, Func<string?>? getDefaultEventType = null)
     {
         _store = new ScopeRulesStore(rulesFilePath);
         _getVanillaRoots = getVanillaRoots;
+        _getDefaultEventType = getDefaultEventType ?? (() => null);
     }
+
+    /// <summary>Namen der Vanilla-Script-Values aus den aktuellen Regeln (Wert-Vorschläge im Scope Finder); leer, solange keine Regeln geladen sind.</summary>
+    public IReadOnlyList<string> ScriptValues => _rules?.ScriptValues ?? (IReadOnlyList<string>)Array.Empty<string>();
 
     /// <summary>
     /// Baut die Scope-Verfolgung aus der Datenbank und den Regeln auf und lernt die Regeln bei Bedarf neu (immer bei <paramref name="force"/>). Aufzurufen im
@@ -42,7 +48,8 @@ public sealed class ScopeService
 
             _rules ??= await Task.Run(_store.TryLoad);
 
-            var learn = canLearn && (force || _rules is null || _rules.DocsImportId != importId);
+            var defaultEventType = _getDefaultEventType();
+            var learn = canLearn && (force || _rules is null || _rules.DocsImportId != importId || _rules.DefaultEventType != defaultEventType);
             if (canLearn && !learn && _rules is not null)
             {
                 var current = await Task.Run(() => ScopeRuleLearner.ComputeFingerprint(ScopeRuleLearner.EnumerateFiles(roots)));
@@ -53,7 +60,7 @@ public sealed class ScopeService
             var learned = false;
             if (learn)
             {
-                var result = await Task.Run(() => ScopeRuleLearner.Learn(roots, db, importId, DateTime.UtcNow, cancellation, progress), cancellation);
+                var result = await Task.Run(() => ScopeRuleLearner.Learn(roots, db, importId, DateTime.UtcNow, cancellation, progress, defaultEventType), cancellation);
                 _rules = result.Rules;
                 duration = result.Duration;
                 learned = true;
@@ -82,11 +89,10 @@ public sealed class ScopeService
         if (rules is null)
         {
             return canLearn
-                ? "Scope-Regeln werden noch gelernt."
-                : "Scope-Regeln fehlen: Es ist kein Vanilla-Ordner bekannt (Einstellungen › Spielpfad einstellen) oder die Script-Datenbank ist leer.";
+                ? LearningStatusTexts.ScopeRulesLearning
+                : LearningStatusTexts.ScopeRulesMissing;
         }
 
-        return $"Scope-Regeln: {rules.ConfidentCount:N0} sichere, {rules.UnresolvedCount:N0} offene, {rules.Discriminators.Count:N0} mit Unterscheider; " +
-               $"gelernt am {rules.LearnedUtc.ToLocalTime():g} aus {rules.FilesScanned:N0} Dateien.";
+        return LearningStatusTexts.ScopeRulesLearned(rules.ConfidentCount, rules.UnresolvedCount, rules.Discriminators.Count, rules.LearnedUtc.ToLocalTime(), rules.FilesScanned);
     }
 }

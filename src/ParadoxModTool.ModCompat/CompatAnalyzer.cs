@@ -6,7 +6,7 @@ public static class CompatAnalyzer
     public static CompatResult Analyze(CompatRequest request, IProgress<CompatProgress>? progress = null, CancellationToken ct = default)
     {
         var mods = ActiveMods(request);
-        var index = ContributionIndex.Build(mods, request.Rules, request.Cache, progress, ct);
+        var index = ContributionIndex.Build(mods, request.Rules, request.Cache, progress, ct, request.IsHidden);
         var findings = new List<CompatFinding>();
 
         foreach (var missing in index.MissingFolders)
@@ -16,7 +16,7 @@ public static class CompatAnalyzer
                 Severity = CompatSeverity.Info,
                 Kind = CompatKind.MissingFolder,
                 RelativePath = string.Empty,
-                Message = $"Der Ordner der Mod \"{missing.Name}\" fehlt und wurde übersprungen ({missing.Folder}).",
+                Message = ModCompatTexts.FindingMissingFolder(missing.Name, missing.Folder),
             });
         }
 
@@ -27,17 +27,19 @@ public static class CompatAnalyzer
                 Severity = CompatSeverity.Info,
                 Kind = CompatKind.Unreadable,
                 RelativePath = file.RelativePath,
-                Message = $"Die Datei {file.RelativePath} in \"{file.Participant.Name}\" ist nicht lesbar ({file.Error}). Sie zählt nur als Dateikonflikt.",
+                Message = ModCompatTexts.FindingUnreadable(file.RelativePath, file.Participant.Name, file.Error),
             });
         }
 
-        progress?.Report(new CompatProgress("Vergleiche Dateien", 0, 0));
+        findings.AddRange(ReplacePathChecker.Check(request, mods));
+
+        progress?.Report(new CompatProgress(ModCompatTexts.ProgressCompareFiles, 0, 0));
         findings.AddRange(FileFindings(request, index, ct));
 
-        progress?.Report(new CompatProgress("Vergleiche Schlüssel", 0, 0));
+        progress?.Report(new CompatProgress(ModCompatTexts.ProgressCompareKeys, 0, 0));
         findings.AddRange(KeyFindings(request, index, ct));
 
-        progress?.Report(new CompatProgress("Sinnhaftigkeitscheck", 0, 0));
+        progress?.Report(new CompatProgress(ModCompatTexts.ProgressSenseCheck, 0, 0));
         findings.AddRange(SenseChecker.Check(request, index, ct));
 
         return new CompatResult(findings
@@ -58,7 +60,7 @@ public static class CompatAnalyzer
 
         if (mods.All(p => p.Id != request.FocusId))
         {
-            throw new ArgumentException("Mod 1 steht nicht im Set.", nameof(request));
+            throw new ArgumentException(ModCompatTexts.FocusNotInSet, nameof(request));
         }
 
         return mods.Where(p => p.Id == request.FocusId || request.CounterpartIds is null || request.CounterpartIds.Contains(p.Id)).ToList();
@@ -79,9 +81,9 @@ public static class CompatAnalyzer
             case Verdict.Suppress:
                 return null;
             case Verdict.Compatch:
-                return finding.With(CompatSeverity.Info, "Kompatch vorhanden: " + compatch!.Name);
+                return finding.With(CompatSeverity.Info, ModCompatTexts.NoteCompatchPresent(compatch!.Name));
             case Verdict.InfoOnly:
-                return finding.With(CompatSeverity.Info, "Gleiches Projekt: gewollte Abhängigkeit.");
+                return finding.With(CompatSeverity.Info, ModCompatTexts.NoteSameProject);
             default:
                 return finding;
         }
@@ -112,7 +114,7 @@ public static class CompatAnalyzer
                     Kind = CompatKind.FileIdentical,
                     RelativePath = relative,
                     Contributions = contributions,
-                    Message = $"Die Datei {relative} ist in {names} inhaltsgleich.",
+                    Message = ModCompatTexts.FindingFileIdentical(relative, names),
                 }
                 : new CompatFinding
                 {
@@ -123,7 +125,7 @@ public static class CompatAnalyzer
                     Winner = winner,
                     Suggestion = CompatSuggestion.NeedsCompatch,
                     Uncertain = !rule.Certain,
-                    Message = $"Die Datei {relative} gibt es in {names}. Geladen wird nur die Fassung von \"{winner.Name}\", die anderen gehen vollständig verloren.",
+                    Message = ModCompatTexts.FindingFileOverride(relative, names, winner.Name),
                 };
 
             if (ApplyRelation(request, finding) is { } kept)

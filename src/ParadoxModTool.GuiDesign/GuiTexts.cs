@@ -427,6 +427,8 @@ public static class GuiTexts
 
     public static string PaletteEngineGroup => T("gui.palette.engineGroup", "Engine-Widgets");
 
+    public static string PaletteBlocksGroup => T("gui.palette.blocksGroup", "Bausteine");
+
     public static string PaletteBuilding => T("gui.palette.building", "Palette wird aufgebaut");
 
     public static string PaletteFailed(string message) => F("gui.palette.failed", "Palette fehlgeschlagen: {0}", message);
@@ -442,17 +444,19 @@ public static class GuiTexts
 
     public static string MenuNewFile => T("gui.menu.newFile", "Neue GUI-Datei");
 
-    public static string MenuNewFileTip => T("gui.menu.newFile.tip", "Neue .gui-Datei im Ordner gui der aktiven Mod anlegen, leer oder mit Fenster-Gerüst");
+    public static string MenuNewFileTip => T("gui.menu.newFile.tip", "Neue .gui-Datei im Ordner gui der aktiven Mod anlegen, leer oder aus einem Baustein");
+
+    public static string MenuBlocks => T("gui.menu.blocks", "Baustein einfügen");
+
+    public static string MenuBlocksTip => T("gui.menu.blocks.tip", "GUI-Baustein auswählen, ausfüllen und an der Cursorstelle einfügen");
 
     public static string NewFileTitle => T("gui.newFile.title", "Neue GUI-Datei");
 
     public static string NewFileName => T("gui.newFile.name", "Dateiname:");
 
-    public static string NewFileScaffold => T("gui.newFile.scaffold", "Gerüst:");
+    public static string NewFileBlock => T("gui.newFile.block", "Baustein:");
 
-    public static string NewFileEmpty => T("gui.newFile.empty", "Leer");
-
-    public static string NewFileWindow => T("gui.newFile.window", "Fenster mit Titelleiste und Schließen-Button");
+    public static string NewFileNoBlock => T("gui.newFile.noBlock", "Kein Baustein gewählt: Die Suche findet keinen passenden.");
 
     public static string NewFileTarget(string folder) => F("gui.newFile.target", "Wird angelegt in: {0}", folder);
 
@@ -573,6 +577,10 @@ public static class GuiTexts
 
     public static string ModSettingsTypesFile => T("gui.modSettings.typesFile", "Typdatei für neue Typen:");
 
+    public static string ModSettingsOverrideFileFlat => T("gui.modSettings.overrideFileFlat", "Überschreibdatei (liegt in gui/):");
+
+    public static string ModSettingsFirstWinsHint => T("gui.modSettings.firstWinsHint", "In diesem Spiel gewinnt die zuerst geladene Datei: Die Standardnamen beginnen deshalb mit 00_, damit sie vor den anderen Dateien der Mod laden.");
+
     public static string ModSettingsDependencies => T("gui.modSettings.dependencies", "Abhängigkeits-Mods (ihre Typen und Templates kommen in den GUI-Index):");
 
     public static string ModSettingsAdd => T("gui.modSettings.add", "Ordner hinzufügen");
@@ -596,6 +604,215 @@ public static class GuiTexts
     public static string NewFileContext => T("gui.newFile.context", "Kontext:");
 
     public static string NewFileContextTip => T("gui.newFile.context.tip", "in_game: im laufenden Spiel, main_menu: Hauptmenü, loading_screen: Ladebildschirm");
+
+    // GUI-Bausteine (docs/superpowers/specs/2026-09-27-gui-building-blocks-design.md).
+    public static string BlocksDefaultGroup => T("gui.blocks.defaultGroup", "Eigene");
+
+    public static string BlocksEmptyFileName => T("gui.blocks.emptyFile", "Leere Datei");
+
+    public static string BlocksEmptyFileDescription => T("gui.blocks.emptyFile.description", "Leere .gui-Datei ohne Inhalt");
+
+    public static string BlocksTitle => T("gui.blocks.title", "Bausteine");
+
+    public static string BlocksSearchTip => T("gui.blocks.search.tip", "Nach Name, Gruppe oder Beschreibung filtern");
+
+    public static string BlocksCount => T("gui.blocks.count", "Anzahl:");
+
+    public static string BlocksOwnCopy => T("gui.blocks.ownCopy", "Als eigene Kopie bearbeiten");
+
+    public static string BlocksOwnCopyTip => T("gui.blocks.ownCopy.tip", "Kopie in den eigenen Bausteinen anlegen und im Editor öffnen; PMT-Updates überschreiben sie nicht");
+
+    public static string BlocksOwnCopyGame => T("gui.blocks.ownCopy.game", "Für alle Mods dieses Spiels");
+
+    public static string BlocksOwnCopyMod => T("gui.blocks.ownCopy.mod", "Nur für die aktive Mod");
+
+    public static string BlocksOwnCopyOverwrite(string name) => F("gui.blocks.ownCopy.overwrite", "Einen eigenen Baustein {0} gibt es dort schon. Überschreiben?", name);
+
+    public static string BlocksOwnCopyFailed(string message) => F("gui.blocks.ownCopy.failed", "Die Kopie konnte nicht angelegt werden: {0}", message);
+
+    public static string ContextSaveBlock => T("gui.blocks.save.context", "Als Baustein speichern");
+
+    public static string BlocksSaveTitle => T("gui.blocks.save.title", "Als Baustein speichern");
+
+    public static string BlocksSaveName => T("gui.blocks.save.name", "Name:");
+
+    public static string BlocksSaveGroup => T("gui.blocks.save.group", "Gruppe:");
+
+    public static string BlocksSaveDescription => T("gui.blocks.save.description", "Beschreibung:");
+
+    public static string BlocksSaveLayer => T("gui.blocks.save.layer", "Speichern für:");
+
+    public static string BlocksSaveLayerGame => T("gui.blocks.save.layer.game", "alle Mods dieses Spiels");
+
+    public static string BlocksSaveLayerMod => T("gui.blocks.save.layer.mod", "nur die aktive Mod");
+
+    public static string BlocksSaveCode => T("gui.blocks.save.code", "Code:");
+
+    public static string BlocksSaveKeys => T("gui.blocks.save.keys", "Platzhalter und Wiederholungen:");
+
+    public static string BlocksSaveKey => T("gui.blocks.save.key", "Schlüssel");
+
+    public static string BlocksSaveLabel => T("gui.blocks.save.label", "Beschriftung");
+
+    public static string BlocksSaveDefault => T("gui.blocks.save.default", "Vorgabe");
+
+    public static string BlocksSaveKind => T("gui.blocks.save.kind", "Art");
+
+    public static string BlocksSaveKindText => T("gui.blocks.save.kind.text", "Text");
+
+    public static string BlocksSaveKindModifier => T("gui.blocks.save.kind.modifier", "Modifier");
+
+    public static string BlocksSaveRepeatCount => T("gui.blocks.save.repeatCount", "Anzahl");
+
+    public static string BlocksSavePreview => T("gui.blocks.save.preview", "So sieht die Eingabe aus:");
+
+    public static string BlocksSaveHelp => T("gui.blocks.save.help", "$name$ setzt einen Wert ein. $repeat tabs$ … $end tabs$ wiederholt einen Abschnitt, darin ist $tabs.id$ ein Wert je Eintrag und $index$ die laufende Nummer. $$ ergibt ein Dollarzeichen.");
+
+    public static string BlocksSaveButton => T("gui.blocks.save.button", "Speichern");
+
+    public static string BlocksSaveCancel => T("gui.blocks.save.cancel", "Abbrechen");
+
+    public static string BlocksSaveNameMissing => T("gui.blocks.save.nameMissing", "Bitte einen Namen eingeben.");
+
+    public static string BlocksSaveOverwrite(string name) => F("gui.blocks.save.overwrite", "Einen eigenen Baustein {0} gibt es in dieser Ebene schon. Überschreiben?", name);
+
+    public static string BlocksSaveFailed(string message) => F("gui.blocks.save.failed", "Der Baustein konnte nicht gespeichert werden: {0}", message);
+
+    public static string ShareExport => T("gui.blocks.share.export", "Exportieren");
+
+    public static string ShareExportTip => T("gui.blocks.share.export.tip", "Eigene Bausteine als Paket (.pmtblocks) speichern, z.B. zum Teilen im Discord oder Forum");
+
+    public static string ShareImport => T("gui.blocks.share.import", "Importieren");
+
+    public static string ShareImportTip => T("gui.blocks.share.import.tip", "Bausteine aus einem Paket (.pmtblocks) oder einer .guiblock-Datei übernehmen");
+
+    public static string ShareExportTitle => T("gui.blocks.share.exportTitle", "Bausteine exportieren");
+
+    public static string ShareImportTitle => T("gui.blocks.share.importTitle", "Bausteine importieren");
+
+    public static string ShareFilter => T("gui.blocks.share.filter", "PMT-Bausteinpaket (*.pmtblocks)|*.pmtblocks");
+
+    public static string ShareImportFilter => T("gui.blocks.share.importFilter", "Bausteine (*.pmtblocks;*.guiblock)|*.pmtblocks;*.guiblock");
+
+    public static string ShareNoOwnBlocks => T("gui.blocks.share.noOwnBlocks", "Es gibt noch keine eigenen Bausteine zum Exportieren.");
+
+    public static string ShareOtherGame(string game) => F("gui.blocks.share.otherGame", "Das Paket stammt von einem anderen Spiel ({0}). Bausteine passen womöglich nicht.", game);
+
+    public static string ShareManifestProblem => T("gui.blocks.share.manifestProblem", "Die Paketbeschreibung fehlt oder ist unlesbar; die Bausteine werden trotzdem gelesen.");
+
+    public static string ShareStatusOk => T("gui.blocks.share.status.ok", "neu");
+
+    public static string ShareStatusConflict => T("gui.blocks.share.status.conflict", "gibt es schon");
+
+    public static string ShareStatusErrors => T("gui.blocks.share.status.errors", "fehlerhaft");
+
+    public static string ShareOverwrite => T("gui.blocks.share.overwrite", "Überschreiben");
+
+    public static string ShareSkipped(string list) => F("gui.blocks.share.skipped", "Übersprungen: {0}", list);
+
+    public static string ShareResult(int imported, int skipped) => F("gui.blocks.share.result", "{0} importiert, {1} übersprungen.", imported, skipped);
+
+    public static string ShareExported(int count, string path) => F("gui.blocks.share.exported", "{0} Bausteine exportiert nach {1}.", count, path);
+
+    public static string ShareFailed(string message) => F("gui.blocks.share.failed", "Das Paket konnte nicht gelesen oder geschrieben werden: {0}", message);
+
+    public static string SuggestButton => T("gui.blocks.suggest.button", "Platzhalter vorschlagen");
+
+    public static string SuggestButtonTip => T("gui.blocks.suggest.button.tip", "PMT sucht Namen, Texte, Texturen, Größen, Variablen und gleichartige Elemente und schlägt Platzhalter und Wiederholungen vor");
+
+    public static string SuggestTitle => T("gui.blocks.suggest.title", "Platzhalter vorschlagen");
+
+    public static string SuggestApply => T("gui.blocks.suggest.apply", "Übernehmen");
+
+    public static string SuggestAll => T("gui.blocks.suggest.all", "Alle");
+
+    public static string SuggestNoneButton => T("gui.blocks.suggest.noneButton", "Keine");
+
+    public static string SuggestCancel => T("gui.blocks.suggest.cancel", "Abbrechen");
+
+    public static string SuggestNone => T("gui.blocks.suggest.none", "Keine Vorschläge gefunden.");
+
+    public static string SuggestKindValue => T("gui.blocks.suggest.kind.value", "Wert");
+
+    public static string SuggestKindRepeat => T("gui.blocks.suggest.kind.repeat", "Wiederholung");
+
+    public static string SuggestFound(string found, int count) => F("gui.blocks.suggest.found", "{0} ({1}×)", found, count);
+
+    public static string SuggestName => T("gui.blocks.suggest.name", "Name");
+
+    public static string SuggestWidth => T("gui.blocks.suggest.width", "Breite");
+
+    public static string SuggestHeight => T("gui.blocks.suggest.height", "Höhe");
+
+    public static string SuggestText(int number) => F("gui.blocks.suggest.text", "Text {0}", number);
+
+    public static string SuggestTexture(int number) => F("gui.blocks.suggest.texture", "Textur {0}", number);
+
+    public static string SuggestVariable(int number) => F("gui.blocks.suggest.variable", "Variable {0}", number);
+
+    public static string SuggestId(int number) => F("gui.blocks.suggest.id", "Kennung {0}", number);
+
+    public static string SuggestRepeat(string elementKey) => F("gui.blocks.suggest.repeat", "Einträge {0}", elementKey);
+
+    public static string BlocksModifierTip => T("gui.blocks.modifier.tip", "Modifier aus der Datenbank des Spiels wählen; freie Eingabe bleibt möglich");
+
+    public static string BlocksEntryFor(string label) => F("gui.blocks.entryFor", "{0} für:", label);
+
+    public static string BlocksPreview => T("gui.blocks.preview", "Vorschau");
+
+    public static string BlocksMissing(string names) => F("gui.blocks.missing", "Im GUI-Index nicht gefunden: {0}. Der Code funktioniert erst, wenn es diese Typen oder Templates gibt.", names);
+
+    public static string BlocksHasErrors => T("gui.blocks.hasErrors", "Der Baustein hat Fehler und kann nicht eingefügt werden:");
+
+    public static string BlocksErrorLine(int line, string message) => F("gui.blocks.errorLine", "Zeile {0}: {1}", line, message);
+
+    public static string BlocksInsert => T("gui.blocks.insert", "Einfügen");
+
+    public static string BlocksOpenFile => T("gui.blocks.openFile", "Datei öffnen");
+
+    public static string BlocksDelete => T("gui.blocks.delete", "Löschen");
+
+    public static string BlocksClose => T("gui.blocks.close", "Schließen");
+
+    public static string BlocksDeleteConfirm(string name) => F("gui.blocks.deleteConfirm", "Baustein {0} löschen?", name);
+
+    public static string BlocksDeleteFailed(string message) => F("gui.blocks.deleteFailed", "Der Baustein konnte nicht gelöscht werden: {0}", message);
+
+    public static string BlocksLayerGame => T("gui.blocks.layer.game", "(Spiel)");
+
+    public static string BlocksLayerMod => T("gui.blocks.layer.mod", "(Mod)");
+
+    public static string BlocksLayerShipped => T("gui.blocks.layer.shipped", "(mitgeliefert)");
+
+    public static string BlocksHidden(string layers) => F("gui.blocks.hidden", "Verdeckt: {0}", layers);
+
+    public static string BlocksNoShipped => T("gui.blocks.noShipped", "Für dieses Spiel liefert PMT noch keine Bausteine mit; die Liste zeigt nur eigene.");
+
+    public static string ContextBlocks => T("gui.blocks.context", "Baustein einfügen");
+
+    public static string KeyBlocks => T("gui.blocks.key", "Strg+Umschalt+B");
+
+    public static string BlocksButton => T("gui.blocks.button", "Bausteine");
+
+    public static string BlocksButtonTip => T("gui.blocks.button.tip", "GUI-Baustein auswählen, ausfüllen und an der Cursorstelle einfügen (Strg+Umschalt+B)");
+
+    public static string BlocksError(Blocks.GuiBlockErrorKind kind, string detail) => kind switch
+    {
+        Blocks.GuiBlockErrorKind.MissingBlock => T("gui.blocks.error.missingBlock", "Die Kopfzeile \"# block:\" mit dem Namen fehlt."),
+        Blocks.GuiBlockErrorKind.DuplicateBlock => F("gui.blocks.error.duplicateBlock", "\"# block:\" steht mehrfach im Kopf: {0}", detail),
+        Blocks.GuiBlockErrorKind.BlockNotFirst => F("gui.blocks.error.blockNotFirst", "\"# block:\" muss die erste Kopfzeile sein: {0}", detail),
+        Blocks.GuiBlockErrorKind.InvalidHeader => F("gui.blocks.error.invalidHeader", "Kopfzeile ungültig: {0}", detail),
+        Blocks.GuiBlockErrorKind.InvalidKey => F("gui.blocks.error.invalidKey", "Ungültiger Schlüssel (erlaubt sind a-z, 0-9, _ und Punkte; \"index\" ist reserviert): {0}", detail),
+        Blocks.GuiBlockErrorKind.UndeclaredParent => F("gui.blocks.error.undeclaredParent", "Die Wiederholung zu diesem Schlüssel ist nicht vorher deklariert: {0}", detail),
+        Blocks.GuiBlockErrorKind.DuplicateKey => F("gui.blocks.error.duplicateKey", "Schlüssel doppelt deklariert: {0}", detail),
+        Blocks.GuiBlockErrorKind.UnknownPlaceholder => F("gui.blocks.error.unknownPlaceholder", "Unbekannter Platzhalter oder unbekannte Wiederholung: {0}", detail),
+        Blocks.GuiBlockErrorKind.OutsideRepeat => F("gui.blocks.error.outsideRepeat", "Platzhalter oder Wiederholung außerhalb der zugehörigen Wiederholung: {0}", detail),
+        Blocks.GuiBlockErrorKind.MissingEnd => F("gui.blocks.error.missingEnd", "Zu $repeat {0}$ fehlt das passende $end {0}$.", detail),
+        Blocks.GuiBlockErrorKind.MismatchedEnd => F("gui.blocks.error.mismatchedEnd", "$end {0}$ passt zu keinem offenen $repeat$.", detail),
+        Blocks.GuiBlockErrorKind.LoneDollar => F("gui.blocks.error.loneDollar", "Einzelnes $ (für ein Dollarzeichen $$ schreiben): {0}", detail),
+        Blocks.GuiBlockErrorKind.DuplicateName => F("gui.blocks.error.duplicateName", "Ein anderer Baustein dieser Ebene hat schon diesen Namen: {0}", detail),
+        _ => F("gui.blocks.error.unreadable", "Datei nicht lesbar: {0}", detail),
+    };
 
     public static string InspectorOpenInDesigner => T("gui.inspector.openInDesigner", "Im Designer öffnen");
 
@@ -679,6 +896,8 @@ public static class GuiTexts
 
     public static string ViewInGameUnsaved => T("gui.game.viewInGame.unsaved", "Nicht alle Mod-Dateien sind gespeichert bzw. übernommen. Das Spiel wird nicht gestartet.");
 
+    public static string ViewInGameUnsavedRunning => T("gui.game.viewInGame.unsavedRunning", "Nicht alle Mod-Dateien sind gespeichert bzw. übernommen. Das Spiel läuft bereits und sieht nur gespeicherte Dateien.");
+
     public static string ViewInGameRunningUnknown => T("gui.game.viewInGame.runningUnknown", "Hot-Reload wirkt nur im Debug-Modus. Läuft das Spiel mit -debug_mode?");
 
     public static string ViewInGameRestartNeeded(string files) => F("gui.game.viewInGame.restartNeeded", "Diese Dateien sind neu, seit das Spiel läuft. Das Spiel lädt sie erst nach einem Neustart: {0}", files);
@@ -687,7 +906,7 @@ public static class GuiTexts
 
     public static string GameEditorRegister(string game) => F("gui.game.editor.register", "PMT als Editor für {0} eintragen", game);
 
-    public static string GameEditorRegisterTip => T("gui.game.editor.register.tip", "Trägt PMT in pdx_settings.json des Spiels als externen Editor ein (System.editor). Im Spiel mit -debug_mode öffnet Alt+Rechtsklick (UI Bounds) das Element dann in PMT. Vorher werden die Datei und der alte Wert gesichert.");
+    public static string GameEditorRegisterTip => T("gui.game.editor.register.tip", "Trägt PMT in pdx_settings.json des Spiels als externen Editor ein (System.editor). Das geht nur bei geschlossenem Spiel und wirkt beim nächsten Start. Im Spiel mit -debug_mode öffnet Alt+Rechtsklick (UI Bounds) die Datei dann in PMT. Vorher werden die Datei und der alte Wert gesichert. Wer den Pfad stattdessen im Spiel einträgt, muss das Spiel danach neu starten.");
 
     public static string GameEditorRestore => T("gui.game.editor.restore", "Alten Editor wiederherstellen");
 
@@ -719,6 +938,10 @@ public static class GuiTexts
 
     public static string GameEditorWriteFailed(string detail) => F("gui.game.editor.writeFailed", "Schreiben fehlgeschlagen: {0}", detail);
 
+    public static string GameEditorLocked(string path) => F("gui.game.editor.locked", "pdx_settings.json wird gerade von einem anderen Programm verwendet (Spiel oder Launcher?) und bleibt unverändert: {0}", path);
+
+    public static string GameEditorNoPath => T("gui.game.editor.noPath", "Pfad zu pdx_settings.json unbekannt: Stelle die playsets.json oder im Spielprofil die Vorlage für den Mod-Ordner ein.");
+
     public static string GameEditorGameRunning => T("gui.game.editor.gameRunning", "Das Spiel läuft. Bitte zuerst das Spiel schließen; es schreibt seine Einstellungen beim Beenden vermutlich neu.");
 
     public static string GameEditorNoExe => T("gui.game.editor.noExe", "Der Pfad zur Spiel-Exe ist nicht eingestellt. Ohne ihn kann PMT nicht prüfen, ob das Spiel läuft.");
@@ -726,6 +949,8 @@ public static class GuiTexts
     public static string GameEditorDevHost => T("gui.game.editor.devHost", "PMT läuft nicht als ParadoxModTool.exe (z.B. über dotnet). Eintragen geht nur mit der gebauten Exe.");
 
     public static string HandOffMissing(string path) => F("gui.game.handOff.missing", "Die Datei aus dem Spiel gibt es nicht: {0}", path);
+
+    public static string HandOffReadFailed(string path, string detail) => F("gui.game.handOff.readFailed", "Die Datei aus dem Spiel lässt sich nicht lesen: {0} ({1})", path, detail);
 
     public static string HandOffNotRecognised(string log) => F("gui.game.handOff.notRecognised", "PMT hat im Aufruf keine vorhandene Datei erkannt und öffnet deshalb nichts. Die Kommandozeile steht im Protokoll: {0}", log);
 

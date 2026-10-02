@@ -58,13 +58,13 @@
              Notiz bzw. Lesezeichen. Mehrere aktive Filter gelten gleichzeitig (UND). Zusammen mit den
              Kategorie-Häkchen oben über Einstellungen ausblendbar (siehe SetDocumentBarVisible). -->
         <StackPanel x:Name="PropertyFilterPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,0,2,2">
-            <TextBlock Text="Nur mit:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource Theme.TextMuted}" />
-            <ToggleButton x:Name="FilterHasNoteToggle" Content="🗒 Notiz" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
-                          ToolTip="Nur Dokumente mit Notiz anzeigen" />
-            <ToggleButton x:Name="FilterHasBookmarkToggle" Content="🔖 Lesezeichen" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
-                          ToolTip="Nur Dokumente mit Lesezeichen anzeigen" />
+            <TextBlock Text="{x:Static local:EditorTexts.FilterOnlyWith}" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource Theme.TextMuted}" />
+            <ToggleButton x:Name="FilterHasNoteToggle" Content="{x:Static local:EditorTexts.FilterNote}" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
+                          ToolTip="{x:Static local:EditorTexts.FilterNoteTip}" />
+            <ToggleButton x:Name="FilterHasBookmarkToggle" Content="{x:Static local:EditorTexts.FilterBookmark}" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
+                          ToolTip="{x:Static local:EditorTexts.FilterBookmarkTip}" />
             <ToggleButton x:Name="FilterHasBugToggle" Content="🐞 Bug" Padding="6,0" Margin="0,0,6,0" Click="CategoryFilter_Changed"
-                          ToolTip="Nur Dokumente mit offenen Bugs anzeigen" />
+                          ToolTip="{x:Static local:EditorTexts.FilterBugTip}" />
         </StackPanel>
         <ListBox x:Name="Tabs"
                  DockPanel.Dock="Top"
@@ -151,13 +151,13 @@
                                  Code-Behind über das DataContext des MenuItem an das richtige
                                  OpenDocument kommt. -->
                             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                                <MenuItem Header="Ordner öffnen" Click="OpenContainingFolderFromTab_Click" />
+                                <MenuItem Header="{x:Static local:EditorTexts.TabOpenFolder}" Click="OpenContainingFolderFromTab_Click" />
                             </ContextMenu>
                         </StackPanel.ContextMenu>
                         <Border Width="4" Margin="0,1,4,1" Background="{Binding CategoryColor}" />
                         <TextBlock Text="●" Foreground="{DynamicResource Theme.Warning}" FontSize="10" VerticalAlignment="Center" Margin="0,0,3,0"
                                    Visibility="{Binding IsModified, Converter={StaticResource BoolToVisibilityConverter}}"
-                                   ToolTip="Ungespeicherte Änderungen" />
+                                   ToolTip="{x:Static local:EditorTexts.TabModifiedTip}" />
                         <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip="{Binding CategoryDisplayName}" />
                         <!-- Herkunft: Vanilla-Symbol (eigene Raute mit "P") bzw. Werkzeug-Symbol für Mod-Dateien; nur Anzeige,
                              ein-/ausblendbar über "Symbole" in der Dokumentenleiste (TabIconSettings). -->
@@ -182,7 +182,7 @@
                         <Button Tag="{Binding}" Click="TabNoteIcon_Click"
                                 Visibility="{Binding NoteIconVisible, Converter={StaticResource BoolToVisibilityConverter}}"
                                 Padding="0" Margin="0,0,2,0" VerticalAlignment="Center"
-                                ToolTip="Es gibt eine Notiz zu dieser Datei - anklicken zum Anzeigen/Bearbeiten">
+                                ToolTip="{x:Static local:EditorTexts.TabNoteTip}">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{DynamicResource Icon.Note}" CornerRadius="2" Padding="3,1">
@@ -208,6 +208,22 @@
                             </Button.Template>
                             <TextBlock Text="🔖" FontSize="10" />
                         </Button>
+                        <!-- Fehlerprotokoll-Symbol (Fehlerprotokoll Plan 2b): Meldungen des letzten Spiellaufs zu dieser Datei (eigene Mods, nicht
+                             unterdrückt). Klick öffnet das Fehlerprotokoll, gefiltert auf die Datei. -->
+                        <Button Tag="{Binding}" Click="TabErrorIcon_Click"
+                                Visibility="{Binding ErrorIconVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Padding="0" Margin="0,0,2,0" VerticalAlignment="Center"
+                                ToolTip="{Binding ErrorTooltip}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{DynamicResource Theme.NoticeBackground}" BorderBrush="{DynamicResource Icon.Bug}"
+                                            BorderThickness="1" CornerRadius="2" Padding="2,0">
+                                        <ContentPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Text="{Binding ErrorBadge}" FontSize="10" />
+                        </Button>
                         <!-- Bug-Symbol (Paket 12c): erscheint, solange die Datei offene Bugs hat. Jeder Klick schaltet zum
                              nächsten offenen Bug weiter (Sprung zur Zeile, falls eine referenziert ist). Heller "Chip" mit
                              rotem Rand statt roter Fläche, damit der rote Käfer auch im hellen Theme Kontrast hat. -->
@@ -227,7 +243,7 @@
                         </Button>
                         <Button Content="✕" Tag="{Binding}" Click="CloseTab_Click"
                                 Padding="4,0" Margin="0" FontSize="10" VerticalAlignment="Center"
-                                ToolTip="Dokument schließen" />
+                                ToolTip="{x:Static local:EditorTexts.TabCloseTip}" />
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -249,7 +265,7 @@
                  derselbe Chip-Aufbau (Border + {DynamicResource Icon.Note}) wie beim
                  Notiz-Icon im Dateienreiter oben, damit beide IMMER dieselbe Farbe zeigen. -->
             <Button DockPanel.Dock="Right" x:Name="ShowNoteButton" Click="ShowNoteButton_Click"
-                    Margin="2,1" Padding="0" ToolTip="Notiz zur aktiven Datei anzeigen/bearbeiten">
+                    Margin="2,1" Padding="0" ToolTip="{x:Static local:EditorTexts.ShowNotesTip}">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{DynamicResource Icon.Note}" CornerRadius="2" Padding="4,1">
@@ -257,12 +273,12 @@
                         </Border>
                     </ControlTemplate>
                 </Button.Template>
-                <TextBlock Text="🗒 Notizen anzeigen" FontSize="11" />
+                <TextBlock Text="{x:Static local:EditorTexts.ShowNotes}" FontSize="11" />
             </Button>
             <Button DockPanel.Dock="Right" x:Name="OpenFolderButton" Content="📂" Click="OpenFolderButton_Click"
-                    Margin="0,1" Padding="4,1" FontSize="11" ToolTip="Ordner öffnen, in dem die aktive Datei liegt" />
+                    Margin="0,1" Padding="4,1" FontSize="11" ToolTip="{x:Static local:EditorTexts.OpenFolderTip}" />
             <Button DockPanel.Dock="Right" x:Name="CopyPathButton" Content="📋" Click="CopyPathButton_Click"
-                    Margin="0,1" Padding="4,1" FontSize="11" ToolTip="Dateipfad der aktiven Datei in die Zwischenablage kopieren" />
+                    Margin="0,1" Padding="4,1" FontSize="11" ToolTip="{x:Static local:EditorTexts.CopyPathTip}" />
             <TextBox x:Name="PathText"
                      IsReadOnly="True"
                      BorderThickness="0"
@@ -270,7 +286,7 @@
                      Padding="4,2"
                      FontSize="11"
                      Foreground="{DynamicResource Theme.TextMuted}"
-                     Text="Kein Dokument geöffnet"
+                     Text="{x:Static local:EditorTexts.NoDocument}"
                      VerticalAlignment="Center"
                      VerticalContentAlignment="Center" />
         </DockPanel>

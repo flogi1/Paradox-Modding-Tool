@@ -115,7 +115,7 @@ public sealed class LayeredStore<T> where T : class
     /// <summary>Speichert atomar. Wirft <see cref="InvalidOperationException"/>, wenn die Ebene keinen Ordner hat.</summary>
     public void Save(string name, StoreLayer layer, T value)
     {
-        var path = PathFor(name, layer) ?? throw new InvalidOperationException($"Für die Ebene {layer} gibt es keinen Ordner.");
+        var path = PathFor(name, layer) ?? throw new InvalidOperationException(ModsTexts.StoreNoFolder(layer.ToString()));
         var json = JsonSerializer.Serialize(value, _options);
         SharedFile.Locked(path, () => SharedFile.WriteAllTextAtomic(path, json));
     }

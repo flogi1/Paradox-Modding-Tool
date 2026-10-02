@@ -22,6 +22,8 @@ public partial class ExplorerPanel
     private readonly ObservableCollection<ExplorerSearchHit> _searchHits = new();
     private DispatcherTimer? _searchTimer;
     private CancellationTokenSource? _searchCts;
+    private (string Text, List<ExplorerSearchHit> Hits, string Status)? _lastSearch;
+    private bool _restoringSearch;
 
     private void InitializeSearch()
     {
@@ -51,7 +53,93 @@ public partial class ExplorerPanel
             return;
         }
 
+        if (_restoringSearch)
+        {
+            return;
+        }
+
+        // Eine neue Suche ersetzt die gemerkte.
+        _lastSearch = null;
+        SearchBackButton.Visibility = Visibility.Collapsed;
         _searchTimer.Start();
+    }
+
+    private void FoldersOnly_Changed(object sender, RoutedEventArgs e)
+    {
+        OptionsChanged?.Invoke(this, EventArgs.Empty);
+        if (_searchTimer is null || string.IsNullOrWhiteSpace(SearchBox.Text))
+        {
+            return;
+        }
+
+        _searchTimer.Stop();
+        _ = RunSearchAsync();
+    }
+
+    /// <summary>
+    /// Ordner-Treffer: Suche merken, Feld leeren und den Ordner im Baum mit allen Dateien zeigen (Nutzerwunsch). Der Knopf
+    /// "Zurück zu den Treffern" holt die Liste wieder, falls man sich verklickt hat.
+    /// </summary>
+    private void ShowFolderHitInTree(ExplorerSearchHit hit)
+    {
+        _lastSearch = (SearchBox.Text, _searchHits.ToList(), SearchStatusText.Text);
+        SearchBox.Clear();
+        RevealInTree(hit.FullPath);
+        SearchBackButton.Visibility = Visibility.Visible;
+    }
+
+    private void SearchBack_Click(object sender, RoutedEventArgs e)
+    {
+        if (_lastSearch is not { } last)
+        {
+            return;
+        }
+
+        _restoringSearch = true;
+        try
+        {
+            SearchBox.Text = last.Text;
+        }
+        finally
+        {
+            _restoringSearch = false;
+        }
+
+        ShowSearchResults(true);
+        foreach (var hit in last.Hits)
+        {
+            _searchHits.Add(hit);
+        }
+
+        SearchStatusText.Text = last.Status;
+        SearchBackButton.Visibility = Visibility.Collapsed;
+    }
+
+    private void SearchResultsList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is FrameworkElement { DataContext: ExplorerSearchHit { IsDirectory: true } hit } && !IsInsideButton(e.OriginalSource as DependencyObject))
+        {
+            ShowFolderHitInTree(hit);
+            e.Handled = true;
+        }
+    }
+
+    private static bool IsInsideButton(DependencyObject? element)
+    {
+        for (var current = element; current is not null; current = System.Windows.Media.VisualTreeHelper.GetParent(current))
+        {
+            if (current is System.Windows.Controls.Primitives.ButtonBase)
+            {
+                return true;
+            }
+
+            if (current is ListBoxItem)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -86,13 +174,15 @@ public partial class ExplorerPanel
         _searchCts = cts;
 
         ShowSearchResults(true);
-        SearchStatusText.Text = "Suche läuft…";
+        SearchStatusText.Text = ExplorerTexts.SearchRunning;
 
         var roots = _roots.Select(r => (r.FullPath, r.Name)).ToList();
+        var foldersOnly = SearchFoldersOnly;
+        var hideUgc = HideUgcReferences;
 
         try
         {
-            var result = await Task.Run(() => ExplorerSearch.Run(roots, pattern, ExplorerSearch.DefaultLimit, cts.Token), cts.Token);
+            var result = await Task.Run(() => ExplorerSearch.Run(roots, pattern, ExplorerSearch.DefaultLimit, cts.Token, foldersOnly, hideUgc), cts.Token);
 
             if (cts.IsCancellationRequested)
             {
@@ -106,10 +196,10 @@ public partial class ExplorerPanel
             }
 
             SearchStatusText.Text = result.Hits.Count == 0
-                ? "Keine Treffer."
+                ? ExplorerTexts.SearchNoHits
                 : result.Truncated
-                    ? $"{result.Hits.Count} Treffer - weitere nicht angezeigt, bitte Suche eingrenzen."
-                    : $"{result.Hits.Count} Treffer.";
+                    ? ExplorerTexts.SearchHitsTruncated(result.Hits.Count)
+                    : ExplorerTexts.SearchHits(result.Hits.Count);
         }
         catch (OperationCanceledException)
         {
@@ -140,9 +230,11 @@ public partial class ExplorerPanel
 
         if (hit.IsDirectory)
         {
-            // Ordner: Suche beenden und im Baum bis dorthin aufklappen.
-            SearchBox.Clear();
-            RevealInTree(hit.FullPath);
+            // Ordner: schon beim einfachen Klick in den Baum gewechselt (SearchResultsList_MouseLeftButtonUp).
+            if (SearchResultsPanel.Visibility == Visibility.Visible)
+            {
+                ShowFolderHitInTree(hit);
+            }
         }
         else
         {

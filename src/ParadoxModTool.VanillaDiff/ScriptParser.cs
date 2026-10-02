@@ -77,7 +77,7 @@ internal sealed class ScriptParser
             {
                 if (!isRoot)
                 {
-                    throw new ScriptParseException("Nicht geschlossene öffnende Klammer \"{\"", token.Line);
+                    throw new ScriptParseException(VanillaDiffTexts.UnclosedBrace, token.Line);
                 }
 
                 FlushPendingComments(entries, pendingComments);
@@ -88,7 +88,7 @@ internal sealed class ScriptParser
             {
                 if (isRoot)
                 {
-                    throw new ScriptParseException("Unerwartete schließende Klammer \"}\" ohne passende \"{\"", token.Line);
+                    throw new ScriptParseException(VanillaDiffTexts.UnexpectedCloseBrace, token.Line);
                 }
 
                 FlushPendingComments(entries, pendingComments);
@@ -178,7 +178,7 @@ internal sealed class ScriptParser
 
             if (Peek().Kind != ScriptTokenKind.CloseBrace)
             {
-                throw new ScriptParseException("Nicht geschlossene öffnende Klammer \"{\"", token.Line);
+                throw new ScriptParseException(VanillaDiffTexts.UnclosedBrace, token.Line);
             }
 
             Advance(); // "}"
@@ -197,7 +197,7 @@ internal sealed class ScriptParser
             return new ScriptScalar { Text = token.Text, IsQuoted = true };
         }
 
-        throw new ScriptParseException($"Unerwartetes Token \"{token.Text}\" ({token.Kind})", token.Line);
+        throw new ScriptParseException(VanillaDiffTexts.UnexpectedToken(token.Text, token.Kind), token.Line);
     }
 
     private ScriptOperator ParseOperator()
@@ -211,7 +211,9 @@ internal sealed class ScriptParser
             "<=" => ScriptOperator.LessOrEqual,
             ">" => ScriptOperator.GreaterThan,
             ">=" => ScriptOperator.GreaterOrEqual,
-            _ => throw new ScriptParseException($"Unbekannter Operator \"{token.Text}\"", token.Line)
+            "?=" => ScriptOperator.EqualsIfExists,
+            "!=" => ScriptOperator.NotEquals,
+            _ => throw new ScriptParseException(VanillaDiffTexts.UnknownOperator(token.Text), token.Line)
         };
     }
 

@@ -1,0 +1,18 @@
+# block: Fortschrittsbalken
+# group: Anzeige
+# description: Balken mit einem Wert zwischen Minimum und Maximum; für Spielwerte "[...]" eintragen. Andere Farben: progressbar_standard, progressbar_red, progressbar_frozen. Vorbild: gui/debug/window_component_library.gui, gui/shared/progressbars.gui
+# param: name | Name | my_progress
+# param: width | Breite | 200
+# param: height | Höhe | 20
+# param: min | Minimum | 0
+# param: max | Maximum | 100
+# param: value | Wert | 50
+# requires: progressbar_green
+
+progressbar_green = {
+	name = "$name$"
+	size = { $width$ $height$ }
+	min = $min$
+	max = $max$
+	value = $value$
+}

@@ -3,10 +3,9 @@ namespace ParadoxModTool.ModCompat;
 /// <summary>Legt bei der ersten Nutzung von Mod-Kompatibilität für ein Spiel ein Beispielset mit Erklärtext an.</summary>
 public static class CompatStarterSet
 {
-    public const string Name = "Mod Kompatibilitätstest";
+    public static string Name => ModCompatTexts.StarterSetName;
 
-    public const string Description =
-        "Füge hier die zwei oder mehr Mods hinzu, die du kompatibel machen willst, in Ladereihenfolge vom größten zum kleinsten Mod, um sie zu vergleichen.";
+    public static string Description => ModCompatTexts.StarterSetDescription;
 
     /// <summary>
     /// Legt das Startset an, wenn der Set-Ordner noch nicht existiert (erste Nutzung für dieses Spiel).

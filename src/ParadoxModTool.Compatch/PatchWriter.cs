@@ -172,7 +172,11 @@ public static class PatchWriter
             AddFile(result, request.TargetFolder, path, TextEncodings.Encode(text, isLoc ? "utf-8-bom" : request.EncodingFor(Path.GetExtension(path).ToLowerInvariant())), text);
         }
 
-        foreach (var stale in index.OwnFiles.Where(p => !own.Keys.Any(k => string.Equals(Norm(k), Norm(p), StringComparison.OrdinalIgnoreCase))))
+        // UpdateMod schreibt nur in die eigenen Dateien der Mod und löscht nie etwas.
+        var stales = request.Target == PatchTarget.UpdateMod
+            ? Enumerable.Empty<string>()
+            : index.OwnFiles.Where(p => !own.Keys.Any(k => string.Equals(Norm(k), Norm(p), StringComparison.OrdinalIgnoreCase)));
+        foreach (var stale in stales)
         {
             if (locks.IsLocked(stale))
             {
@@ -313,11 +317,22 @@ public static class PatchWriter
 
             splices.Remove(relative);
             AddFile(result, request.TargetFolder, relative, content, preview);
+            if (request.Target == PatchTarget.UpdateMod)
+            {
+                // Die Datei gehört der Mod: nicht als "von PMT geschrieben" merken, sonst löschte ein späterer Lauf sie (Spec, Abschnitt 5).
+                continue;
+            }
+
             result.WholeFiles[Norm(relative)] = TextEncodings.Sha256(content);
             if (file.DependsOnLoadOrder && request.Target != PatchTarget.Compatch)
             {
                 result.OrderDependent.Add(relative);
             }
+        }
+
+        if (request.Target == PatchTarget.UpdateMod)
+        {
+            return;
         }
 
         foreach (var (relative, hash) in request.PreviousWholeFiles)
@@ -429,7 +444,7 @@ public static class PatchWriter
         var full = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
         if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase))
         {
-            throw new CompatchInputException("Pfad außerhalb des Zielordners: " + relative);
+            throw new CompatchInputException(CompatchTexts.PathOutsideTarget(relative));
         }
 
         return full;

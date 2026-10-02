@@ -62,4 +62,20 @@ public class FolderScannerTests : IDisposable
 
         Assert.Empty(children);
     }
+
+    [Fact]
+    public void GetChildren_BlendetUgcVerweiseAusWennGewuenscht()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "ugc_ordner"));
+        File.WriteAllText(Path.Combine(_root, "ugc_1385440355.mod"), "x");
+        File.WriteAllText(Path.Combine(_root, "UGC_42.MOD"), "x");
+        File.WriteAllText(Path.Combine(_root, "IdeaVariation.mod"), "x");
+        File.WriteAllText(Path.Combine(_root, "ugc_notes.txt"), "x");
+
+        var hidden = FolderScanner.GetChildren(_root, hideUgcReferences: true).Select(c => c.Name).ToList();
+        var shown = FolderScanner.GetChildren(_root).Select(c => c.Name).ToList();
+
+        Assert.Equal(new[] { "ugc_ordner", "IdeaVariation.mod", "ugc_notes.txt" }, hidden);
+        Assert.Equal(5, shown.Count);
+    }
 }

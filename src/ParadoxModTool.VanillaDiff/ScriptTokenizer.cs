@@ -12,7 +12,7 @@ public sealed class ScriptParseException : Exception
 {
     public int Line { get; }
 
-    public ScriptParseException(string message, int line) : base($"{message} (Zeile {line})")
+    public ScriptParseException(string message, int line) : base(VanillaDiffTexts.AtLine(message, line))
     {
         Line = line;
     }
@@ -87,7 +87,7 @@ public static class ScriptTokenizer
                 {
                     if (pos >= length)
                     {
-                        throw new ScriptParseException("Nicht geschlossener String-Literal", startLine);
+                        throw new ScriptParseException(VanillaDiffTexts.UnclosedString, startLine);
                     }
 
                     var ch = source[pos];
@@ -139,6 +139,13 @@ public static class ScriptTokenizer
                 continue;
             }
 
+            if (c is '?' or '!' && Peek(1) == '=')
+            {
+                tokens.Add(new ScriptToken { Kind = ScriptTokenKind.Operator, Text = c + "=", Line = line, Start = pos, End = pos + 2 });
+                pos += 2;
+                continue;
+            }
+
             if (c == '<')
             {
                 var opStart = pos;
@@ -177,7 +184,9 @@ public static class ScriptTokenizer
             // bis zum nächsten Trennzeichen einlesen.
             var wordStart = pos;
             var wordLine = line;
-            while (pos < length && !IsDelimiter(source[pos]))
+            // "x?=" und "x!=" ohne Leerzeichen: '?'/'!' gehören dann zum Operator, nicht zum Wort.
+            while (pos < length && !IsDelimiter(source[pos])
+                   && !(source[pos] is '?' or '!' && pos + 1 < length && source[pos + 1] == '='))
             {
                 pos++;
             }
@@ -186,7 +195,7 @@ public static class ScriptTokenizer
             {
                 // Sollte durch die obigen Zweige nie erreicht werden, ist aber eine sichere
                 // Absicherung gegen eine Endlosschleife bei einem unerwarteten Zeichen.
-                throw new ScriptParseException($"Unerwartetes Zeichen '{c}'", wordLine);
+                throw new ScriptParseException(VanillaDiffTexts.UnexpectedCharacter(c), wordLine);
             }
 
             var word = source.Substring(wordStart, pos - wordStart);

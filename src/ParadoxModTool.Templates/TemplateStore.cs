@@ -153,7 +153,7 @@ public sealed class SavedTemplate
             Disable(ShippedRules.NamePrefixId);
             if (prefixes.Count > 0)
             {
-                var rule = CountingRule.Create("Namenspräfix (aus alter Vorlage)");
+                var rule = CountingRule.Create(TemplatesTexts.MigratedNamePrefixRule);
                 rule.Action = RuleAction.MarkedDoesNotCount;
                 rule.Patterns = prefixes.SelectMany(p => new[] { p + "[#]*", p + "_[#]*" }).ToList();
                 Rules.Add(rule);

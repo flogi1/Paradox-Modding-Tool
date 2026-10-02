@@ -85,9 +85,7 @@ public static class MergeEngine
                         Path = path,
                         PathSegments = segments,
                         Kind = MergeConflictKind.RemoveForMod,
-                        Description =
-                            $"Der Mod hat \"{display}\" entfernt, das Spiel-Update hat diese Stelle aber verändert. " +
-                            "Die Fassung des Spiel-Updates wurde übernommen; \"Mod übernehmen\" entfernt die Stelle.",
+                        Description = VanillaDiffTexts.ConflictRemovedByMod(display),
                         LeftValue = newUnit.Value,
                         RightValue = null
                     });
@@ -109,9 +107,7 @@ public static class MergeEngine
                     {
                         Path = path,
                         PathSegments = segments,
-                        Description =
-                            $"Sowohl der Mod als auch das Spiel-Update haben \"{display}\" neu eingeführt, mit unterschiedlichem Inhalt. " +
-                            "Die Fassung des Spiel-Updates wurde übernommen; bitte prüfen, ob die Mod-Fassung stattdessen nötig ist.",
+                        Description = VanillaDiffTexts.ConflictAddedByBoth(display),
                         LeftValue = newUnit.Value,
                         RightValue = modUnit.Value,
                         ModEntry = modUnit.Entry,
@@ -136,9 +132,7 @@ public static class MergeEngine
                     PathSegments = segments,
                     Kind = MergeConflictKind.InsertForMod,
                     AnchorKey = AnchorKeyFor(modUnits, modUnit, current),
-                    Description =
-                        $"Das Spiel-Update hat \"{display}\" entfernt, der Mod hat diese Stelle aber verändert. " +
-                        "Die Stelle fehlt in der zusammengeführten Datei; \"Mod übernehmen\" fügt die Mod-Fassung wieder ein.",
+                    Description = VanillaDiffTexts.ConflictRemovedByUpdate(display),
                     LeftValue = null,
                     RightValue = modUnit.Value,
                     ModEntry = modUnit.Entry,
@@ -174,9 +168,7 @@ public static class MergeEngine
             {
                 Path = path,
                 PathSegments = segments,
-                Description =
-                    $"\"{display}\" wurde sowohl vom Mod als auch vom Spiel-Update unterschiedlich verändert. " +
-                    "Die Fassung des Spiel-Updates wurde übernommen; bitte die Mod-Änderung bei Bedarf über \"Mod übernehmen\" wählen.",
+                Description = VanillaDiffTexts.ConflictChangedByBoth(display),
                 LeftValue = newUnit.Value,
                 RightValue = modUnit.Value,
                 ModEntry = modUnit.Entry,

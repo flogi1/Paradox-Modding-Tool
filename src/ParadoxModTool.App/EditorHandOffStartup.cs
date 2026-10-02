@@ -1,11 +1,9 @@
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Windows;
 using ParadoxModTool.GameProfiles;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.LaunchControl;
-using ParadoxModTool.Localization;
 using ParadoxModTool.Session;
 
 namespace ParadoxModTool.App;
@@ -42,7 +40,7 @@ internal static class EditorHandOffStartup
         {
             // Aufruf ohne erkennbare Datei (Review Plan 4): nicht still das nächste freie Spiel öffnen, sondern melden und enden.
             HandOffLog.Append(log, "no file recognised", DateTime.Now);
-            UiText.Load(Path.Combine(AppContext.BaseDirectory, "locales"), UiLanguage(repository));
+            GlobalUiLanguage.Load(repository);
             System.Windows.MessageBox.Show(GuiTexts.HandOffNotRecognised(log), "Paradox Modding Tool", MessageBoxButton.OK, MessageBoxImage.Information);
             return new EditorHandOffStart(true, args, null);
         }
@@ -92,24 +90,6 @@ internal static class EditorHandOffStartup
         var sent = EditorHandOffPipe.SendAsync(gameId, request, TimeSpan.FromSeconds(20)).GetAwaiter().GetResult();
         HandOffLog.Append(LogPath(SessionRepository.CreateDefault()), sent ? "handed over on retry" : "hand-over failed on retry", DateTime.Now);
         return sent;
-    }
-
-    /// <summary>Oberflächensprache aus den globalen Einstellungen (settings.json), bevor ein Spiel geöffnet ist; null, wenn nicht lesbar.</summary>
-    private static string? UiLanguage(SessionRepository repository)
-    {
-        try
-        {
-            using var stream = new FileStream(repository.SettingsFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            using var document = JsonDocument.Parse(stream);
-            return document.RootElement.ValueKind == JsonValueKind.Object
-                && document.RootElement.TryGetProperty("UiLanguage", out var language) && language.ValueKind == JsonValueKind.String
-                    ? language.GetString()
-                    : null;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-        {
-            return null;
-        }
     }
 
     [DllImport("user32.dll", SetLastError = true)]

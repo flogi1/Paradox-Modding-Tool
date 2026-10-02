@@ -351,13 +351,23 @@ public sealed class GuiDesignerView : UserControl
             else if (e.Data.GetData(PaletteDragFormat) is GuiPaletteEntry entry)
             {
                 // Ohne Eintrag unter der Maus (z.B. leere Datei): ans Dateiende.
-                Request(new GuiDesignerAction(GuiDesignerActionKind.Insert, null)
+                var insert = new GuiDesignerAction(GuiDesignerActionKind.Insert, null)
                 {
                     Placement = targetNode is null ? GuiPlacement.AtSelection : GuiPlacement.Drop,
                     Target = targetNode,
                     DropY = y,
                     Entry = entry,
-                });
+                };
+
+                // Ein Baustein öffnet ein modales Fenster: nicht innerhalb der Ziehen-Schleife von DoDragDrop (Teil-2-Ruling 2).
+                if (entry.Kind == GuiPaletteKind.Block)
+                {
+                    Dispatcher.BeginInvoke(() => Request(insert));
+                }
+                else
+                {
+                    Request(insert);
+                }
             }
 
             e.Handled = true;
@@ -389,6 +399,9 @@ public sealed class GuiDesignerView : UserControl
 
     /// <summary>"Neuer Typ" (Eigenschaftenfeld oder Baum, Plan 3c Ruling 1).</summary>
     public event EventHandler<GuiNode>? NewTypeRequested;
+
+    /// <summary>"Als Baustein speichern" im Baum.</summary>
+    public event EventHandler<GuiNode>? SaveAsBlockRequested;
 
     /// <summary>"Als neuen Typ herausziehen" im Baum.</summary>
     public event EventHandler<GuiNode>? ExtractTypeRequested;
@@ -642,6 +655,9 @@ public sealed class GuiDesignerView : UserControl
         if (isElement)
         {
             AddMenuItem(GuiTexts.TreeShowInCode, () => ShowInCodeRequested?.Invoke(this, node));
+
+            // Auch schreibgeschützt (Vanilla): Speichern ändert die Datei nicht (Teil-2-Ruling 3).
+            AddMenuItem(GuiTexts.ContextSaveBlock, () => SaveAsBlockRequested?.Invoke(this, node));
         }
 
         if (item.IsTypeInstance)
@@ -657,7 +673,8 @@ public sealed class GuiDesignerView : UserControl
             GuiDesignerAction Insert(GuiPlacement placement) =>
                 new(GuiDesignerActionKind.Insert, null) { Entry = entry, Target = node, Placement = placement };
 
-            if (entry.Snippet is null)
+            // Bausteine (Teil-2-Ruling 1) werden wie Widgets eingefügt, nie als using.
+            if (entry.Kind == GuiPaletteKind.Template)
             {
                 AddMenuItem(GuiTexts.TreeAddUsing(entry.Name), () => Request(Insert(GuiPlacement.Child)), editable);
             }

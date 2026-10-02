@@ -2,10 +2,15 @@
   "id": "ck3",
   "steamAppId": "1158310",
   "displayName": "Crusader Kings III",
+  "releaseDate": "2020-09-01",
   "engineFamily": "clausewitz-jomini",
   "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Crusader Kings III/mod",
-  "metadataFile": ".metadata/metadata.json",
+  "metadataFile": "*.mod",
   "loadOrderRule": "alphabetical-filename-wins",
+  "scriptDocsFolder": "logs",
+  "defaultEventType": "character_event",
+  "replacePathHidesEarlierMods": true,
+  "errorLogRules": "errorlog/ck3.json",
   "vanillaHistoryFolderName": "CK III Vanilla History",
   "folderCategories": [
     { "path": "common", "label": "Common", "defaultColor": "#4A90D9", "description": "Kernspielregeln" },
@@ -14,7 +19,10 @@
     { "path": "gfx", "label": "Grafik", "defaultColor": "#7A4AD9", "description": "Grafik-Referenzen (.gfx)" },
     { "path": "localization", "label": "Lokalisierung", "defaultColor": "#D94A4A", "description": "YAML-Lokalisierungsdateien (.yml)" },
     { "path": "history", "label": "Historie", "defaultColor": "#B08AD9" },
-    { "path": "map_data", "label": "Karte", "defaultColor": "#4AC7D9" }
+    { "path": "map_data", "label": "Karte", "defaultColor": "#4AC7D9" },
+    { "path": "music", "label": "Musik", "defaultColor": "#8A8A8A" },
+    { "path": "sound", "label": "Sound", "defaultColor": "#8A8A8A" },
+    { "path": "fonts", "label": "Schriften", "defaultColor": "#8A8A8A" }
   ],
   "fileTypes": [
     { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" },
@@ -23,8 +31,82 @@
     { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" }
   ],
   "launchOptions": [
-    { "label": "Normal", "args": "" },
-    { "label": "Debug-Modus", "args": "-debug_mode" }
+    { "labelKey": "menu.launch.normal", "label": "Normal", "args": "" },
+    { "labelKey": "menu.launch.debug", "label": "Debug-Modus", "args": "-debug_mode" }
   ],
-  "notes": "Einfaches Startprofil, noch nicht gegen das Spiel geprüft: Ordner und Startoptionen bei Bedarf anpassen."
+  "keyOperators": [],
+  "overrideRules": [
+    { "folder": "common", "behavior": "PerKey", "certain": true },
+    { "folder": "common/defines", "behavior": "PartialKeys", "certain": true },
+    { "folder": "common/on_action", "behavior": "AppendOnly", "certain": false },
+    { "folder": "common/religion", "behavior": "WholeFile", "certain": true },
+    { "folder": "common/landed_titles", "behavior": "PerKey", "certain": false },
+    { "folder": "events", "behavior": "FirstWins", "certain": false },
+    { "folder": "gui", "behavior": "FirstWins", "certain": true },
+    { "folder": "localization", "behavior": "LocalizationKeys", "certain": true },
+    { "folder": "history", "behavior": "PerKey", "certain": false },
+    { "folder": "gfx", "behavior": "WholeFile", "certain": false },
+    { "folder": "map_data", "behavior": "WholeFile", "certain": false },
+    { "folder": "music", "behavior": "WholeFile", "certain": false },
+    { "folder": "sound", "behavior": "WholeFile", "certain": false },
+    { "folder": "fonts", "behavior": "WholeFile", "certain": false }
+  ],
+  "modifierFormats": {
+    "source": "definitions",
+    "folders": ["common/modifier_definition_formats"],
+    "defaultDecimals": 2,
+    "trimTrailingZeros": true,
+    "nameLocFolders": ["localization"],
+    "nameKeys": ["MOD_{name}", "{name}"],
+    "nameRefKeys": ["game_concept_{id}"]
+  },
+  "gui": {
+    "contexts": [],
+    "typeOverride": "firstWins",
+    "structuredBlocks": [
+      "modify_texture", "glow", "state", "animation", "start_sound", "end_sound", "format",
+      "textformatting", "iconsize", "texticon", "datacontext_from_model",
+      "attachto", "glow_generation_rules", "soundparam"
+    ],
+    "widgetHolders": [
+      "tooltipwidget", "item", "scrollwidget", "viewportwidget", "dec_button", "inc_button", "slider",
+      "track", "buttonText", "list", "active_item", "zoomwidget", "marker",
+      "scrollbar_vertical", "scrollbar_horizontal"
+    ],
+    "layoutHolders": [ "item", "scrollwidget", "viewportwidget", "zoomwidget" ]
+  },
+  "saveGames": {
+    "folder": "save games",
+    "extension": ".ck3",
+    "textMarker": { "prefix": "SAV", "offset": 5, "value": "00", "compressedValue": "02" },
+    "metadataBlock": "meta_data",
+    "dateField": "meta_date",
+    "objectKinds": [
+      { "path": "living/*", "labelKey": "saveexplorer.kind.character", "label": "Charaktere", "nameSource": "field", "nameField": "first_name", "variablesPath": "alive_data", "scriptReference": "character:{0}" },
+      { "path": "landed_titles/landed_titles/*", "labelKey": "saveexplorer.kind.title", "label": "Titel", "nameSource": "field", "nameField": "key" },
+      { "path": "dynasties/dynasty_house/*", "labelKey": "saveexplorer.kind.house", "label": "Häuser", "nameSource": "field", "nameField": "name" },
+      { "path": "dynasties/dynasties/*", "labelKey": "saveexplorer.kind.dynasty", "label": "Dynastien", "nameSource": "field", "nameField": "key" },
+      { "path": "religion/faiths/*", "labelKey": "saveexplorer.kind.faith", "label": "Glaubensrichtungen", "nameSource": "field", "nameField": "tag" },
+      { "path": "culture_manager/cultures/*", "labelKey": "saveexplorer.kind.culture", "label": "Kulturen", "nameSource": "field", "nameField": "culture_template" },
+      { "path": "artifacts/artifacts/*", "labelKey": "saveexplorer.kind.artifact", "label": "Artefakte", "nameSource": "field", "nameField": "name" },
+      { "path": "provinces/*", "labelKey": "saveexplorer.kind.province", "label": "Provinzen", "nameSource": "id" },
+      { "path": "faction_manager/factions/*", "labelKey": "saveexplorer.kind.faction", "label": "Fraktionen", "nameSource": "id" },
+      { "path": "stories/active/*", "labelKey": "saveexplorer.kind.story", "label": "Geschichten", "nameSource": "id" },
+      { "path": "character_memory_manager/database/*", "labelKey": "saveexplorer.kind.memory", "label": "Erinnerungen", "nameSource": "id" },
+      { "path": "house_relations/database/*", "labelKey": "saveexplorer.kind.houseRelation", "label": "Hausbeziehungen", "nameSource": "id" }
+    ],
+    "valueTypes": {
+      "value": { "format": "fixedPoint", "factor": 100000 },
+      "boolean": { "format": "yesNo" },
+      "flag": { "format": "flagName" },
+      "char": { "format": "objectName", "objectPath": "living" },
+      "lt": { "format": "objectName", "objectPath": "landed_titles/landed_titles" },
+      "dyn_house": { "format": "objectName", "objectPath": "dynasties/dynasty_house" },
+      "dyn": { "format": "objectName", "objectPath": "dynasties/dynasties" },
+      "faith": { "format": "objectName", "objectPath": "religion/faiths" },
+      "culture": { "format": "objectName", "objectPath": "culture_manager/cultures" }
+    },
+    "notes": "Quelle: Debug-Spielstand (komprimierter Text, SAV…02) und autosave_exit (Text, SAV…00) des Nutzers, 2026-09-30, Spielversion 1.19.0.6. Situationen und andere Besitzer erscheinen unter Sonstige; trait, artifact und culture_innovation zeigen den Rohwert."
+  },
+  "notes": "GUI: flaches gui/, Typen und Templates: Mod vor Vanilla, und die Dateien aller Mods werden gemeinsam alphabetisch nach Pfad sortiert, die erste Definition gewinnt; die Playset-Reihenfolge zählt nicht (gemessen 2026-09-30 mit den Test-Mods PMT Error Probe und PMT Order Probe B). Gegen die echte Installation (D:\\SteamLibrary, AppID 1158310, Spielversion 1.19.0.6) und ck3.paradoxwikis.com geprüft, 2026-09-30. Mod-Metadaten im klassischen Format: <Name>.mod neben dem Mod-Ordner, sonst descriptor.mod im Ordner; replace_path wird im Kompatch und in der Mod-Kompatibilität beachtet (nur Vanilla-Dateien direkt im Ordner). Quellen der Überschreib-Regeln: https://ck3.paradoxwikis.com/Modding (common je Schlüssel, zuletzt geladen gewinnt; GUI-Typen und -Templates: zuerst geladen gewinnt; einzelne Events und Glaubensrichtungen nur als ganze Datei; on_action hängt events, random_events und on_actions an; localization/replace überschreibt Schlüssel) und https://ck3.paradoxwikis.com/Defines (nur geänderte Defines nötig). Unsicher: on_action gilt als ganz anhängend, obwohl trigger und effect überschrieben werden; events als FirstWins, damit doppelte Event-IDs zwischen Mods auffallen; landed_titles, history und die Dateiordner sind nicht dokumentiert. Keine INJECT/REPLACE-Präfixe (keine Vanilla-Datei nutzt sie). Script-Datenbank aus den Logs des Konsolenbefehls script_docs im Ordner logs; Doku-Logs und Datentyp-Dump (Konsolenbefehl dump_data_types) mit Spielversion 1.20.0.2 vollständig gelesen, 2026-09-30. Events ohne type gelten als character_event, scope = X setzt den Root-Scope (game/events/_events.info). Fehlerlog-Katalog aus einem Probelauf mit Test-Mod (2026-09-30), mit 1.20.0.2 wiederholt: gleiche Meldungstexte; Meldungen beim Laden eines 1.19-Spielstands ergänzt. Spielstand-Explorer für Text-Stände, auch komprimiert (SAV…02). replace_path blendet Vanilla und die Mods aus, die im Playset davor laden; spätere Mods und die eigenen Dateien bleiben (gemessen 2026-09-30 mit zwei Test-Mods in beiden Reihenfolgen)."
 }

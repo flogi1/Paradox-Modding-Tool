@@ -1,0 +1,15 @@
+# block: Suchfeld
+# group: Bedienelemente
+# description: Eingabefeld mit Lupe; den eingegebenen Text werten in Vanilla nur Funktionen des Spiels aus (ontextedited, onreturnpressed im Block editbox_properties), nicht GetVariableSystem. Vorbild: gui/window_artifact_helper.gui, gui/multiplayer_types.gui
+# param: name | Name | my_search
+# param: width | Breite | 250
+# requires: editbox_search_field
+
+editbox_search_field = {
+	minimumsize = { $width$ 30 }
+
+	blockoverride "editbox_properties" {
+		name = "$name$"
+		# ontextedited = "[...]"
+	}
+}

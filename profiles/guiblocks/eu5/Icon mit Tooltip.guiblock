@@ -1,0 +1,14 @@
+# block: Icon mit Tooltip
+# group: Anzeige
+# description: Icon mit einfachem Tooltip aus einem Lokalisierungsschlüssel; für Begriffe tooltip = "[begriff|e]" mit tagtooltip_enabled = yes. Vorbild: in_game/gui/credit.gui, in_game/gui/attribute_columns/country.gui
+# param: name | Name | my_icon
+# param: texture | Icon (Texturpfad) | gfx/interface/icons/flat_icons/debt.dds
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_ICON_TT
+# param: size | Größe | 32
+
+icon = {
+	name = "$name$"
+	size = { $size$ $size$ }
+	texture = "$texture$"
+	tooltip = "$tooltip$"
+}

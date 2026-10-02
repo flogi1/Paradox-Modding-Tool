@@ -25,21 +25,21 @@ public static class SteamCmdOutput
     {
         if (run.TimedOut)
         {
-            return new SteamCmdOutcome(SteamCmdOutcomeKind.Timeout, "SteamCMD hat nicht rechtzeitig geantwortet und wurde beendet.");
+            return new SteamCmdOutcome(SteamCmdOutcomeKind.Timeout, SteamTexts.CmdTimeout);
         }
 
         if (run.Lines.Any(line => Contains(line, GuardMarkers)))
         {
             return new SteamCmdOutcome(
                 SteamCmdOutcomeKind.GuardRequired,
-                "Steam verlangt einen Steam-Guard-Code. Führe „Steam-Anmeldung einrichten“ erneut aus und gib den Code dort ein.");
+                SteamTexts.CmdGuardRequired);
         }
 
         if (run.Lines.Any(line => Contains(line, LoginMarkers)))
         {
             return new SteamCmdOutcome(
                 SteamCmdOutcomeKind.LoginRequired,
-                "Die Steam-Anmeldung ist abgelaufen oder fehlt. Führe „Steam-Anmeldung einrichten“ erneut aus.");
+                SteamTexts.CmdLoginRequired);
         }
 
         var errorLine = run.Lines.FirstOrDefault(line => Contains(line, ErrorMarkers));
@@ -50,10 +50,10 @@ public static class SteamCmdOutput
 
         if (run.ExitCode != 0)
         {
-            return new SteamCmdOutcome(SteamCmdOutcomeKind.Failed, $"SteamCMD endete mit dem Code {run.ExitCode}.");
+            return new SteamCmdOutcome(SteamCmdOutcomeKind.Failed, SteamTexts.CmdExitCode(run.ExitCode));
         }
 
-        return new SteamCmdOutcome(SteamCmdOutcomeKind.Success, "SteamCMD hat keinen Fehler gemeldet.");
+        return new SteamCmdOutcome(SteamCmdOutcomeKind.Success, SteamTexts.CmdNoError);
     }
 
     private static bool Contains(string line, string[] markers) =>

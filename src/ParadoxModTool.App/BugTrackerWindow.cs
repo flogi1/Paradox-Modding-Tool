@@ -33,6 +33,8 @@ internal sealed partial class BugTrackerWindow : Window
     private readonly Controls.TextBox _searchBox = new() { Width = 180, VerticalAlignment = VerticalAlignment.Center };
     private readonly Controls.ListBox _list = new() { HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch };
     private readonly Controls.TextBlock _emptyText = new() { Margin = new Thickness(4) };
+    private readonly Controls.Button _sourcesButton = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
+    private readonly Controls.TextBlock _errorText = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6) };
     private BugData _data = new();
     private string? _selectedId;
     private bool _filling;
@@ -53,6 +55,9 @@ internal sealed partial class BugTrackerWindow : Window
         var filters = BuildFilters();
         Controls.DockPanel.SetDock(filters, Controls.Dock.Top);
         root.Children.Add(filters);
+        _errorText.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+        Controls.DockPanel.SetDock(_errorText, Controls.Dock.Top);
+        root.Children.Add(_errorText);
 
         var body = new Controls.Grid();
         body.ColumnDefinitions.Add(new Controls.ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
@@ -99,6 +104,18 @@ internal sealed partial class BugTrackerWindow : Window
         RebuildList();
     }
 
+    /// <summary>Stellt den Bugtracker auf ein Projekt (Übersicht "Meine Mods"); unbekannte Projekte ändern nichts.</summary>
+    public void SelectProject(string projectId)
+    {
+        if (projectId == SelectedProjectId || _host.ProjectChoices().All(choice => choice.Id != projectId))
+        {
+            return;
+        }
+
+        FillProjects(projectId);
+        RebuildList();
+    }
+
     /// <summary>Wählt eine Meldung aus; wechselt dazu ins Projekt der Meldung und blendet Filter aus, die sie verstecken.</summary>
     public void SelectReport(string id)
     {
@@ -128,10 +145,30 @@ internal sealed partial class BugTrackerWindow : Window
     {
         var header = new Controls.DockPanel { Margin = new Thickness(0, 0, 0, 8) };
         var refresh = new Controls.Button { Content = BugTexts.WindowRefresh, ToolTip = BugTexts.WindowRefreshTip, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
-        refresh.Click += (_, _) => Reload();
         var newBug = new Controls.Button { Content = BugTexts.WindowNewBug, ToolTip = BugTexts.WindowNewBugTip, Padding = new Thickness(8, 2, 8, 2) };
         newBug.Click += (_, _) => CreateBugWithoutLink();
+        refresh.Click += async (_, _) =>
+        {
+            if (SelectedProjectId is { } projectId && _host.HasBugSources(projectId))
+            {
+                await _host.RefreshBugsAsync(projectId);
+            }
+            else
+            {
+                Reload();
+            }
+        };
+        _sourcesButton.Content = BugTexts.WindowSources;
+        _sourcesButton.ToolTip = BugTexts.WindowSourcesTip;
+        _sourcesButton.Click += (_, _) =>
+        {
+            if (SelectedProjectId is { } projectId)
+            {
+                _host.OpenBugSources(projectId);
+            }
+        };
         var right = new Controls.StackPanel { Orientation = Controls.Orientation.Horizontal };
+        right.Children.Add(_sourcesButton);
         right.Children.Add(refresh);
         right.Children.Add(newBug);
         Controls.DockPanel.SetDock(right, Controls.Dock.Right);
@@ -146,6 +183,10 @@ internal sealed partial class BugTrackerWindow : Window
             {
                 _selectedId = null;
                 RebuildList();
+                if (SelectedProjectId is { } projectId)
+                {
+                    _host.RefreshBugsInBackground(projectId);
+                }
             }
         };
         header.Children.Add(left);
@@ -229,6 +270,10 @@ internal sealed partial class BugTrackerWindow : Window
 
     private void RebuildList()
     {
+        _sourcesButton.Visibility = SelectedProjectId is null ? Visibility.Collapsed : Visibility.Visible;
+        var error = SelectedProjectId is { } errorProject ? _host.BugRefreshError(errorProject) : null;
+        _errorText.Text = error is null ? string.Empty : BugTexts.WindowLastError(error);
+        _errorText.Visibility = error is null ? Visibility.Collapsed : Visibility.Visible;
         var filter = CurrentFilter;
         var reports = BugQueries.ForProject(_data, SelectedProjectId, _host.BugProjects).Where(filter.Matches).ToList();
 
@@ -336,8 +381,7 @@ internal sealed partial class BugTrackerWindow : Window
         }
     }
 
-    private void SetStatus(string reportId, BugStatus status) =>
-        _host.ChangeBugs(data => BugEditing.SetStatus(data, reportId, status));
+    private async void SetStatus(string reportId, BugStatus status) => await _host.SetBugStatusAsync(reportId, status);
 
     private void CreateBugWithoutLink()
     {

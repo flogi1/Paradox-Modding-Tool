@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ParadoxModTool.GuiDesign.Catalog;
 using ParadoxModTool.GuiDesign.Index;
+using ParadoxModTool.GuiDesign.Resolve;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,6 +39,59 @@ public class GuiCatalogTests
 
     private static GuiPropertyCatalog LearnFrom(params (GuiSourceFile File, string Text)[] files) =>
         GuiCatalogLearner.Learn(GuiIndexTests.Build(files), GuiResolverTests.Rules, "fp");
+
+    [Fact]
+    public void LearnsExamplesPerMember()
+    {
+        var catalog = LearnFrom((GuiIndexTests.F("in_game/gui/a.gui"),
+            "widget = { datacontext = \"[Country]\" text = \"[Country.GetCapital.GetName]\" visible = \"[Not(Country.IsPlayer)]\" }\n"));
+
+        Assert.Contains(catalog.ExamplesFor("Country.GetCapital"), e => e.Expression == "[Country.GetCapital.GetName]" && e.File == "in_game/gui/a.gui");
+        Assert.Contains(catalog.ExamplesFor("Country.IsPlayer"), e => e.Expression == "[Not(Country.IsPlayer)]");
+        Assert.Contains(catalog.ExamplesFor("Not"), e => e.Expression == "[Not(Country.IsPlayer)]");
+        Assert.Contains(catalog.ExamplesFor("Country"), e => e.Expression == "[Country]");
+        Assert.Empty(catalog.ExamplesFor("GetCapital.GetName"));
+    }
+
+    [Fact]
+    public void KeepsAtMostFiveExamples_MostFrequentFirst()
+    {
+        var text = string.Concat(Enumerable.Range(0, 6).Select(i => $"widget = {{ text = \"[Country.GetName{i}]\" tooltip = \"[Country.GetName0]\" }}\n"));
+        var examples = LearnFrom((GuiIndexTests.F("in_game/gui/a.gui"), text)).ExamplesFor("Country");
+
+        Assert.Equal(5, examples.Count);
+        Assert.Equal("[Country.GetName0]", examples[0].Expression);
+    }
+
+    [Fact]
+    public void LearnsListItemTypeFromItemExpressions()
+    {
+        var items = "item = { widget = { text = \"[Location.GetName]\" visible = \"[Location.HasOwner]\" tooltip = \"[Location.GetName]\" } }";
+        var catalog = LearnFrom((GuiIndexTests.F("in_game/gui/a.gui"), $"dynamicgridbox = {{ datamodel = \"[Province.GetLocations]\" {items} }}\n"));
+
+        Assert.Equal("Location", catalog.ItemTypeOf("Province.GetLocations"));
+        Assert.Equal("Location", catalog.ItemTypeOf("[Province.GetLocations]"));
+    }
+
+    [Fact]
+    public void ListItemTypeIgnoresWidgetAndGlobalContexts_AndNestedDataContexts()
+    {
+        var items = "item = { widget = { text = \"[Location.GetName]\" visible = \"[IsOdd_int32(PdxGuiWidget.GetIndexInDataModel)]\" " +
+                    "enabled = \"[PdxGuiWidget.IsUberButtonEnabled]\" tooltip = \"[GetPlayer.GetName]\" " +
+                    "sub = { datacontext = \"[Country]\" a = \"[Country.GetName]\" b = \"[Country.GetName]\" c = \"[Country.GetName]\" } } }";
+        var catalog = LearnFrom((GuiIndexTests.F("in_game/gui/a.gui"), $"dynamicgridbox = {{ datamodel = \"[Province.GetLocations]\" {items} }}\n"));
+
+        Assert.Equal("Location", catalog.ItemTypeOf("Province.GetLocations"));
+    }
+
+    [Fact]
+    public void ListItemTypeNeedsSixtyPercent()
+    {
+        var items = "item = { widget = { text = \"[Location.GetName]\" tooltip = \"[Country.GetName]\" } }";
+        var catalog = LearnFrom((GuiIndexTests.F("in_game/gui/a.gui"), $"dynamicgridbox = {{ datamodel = \"[Province.GetLocations]\" {items} }}\n"));
+
+        Assert.Null(catalog.ItemTypeOf("Province.GetLocations"));
+    }
 
     [Fact]
     public void LearnsPropertiesPerBaseWidget()
@@ -119,7 +173,9 @@ public class GuiCatalogTests
         var catalog = GuiCatalogLearner.Learn(index, GuiRulesVanillaTests.ProfileRules(), GuiSourceSet.ComputeFingerprint(index.Files));
         _output.WriteLine($"{catalog.Widgets.Count} Engine-Widgets gelernt in {watch.ElapsedMilliseconds} ms");
 
-        Assert.Equal(GuiValueForm.TexturePath, catalog.Property("icon", "texture")!.DominantForm);
+        // Ab 1.4 ist "icon" im Ladebildschirm ein Typ auf "ubericon": die Eigenschaften stehen dann unter dem Basis-Widget.
+        var iconBase = new GuiResolver(index, GuiRulesVanillaTests.ProfileRules()).BaseWidgetOf("icon");
+        Assert.Equal(GuiValueForm.TexturePath, catalog.Property(iconBase, "texture")!.DominantForm);
         var policy = catalog.Property("uberhbox", "layoutpolicy_horizontal")!;
         Assert.True(policy.IsEnum);
         Assert.Contains("expanding", policy.Words.Keys);

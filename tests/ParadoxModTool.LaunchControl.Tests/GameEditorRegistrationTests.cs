@@ -54,6 +54,34 @@ public sealed class GameEditorRegistrationTests : IDisposable
     }
 
     [Fact]
+    public void RegisteringAgainAfterAMoveKeepsTheFirstBackup()
+    {
+        File.WriteAllText(Settings, PdxSettingsTextTests.Sample);
+
+        GameEditorRegistration.Register(Settings, Pmt, State);
+        GameEditorRegistration.Register(Settings, @"D:\Moved\ParadoxModTool.exe", State);
+
+        Assert.Equal(PdxSettingsTextTests.Sample, File.ReadAllText(Path.Combine(State, GameEditorRegistration.BackupFileName)));
+    }
+
+    [Fact]
+    public void LockedSettingsAreReportedAsLocked()
+    {
+        File.WriteAllText(Settings, PdxSettingsTextTests.Sample);
+        using (new FileStream(Settings, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            Assert.Equal(PdxSettingsProblem.Locked, GameEditorRegistration.CurrentEditor(Settings).Problem);
+            Assert.Equal(GameEditorOutcome.Locked, GameEditorRegistration.Register(Settings, Pmt, State).Outcome);
+        }
+
+        GameEditorRegistration.Register(Settings, Pmt, State);
+        using (new FileStream(Settings, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            Assert.Equal(GameEditorOutcome.Locked, GameEditorRegistration.Restore(Settings, Pmt, State).Outcome);
+        }
+    }
+
+    [Fact]
     public void RestoreLeavesAnEditorAloneThatTheUserChangedSince()
     {
         File.WriteAllText(Settings, PdxSettingsTextTests.Sample);

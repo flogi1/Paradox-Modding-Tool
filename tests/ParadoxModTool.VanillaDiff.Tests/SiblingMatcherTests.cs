@@ -44,6 +44,41 @@ public class SiblingMatcherTests
         Assert.Equal("S:modifier#1", Assert.Single(units).Key);
     }
 
+    private const string Definitions =
+        "modifier_definition = { type = privileges key = max_terms trigger = { always = yes } }\n"
+        + "modifier_definition = { type = privileges key = num_of_pronoiars trigger = { always = yes } }\n";
+
+    [Fact]
+    public void Siblings_with_different_identity_are_never_paired_even_if_similar()
+    {
+        var units = Align(Definitions, "modifier_definition = { type = privileges key = iv_state_upkeep trigger = { always = yes } }\n").Units;
+
+        var unit = Assert.Single(units);
+        Assert.NotEqual("S:modifier_definition", unit.Key);
+        Assert.NotEqual("S:modifier_definition#1", unit.Key);
+    }
+
+    [Fact]
+    public void Siblings_with_the_same_identity_are_paired_even_if_moved_and_changed()
+    {
+        var units = Align(Definitions, "modifier_definition = { type = loyalty key = num_of_pronoiars trigger = { always = no } }\n").Units;
+
+        Assert.Equal("S:modifier_definition#1", Assert.Single(units).Key);
+    }
+
+    [Fact]
+    public void New_siblings_with_the_same_identity_get_the_same_key_on_both_sides()
+    {
+        var added = "modifier_definition = { type = privileges key = iv_state_upkeep trigger = { always = yes } }\n";
+        var changed = "modifier_definition = { type = loyalty key = iv_state_upkeep trigger = { always = no } }\n";
+
+        var a = Assert.Single(Align(Definitions, added).Units);
+        var b = Assert.Single(Align(Definitions, changed).Units);
+
+        Assert.Equal(a.Key, b.Key);
+        Assert.Contains("iv_state_upkeep", a.Display);
+    }
+
     [Fact]
     public void Equally_similar_candidates_are_ambiguous()
     {

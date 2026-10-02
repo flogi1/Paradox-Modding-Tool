@@ -18,6 +18,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        FocusReturnOnClose.Register();
 
         // Start durch den Update-Modus? (--update-applied / --update-failed / --update-cancelled, siehe UpdateStartArguments)
         var updateStart = ParadoxModTool.Updates.UpdateStartArguments.Parse(e.Args);
@@ -30,6 +31,10 @@ public partial class App : Application
             Shutdown();
             return;
         }
+
+        // Oberflächentexte schon vor den Startmeldungen laden (GameContext meldet z. B. "Spiel schon offen"); die Sprache ist
+        // global (settings.json). Nach dem Öffnen des Spiels wird mit der geladenen Session noch einmal geladen.
+        GlobalUiLanguage.Load(GameContext.Repository);
 
         // Spiel dieses Fensters wählen und sperren (siehe GameContext). Ohne freies Spiel gibt es kein Fenster.
         if (!GameContext.TryOpen(handOff.Args, out var startError))
@@ -56,8 +61,8 @@ public partial class App : Application
         var sessionAtStart = GameContext.Session.State;
         ThemeManager.Initialize(sessionAtStart);
 
-        // Oberflächentexte (locales/<sprache>.json, Rückfall Deutsch) vor dem ersten Fenster laden.
-        ParadoxModTool.Localization.UiText.Load(System.IO.Path.Combine(AppContext.BaseDirectory, "locales"), sessionAtStart?.UiLanguage);
+        // Oberflächentexte (locales/<sprache>.json aus User- und Programmordner, Rückfall Englisch, dann Deutsch) vor dem ersten Fenster laden.
+        ParadoxModTool.Localization.UiText.Load(ParadoxModTool.Localization.LocaleSources.Default(), sessionAtStart?.UiLanguage);
 
         // Dateikategorien (frei editierbar) müssen vor dem Hauptfenster feststehen, weil beim Wiederherstellen der Session
         // jedes Dokument sofort klassifiziert wird.
@@ -66,7 +71,7 @@ public partial class App : Application
         var splash = new SplashWindow();
         splash.Show();
         StartupProgress.Attach(splash);
-        StartupProgress.Report(0.05, "Fenster wird aufgebaut…");
+        StartupProgress.Report(0.05, MiscWindowTexts.SplashBuildingWindow);
 
         var main = new MainWindow { PendingEditorRequest = handOff.Pending };
         if (updateStart.Applied is { } appliedVersion)
@@ -79,16 +84,33 @@ public partial class App : Application
         MainWindow = main;
         main.ContentRendered += (_, _) =>
         {
-            StartupProgress.Report(1.0, "Fertig");
+            StartupProgress.Report(1.0, ParadoxModTool.Localization.CommonTexts.Done);
             StartupProgress.Finish();
             main.OnFirstRenderedAfterStart(updateStart);
         };
         main.Show();
     }
 
+    /// <summary>"PMT neu starten": nach dem Beenden dieses Prozesses dasselbe Spiel in einem neuen Prozess öffnen.</summary>
+    internal static bool RestartAfterExit { get; set; }
+
     protected override void OnExit(ExitEventArgs e)
     {
         GameContext.Release();
+
+        // Erst nach dem Freigeben der Spielsperre starten, sonst meldet der neue Prozess das Spiel als schon geöffnet.
+        if (RestartAfterExit)
+        {
+            try
+            {
+                GameContext.LaunchWindow(GameContext.GameId);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                // Programmpfad unbekannt oder Start verweigert: PMT bleibt geschlossen, der Nutzer startet es selbst.
+            }
+        }
+
         base.OnExit(e);
     }
 }

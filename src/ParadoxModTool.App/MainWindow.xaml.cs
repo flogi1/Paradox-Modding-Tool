@@ -33,6 +33,7 @@ using ParadoxModTool.UndoRedo;
 using ParadoxModTool.Updates;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ParadoxModTool.Settings;
+using ParadoxModTool.Localization;
 
 namespace ParadoxModTool.App;
 
@@ -57,6 +58,9 @@ public partial class MainWindow : Window
     /// Vanilla-Dateierkennung falsch wäre. <see langword="null"/>, solange noch keine gewählt wurde.
     /// </summary>
     private string? _vanillaDiffModRootOverride;
+
+    /// <summary>Zuletzt im Fenster "Suchen &amp; Ersetzen" durchsuchter Ordner (<see cref="AppSessionState.SearchLastFolder"/>).</summary>
+    private string? _searchLastFolder;
     private ParadoxModTool.VersionManager.StorageSettings _storageSettings = new(null, false);
 
     /// <summary>
@@ -107,6 +111,9 @@ public partial class MainWindow : Window
 
     /// <summary>Globaler Zustand für "Nur gefundenen Code anzeigen" (Nutzer-Feedback), geteilt zwischen der Ergebnisleiste hier und dem modalen Suchen-Fenster.</summary>
     private bool _diffFoldingEnabled = true;
+
+    /// <summary>Compare und Update Tool: zuletzt offener Reiter ("compare"/"update").</summary>
+    private string _cuToolLastTab = "update";
     private bool _hideSearchResultDescriptions;
     private bool _suppressHideDescriptionSync;
 
@@ -124,6 +131,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         InitializeSettings();
+        InitializeFolderFilters();
         InitializeMenuTexts();
         ApplySavedWindowBounds();
         ThemeManager.Attach(this);
@@ -155,6 +163,7 @@ public partial class MainWindow : Window
         ExplorerPanelControl.DeleteRequested += ExplorerPanel_DeleteRequested;
 
         ResultsPanelList.ItemsSource = _searchResults;
+        ResultsListCopy.Attach(ResultsPanelList, ResultsPanelDetail);
 
         // Ergebnisleiste automatisch einblenden, sobald ein neuer Treffer hinzukommt (z. B. durch
         // "Alle finden" im modalen Suchen-Fenster) - so muss der Nutzer sie nicht erst manuell
@@ -170,16 +179,18 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Der Arbeitsbereich, der gerade den Tastaturfokus enthält (oder zuletzt enthielt) — Grundlage
+    /// Der Arbeitsbereich, der gerade den Tastaturfokus enthält, sonst der zuletzt fokussierte (z. B. wenn der Fokus im Suchfenster liegt) — Grundlage
     /// dafür, in welchem Arbeitsbereich "Suchen"/"Ersetzen im aktuellen Dokument" wirkt, wenn
     /// Split-View aktiv ist. Ohne Fokus in einem der beiden (z. B. direkt nach dem Programmstart)
     /// wird der linke Arbeitsbereich als Standard verwendet.
     /// </summary>
-    private EditorPane ActivePane => RightEditor.IsKeyboardFocusWithin ? RightEditor : LeftEditor;
+    private EditorPane ActivePane => RightEditor.IsKeyboardFocusWithin ? RightEditor
+        : LeftEditor.IsKeyboardFocusWithin ? LeftEditor
+        : _lastFocusedPane == RightEditor && RightEditor.IsVisible ? RightEditor : LeftEditor;
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        StartupProgress.Report(0.15, "Spielprofil wird geladen…");
+        StartupProgress.Report(0.15, MainTexts.StartupLoadingProfile);
 
         // Bewusst zwei getrennte try/catch-Blöcke (statt einem gemeinsamen): Spielprofil
         // (JSON) und Syntax-Highlighting (XSHD/XML) sind zwei unabhängige Ladevorgänge mit
@@ -207,17 +218,16 @@ public partial class MainWindow : Window
             else
             {
                 MessageBox.Show(
-                    $"Kein Spielprofil für '{GameContext.GameId}' gefunden.\n" +
-                    "Läuft das Projekt aus dem Build-Ordner (bin/Debug/net8.0-windows)? Dort muss ein Ordner 'profiles' liegen.",
-                    "Hinweis");
+                    MainTexts.ProfileNotFound(GameContext.GameId),
+                    CommonTexts.Notice);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Spielprofil konnte nicht geladen werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.ProfileLoadFailed(ex.Message), CommonTexts.Error);
         }
 
-        StartupProgress.Report(0.3, "Syntax-Hervorhebung wird geladen…");
+        StartupProgress.Report(0.3, MainTexts.StartupLoadingSyntax);
         try
         {
             var xshdPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "syntax-templates", "jomini-script.xshd");
@@ -229,8 +239,8 @@ public partial class MainWindow : Window
             else
             {
                 MessageBox.Show(
-                    $"Syntax-Highlighting-Datei nicht gefunden unter: {xshdPath}",
-                    "Hinweis");
+                    MainTexts.SyntaxFileMissing(xshdPath),
+                    CommonTexts.Notice);
             }
         }
         catch (Exception ex)
@@ -242,18 +252,18 @@ public partial class MainWindow : Window
             var details = $"{ex.GetType().FullName}: {ex.Message}";
             if (ex.InnerException is { } inner)
             {
-                details += $"\n\nInnere Ausnahme: {inner.GetType().FullName}: {inner.Message}";
+                details += "\n\n" + MainTexts.SyntaxInnerException(inner.GetType().FullName ?? string.Empty, inner.Message);
             }
             details += $"\n\nStacktrace:\n{ex.StackTrace}";
-            MessageBox.Show(details, "Syntax-Highlighting konnte nicht geladen werden");
+            MessageBox.Show(details, MainTexts.SyntaxLoadFailedTitle);
         }
 
         // Bewusst erst NACH den beiden Ladevorgängen oben aufgerufen, damit wiederhergestellte
         // Dokumente sofort mit dem richtigen Syntax-Highlighting angezeigt werden.
-        StartupProgress.Report(0.4, "Sitzung wird wiederhergestellt…");
+        StartupProgress.Report(0.4, MainTexts.StartupRestoringSession);
         RestoreSession();
 
-        StartupProgress.Report(0.9, "Wiederherstellung wird geprüft…");
+        StartupProgress.Report(0.9, MainTexts.StartupCheckingRecovery);
 
         // Ungespeicherte Änderungen aus der letzten Sitzung bzw. einem Absturz wieder einspielen
         // (siehe MainWindow.Recovery.cs) und danach die regelmäßige Sicherung starten.
@@ -296,12 +306,18 @@ public partial class MainWindow : Window
 
         InitializeScriptHints();
         InitializeGuiWorkspace();
+        InitializeErrorLog();
+        InitializeDesync();
+        InitializeSaveExplorer();
 
-        StartupProgress.Report(0.97, "Fast fertig…");
+        StartupProgress.Report(0.97, MainTexts.StartupAlmostDone);
         StartBackgroundUpdateCheck();
     }
 
-    /// <summary>Standardpfad zu playsets.json unter "Documents/Paradox Interactive/&lt;Spiel&gt;/" - <see langword="null"/>, wenn dort keine Datei gefunden wurde.</summary>
+    /// <summary>
+    /// Standardpfad zu playsets.json unter "Documents/Paradox Interactive/&lt;Spiel&gt;/", sonst zu launcher-v2.sqlite im selben Ordner
+    /// (Paradox-Launcher v2, z. B. EU IV und CK3) - <see langword="null"/>, wenn dort keine der beiden Dateien gefunden wurde.
+    /// </summary>
     private string? TryGetDefaultPlaysetsFilePath()
     {
         try
@@ -316,8 +332,9 @@ public partial class MainWindow : Window
             }
 
             gameFolder ??= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive", "Europa Universalis V");
-            var candidate = Path.Combine(gameFolder, "playsets.json");
-            return File.Exists(candidate) ? candidate : null;
+            return new[] { "playsets.json", "launcher-v2.sqlite" }
+                .Select(name => Path.Combine(gameFolder, name))
+                .FirstOrDefault(File.Exists);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
         {
@@ -364,8 +381,8 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "playsets.json|playsets.json|Alle Dateien (*.*)|*.*",
-            Title = "playsets.json auswählen",
+            Filter = $"playsets.json, launcher-v2.sqlite|playsets.json;launcher-v2.sqlite|{MainTexts.FilterAllFiles}|*.*",
+            Title = MainTexts.PlaysetsChooseTitle,
         };
 
         var initialDirectory = _playsetsFilePath is { } existing && File.Exists(existing)
@@ -374,9 +391,10 @@ public partial class MainWindow : Window
 
         if (initialDirectory is not null)
         {
-            dialog.InitialDirectory = initialDirectory;
+            dialog.InitialDirectory = ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(initialDirectory);
         }
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("main.playsets");
         if (dialog.ShowDialog() != true)
         {
             return;
@@ -384,6 +402,7 @@ public partial class MainWindow : Window
 
         _playsetsFilePath = dialog.FileName;
         RefreshPlaysetsCombo();
+        _errorLog?.RefreshSources();
     }
 
     /// <summary>
@@ -404,6 +423,7 @@ public partial class MainWindow : Window
         LoadUpdateSettings(state);
         LoadGuiSettings(state);
         LoadCompatchSettings(state);
+        LoadErrorLogSettings(state);
 
         // Kategorie-Farben gehören seit Paket 12b zum Theme (siehe ThemeManager, MainWindow.Theme.cs).
 
@@ -412,14 +432,17 @@ public partial class MainWindow : Window
         RefreshNotesPanel();
         ParadoxModTool.Editor.ScopeSettings.SetStatusBarEnabled(state.ScopeStatusBarEnabled);
         ParadoxModTool.Editor.ScopeSettings.SetHoverEnabled(state.ScopeHoverEnabled);
+        ParadoxModTool.Editor.ModifierValueSettings.SetHoverEnabled(state.ModifierHoverEnabled);
+        ParadoxModTool.Editor.ModifierValueSettings.SetNamesEnabled(state.ModifierNamesEnabled);
         ParadoxModTool.Editor.ScopeSettings.SetStatusBarTopEnabled(state.ScopeStatusBarTopEnabled);
         ParadoxModTool.Editor.ScopeSettings.SetWarningsEnabled(state.ScopeWarningsEnabled);
         _diffFoldingEnabled = state.DiffFoldingEnabled;
-        ExplorerPanelControl.ButtonsOnLeft = state.ExplorerButtonsOnLeft;
+        _cuToolLastTab = state.CuToolLastTab;
         ParadoxModTool.Editor.ScopeSettings.SetPanelEnabled(state.ScopePanelEnabled);
         ParadoxModTool.Editor.BracketSettings.SetHighlightEnabled(state.BracketHighlightEnabled);
         ScriptHintSettings.SetHoverEnabled(state.ScriptHoverEnabled);
         ScriptHintSettings.SetAutoCompleteEnabled(state.ScriptAutoCompleteEnabled);
+        ScriptHintSettings.SetCompleteCustomLocalizations(state.ScriptCompleteCustomLocalizations);
         SyncScriptHintControls();
 
 
@@ -433,6 +456,7 @@ public partial class MainWindow : Window
         // Bugfix Vanilla-Diff-Fenster: gewählter Mod-Ordner (einer konkreten Mod, nicht der
         // Sammelordner) soll ebenfalls die Session überdauern.
         _vanillaDiffModRootOverride = state.VanillaDiffModRootOverride;
+        _searchLastFolder = state.SearchLastFolder;
         _scriptDocsFolderOverride = state.ScriptDocsFolder;
 
         // Speicherorte für Snapshots/Vanilla-Historie (Nutzer-Feedback Task 14).
@@ -455,10 +479,14 @@ public partial class MainWindow : Window
 
         TabIconSettings.LoadHidden(state.HiddenTabIcons);
         FilterBarSettings.LoadHidden(state.HiddenFilterEntries);
+        LoadFolderFilters(state);
         RefreshFileOrigins();
 
         RestorePane(LeftEditor, state.LeftPane);
         RestorePane(RightEditor, state.RightPane);
+
+        // Alte Vanilla-Fassungen für den Update-Abgleich (Compare und Update Tool) im Hintergrund ablegen.
+        RecordVanillaSnapshotsInBackground();
     }
 
     /// <summary>
@@ -477,7 +505,7 @@ public partial class MainWindow : Window
             _restoreDone++;
             StartupProgress.Report(
                 0.4 + 0.5 * _restoreDone / Math.Max(1, _restoreTotal),
-                $"Dokument {_restoreDone}/{_restoreTotal}: {Path.GetFileName(documentState.FilePath)}");
+                MainTexts.StartupDocument(_restoreDone, _restoreTotal, Path.GetFileName(documentState.FilePath)));
 
             if (!File.Exists(documentState.FilePath))
             {
@@ -486,7 +514,8 @@ public partial class MainWindow : Window
 
             try
             {
-                var document = pane.LoadFile(documentState.FilePath, _activeHighlighting);
+                // Ältere Sitzungen enthalten gemischte Pfade (…\Name/Documents/…/mod\Datei); der saubere Pfad steht im Tab-Tooltip und erreicht externe Programme.
+                var document = pane.LoadFile(ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(documentState.FilePath), _activeHighlighting);
                 document.CaretOffset = documentState.CaretOffset;
 
                 // Manuelle Kategorie wiederherstellen. Eine Kennung, die es nicht mehr gibt (Kategorie gelöscht
@@ -531,6 +560,9 @@ public partial class MainWindow : Window
         var state = GameContext.Session.State;
         // Das Einstellungsfenster schließt als Kindfenster erst nach diesem Ereignis; Größe und Position daher jetzt übernehmen.
         _settingsWindow?.SaveBounds();
+        SaveErrorLogWindowBounds();
+        SaveSaveExplorerWindowBounds();
+        _myModsWindow?.SaveBounds();
         _settings.WriteTo(state);
         state.ActiveGameProfileId = _activeProfile?.Id ?? GameContext.GameId;
         state.LeftPane = CapturePaneState(LeftEditor);
@@ -539,22 +571,30 @@ public partial class MainWindow : Window
         state.BugsPanelWholeProject = NotesPanelControl.BugsWholeProject;
         state.HiddenTabIcons = TabIconSettings.HiddenNames();
         state.HiddenFilterEntries = FilterBarSettings.HiddenKeys();
+        SaveFolderFilters(state);
         state.Categories = FileCategoryClassifier.Categories.Select(c => c.Clone()).ToList();
         state.ScriptHoverEnabled = ScriptHintSettings.HoverEnabled;
         state.ScriptAutoCompleteEnabled = ScriptHintSettings.AutoCompleteEnabled;
+        state.ScriptCompleteCustomLocalizations = ScriptHintSettings.CompleteCustomLocalizations;
         state.ScopeStatusBarEnabled = ParadoxModTool.Editor.ScopeSettings.StatusBarEnabled;
         state.ScopeStatusBarTopEnabled = ParadoxModTool.Editor.ScopeSettings.StatusBarTopEnabled;
         state.ScopeWarningsEnabled = ParadoxModTool.Editor.ScopeSettings.WarningsEnabled;
         state.DiffFoldingEnabled = _diffFoldingEnabled;
-        state.ExplorerButtonsOnLeft = ExplorerPanelControl.ButtonsOnLeft;
+        state.CuToolLastTab = _cuToolLastTab;
         state.ScopePanelEnabled = ParadoxModTool.Editor.ScopeSettings.PanelEnabled;
         state.BracketHighlightEnabled = ParadoxModTool.Editor.BracketSettings.HighlightEnabled;
         state.ScopeHoverEnabled = ParadoxModTool.Editor.ScopeSettings.HoverEnabled;
+        state.ModifierHoverEnabled = ParadoxModTool.Editor.ModifierValueSettings.HoverEnabled;
+        state.ModifierNamesEnabled = ParadoxModTool.Editor.ModifierValueSettings.NamesEnabled;
         SaveGuiSettings(state);
         SaveCompatchSettings(state);
+        CloseDesync();
+        SaveErrorLogSettings(state);
+        CloseSaveExplorer();
         state.GameExecutablePath = _gameExecutablePath;
         state.PlaysetsFilePath = _playsetsFilePath;
         state.VanillaDiffModRootOverride = _vanillaDiffModRootOverride;
+        state.SearchLastFolder = _searchLastFolder;
         state.ScriptDocsFolder = _scriptDocsFolderOverride;
         state.StorageParentFolder = _storageSettings.ParentFolder;
         state.StoreInsideModFolder = _storageSettings.InsideModFolder;
@@ -650,6 +690,7 @@ public partial class MainWindow : Window
         // Werkzeugleisten-/Menü-Button (siehe FileNote_Click) - gemeinsame Stelle ShowNoteFor.
         pane.ShowNoteRequested += (_, document) => ShowNoteFor(document);
         pane.ShowBugRequested += (_, document) => CycleBugs(document);
+        pane.ShowErrorLogRequested += (_, document) => OpenErrorLogWindow(document.FilePath);
         pane.ManageCategoriesRequested += (_, _) => OpenCategoriesDialog();
     }
 
@@ -668,10 +709,10 @@ public partial class MainWindow : Window
         var categories = FileCategoryClassifier.Categories.Where(c => c.Extensions.Count > 0).ToList();
         var all = categories.SelectMany(c => c.Extensions).Distinct().Select(x => "*" + x).ToList();
 
-        var filter = new System.Text.StringBuilder("Alle Dateien (*.*)|*.*");
+        var filter = new System.Text.StringBuilder($"{MainTexts.FilterAllFiles}|*.*");
         if (all.Count > 0)
         {
-            filter.Append($"|Alle unterstützten Dateitypen ({string.Join(";", all)})|{string.Join(";", all)}");
+            filter.Append($"|{MainTexts.FilterAllSupported(string.Join(";", all))}|{string.Join(";", all)}");
         }
 
         foreach (var category in categories)
@@ -690,6 +731,7 @@ public partial class MainWindow : Window
             Filter = BuildOpenFileDialogFilter()
         };
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("main.openFile");
         if (dialog.ShowDialog() != true)
         {
             return;
@@ -722,9 +764,10 @@ public partial class MainWindow : Window
         {
             var dialog = new SaveFileDialog
             {
-                Filter = "Paradox-Skriptdateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*"
+                Filter = $"{MainTexts.FilterScriptFiles}|*.txt|{MainTexts.FilterAllFiles}|*.*"
             };
 
+            dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("main.saveAs");
             if (dialog.ShowDialog() != true)
             {
                 return;
@@ -736,7 +779,7 @@ public partial class MainWindow : Window
         try
         {
             var action = new FileWriteUndoableAction(
-                $"Datei gespeichert: {Path.GetFileName(targetPath)}",
+                MainTexts.SaveUndoName(Path.GetFileName(targetPath)),
                 targetPath,
                 pane.CurrentText);
 
@@ -747,8 +790,12 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Datei konnte nicht gespeichert werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.SaveFailed(ex.Message), CommonTexts.Error);
+            return;
         }
+
+        // Warnungen des letzten Ersetzens (OR/NOR/AND mit einem Eintrag) gegen den gespeicherten Stand aktualisieren.
+        RefreshReplaceWarningsAfterSave(targetPath);
     }
 
     private void SplitViewToggle_Click(object sender, RoutedEventArgs e) => _settings.SplitViewEnabled = SplitViewToggle.IsChecked == true;
@@ -768,6 +815,22 @@ public partial class MainWindow : Window
         if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.P)
         {
             OpenScopePathDialog();
+            e.Handled = true;
+            return;
+        }
+
+        // Strg+Umschalt+D: GUI-Daten-Helfer (nur mit eingeschalteten GUI-Werkzeugen).
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D && GuiSettings.ToolsEnabled)
+        {
+            _ = OpenGuiDataHelperAsync();
+            e.Handled = true;
+            return;
+        }
+
+        // Strg+Umschalt+B: GUI-Bausteine (nur mit eingeschalteten GUI-Werkzeugen).
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.B && GuiSettings.ToolsEnabled)
+        {
+            OpenGuiBlocks();
             e.Handled = true;
             return;
         }
@@ -837,9 +900,8 @@ public partial class MainWindow : Window
         if (ActivePane.CurrentFilePath is not { } filePath)
         {
             MessageBox.Show(
-                "Für dieses Dokument gibt es noch keine Datei auf der Platte - bitte zuerst " +
-                "speichern, bevor ein Bookmark gesetzt werden kann.",
-                "Hinweis");
+                MainTexts.NoFileYet(MainTexts.NoFileYetBookmark),
+                CommonTexts.Notice);
             return;
         }
 
@@ -917,7 +979,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenSearchReplaceWindow(string? folder = null)
+    private void OpenSearchReplaceWindow(string? path = null)
     {
         if (_searchReplaceWindow is null)
         {
@@ -932,7 +994,9 @@ public partial class MainWindow : Window
                 SetHideSearchResultDescriptions,
                 _activeProfile,
                 () => ResolveDefaultModRoot(_activeProfile?.DefaultModRootTemplate),
-                () => ComputeGameContentRoot(_gameExecutablePath))
+                () => ComputeGameContentRoot(_gameExecutablePath),
+                () => _searchLastFolder,
+                folder => _searchLastFolder = folder)
             {
                 Owner = this,
             };
@@ -948,9 +1012,13 @@ public partial class MainWindow : Window
             _searchReplaceWindow.Show();
         }
 
-        if (folder is not null)
+        if (path is not null)
         {
-            _searchReplaceWindow.SearchInFolder(folder);
+            _searchReplaceWindow.SearchInPath(path);
+        }
+        else
+        {
+            _searchReplaceWindow.FocusSearchBox(ActivePane.SelectedText);
         }
     }
 
@@ -973,7 +1041,9 @@ public partial class MainWindow : Window
             SetHideSearchResultDescriptions,
             _activeProfile,
             () => ResolveDefaultModRoot(_activeProfile?.DefaultModRootTemplate),
-            () => ComputeGameContentRoot(_gameExecutablePath))
+            () => ComputeGameContentRoot(_gameExecutablePath),
+            () => _searchLastFolder,
+            folder => _searchLastFolder = folder)
         {
             Owner = owner,
         };
@@ -998,7 +1068,16 @@ public partial class MainWindow : Window
                 () => _storageSettings,
                 () => _diffFoldingEnabled,
                 value => _diffFoldingEnabled = value,
-                CreateSearchWindowForDiff)
+                CreateSearchWindowForDiff,
+                () => _cuToolLastTab,
+                tab => _cuToolLastTab = tab,
+                RecordVanillaSnapshots,
+                VanillaUpdateModDirectory,
+                OpenVanillaUpdateMerge,
+                () => _compatchHiddenKinds ?? DefaultHiddenKinds,
+                kinds => _compatchHiddenKinds = kinds.ToList(),
+                modFolder => ParadoxModTool.SearchReplace.ReplaceLists.ReplaceListStore.FileFor(GameContext.Repository.GameDirectory(GameContext.GameId), VanillaUpdateModKey(modFolder)),
+                ApplyReplaceList)
             {
                 Owner = this,
             };
@@ -1132,9 +1211,8 @@ public partial class MainWindow : Window
         else
         {
             MessageBox.Show(
-                "Für dieses Dokument gibt es noch keine Datei auf der Platte - bitte zuerst " +
-                "speichern, bevor eine Notiz hinzugefügt werden kann.",
-                "Hinweis");
+                MainTexts.NoFileYet(MainTexts.NoFileYetNote),
+                CommonTexts.Notice);
         }
     }
 
@@ -1155,9 +1233,8 @@ public partial class MainWindow : Window
         if (document.FilePath is not { } filePath)
         {
             MessageBox.Show(
-                "Für dieses Dokument gibt es noch keine Datei auf der Platte - bitte zuerst " +
-                "speichern, bevor eine Notiz hinzugefügt werden kann.",
-                "Hinweis");
+                MainTexts.NoFileYet(MainTexts.NoFileYetNote),
+                CommonTexts.Notice);
             return;
         }
 
@@ -1233,7 +1310,7 @@ public partial class MainWindow : Window
     {
         if (ActivePane.ActiveDocument is not { } document)
         {
-            MessageBox.Show("Kein Dokument geöffnet.", "Hinweis");
+            MessageBox.Show(MainTexts.NoDocumentOpen, CommonTexts.Notice);
             return;
         }
 
@@ -1259,10 +1336,8 @@ public partial class MainWindow : Window
             if (!result.Success)
             {
                 MessageBox.Show(
-                    "Struktur-Neuformatierung nicht möglich - die Datei konnte nicht als " +
-                    $"Paradox-Skript gelesen werden:\n\n{result.ErrorMessage}\n\n" +
-                    "Es wurde nichts am Dokument geändert.",
-                    "Formatieren");
+                    MainTexts.FormatFailed(result.ErrorMessage ?? string.Empty),
+                    MainTexts.FormatTitle);
                 return;
             }
 
@@ -1291,8 +1366,8 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "Programme (*.exe)|*.exe|Alle Dateien (*.*)|*.*",
-            Title = "Spiel-.exe auswählen",
+            Filter = $"{MainTexts.FilterPrograms}|*.exe|{MainTexts.FilterAllFiles}|*.*",
+            Title = MainTexts.GameExeChooseTitle,
         };
 
         if (_gameExecutablePath is { } existing && File.Exists(existing))
@@ -1300,6 +1375,7 @@ public partial class MainWindow : Window
             dialog.InitialDirectory = Path.GetDirectoryName(existing);
         }
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("main.gameExe");
         if (dialog.ShowDialog() != true)
         {
             return false;
@@ -1308,6 +1384,7 @@ public partial class MainWindow : Window
         _gameExecutablePath = dialog.FileName;
         RefreshFileOrigins();
         _ = UpdateGuiWorkspaceAsync(force: false);
+        _errorLog?.RefreshSources();
 
         // Verzeichnis-Übersicht (Nutzer-Feedback Runde 10): Vorauswahl für "Ordner hinzufügen"
         // anhand des neu eingestellten Spielpfads aktualisieren - siehe ComputeGameFilesGuess.
@@ -1365,11 +1442,11 @@ public partial class MainWindow : Window
         }
 
         var names = unsaved.Select(x => x.Document.DisplayName).Distinct().ToList();
-        var list = string.Join("\n", names.Take(8).Select(n => "  " + n)) + (names.Count > 8 ? $"\n  … und {names.Count - 8} weitere" : string.Empty);
+        var list = string.Join("\n", names.Take(8).Select(n => "  " + n)) + (names.Count > 8 ? "\n  " + MainTexts.LaunchMore(names.Count - 8) : string.Empty);
         var answer = MessageBox.Show(
             this,
-            $"Diese Mod-Dateien haben ungespeicherte Änderungen; das Spiel sieht sie erst nach dem Speichern:\n\n{list}\n\nJa: speichern und starten\nNein: ohne Speichern starten\nAbbrechen: nicht starten",
-            "Spiel starten",
+            MainTexts.LaunchUnsaved(list),
+            MainTexts.LaunchTitle,
             MessageBoxButton.YesNoCancel,
             MessageBoxImage.Warning,
             MessageBoxResult.Yes);
@@ -1438,7 +1515,7 @@ public partial class MainWindow : Window
             var playsetResult = PlaysetStore.SetActivePlayset(_playsetsFilePath, selectedPlayset.Name);
             if (!playsetResult.Success)
             {
-                MessageBox.Show(playsetResult.ErrorMessage, "Playset konnte nicht umgeschaltet werden");
+                MessageBox.Show(playsetResult.ErrorMessage, MainTexts.LaunchPlaysetFailed);
                 return false;
             }
 
@@ -1448,7 +1525,7 @@ public partial class MainWindow : Window
         var result = GameLauncher.Launch(_gameExecutablePath, arguments);
         if (!result.Success)
         {
-            MessageBox.Show(result.ErrorMessage, "Spiel konnte nicht gestartet werden");
+            MessageBox.Show(result.ErrorMessage, MainTexts.LaunchFailed);
             return false;
         }
 
@@ -1521,7 +1598,7 @@ public partial class MainWindow : Window
         {
             var actions = plans
                 .Select(plan => (IUndoableAction)new FileWriteUndoableAction(
-                    $"Ersetzen: {Path.GetFileName(plan.FilePath)}", plan.FilePath, plan.NewContent))
+                    MainTexts.ReplaceUndoName(Path.GetFileName(plan.FilePath)), plan.FilePath, plan.NewContent))
                 .ToList();
 
             _history.Execute(new CompositeUndoableAction(description, actions));
@@ -1536,7 +1613,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ersetzen in Dateien fehlgeschlagen: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.ReplaceFailed(ex.Message), CommonTexts.Error);
             return 0;
         }
     }
@@ -1643,18 +1720,18 @@ public partial class MainWindow : Window
 
         if (File.Exists(targetPath))
         {
-            MessageBox.Show($"Die Datei \"{e.FileName}\" existiert in diesem Ordner bereits.", "Neue Datei anlegen");
+            MessageBox.Show(MainTexts.NewFileExists(e.FileName), MainTexts.NewFileTitle);
             return;
         }
 
         try
         {
-            var action = new FileWriteUndoableAction($"Datei angelegt: {e.FileName}", targetPath, string.Empty);
+            var action = new FileWriteUndoableAction(MainTexts.NewFileUndoName(e.FileName), targetPath, string.Empty);
             _history.Execute(action);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Datei konnte nicht angelegt werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.NewFileFailed(ex.Message), CommonTexts.Error);
             return;
         }
 
@@ -1681,14 +1758,14 @@ public partial class MainWindow : Window
 
         if (Directory.Exists(targetPath) || File.Exists(targetPath))
         {
-            MessageBox.Show($"\"{e.FolderName}\" existiert in diesem Ordner bereits.", "Neuen Ordner anlegen");
+            MessageBox.Show(MainTexts.NewFolderExists(e.FolderName), MainTexts.NewFolderTitle);
             return;
         }
 
         try
         {
             var action = new DelegateUndoableAction(
-                $"Ordner angelegt: {e.FolderName}",
+                MainTexts.NewFolderUndoName(e.FolderName),
                 doAction: () => Directory.CreateDirectory(targetPath),
                 undoAction: () =>
                 {
@@ -1701,7 +1778,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ordner konnte nicht angelegt werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.NewFolderFailed(ex.Message), CommonTexts.Error);
             return;
         }
 
@@ -1745,7 +1822,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Löschen fehlgeschlagen: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.DeleteFailed(ex.Message), CommonTexts.Error);
             return;
         }
 
@@ -1796,6 +1873,7 @@ public partial class MainWindow : Window
 
         RefreshActiveMod();
         RefreshLockDisplays();
+        RefreshModifierFormats();
     }
 
     private static string? ResolveDefaultModRoot(string? template)
@@ -1808,7 +1886,8 @@ public partial class MainWindow : Window
         try
         {
             var expanded = Environment.ExpandEnvironmentVariables(template);
-            return Directory.Exists(expanded) ? expanded : null;
+            // Vorlagen wie "%USERPROFILE%/Documents/..." ergeben gemischte Schrägstriche; GetFullPath vereinheitlicht sie.
+            return Directory.Exists(expanded) ? Path.GetFullPath(expanded) : null;
         }
         catch (Exception ex) when (ex is ArgumentException or PathTooLongException)
         {
@@ -1858,7 +1937,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Rückgängig fehlgeschlagen: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.UndoFailed(ex.Message), CommonTexts.Error);
         }
     }
 
@@ -1871,7 +1950,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Wiederholen fehlgeschlagen: {ex.Message}", "Fehler");
+            MessageBox.Show(MainTexts.RedoFailed(ex.Message), CommonTexts.Error);
         }
     }
 

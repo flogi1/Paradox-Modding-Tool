@@ -17,6 +17,9 @@ public partial class MainWindow
 {
     private GuiWorkspaceService? _guiService;
 
+    /// <summary>Kontextordner und Überschreib-Reihenfolge des aktiven Spiels (EU V ohne Profil).</summary>
+    private GuiLayout CurrentGuiLayout => GameContext.Profile is { } profile ? GuiRules.FromProfile(profile).Layout : GuiLayout.Default;
+
     private GuiWorkspaceService GuiService => _guiService ??= new GuiWorkspaceService(
         Path.Combine(GameContext.Repository.GameDirectory(GameContext.GameId), "gui", "catalog.json"),
         GameContext.Profile is { } profile ? GuiRules.FromProfile(profile) : GuiRules.Empty);
@@ -28,11 +31,21 @@ public partial class MainWindow
         GuiInspectMenuItem.Header = GuiTexts.MenuInspect;
         GuiInspectMenuItem.ToolTip = GuiTexts.MenuInspectTip;
         GuiInspectMenuItem.InputGestureText = GuiTexts.KeyInspect;
+        GuiDataHelperMenuItem.Header = GuiDataTexts.Title;
+        GuiDataHelperMenuItem.ToolTip = GuiDataTexts.MenuTip;
+        GuiDataHelperMenuItem.InputGestureText = GuiDataTexts.Key;
+        GuiBlocksMenuItem.Header = GuiTexts.MenuBlocks;
+        GuiBlocksMenuItem.ToolTip = GuiTexts.MenuBlocksTip;
+        GuiBlocksMenuItem.InputGestureText = GuiTexts.KeyBlocks;
         GuiNewFileMenuItem.Header = GuiTexts.MenuNewFile;
         GuiNewFileMenuItem.ToolTip = GuiTexts.MenuNewFileTip;
         GuiModSettingsMenuItem.Header = GuiTexts.MenuModSettings;
         GuiModSettingsMenuItem.ToolTip = GuiTexts.MenuModSettingsTip;
         GuiSettings.ColorPicker = PickGuiColor;
+        GuiSettings.DataHelper = OpenGuiDataHelperFor;
+        GuiSettings.ConditionHelper = OpenGuiConditionHelperFor;
+        GuiSettings.BlockSource = () => LoadGuiBlockLibrary().Effective;
+        GuiSettings.BlockPicker = PickGuiBlock;
         SyncGuiInspectMenu();
         _ = UpdateGuiWorkspaceAsync(force: false);
     }
@@ -157,8 +170,13 @@ public partial class MainWindow
     }
 
     /// <summary>Menüpunkt "GUI-Element inspizieren" nur bei eingeschalteten GUI-Werkzeugen.</summary>
-    private void SyncGuiInspectMenu() =>
+    private void SyncGuiInspectMenu()
+    {
         GuiInspectMenuItem.Visibility = GuiSettings.ToolsEnabled ? Visibility.Visible : Visibility.Collapsed;
+        GuiDataHelperMenuItem.Visibility = GuiInspectMenuItem.Visibility;
+        GuiBlocksMenuItem.Visibility = GuiInspectMenuItem.Visibility;
+        ApplyToolbarVisibility();
+    }
 
     private GuiInspectorWindow? _guiInspector;
     private GuiElementSearchWindow? _guiSearch;
@@ -174,6 +192,8 @@ public partial class MainWindow
         pane.GuiDraftDiscardRequested += (_, document) => DiscardGuiDraft(document, ask: true);
         pane.GuiEditDefinitionRequested += (_, e) => OpenGuiInDesigner(e.Path, e.Line, startDraft: true);
         pane.GuiViewInGameRequested += (_, _) => ViewInGame();
+        pane.GuiBlocksRequested += (_, _) => OpenGuiBlocks();
+        pane.GuiSaveBlockRequested += (_, code) => SaveGuiBlock(code);
     }
 
     /// <summary>Zeigt ein Element im GUI-Inspektor (ein Fenster, das weiterverwendet wird).</summary>
@@ -236,20 +256,15 @@ public partial class MainWindow
             return;
         }
 
-        var dialog = new GuiNewFileWindow(modRoot) { Owner = this };
-        if (dialog.ShowDialog() != true)
+        var library = LoadGuiBlockLibrary();
+        var dialog = new GuiNewFileWindow(modRoot, library.Effective, CurrentGuiLayout) { Owner = this };
+        if (dialog.ShowDialog() != true || GuiBlockFileText(library, dialog.Block!, dialog.FileName) is not { } text)
         {
             return;
         }
 
         var folder = dialog.Folder;
         var path = Path.Combine(folder, dialog.FileName);
-        var index = GuiSettings.Workspace?.Index;
-        var text = GuiScaffold.Text(
-            dialog.Scaffold,
-            GuiScaffold.NameFor(dialog.FileName),
-            name => index?.Find(name, GuiDefinitionKind.Type) is not null,
-            name => index?.Find(name, GuiDefinitionKind.Template) is not null);
         try
         {
             Directory.CreateDirectory(folder);

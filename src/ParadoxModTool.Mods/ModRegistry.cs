@@ -13,6 +13,10 @@ public sealed class ModRegistry
 
     private const int CurrentVersion = 1;
 
+    private static readonly System.Text.RegularExpressions.Regex DiscordKeyPattern = new(@"^\d{1,20}/\d{1,20}$");
+
+    private static bool IsSnowflake(string? text) => text is { Length: > 0 and <= 20 } && text.All(char.IsAsciiDigit);
+
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
@@ -54,7 +58,7 @@ public sealed class ModRegistry
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            registry.LoadWarning = "mods.json war nicht lesbar; eine Kopie liegt als mods.json.bad neben der Datei.";
+            registry.LoadWarning = ModsTexts.RegistryLoadWarning;
             try
             {
                 File.Copy(path, path + ".bad", overwrite: true);
@@ -75,7 +79,7 @@ public sealed class ModRegistry
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Der Name der Mod darf nicht leer sein.", nameof(name));
+            throw new ArgumentException(ModsTexts.RegistryEmptyName, nameof(name));
         }
 
         var normalized = ModPaths.Normalize(path);
@@ -127,7 +131,7 @@ public sealed class ModRegistry
         var text = workshopId?.Trim();
         if (!string.IsNullOrEmpty(text) && !text.All(char.IsAsciiDigit))
         {
-            throw new ArgumentException("Die Workshop-ID besteht nur aus Ziffern.", nameof(workshopId));
+            throw new ArgumentException(ModsTexts.RegistryWorkshopDigits, nameof(workshopId));
         }
 
         mod.SteamWorkshopId = string.IsNullOrEmpty(text) || text.All(c => c == '0') ? null : text;
@@ -144,18 +148,18 @@ public sealed class ModRegistry
             var repo = entry.Repo?.Trim() ?? string.Empty;
             if (!GitHubNames.IsValidRepo(repo))
             {
-                throw new ArgumentException($"\"{repo}\" ist kein Repository (erwartet owner/name).", nameof(repos));
+                throw new ArgumentException(ModsTexts.RegistryNotRepository(repo), nameof(repos));
             }
 
             if (list.Any(r => r.Repo.Equals(repo, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new ArgumentException($"Das Repository {repo} ist doppelt.", nameof(repos));
+                throw new ArgumentException(ModsTexts.RegistryRepositoryDuplicate(repo), nameof(repos));
             }
 
             var format = string.IsNullOrWhiteSpace(entry.TagFormat) ? GitHubNames.DefaultTagFormat : entry.TagFormat.Trim();
             if (!format.Contains("{version}", StringComparison.Ordinal))
             {
-                throw new ArgumentException("Das Tag-Format braucht den Platzhalter {version}.", nameof(repos));
+                throw new ArgumentException(ModsTexts.RegistryTagFormat, nameof(repos));
             }
 
             list.Add(new GitHubRepoEntry { Repo = repo, TagFormat = format, Enabled = entry.Enabled });
@@ -175,24 +179,24 @@ public sealed class ModRegistry
             var name = variant.Name?.Trim() ?? string.Empty;
             if (name.Length == 0)
             {
-                throw new ArgumentException("Der Name der ZIP-Variante darf nicht leer sein.", nameof(variants));
+                throw new ArgumentException(ModsTexts.RegistryVariantEmptyName, nameof(variants));
             }
 
             if (list.Any(v => v.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new ArgumentException($"Die ZIP-Variante \"{name}\" ist doppelt.", nameof(variants));
+                throw new ArgumentException(ModsTexts.RegistryVariantDuplicate(name), nameof(variants));
             }
 
             var only = variant.OnlyFolders.Select(f => f.Trim().Replace('\\', '/').Trim('/')).Where(f => f.Length > 0).ToList();
             if (only.Any(f => Path.IsPathRooted(f) || f.Split('/').Any(part => part == ".." || part == ".")))
             {
-                throw new ArgumentException("Ordnerangaben müssen relativ zum Mod-Ordner sein.", nameof(variants));
+                throw new ArgumentException(ModsTexts.RegistryVariantRelative, nameof(variants));
             }
 
             var root = string.IsNullOrWhiteSpace(variant.RootFolder) ? null : variant.RootFolder.Trim();
             if (root is not null && (root.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || root is "." or ".."))
             {
-                throw new ArgumentException("Der Wurzelordner darf keine Pfadzeichen enthalten.", nameof(variants));
+                throw new ArgumentException(ModsTexts.RegistryVariantRoot, nameof(variants));
             }
 
             list.Add(new GitHubZipVariant
@@ -211,12 +215,75 @@ public sealed class ModRegistry
         Save();
     }
 
+    /// <summary>Ersetzt die Bug-Quellen der Mod. Wirft <see cref="ArgumentException"/> bei unbekannter Art, ungültigem Repository, leerem Schlüssel oder doppelter Quelle.</summary>
+    public void SetBugSources(string id, IEnumerable<BugSourceEntry> sources)
+    {
+        var mod = Require(id);
+        var list = new List<BugSourceEntry>();
+        foreach (var entry in sources)
+        {
+            var kind = entry.Kind?.Trim() ?? string.Empty;
+            var key = entry.Key?.Trim() ?? string.Empty;
+            if (kind != BugSourceKinds.GitHub && kind != BugSourceKinds.Discord)
+            {
+                throw new ArgumentException(ModsTexts.RegistryBugSourceKind(kind), nameof(sources));
+            }
+
+            if (key.Length == 0
+                || (kind == BugSourceKinds.GitHub && !GitHubNames.IsValidRepo(key))
+                || (kind == BugSourceKinds.Discord && !DiscordKeyPattern.IsMatch(key)))
+            {
+                throw new ArgumentException(ModsTexts.RegistryBugSourceInvalid(key), nameof(sources));
+            }
+
+            if (kind == BugSourceKinds.Discord)
+            {
+                var tags = new[] { entry.OpenTagId, entry.DoneTagId, entry.RejectedTagId };
+                if (!tags.All(IsSnowflake) || tags.Distinct().Count() != 3)
+                {
+                    throw new ArgumentException(ModsTexts.RegistryDiscordTags, nameof(sources));
+                }
+            }
+
+            if (list.Any(s => s.Kind == kind && s.Key.Equals(key, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException(ModsTexts.RegistryBugSourceDuplicate(key), nameof(sources));
+            }
+
+            var labels = (entry.Labels ?? new List<string>())
+                .Select(label => label?.Trim() ?? string.Empty)
+                .Where(label => label.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (kind == BugSourceKinds.Discord && !labels.All(IsSnowflake))
+            {
+                throw new ArgumentException(ModsTexts.RegistryDiscordFilter, nameof(sources));
+            }
+
+            list.Add(new BugSourceEntry
+            {
+                Kind = kind,
+                Key = key,
+                Enabled = entry.Enabled,
+                Labels = labels,
+                Name = entry.Name?.Trim() ?? string.Empty,
+                OpenTagId = entry.OpenTagId ?? string.Empty,
+                DoneTagId = entry.DoneTagId ?? string.Empty,
+                RejectedTagId = entry.RejectedTagId ?? string.Empty,
+                ArchiveClosed = entry.ArchiveClosed,
+            });
+        }
+
+        mod.BugSources = list;
+        Save();
+    }
+
     public void Rename(string id, string name)
     {
         var mod = Require(id);
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Der Name der Mod darf nicht leer sein.", nameof(name));
+            throw new ArgumentException(ModsTexts.RegistryEmptyName, nameof(name));
         }
 
         mod.Name = name.Trim();
@@ -240,7 +307,7 @@ public sealed class ModRegistry
         var index = IndexOfPath(mod, ModPaths.Normalize(path));
         if (index < 0)
         {
-            throw new InvalidOperationException("Dieser Ordner gehört nicht zur Mod.");
+            throw new InvalidOperationException(ModsTexts.RegistryFolderNotOfMod);
         }
 
         mod.Paths.RemoveAt(index);
@@ -254,7 +321,7 @@ public sealed class ModRegistry
         var index = IndexOfPath(mod, ModPaths.Normalize(oldPath));
         if (index < 0)
         {
-            throw new InvalidOperationException("Der alte Ordner gehört nicht zur Mod.");
+            throw new InvalidOperationException(ModsTexts.RegistryOldFolderNotOfMod);
         }
 
         var normalizedNew = ModPaths.Normalize(newPath);
@@ -299,33 +366,33 @@ public sealed class ModRegistry
 
         if (role == ModRole.Main)
         {
-            throw new InvalidOperationException("Eine Mod mit Hauptmod ist ein Dev-Branch oder eine Submod.");
+            throw new InvalidOperationException(ModsTexts.RegistryChildHasParent);
         }
 
         if (mod.IsCompatch)
         {
-            throw new InvalidOperationException($"\"{mod.Name}\" ist ein Kompatch und gehört zu keinem Projekt.");
+            throw new InvalidOperationException(ModsTexts.RegistryCompatchNoProject(mod.Name));
         }
 
-        var parent = Get(parentModId) ?? throw new InvalidOperationException("Der Hauptmod existiert nicht.");
+        var parent = Get(parentModId) ?? throw new InvalidOperationException(ModsTexts.RegistryParentMissing);
         if (parent.IsCompatch)
         {
-            throw new InvalidOperationException($"\"{parent.Name}\" ist ein Kompatch und kann kein Hauptmod sein.");
+            throw new InvalidOperationException(ModsTexts.RegistryCompatchNotMain(parent.Name));
         }
 
         if (parent.Id == mod.Id)
         {
-            throw new InvalidOperationException("Eine Mod kann nicht ihr eigener Hauptmod sein.");
+            throw new InvalidOperationException(ModsTexts.RegistryOwnParent);
         }
 
         if (parent.ParentModId is not null)
         {
-            throw new InvalidOperationException($"\"{parent.Name}\" gehört selbst zu einem Projekt. Wähle dessen Hauptmod.");
+            throw new InvalidOperationException(ModsTexts.RegistryParentInProject(parent.Name));
         }
 
         if (_mods.Any(m => m.ParentModId == mod.Id))
         {
-            throw new InvalidOperationException($"Der Mod \"{mod.Name}\" sind selbst Mods zugeordnet und kann deshalb keinem Projekt angehören.");
+            throw new InvalidOperationException(ModsTexts.RegistryHasMembers(mod.Name));
         }
 
         mod.ParentModId = parent.Id;
@@ -342,12 +409,12 @@ public sealed class ModRegistry
         var main = Require(mainId);
         if (main.IsCompatch)
         {
-            throw new InvalidOperationException($"\"{main.Name}\" ist ein Kompatch und kann kein Hauptmod sein.");
+            throw new InvalidOperationException(ModsTexts.RegistryCompatchNotMain(main.Name));
         }
 
         if (main.ParentModId is not null)
         {
-            throw new InvalidOperationException($"\"{main.Name}\" gehört selbst zu einem Projekt und kann nicht Hauptmod sein.");
+            throw new InvalidOperationException(ModsTexts.RegistryMainInProject(main.Name));
         }
 
         var list = members.ToList();
@@ -357,32 +424,32 @@ public sealed class ModRegistry
             var mod = Require(modId);
             if (mod.IsCompatch)
             {
-                throw new InvalidOperationException($"\"{mod.Name}\" ist ein Kompatch und gehört zu keinem Projekt.");
+                throw new InvalidOperationException(ModsTexts.RegistryCompatchNoProject(mod.Name));
             }
 
             if (role == ModRole.Main)
             {
-                throw new InvalidOperationException("Eine zugeordnete Mod ist ein Dev-Branch oder eine Submod.");
+                throw new InvalidOperationException(ModsTexts.RegistryMemberHasParent);
             }
 
             if (mod.Id == main.Id)
             {
-                throw new InvalidOperationException("Eine Mod kann nicht ihr eigener Hauptmod sein.");
+                throw new InvalidOperationException(ModsTexts.RegistryOwnParent);
             }
 
             if (!seen.Add(mod.Id))
             {
-                throw new InvalidOperationException($"Die Mod \"{mod.Name}\" steht mehrfach in der Liste.");
+                throw new InvalidOperationException(ModsTexts.RegistryMemberDuplicate(mod.Name));
             }
 
             if (mod.ParentModId is not null && mod.ParentModId != main.Id)
             {
-                throw new InvalidOperationException($"Die Mod \"{mod.Name}\" gehört schon zu einem anderen Projekt.");
+                throw new InvalidOperationException(ModsTexts.RegistryMemberOtherProject(mod.Name));
             }
 
             if (_mods.Any(m => m.ParentModId == mod.Id))
             {
-                throw new InvalidOperationException($"Der Mod \"{mod.Name}\" sind selbst Mods zugeordnet und kann deshalb keinem Projekt angehören.");
+                throw new InvalidOperationException(ModsTexts.RegistryHasMembers(mod.Name));
             }
         }
 
@@ -427,7 +494,7 @@ public sealed class ModRegistry
         var mod = Require(id);
         if (mod.ParentModId is not null || _mods.Any(m => m.ParentModId == mod.Id))
         {
-            throw new InvalidOperationException($"\"{mod.Name}\" gehört zu einem Projekt. Löse sie erst daraus, bevor sie ein Kompatch wird.");
+            throw new InvalidOperationException(ModsTexts.RegistryProjectToCompatch(mod.Name));
         }
 
         var list = new List<CompatchTarget>();
@@ -438,28 +505,28 @@ public sealed class ModRegistry
             var folder = string.IsNullOrWhiteSpace(target.Folder) ? null : ModPaths.Normalize(target.Folder);
             if (new[] { modId, workshopId, folder }.Count(v => v is not null) != 1)
             {
-                throw new InvalidOperationException("Ein Ziel braucht genau eine Angabe: Register, Workshop-ID oder Ordner.");
+                throw new InvalidOperationException(ModsTexts.RegistryTargetOneSource);
             }
 
             if (modId == mod.Id)
             {
-                throw new InvalidOperationException("Ein Kompatch kann nicht sein eigenes Ziel sein.");
+                throw new InvalidOperationException(ModsTexts.RegistryTargetSelf);
             }
 
             if (modId is not null && Get(modId) is null)
             {
-                throw new InvalidOperationException("Die Ziel-Mod existiert nicht im Register.");
+                throw new InvalidOperationException(ModsTexts.RegistryTargetMissing);
             }
 
             if (workshopId is not null && !workshopId.All(char.IsAsciiDigit))
             {
-                throw new InvalidOperationException("Die Workshop-ID besteht nur aus Ziffern.");
+                throw new InvalidOperationException(ModsTexts.RegistryWorkshopDigits);
             }
 
             var copy = new CompatchTarget { ModId = modId, WorkshopId = workshopId, Folder = folder, DisplayName = (target.DisplayName ?? string.Empty).Trim() };
             if (list.Any(t => t.Key == copy.Key))
             {
-                throw new InvalidOperationException($"Das Ziel \"{copy.DisplayName}\" steht mehrfach in der Liste.");
+                throw new InvalidOperationException(ModsTexts.RegistryTargetDuplicate(copy.DisplayName));
             }
 
             list.Add(copy);
@@ -467,7 +534,7 @@ public sealed class ModRegistry
 
         if (list.Count == 0)
         {
-            throw new InvalidOperationException("Ein Kompatch braucht mindestens ein Ziel.");
+            throw new InvalidOperationException(ModsTexts.RegistryNoTargets);
         }
 
         mod.IsCompatch = true;
@@ -585,7 +652,7 @@ public sealed class ModRegistry
     }
 
     private ModInfo Require(string id) =>
-        Get(id) ?? throw new InvalidOperationException($"Es gibt keine Mod mit der ID {id}.");
+        Get(id) ?? throw new InvalidOperationException(ModsTexts.RegistryUnknownId(id));
 
     private static int IndexOfPath(ModInfo mod, string normalized) =>
         mod.Paths.FindIndex(p => ModPaths.TryNormalize(p, out var other) && string.Equals(other, normalized, StringComparison.OrdinalIgnoreCase));
@@ -598,7 +665,7 @@ public sealed class ModRegistry
         var owner = _mods.FirstOrDefault(m => m.Paths.Any(p => ModPaths.TryNormalize(p, out var other) && string.Equals(other, normalized, StringComparison.OrdinalIgnoreCase)));
         if (owner is not null)
         {
-            throw new InvalidOperationException($"Der Ordner gehört schon zur Mod \"{owner.Name}\".");
+            throw new InvalidOperationException(ModsTexts.RegistryFolderOwned(owner.Name));
         }
     }
 
@@ -625,6 +692,18 @@ public sealed class ModRegistry
             mod.Paths = (mod.Paths ?? new List<string>()).Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
             mod.GitHubRepos = (mod.GitHubRepos ?? new List<GitHubRepoEntry>()).Where(r => r is not null && GitHubNames.IsValidRepo(r.Repo)).ToList();
             mod.GitHubZipVariants = (mod.GitHubZipVariants ?? new List<GitHubZipVariant>()).Where(v => v is not null && !string.IsNullOrWhiteSpace(v.Name)).ToList();
+            mod.BugSources = (mod.BugSources ?? new List<BugSourceEntry>())
+                .Where(s => s is not null && !string.IsNullOrWhiteSpace(s.Key)
+                    && ((s.Kind == BugSourceKinds.Discord && DiscordKeyPattern.IsMatch(s.Key)) || (s.Kind == BugSourceKinds.GitHub && GitHubNames.IsValidRepo(s.Key))))
+                .ToList();
+            foreach (var source in mod.BugSources)
+            {
+                source.Labels ??= new List<string>();
+                source.Name ??= string.Empty;
+                source.OpenTagId ??= string.Empty;
+                source.DoneTagId ??= string.Empty;
+                source.RejectedTagId ??= string.Empty;
+            }
             mod.LockedPaths = ModLocks.NormalizeEntries(mod.LockedPaths);
             mod.CompatchTargets = (mod.CompatchTargets ?? new List<CompatchTarget>()).Where(t => t is not null).ToList();
             if (mod.IsCompatch)

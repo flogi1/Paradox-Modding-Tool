@@ -146,8 +146,14 @@ public partial class ExplorerPanel : UserControl
     /// <summary>Liefert den Tooltip des Schloss-Symbols für einen Eintrag (Pfad, ist Ordner); <see langword="null"/> = kein Symbol.</summary>
     public Func<string, bool, string?>? LockMarkProvider { get; set; }
 
+    /// <summary>Liefert die Fehlermarkierung eines Eintrags (Pfad, ist Ordner); <see langword="null"/> = keine. Das Hauptfenster kennt das Fehlerprotokoll.</summary>
+    public Func<string, bool, ExplorerErrorMark?>? ErrorMarkProvider { get; set; }
+
+    /// <summary>Klick auf die Fehlermarkierung; der Wert ist der Pfad des Eintrags.</summary>
+    public event EventHandler<string>? ErrorMarkClicked;
+
     public static readonly DependencyProperty ButtonsOnLeftProperty =
-        DependencyProperty.Register(nameof(ButtonsOnLeft), typeof(bool), typeof(ExplorerPanel), new PropertyMetadata(false));
+        DependencyProperty.Register(nameof(ButtonsOnLeft), typeof(bool), typeof(ExplorerPanel), new PropertyMetadata(false, OnOptionChanged));
 
     /// <summary>Lupe und die Knöpfe für den linken und rechten Arbeitsbereich stehen links vor dem Namen statt rechts dahinter.</summary>
     public bool ButtonsOnLeft
@@ -156,14 +162,56 @@ public partial class ExplorerPanel : UserControl
         set => SetValue(ButtonsOnLeftProperty, value);
     }
 
+    public static readonly DependencyProperty ShowErrorMarksProperty =
+        DependencyProperty.Register(nameof(ShowErrorMarks), typeof(bool), typeof(ExplorerPanel), new PropertyMetadata(true, OnOptionChanged));
+
+    /// <summary>Fehlermarkierungen (Meldungen des letzten Spiellaufs) hinter Dateien und Ordnern zeigen. Standard: an.</summary>
+    public bool ShowErrorMarks
+    {
+        get => (bool)GetValue(ShowErrorMarksProperty);
+        set => SetValue(ShowErrorMarksProperty, value);
+    }
+
+    /// <summary>Ein Schalter der Übersicht (Buttons links, Bug-Markierungen, Nur Ordner) wurde geändert; das Hauptfenster übernimmt ihn in die Einstellungen.</summary>
+    public event EventHandler? OptionsChanged;
+
+    private static void OnOptionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
+        ((ExplorerPanel)d).OptionsChanged?.Invoke(d, EventArgs.Empty);
+
+    /// <summary>Workshop-Verweise <c>ugc_*.mod</c> (<see cref="UgcReference"/>) weder im Baum noch in der Namenssuche zeigen. Ändern liest den Baum neu ein.</summary>
+    public bool HideUgcReferences
+    {
+        get => _hideUgcReferences;
+        set
+        {
+            if (_hideUgcReferences != value)
+            {
+                _hideUgcReferences = value;
+                RefreshAll();
+            }
+        }
+    }
+
+    private bool _hideUgcReferences = true;
+
+    /// <summary>Namenssuche nur nach Ordnern.</summary>
+    public bool SearchFoldersOnly
+    {
+        get => FoldersOnlyCheckBox.IsChecked == true;
+        set => FoldersOnlyCheckBox.IsChecked = value;
+    }
+
     /// <summary>Liefert die Zahl der Sperren (Dateien und Ordner) im Ordner; 0 = Menüpunkt "Alle Sperren darunter aufheben" bleibt aus.</summary>
     public Func<string, int>? LockCountBelowProvider { get; set; }
 
     /// <summary>Wird ausgelöst, wenn der Nutzer "Alle Sperren darunter aufheben" wählt; der Wert ist der Ordnerpfad.</summary>
     public event EventHandler<string>? UnlockBelowRequested;
 
-    /// <summary>Wird ausgelöst, wenn der Nutzer die Lupe neben einem Ordner anklickt; der Wert ist der Ordnerpfad.</summary>
-    public event EventHandler<string>? SearchInFolderRequested;
+    /// <summary>
+    /// Wird ausgelöst, wenn der Nutzer die Lupe neben einem Ordner anklickt oder im Kontextmenü "In Dateien suchen" wählt; der
+    /// Wert ist der Ordner- oder Dateipfad.
+    /// </summary>
+    public event EventHandler<string>? SearchInPathRequested;
 
     /// <summary>Fragt die Schloss-Symbole aller geladenen Einträge neu ab (nach Sperren, Entsperren und Änderungen an Mods).</summary>
     public void RefreshLockMarks()
@@ -193,11 +241,74 @@ public partial class ExplorerPanel : UserControl
         }
     }
 
+    /// <summary>Fragt die Fehlermarkierungen aller geladenen Einträge neu ab (nach jeder Änderung im Fehlerprotokoll).</summary>
+    public void RefreshErrorMarks()
+    {
+        foreach (var root in _roots)
+        {
+            RefreshErrorMarks(root);
+        }
+
+        foreach (var favorite in _favoriteEntries)
+        {
+            RefreshErrorMarks(favorite);
+        }
+    }
+
+    private void RefreshErrorMarks(ExplorerEntry entry)
+    {
+        if (entry.IsPlaceholder)
+        {
+            return;
+        }
+
+        ApplyErrorMark(entry);
+        foreach (var child in entry.Children)
+        {
+            RefreshErrorMarks(child);
+        }
+    }
+
+    private void ApplyErrorMark(ExplorerEntry entry)
+    {
+        var mark = entry.IsPlaceholder ? null : ErrorMarkProvider?.Invoke(entry.FullPath, entry.IsDirectory);
+        entry.SetErrorMark(mark?.Badge, mark?.Tooltip);
+    }
+
+    private void ErrorMark_Click(object sender, RoutedEventArgs e)
+    {
+        // Nur das Fehlerprotokoll öffnen; der Eintrag selbst soll nicht zusätzlich aufklappen oder ausgewählt werden.
+        e.Handled = true;
+        if (EntryFrom(sender) is { IsPlaceholder: false } entry)
+        {
+            ErrorMarkClicked?.Invoke(this, entry.FullPath);
+        }
+    }
+
     private void SearchFolder_Click(object sender, RoutedEventArgs e)
     {
         if (EntryFrom(sender) is { IsDirectory: true, IsPlaceholder: false } entry)
         {
-            SearchInFolderRequested?.Invoke(this, entry.FullPath);
+            SearchInPathRequested?.Invoke(this, entry.FullPath);
+        }
+    }
+
+    private void SearchInPath_Click(object sender, RoutedEventArgs e)
+    {
+        if (EntryFrom(sender) is { IsPlaceholder: false } entry)
+        {
+            SearchInPathRequested?.Invoke(this, entry.FullPath);
+        }
+    }
+
+    /// <summary>Rechtsklick "Als Filter anlegen" auf einen Ordner; der Wert ist der Ordnerpfad.</summary>
+    public event EventHandler<string>? FolderFilterRequested;
+
+    private void CreateFolderFilter_Click(object sender, RoutedEventArgs e)
+    {
+        if (EntryFrom(sender) is { IsDirectory: true, IsPlaceholder: false } entry)
+        {
+            FolderFilterRequested?.Invoke(this, entry.FullPath);
         }
     }
 
@@ -211,7 +322,7 @@ public partial class ExplorerPanel : UserControl
         var lockState = entry is { IsPlaceholder: false, IsRoot: false } ? PathLockStateProvider?.Invoke(entry.FullPath) : null;
         var unlockCount = entry is { IsDirectory: true, IsPlaceholder: false } ? LockCountBelowProvider?.Invoke(entry.FullPath) ?? 0 : 0;
 
-        foreach (var item in menu.Items.OfType<FrameworkElement>().Where(i => i.Tag is string tag && tag != "Lock" && tag != "UnlockBelow"))
+        foreach (var item in menu.Items.OfType<FrameworkElement>().Where(i => i.Tag is string tag && tag != "Lock" && tag != "UnlockBelow" && tag != "SearchInPath"))
         {
             var visible = false;
             if (item is System.Windows.Controls.MenuItem parent)
@@ -260,11 +371,12 @@ public partial class ExplorerPanel : UserControl
             }
             else
             {
-                var noun = entry.IsDirectory ? "Ordner" : "Datei";
                 lockItem.Visibility = Visibility.Visible;
-                lockItem.Header = lockState.Kind == ExplorerLockKind.Unlocked ? $"{noun} sperren" : $"{noun} entsperren";
+                lockItem.Header = lockState.Kind == ExplorerLockKind.Unlocked
+                    ? (entry.IsDirectory ? ExplorerTexts.LockFolder : ExplorerTexts.LockFile)
+                    : (entry.IsDirectory ? ExplorerTexts.UnlockFolder : ExplorerTexts.UnlockFile);
                 lockItem.IsEnabled = lockState.Kind != ExplorerLockKind.LockedByParent;
-                lockItem.ToolTip = lockState.Kind == ExplorerLockKind.LockedByParent ? $"Gesperrt durch den Ordner {lockState.ByPath}. Entsperre den Ordner." : null;
+                lockItem.ToolTip = lockState.Kind == ExplorerLockKind.LockedByParent ? ExplorerTexts.LockedByParent(lockState.ByPath) : null;
                 lockItem.DataContext = (entry, lockState.Kind == ExplorerLockKind.Unlocked);
                 lockItem.Click -= LockItem_Click;
                 lockItem.Click += LockItem_Click;
@@ -274,9 +386,15 @@ public partial class ExplorerPanel : UserControl
         if (menu.Items.OfType<System.Windows.Controls.MenuItem>().FirstOrDefault(i => i.Tag is "UnlockBelow") is { } unlockItem)
         {
             unlockItem.Visibility = unlockCount > 0 ? Visibility.Visible : Visibility.Collapsed;
-            unlockItem.Header = $"Alle Sperren darunter aufheben ({unlockCount})";
+            unlockItem.Header = ExplorerTexts.UnlockBelow(unlockCount);
             unlockItem.Click -= UnlockBelowItem_Click;
             unlockItem.Click += UnlockBelowItem_Click;
+        }
+
+        // "In Dateien suchen" bei Ordnern, "In Datei suchen" bei einer einzelnen Datei.
+        if (menu.Items.OfType<System.Windows.Controls.MenuItem>().FirstOrDefault(i => i.Tag is "SearchInPath") is { } searchItem)
+        {
+            searchItem.Header = entry is { IsDirectory: false } ? ExplorerTexts.SearchInFile : ExplorerTexts.SearchInFiles;
         }
     }
 
@@ -349,7 +467,9 @@ public partial class ExplorerPanel : UserControl
 
         var entry = new ExplorerEntry
         {
-            FullPath = descriptor.FullPath,
+            // Gemischte Schrägstriche (aus Profilvorlage oder alter Sitzung) werden hier vereinheitlicht: alle Einträge darunter erben den Pfad,
+            // und "Ordner öffnen (Explorer)" scheitert mit ihnen (öffnet "Dokumente").
+            FullPath = PathNormalization.ToWindowsPath(descriptor.FullPath),
             Name = descriptor.DisplayName,
             IsDirectory = true,
             IsRoot = true,
@@ -468,7 +588,7 @@ public partial class ExplorerPanel : UserControl
     private static ExplorerEntry CreatePlaceholder() => new()
     {
         FullPath = string.Empty,
-        Name = "Lädt…",
+        Name = ExplorerTexts.Loading,
         IsDirectory = false,
         IsPlaceholder = true,
     };
@@ -488,12 +608,13 @@ public partial class ExplorerPanel : UserControl
 
         entry.IsFavorite = _favoritePaths.Any(p => PathNormalization.NormalizeKey(p) == key);
         entry.LockTooltip = entry.IsPlaceholder ? null : LockMarkProvider?.Invoke(entry.FullPath, entry.IsDirectory);
+        ApplyErrorMark(entry);
     }
 
     private void LoadChildren(ExplorerEntry folder)
     {
         folder.Children.Clear();
-        foreach (var child in FolderScanner.GetChildren(folder.FullPath))
+        foreach (var child in FolderScanner.GetChildren(folder.FullPath, HideUgcReferences))
         {
             ApplyColorAndFavoriteState(child);
             if (child.IsDirectory)
@@ -619,7 +740,7 @@ public partial class ExplorerPanel : UserControl
         // Unsicherheiten) - für eine spätere Ausbaustufe ggf. durch einen eigenen, themefähigen
         // WPF-Dialog ersetzen.
         var name = Microsoft.VisualBasic.Interaction.InputBox(
-            "Name des neuen Ordners:", "Neuen Ordner anlegen", "Neuer Ordner");
+            ExplorerTexts.NewFolderPrompt, ExplorerTexts.NewFolder, ExplorerTexts.NewFolderDefaultName);
 
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -636,11 +757,9 @@ public partial class ExplorerPanel : UserControl
             return;
         }
 
-        var kindLabel = entry.IsDirectory ? "den Ordner" : "die Datei";
         var result = MessageBox.Show(
-            $"Soll {kindLabel} \"{entry.Name}\" wirklich gelöscht werden?\n\n" +
-            "Das Element wird in den Windows-Papierkorb verschoben (von dort bei Bedarf wiederherstellbar).",
-            "Löschen bestätigen",
+            entry.IsDirectory ? ExplorerTexts.DeleteConfirmFolder(entry.Name) : ExplorerTexts.DeleteConfirmFile(entry.Name),
+            ExplorerTexts.DeleteConfirmTitle,
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -905,19 +1024,21 @@ public partial class ExplorerPanel : UserControl
 
         try
         {
+            // Der Explorer versteht nur Pfade mit Backslashes (sonst öffnet er "Dokumente"); auch ein alter, gemischt gespeicherter Pfad geht so.
+            var path = PathNormalization.ToWindowsPath(entry.FullPath);
             if (entry.IsDirectory)
             {
-                if (Directory.Exists(entry.FullPath))
+                if (Directory.Exists(path))
                 {
-                    Process.Start("explorer.exe", $"\"{entry.FullPath}\"");
+                    Process.Start("explorer.exe", $"\"{path}\"");
                 }
             }
-            else if (File.Exists(entry.FullPath))
+            else if (File.Exists(path))
             {
                 // "/select," markiert die Datei im geöffneten Ordnerfenster, statt den Ordner
                 // nur allgemein zu öffnen - dieselbe Umsetzung wie
                 // ParadoxModTool.Editor.EditorPane.OpenContainingFolder.
-                Process.Start("explorer.exe", $"/select,\"{entry.FullPath}\"");
+                Process.Start("explorer.exe", $"/select,\"{path}\"");
             }
         }
         catch (System.ComponentModel.Win32Exception)
@@ -934,6 +1055,7 @@ public partial class ExplorerPanel : UserControl
             dialog.SelectedPath = suggested;
         }
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("explorer.addRoot");
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
         {
             return;

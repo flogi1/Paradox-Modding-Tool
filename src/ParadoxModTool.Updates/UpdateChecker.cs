@@ -61,14 +61,14 @@ public sealed class UpdateChecker
 
             if (!response.IsSuccessStatusCode)
             {
-                return new UpdateCheckResult(UpdateCheckStatus.Failed, Error: $"GitHub antwortete mit Status {(int)response.StatusCode}.");
+                return new UpdateCheckResult(UpdateCheckStatus.Failed, Error: UpdateTexts.CheckHttpStatus((int)response.StatusCode));
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var release = ReleaseParser.Parse(json);
             if (release is null)
             {
-                return new UpdateCheckResult(UpdateCheckStatus.Failed, Error: "Die Antwort von GitHub konnte nicht gelesen werden.");
+                return new UpdateCheckResult(UpdateCheckStatus.Failed, Error: UpdateTexts.CheckUnreadable);
             }
 
             return release.Version > current

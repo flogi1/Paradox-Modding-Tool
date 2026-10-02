@@ -48,7 +48,14 @@ public sealed class UpdateApplier(UpdateLog log, int attempts = 10, TimeSpan? re
                 throw new UpdateApplyException("Fremde Einträge im Programmordner: " + string.Join(", ", collisions), rolledBack: true, null);
             }
 
-            // Rest eines früheren, erfolgreichen Updates: darf weg, bevor die neue Sicherung entsteht.
+            // Rest eines früheren, erfolgreichen Updates: darf weg, bevor die neue Sicherung entsteht. Nicht aber der Rest eines gescheiterten
+            // Rückfalls: er enthält Teile der alten Version, die sonst nirgends mehr liegen.
+            if (File.Exists(Path.Combine(backup, UpdatePaths.IncompleteMarkerName)))
+            {
+                log.Write("Tausch abgelehnt: unvollständige Sicherung eines gescheiterten Rückfalls in " + backup);
+                throw new UpdateApplyException("Unvollständige Sicherung in " + backup, rolledBack: true, null);
+            }
+
             if (Directory.Exists(backup))
             {
                 Retry(() => Directory.Delete(backup, recursive: true));
@@ -88,7 +95,7 @@ public sealed class UpdateApplier(UpdateLog log, int attempts = 10, TimeSpan? re
             }
             catch (Exception rollbackError) when (rollbackError is IOException or UnauthorizedAccessException)
             {
-                log.Write($"Rückfall fehlgeschlagen, alte Version liegt in {backup}: {rollbackError.Message}");
+                log.Write($"Rückfall fehlgeschlagen, Rest der alten Version (falls vorhanden) in {backup}: {rollbackError.Message}");
                 throw new UpdateApplyException(ex.Message, rolledBack: false, rollbackError);
             }
 
@@ -131,13 +138,23 @@ public sealed class UpdateApplier(UpdateLog log, int attempts = 10, TimeSpan? re
         }
 
         log.Write("Rückfall auf die Sicherung.");
+        var marker = Path.Combine(backup, UpdatePaths.IncompleteMarkerName);
+        try
+        {
+            File.WriteAllText(marker, string.Empty);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Nur ein Schutz gegen späteres Aufräumen; der Rückfall selbst geht auch ohne.
+        }
+
         foreach (var name in removeNames)
         {
             var entry = Path.Combine(target, name);
             Retry(() => Delete(entry));
         }
 
-        foreach (var entry in Directory.EnumerateFileSystemEntries(backup).ToList())
+        foreach (var entry in Directory.EnumerateFileSystemEntries(backup).Where(e => !string.Equals(e, marker, StringComparison.OrdinalIgnoreCase)).ToList())
         {
             Retry(() => Move(entry, Path.Combine(target, Path.GetFileName(entry))));
         }
@@ -176,7 +193,15 @@ public sealed class UpdateApplier(UpdateLog log, int attempts = 10, TimeSpan? re
             return;
         }
 
-        TryDeleteDirectory(Path.Combine(installFolder, UpdatePaths.BackupFolderName), log);
+        var backup = Path.Combine(installFolder, UpdatePaths.BackupFolderName);
+        if (File.Exists(Path.Combine(backup, UpdatePaths.IncompleteMarkerName)))
+        {
+            log.Write("Unvollständige Sicherung eines gescheiterten Rückfalls bleibt liegen: " + backup);
+        }
+        else
+        {
+            TryDeleteDirectory(backup, log);
+        }
         if (!Directory.Exists(paths.Root))
         {
             return;

@@ -6,8 +6,13 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Threading;
 using ParadoxModTool.GameProfiles;
+using ParadoxModTool.Localization;
+using ParadoxModTool.ModCompat;
 using ParadoxModTool.SearchReplace;
+using ParadoxModTool.Settings;
 // WPF bringt über System.Windows.Controls bereits eine eigene Klasse "TextSearch" mit
 // (Such-Unterstützung in ListBox/ComboBox) - das kollidiert mit unserer gleichnamigen
 // ParadoxModTool.SearchReplace.TextSearch (CS0104). Alias löst das eindeutig zugunsten
@@ -17,7 +22,7 @@ using TextSearch = ParadoxModTool.SearchReplace.TextSearch;
 // Browse_Click) - wie schon an anderer Stelle in diesem Programm dokumentiert (Lessons Learned
 // Punkt 7/12 der Architektur-Dokumentation) werden dadurch mehrere gleichnamige Typen zwischen
 // WPF und WinForms mehrdeutig (CS0104). Neu betroffen durch die Schnellzugriff-Buttons (siehe
-// BuildFixedQuickPathButtons/BuildCustomQuickPathButtons weiter unten, die WPF-Controls per Code
+// früher hier, heute QuickPathBar, die WPF-Controls per Code
 // statt XAML erzeugen): "Button" (System.Windows.Controls.Button vs. System.Windows.Forms.Button)
 // und "Orientation" (System.Windows.Controls.Orientation vs. System.Windows.Forms.Orientation).
 using Button = System.Windows.Controls.Button;
@@ -52,7 +57,7 @@ public partial class SearchReplaceWindow : Window
     private List<string> _favoritesBaseline = new();
 
     /// <summary>Aktives Spielprofil (für die 4 FESTEN Schnellzugriff-Buttons - Mod-Ordner/in_game/
-    /// main_menu/loading_screen, siehe <see cref="BuildFixedQuickPathButtons"/>) sowie der
+    /// main_menu/loading_screen, siehe <see cref="QuickPathBar"/>) sowie der
     /// Callback zum Auflösen des Mod-Ordner-Pfads (dieselbe Logik wie beim automatischen
     /// Vorschlag der Verzeichnis-Übersicht, siehe MainWindow.ResolveDefaultModRoot - hier als
     /// Delegate übergeben, damit dieses Fenster keine eigene Kopie der Auflösungslogik braucht).</summary>
@@ -67,8 +72,9 @@ public partial class SearchReplaceWindow : Window
     /// ist oder der "game"-Ordner (noch) nicht existiert.</summary>
     private readonly Func<string?> _resolveGameContentRoot;
 
-    private readonly string _quickPathSettingsPath = QuickPathStore.GetDefaultFilePath();
-    private readonly QuickPathSettings _quickPathSettings;
+    /// <summary>Merkt sich den zuletzt durchsuchten Ordner über das Schließen des Fensters hinaus (Sitzungszustand im Hauptfenster); beide null = nichts merken.</summary>
+    private readonly Func<string?>? _getLastFolder;
+    private readonly Action<string>? _setLastFolder;
 
     /// <summary>
     /// Die Trefferliste wird vom Hauptfenster übergeben und geteilt (Nutzer-Feedback: "Ich hätte
@@ -95,9 +101,18 @@ public partial class SearchReplaceWindow : Window
         Action<bool> setHideDescription,
         GameProfile? activeProfile,
         Func<string?> resolveDefaultModRoot,
-        Func<string?> resolveGameContentRoot)
+        Func<string?> resolveGameContentRoot,
+        Func<string?>? getLastFolder = null,
+        Action<string>? setLastFolder = null)
     {
         InitializeComponent();
+        ApplyTexts();
+        Loaded += (_, _) => FocusSearchBox();
+        Closing += (_, _) =>
+        {
+            RememberFolder();
+            ReturnFocusToOwner();
+        };
 
         _getActiveDocumentText = getActiveDocumentText;
         _selectInActiveDocument = selectInActiveDocument;
@@ -110,8 +125,11 @@ public partial class SearchReplaceWindow : Window
         _activeProfile = activeProfile;
         _resolveDefaultModRoot = resolveDefaultModRoot;
         _resolveGameContentRoot = resolveGameContentRoot;
+        _getLastFolder = getLastFolder;
+        _setLastFolder = setLastFolder;
 
         ResultsList.ItemsSource = _results;
+        ResultsListCopy.Attach(ResultsList, ResultsDetail);
         FavoritesList.ItemsSource = _favorites;
         HideDescriptionCheckBox.IsChecked = _getHideDescription();
 
@@ -122,203 +140,108 @@ public partial class SearchReplaceWindow : Window
 
         _favoritesBaseline = _favorites.ToList();
 
-        _quickPathSettings = QuickPathStore.TryLoad(_quickPathSettingsPath);
-        BuildFixedQuickPathButtons();
-        BuildCustomQuickPathButtons();
-        ApplyQuickPathVisibility(_quickPathSettings.Visible);
+        QuickPaths.Initialize(_activeProfile, _resolveDefaultModRoot, _resolveGameContentRoot);
+        QuickPaths.PathChosen += (_, path) => FolderTextBox.Text = path;
+        QuickPathBar.AcceptDrops(FolderTextBox);
+
+        if (_getLastFolder?.Invoke() is { Length: > 0 } lastFolder)
+        {
+            FolderTextBox.Text = lastFolder;
+        }
 
         UpdateModeVisibility();
     }
 
-    /// <summary>
-    /// Baut die 4 FESTEN, spielprofil-abhängigen Schnellzugriff-Buttons (Nutzer-Feedback: "es
-    /// sollten für das Spiel 4 Default Buttons angezeigt werden ... Für EU V sollte das der mod
-    /// Ordner sein, der in_game Ordner, der main_menu Ordner und der loading_screen Ordner."). Der
-    /// Mod-Ordner-Button liegt unter <see cref="_resolveDefaultModRoot"/>; die anderen drei sind
-    /// die VANILLA-Gegenstücke im Spiel-Installationsordner - also Unterordner von
-    /// <see cref="_resolveGameContentRoot"/> (dem "game"-Ordner, der bei einer echten EU5-Installation
-    /// als GESCHWISTER-Ordner neben "binaries" liegt, nicht dessen Unterordner - vom Nutzer am
-    /// 2026-09-17 anhand seiner echten Installation bestätigt, nachdem eine erste Annahme
-    /// fälschlich den "binaries"-Ordner selbst annahm), NICHT vom Mod-Ordner. Ist die jeweilige
-    /// Basis nicht auflösbar (kein Profil/kein Spielpfad eingestellt), werden die Buttons
-    /// deaktiviert statt versteckt, damit für den Nutzer sichtbar bleibt, DASS es diese
-    /// Schnellzugriffe gibt (nur eben gerade nicht nutzbar).
-    /// </summary>
-    private void BuildFixedQuickPathButtons()
+    /// <summary>Gibt den Inhalt des Ordnerfelds an das Hauptfenster, damit ein neu geöffnetes Fenster wieder dort sucht.</summary>
+    private void RememberFolder()
     {
-        FixedQuickPathButtons.Children.Clear();
+        if (FolderTextBox.Text.Trim() is { Length: > 0 } folder)
+        {
+            _setLastFolder?.Invoke(folder);
+        }
+    }
 
-        var modRoot = _resolveDefaultModRoot();
-        AddFixedQuickPathButton("Mod-Ordner", modRoot, "Der lokale Mod-Ordner aus dem aktiven Spielprofil.");
+    private void ApplyTexts()
+    {
+        Title = SearchTexts.Title;
+        CurrentDocumentModeRadio.Content = SearchTexts.ModeCurrentDocument;
+        FilesModeRadio.Content = SearchTexts.ModeFiles;
+        BrowseButton.Content = SearchTexts.Browse;
+        FolderTextBox.ToolTip = SearchTexts.PathTip;
+        RemoveFavoriteButton.Content = SearchTexts.FavoriteRemove;
+        RemoveFavoriteButton.ToolTip = SearchTexts.FavoriteRemoveTip;
+        AddFavoriteButton.Content = SearchTexts.FavoriteSave;
+        AddFavoriteButton.ToolTip = SearchTexts.FavoriteSaveTip;
+        FavoritesList.ToolTip = SearchTexts.FavoritesTip;
+        SearchLabel.Text = SearchTexts.SearchLabel;
+        ReplaceLabel.Text = SearchTexts.ReplaceLabel;
+        MatchCaseCheckBox.Content = SearchTexts.MatchCase;
+        WholeWordCheckBox.Content = SearchTexts.WholeWord;
+        IgnoreFormattingCheckBox.Content = SearchTexts.IgnoreFormatting;
+        IgnoreFormattingCheckBox.ToolTip = SearchTexts.IgnoreFormattingTip;
+        FindAllButton.Content = SearchTexts.FindAll;
+        ReplaceAllButton.Content = SearchTexts.ReplaceAll;
+        HideDescriptionCheckBox.Content = SearchTexts.HideDescription;
+        HideDescriptionCheckBox.ToolTip = SearchTexts.HideDescriptionTip;
+        ResultsList.ToolTip = SearchTexts.ResultsTip;
+    }
 
-        if (_activeProfile is null)
+    /// <summary>
+    /// Setzt den Cursor in das Suchfeld und markiert dessen Inhalt (Nutzer-Feedback: nach Strg+F sofort tippen können, ohne erst
+    /// in das Fenster zu klicken). Läuft über den Dispatcher, weil ein gerade erst gezeigtes oder aktiviertes Fenster den
+    /// Tastaturfokus sonst noch nicht annimmt.
+    /// </summary>
+    public void FocusSearchBox(string? selectedText = null)
+    {
+        // Strg+F mit markiertem Code im Editor: die Markierung wird zum Suchtext (auch mehrzeilig); ohne Markierung bleibt der bisherige Suchtext.
+        if (!string.IsNullOrEmpty(selectedText))
+        {
+            SearchTextBox.Text = selectedText;
+        }
+
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+        {
+            Activate();
+            SearchTextBox.Focus();
+            Keyboard.Focus(SearchTextBox);
+            SearchTextBox.SelectAll();
+        });
+    }
+
+    /// <summary>
+    /// Holt beim Schließen das Besitzerfenster nach vorn (Nutzer-Feedback: beim Schließen wurde das Hauptfenster manchmal
+    /// minimiert). Windows aktiviert nach dem Schließen sonst das nächste Fenster in der Z-Reihenfolge, das nach einem
+    /// Ordnerdialog oder einem Klick in ein anderes Programm nicht mehr das Hauptfenster ist.
+    /// </summary>
+    private void ReturnFocusToOwner()
+    {
+        // Schließt das Hauptfenster selbst (und damit dieses Fenster), ist es schon unsichtbar: dann nichts tun.
+        if (Owner is not { IsVisible: true } owner)
         {
             return;
         }
 
-        var gameContentRoot = _resolveGameContentRoot();
-
-        foreach (var categoryPath in new[] { "in_game", "main_menu", "loading_screen" })
-        {
-            var category = _activeProfile.FolderCategories
-                .FirstOrDefault(c => string.Equals(c.Path, categoryPath, StringComparison.OrdinalIgnoreCase));
-            if (category is null)
-            {
-                continue;
-            }
-
-            var resolvedPath = gameContentRoot is null ? null : Path.Combine(gameContentRoot, category.Path);
-            AddFixedQuickPathButton(category.Label, resolvedPath, category.Description ?? $"{category.Label} ({category.Path})");
-        }
-    }
-
-    private void AddFixedQuickPathButton(string label, string? resolvedPath, string description)
-    {
-        var button = new Button
-        {
-            Content = label,
-            Padding = new Thickness(6, 2, 6, 2),
-            Margin = new Thickness(0, 0, 4, 4),
-            IsEnabled = resolvedPath is not null,
-            ToolTip = resolvedPath is null
-                ? $"{description}\n\n(Derzeit nicht ermittelbar - Mod-Ordner nicht gefunden.)"
-                : $"{description}\n\n{resolvedPath}",
-        };
-
-        button.Click += (_, _) =>
-        {
-            if (resolvedPath is not null)
-            {
-                FolderTextBox.Text = resolvedPath;
-            }
-        };
-
-        FixedQuickPathButtons.Children.Add(button);
-    }
-
-    /// <summary>
-    /// Baut die 4 FREI konfigurierbaren Schnellzugriff-Buttons (Nutzer-Feedback: "4 weitere
-    /// Buttons, wo man den Pfad frei konfigurieren kann, den man speichern will") - jeder Button
-    /// kommt mit einem kleinen "✎"-Knopf zum Umbenennen/Pfad-Festlegen (siehe
-    /// <see cref="ConfigureCustomQuickPathButton"/>), da für 4 freie Buttons ein eigener
-    /// Verwaltungsdialog unverhältnismäßig wäre.
-    /// </summary>
-    private void BuildCustomQuickPathButtons()
-    {
-        CustomQuickPathButtons.Children.Clear();
-
-        for (var i = 0; i < _quickPathSettings.CustomButtons.Count; i++)
-        {
-            var index = i; // für die Click-Closures unten eingefangen (Schleifenvariable selbst würde sich sonst ändern)
-            var state = _quickPathSettings.CustomButtons[index];
-
-            var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 6, 4) };
-
-            var mainButton = new Button
-            {
-                Content = state.Label,
-                Padding = new Thickness(6, 2, 6, 2),
-                IsEnabled = state.Path is not null,
-                ToolTip = state.Path is null
-                    ? "Noch kein Pfad festgelegt - über \"✎\" konfigurieren."
-                    : state.Path,
-            };
-            mainButton.Click += (_, _) =>
-            {
-                if (_quickPathSettings.CustomButtons[index].Path is { } path)
-                {
-                    FolderTextBox.Text = path;
-                }
-            };
-
-            var editButton = new Button
-            {
-                Content = "✎",
-                Padding = new Thickness(4, 2, 4, 2),
-                Margin = new Thickness(2, 0, 0, 0),
-                ToolTip = "Name und Pfad dieses Schnellzugriff-Buttons festlegen",
-            };
-            editButton.Click += (_, _) => ConfigureCustomQuickPathButton(index);
-
-            container.Children.Add(mainButton);
-            container.Children.Add(editButton);
-            CustomQuickPathButtons.Children.Add(container);
-        }
-    }
-
-    /// <summary>
-    /// Fragt Name UND Pfad für einen freien Schnellzugriff-Button ab (Microsoft.VisualBasic.
-    /// Interaction.InputBox für den Namen, klassischer FolderBrowserDialog für den Pfad -
-    /// dieselbe pragmatische Wahl wie bei ExplorerPanel.NewFolder_Click bzw. dem bereits
-    /// vorhandenen "Durchsuchen…"-Button oben in diesem Fenster). Ein Abbruch des Namens-Dialogs
-    /// bricht die GESAMTE Aktion ab; ein Abbruch NUR des Ordner-Dialogs behält dagegen den
-    /// bisherigen Pfad bei (falls schon einer gesetzt war) und übernimmt trotzdem die neue
-    /// Beschriftung - reines Umbenennen soll nicht zwingend einen Ordner-Dialog erzwingen.
-    /// </summary>
-    private void ConfigureCustomQuickPathButton(int index)
-    {
-        var current = _quickPathSettings.CustomButtons[index];
-
-        var newLabel = Microsoft.VisualBasic.Interaction.InputBox(
-            "Name für diesen Schnellzugriff-Button:", "Schnellzugriff-Button konfigurieren", current.Label);
-
-        if (string.IsNullOrWhiteSpace(newLabel))
-        {
-            return;
-        }
-
-        current.Label = newLabel.Trim();
-
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
-        {
-            Description = $"Ordner für \"{current.Label}\" auswählen (Abbrechen behält den bisherigen Pfad bei)",
-        };
-        if (!string.IsNullOrEmpty(current.Path) && Directory.Exists(current.Path))
-        {
-            dialog.SelectedPath = current.Path;
-        }
-
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        {
-            current.Path = dialog.SelectedPath;
-        }
-
-        SaveQuickPathSettings();
-        BuildCustomQuickPathButtons();
-    }
-
-    /// <summary>Nutzer-Feedback: "Man sollte auch die Möglichkeit haben die Buttons
-    /// auszublenden." - Zustand wird über <see cref="QuickPathSettings.Visible"/> dauerhaft
-    /// gespeichert (siehe <see cref="QuickPathVisibilityToggle_Click"/>).</summary>
-    private void ApplyQuickPathVisibility(bool visible)
-    {
-        QuickPathVisibilityToggle.IsChecked = visible;
-        QuickPathButtonsPanel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        QuickPathVisibilityToggle.Content = visible ? "▾ Ausblenden" : "▸ Einblenden";
-    }
-
-    private void QuickPathVisibilityToggle_Click(object sender, RoutedEventArgs e)
-    {
-        var visible = QuickPathVisibilityToggle.IsChecked == true;
-        ApplyQuickPathVisibility(visible);
-        _quickPathSettings.Visible = visible;
-        SaveQuickPathSettings();
-    }
-
-    private void SaveQuickPathSettings()
-    {
         try
         {
-            QuickPathStore.Save(_quickPathSettings, _quickPathSettingsPath);
+            if (owner.WindowState == WindowState.Minimized)
+            {
+                owner.WindowState = WindowState.Normal;
+            }
+
+            owner.Activate();
         }
-        catch (IOException)
+        catch (InvalidOperationException)
         {
-            // Einstellung bleibt für die laufende Sitzung wirksam, wird nur nicht dauerhaft gespeichert.
+            // Besitzer wird gerade geschlossen.
         }
-        catch (UnauthorizedAccessException)
-        {
-            // Einstellung bleibt für die laufende Sitzung wirksam, wird nur nicht dauerhaft gespeichert.
-        }
+    }
+
+    /// <summary>Besitzer für die WinForms-Ordnerdialoge, damit sie zu diesem Fenster gehören statt frei zu schweben.</summary>
+    private System.Windows.Forms.IWin32Window DialogOwner => new Win32DialogOwner(new WindowInteropHelper(this).Handle);
+
+    private sealed class Win32DialogOwner(IntPtr handle) : System.Windows.Forms.IWin32Window
+    {
+        public IntPtr Handle { get; } = handle;
     }
 
     /// <summary>Vom Hauptfenster aufgerufen, um den Checkbox-Zustand hier zu spiegeln, ohne den Toggle erneut auszulösen (bidirektionale Synchronisierung mit der Ergebnisleiste im Hauptfenster).</summary>
@@ -352,15 +275,19 @@ public partial class SearchReplaceWindow : Window
         IgnoreFormatting = IgnoreFormattingCheckBox.IsChecked == true,
     };
 
-    /// <summary>Stellt die Suche auf "Ordner (Dateien)" mit diesem Ordner ein und setzt den Cursor in das Suchfeld (Lupe in der Verzeichnis-Übersicht).</summary>
-    public void SearchInFolder(string folder)
+    /// <summary>
+    /// Stellt die Suche auf "Ordner oder Datei" mit diesem Ordner bzw. dieser einzelnen Datei ein und setzt den Cursor in das
+    /// Suchfeld (Lupe und Rechtsklick "In Dateien suchen" in der Verzeichnis-Übersicht).
+    /// </summary>
+    public void SearchInPath(string path)
     {
         FilesModeRadio.IsChecked = true;
-        FolderTextBox.Text = folder;
+        FolderTextBox.Text = path;
         UpdateModeVisibility();
-        SearchTextBox.Focus();
-        SearchTextBox.SelectAll();
+        FocusSearchBox();
     }
+
+    private static bool PathExists(string path) => Directory.Exists(path) || File.Exists(path);
 
     private bool IsFilesMode => FilesModeRadio.IsChecked == true;
 
@@ -388,10 +315,11 @@ public partial class SearchReplaceWindow : Window
         // SDK-Version verifiziert werden, FolderBrowserDialog ist seit Jahren stabil verfügbar.
         var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "Suchordner auswählen",
+            Description = SearchTexts.BrowseDialogTitle,
         };
 
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("search.folder");
+        if (dialog.ShowDialog(DialogOwner) == System.Windows.Forms.DialogResult.OK)
         {
             FolderTextBox.Text = dialog.SelectedPath;
         }
@@ -442,12 +370,114 @@ public partial class SearchReplaceWindow : Window
         }
     }
 
-    private void FindAll_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Enter im Suchfeld (und im Ordnerfeld) startet die Suche; Umschalt+Enter lässt das Suchfeld eine neue Zeile beginnen (mehrzeilige Codeblöcke).
+    /// </summary>
+    private void SearchInput_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
+        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            e.Handled = true;
+            FindAll_Click(sender, e);
+        }
+    }
+
+    /// <summary>
+    /// Tab (und Umschalt+Tab) wechselt zwischen "Aktuelles Dokument" und "Ordner oder Datei", hin und zurück. Im Suchfeld und im Ersetzen-Feld
+    /// bleibt Tab ein Tab-Zeichen (eingerückten Code von Hand tippen); dort greift der Wechsel nicht.
+    /// </summary>
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != Key.Tab || _busy || Keyboard.Modifiers is not (ModifierKeys.None or ModifierKeys.Shift) || Keyboard.FocusedElement is System.Windows.Controls.TextBox { AcceptsTab: true })
+        {
+            return;
+        }
+
+        e.Handled = true;
+        var focused = Keyboard.FocusedElement as DependencyObject;
+        (IsFilesMode ? CurrentDocumentModeRadio : FilesModeRadio).IsChecked = true;
+
+        // Lag der Fokus im jetzt ausgeblendeten Ordnerbereich, ginge er verloren und Tab würde nicht mehr zurückschalten.
+        if (!IsFilesMode && focused is not null && FolderPanel.IsAncestorOf(focused))
+        {
+            FindAllButton.Focus();
+        }
+    }
+
+    /// <summary>
+    /// Ein Klick auf eine Fläche ohne Eingabeelement (Beschriftung, leerer Bereich, Fensterrand) nimmt dem Textfeld den Fokus, damit dort kein Cursor stehen
+    /// bleibt: WPF lässt den Fokus sonst im Textfeld, solange man nicht in ein anderes fokussierbares Element klickt. Klicks auf Felder, Knöpfe, Listen und
+    /// Optionen (auch das Ersetzen-Feld) bleiben unberührt.
+    /// </summary>
+    private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        for (var node = e.OriginalSource as DependencyObject; node is not null; node = node is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D ? System.Windows.Media.VisualTreeHelper.GetParent(node) : LogicalTreeHelper.GetParent(node))
+        {
+            if (node is UIElement { Focusable: true } && node is not Window && node != RootGrid)
+            {
+                return;
+            }
+        }
+
+        Keyboard.Focus(RootGrid);
+    }
+
+    private bool _busy;
+
+    /// <summary>
+    /// Führt eine Aufgabe über viele Dateien im Hintergrund aus, mit dem allgemeinen Fortschrittsfenster (Balken, Abbrechen). Eine einzelne Datei läuft ohne Fenster.
+    /// <see langword="null"/> = abgebrochen. Solange die Aufgabe läuft, ist dieses Fenster gesperrt.
+    /// </summary>
+    private async Task<T?> RunFileTaskAsync<T>(string path, string title, Func<CancellationToken, IProgress<(int Done, int Total)>?, T> work)
+        where T : class
+    {
+        if (File.Exists(path))
+        {
+            return work(CancellationToken.None, null);
+        }
+
+        using var cancellation = new CancellationTokenSource();
+        var progressWindow = new TaskProgressWindow(title, SettingsTexts.ProgressHint, SettingsTexts.Cancel, SettingsTexts.ProgressCount, cancellation.Cancel) { Owner = this };
+        var progress = new Progress<(int Done, int Total)>(value => progressWindow.Report(new CompatProgress(SettingsTexts.ProgressFiles, value.Done, value.Total)));
+        _busy = true;
+        if (Content is UIElement root)
+        {
+            root.IsEnabled = false;
+        }
+
+        progressWindow.Show();
+        try
+        {
+            return await Task.Run(() => work(cancellation.Token, progress));
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            return null;
+        }
+        finally
+        {
+            progressWindow.CloseAfterFinished();
+            if (Content is UIElement unlocked)
+            {
+                unlocked.IsEnabled = true;
+            }
+
+            _busy = false;
+            SearchTextBox.Focus();
+        }
+    }
+
+    private async void FindAll_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
         var query = SearchTextBox.Text;
         if (string.IsNullOrEmpty(query))
         {
-            StatusText.Text = "Bitte einen Suchbegriff eingeben.";
+            StatusText.Text = SearchTexts.EnterQuery;
             return;
         }
 
@@ -456,20 +486,28 @@ public partial class SearchReplaceWindow : Window
         if (IsFilesMode)
         {
             var folder = NormalizeFolderPath(FolderTextBox.Text.Trim());
-            if (!Directory.Exists(folder))
+            if (!PathExists(folder))
             {
-                StatusText.Text = "Der angegebene Ordner wurde nicht gefunden.";
+                StatusText.Text = SearchTexts.PathNotFound;
                 return;
             }
 
-            var matches = FileSearchService.Search(folder, query, CurrentOptions);
+            RememberFolder();
+            var options = CurrentOptions;
+            var matches = await RunFileTaskAsync(folder, SearchTexts.ProgressFind, (cancellation, progress) => FileSearchService.Search(folder, query, options, cancellation: cancellation, progress: progress));
+            if (matches is null)
+            {
+                StatusText.Text = CommonTexts.Cancelled;
+                return;
+            }
+
             foreach (var match in matches)
             {
                 _results.Add(SearchResultRow.FromFileMatch(match, _getHideDescription()));
             }
 
             var fileCount = matches.Select(m => m.FilePath).Distinct().Count();
-            StatusText.Text = $"{matches.Count} Treffer in {fileCount} Datei(en).";
+            StatusText.Text = SearchTexts.FilesFound(matches.Count, fileCount);
         }
         else
         {
@@ -480,16 +518,21 @@ public partial class SearchReplaceWindow : Window
                 _results.Add(SearchResultRow.FromDocumentMatch(match, _getHideDescription()));
             }
 
-            StatusText.Text = $"{matches.Count} Treffer im aktuellen Dokument.";
+            StatusText.Text = SearchTexts.DocumentFound(matches.Count);
         }
     }
 
-    private void ReplaceAll_Click(object sender, RoutedEventArgs e)
+    private async void ReplaceAll_Click(object sender, RoutedEventArgs e)
     {
+        if (_busy)
+        {
+            return;
+        }
+
         var query = SearchTextBox.Text;
         if (string.IsNullOrEmpty(query))
         {
-            StatusText.Text = "Bitte einen Suchbegriff eingeben.";
+            StatusText.Text = SearchTexts.EnterQuery;
             return;
         }
 
@@ -498,32 +541,46 @@ public partial class SearchReplaceWindow : Window
         if (IsFilesMode)
         {
             var folder = NormalizeFolderPath(FolderTextBox.Text.Trim());
-            if (!Directory.Exists(folder))
+            if (!PathExists(folder))
             {
-                StatusText.Text = "Der angegebene Ordner wurde nicht gefunden.";
+                StatusText.Text = SearchTexts.PathNotFound;
                 return;
             }
 
-            var files = FileSearchService.EnumerateSearchableFiles(folder);
-            var plans = FileReplaceService.ComputeReplacements(files, query, replacement, CurrentOptions);
+            RememberFolder();
+            var options = CurrentOptions;
+            var plans = await RunFileTaskAsync(
+                folder,
+                SearchTexts.ProgressReplace,
+                (cancellation, progress) => FileReplaceService.ComputeReplacements(FileSearchService.EnumerateSearchableFiles(folder), query, replacement, options, cancellation, progress));
+            if (plans is null)
+            {
+                StatusText.Text = CommonTexts.Cancelled;
+                return;
+            }
 
             if (plans.Count == 0)
             {
-                StatusText.Text = "Keine Treffer - es wurde nichts ersetzt.";
+                StatusText.Text = SearchTexts.NothingReplaced;
                 return;
             }
 
+            // Vor dem Schreiben prüfen: danach ist der alte Stand der Dateien weg, mit dem die neuen Blöcke verglichen werden.
+            var hits = await Task.Run(() => plans.SelectMany(plan => BlocksAddedBy(plan, folder)).ToList());
+
             var totalReplacements = plans.Sum(p => p.ReplacementCount);
-            var description = $"Suchen & Ersetzen in Dateien: \"{query}\" → \"{replacement}\" ({plans.Count} Datei(en))";
+            var description = SearchTexts.ReplaceHistoryDescription(query, replacement, plans.Count);
             var changedFiles = _executeFileReplacements(plans, description);
 
-            StatusText.Text = $"{totalReplacements} Ersetzung(en) in {changedFiles} Datei(en) durchgeführt.";
+            StatusText.Text = SearchTexts.FilesReplaced(totalReplacements, changedFiles);
 
             _results.Clear();
             foreach (var plan in plans)
             {
                 _results.Add(SearchResultRow.FromReplacementPlan(plan, _getHideDescription()));
             }
+
+            ReplaceWarningHub.Report(hits);
         }
         else
         {
@@ -532,14 +589,34 @@ public partial class SearchReplaceWindow : Window
 
             if (count == 0)
             {
-                StatusText.Text = "Keine Treffer im aktuellen Dokument - es wurde nichts ersetzt.";
+                StatusText.Text = SearchTexts.DocumentNothingReplaced;
                 return;
             }
 
             _replaceActiveDocumentText(newText);
-            StatusText.Text = $"{count} Ersetzung(en) im aktuellen Dokument durchgeführt (Strg+Z im Textbereich macht dies rückgängig, solange noch nicht gespeichert).";
+            StatusText.Text = SearchTexts.DocumentReplaced(count);
             _results.Clear();
+
+            ReplaceWarningHub.Report(SingleEntryBlockFinder.NewIn(text, newText).Select(block => new BlockWarningHit(SearchTexts.ModeCurrentDocument, block, null)).ToList());
         }
+    }
+
+    /// <summary>OR-/NOR-/AND-Blöcke mit höchstens einem Eintrag, die der Ersetzungsplan in einer Datei neu erzeugt (Vergleich mit dem Stand auf der Platte).</summary>
+    private IEnumerable<BlockWarningHit> BlocksAddedBy(FileReplacementPlan plan, string root)
+    {
+        string oldText;
+        try
+        {
+            oldText = File.ReadAllText(plan.FilePath, System.Text.Encoding.UTF8);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return Enumerable.Empty<BlockWarningHit>();
+        }
+
+        var display = Directory.Exists(root) ? Path.GetRelativePath(root, plan.FilePath) : Path.GetFileName(plan.FilePath);
+        return SingleEntryBlockFinder.NewIn(oldText, plan.NewContent)
+            .Select(block => new BlockWarningHit(display, block, plan.FilePath));
     }
 
     private void ResultsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -632,9 +709,9 @@ public sealed class SearchResultRow : INotifyPropertyChanged
 
     /// <summary>Die beschreibende Zeile ("Datei — Zeile N: ..."), ausblendbar über <see cref="HideDescription"/>.</summary>
     public string Description => FilePath is null
-        ? $"Zeile {LineNumber}: {LineText}"
+        ? SearchTexts.ResultLine(LineNumber, LineText)
         : LineNumber > 0
-            ? $"{Path.GetFileName(FilePath)} — Zeile {LineNumber}: {LineText}"
+            ? SearchTexts.ResultFileLine(Path.GetFileName(FilePath), LineNumber, LineText)
             : $"{Path.GetFileName(FilePath)} — {LineText}";
 
     /// <summary>Ob die Beschreibungszeile ausgeblendet ist (Nutzer-Feedback: Toggle für "nur den gefundenen Code anzeigen").</summary>
@@ -685,7 +762,7 @@ public sealed class SearchResultRow : INotifyPropertyChanged
     {
         FilePath = plan.FilePath,
         LineNumber = 0,
-        LineText = $"{plan.ReplacementCount} Ersetzung(en)",
+        LineText = SearchTexts.ResultReplacements(plan.ReplacementCount),
         MatchedText = string.Empty,
         Offset = 0,
         Length = 0,

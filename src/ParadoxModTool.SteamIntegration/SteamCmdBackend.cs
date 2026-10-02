@@ -23,7 +23,7 @@ public sealed class SteamCmdBackend : IWorkshopBackend
     {
         if (string.IsNullOrWhiteSpace(_userName) || _userName.Any(c => char.IsWhiteSpace(c) || c == '"'))
         {
-            throw new ArgumentException("Der Steam-Benutzername fehlt oder enthält Leerzeichen oder Anführungszeichen.", nameof(upload));
+            throw new ArgumentException(SteamTexts.UserNameInvalid, nameof(upload));
         }
 
         var first = upload.WorkshopId is null;
@@ -39,7 +39,7 @@ public sealed class SteamCmdBackend : IWorkshopBackend
             upload.PreviewFile);
         File.WriteAllText(vdfPath, WorkshopItemVdf.Build(item), new UTF8Encoding(false));
 
-        progress?.Report("SteamCMD wird gestartet …");
+        progress?.Report(SteamTexts.CmdStarting);
         var start = new SteamCmdStart(
             _steamCmdPath,
             new[] { "+login", _userName, "+workshop_build_item", vdfPath, "+quit" },
@@ -52,11 +52,11 @@ public sealed class SteamCmdBackend : IWorkshopBackend
         }
         catch (OperationCanceledException)
         {
-            return Result(WorkshopPublishOutcome.Cancelled, ReadNewId(vdfPath, first), Array.Empty<string>(), "Der Upload wurde abgebrochen.");
+            return Result(WorkshopPublishOutcome.Cancelled, ReadNewId(vdfPath, first), Array.Empty<string>(), SteamTexts.UploadCancelled);
         }
         catch (Exception ex) when (ex is Win32Exception or IOException or InvalidOperationException or UnauthorizedAccessException)
         {
-            return Result(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), "SteamCMD konnte nicht gestartet werden: " + ex.Message);
+            return Result(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), SteamTexts.CmdStartFailed(ex.Message));
         }
 
         var id = first ? ReadNewId(vdfPath, first) : upload.WorkshopId;
@@ -64,9 +64,9 @@ public sealed class SteamCmdBackend : IWorkshopBackend
         return outcome.Kind switch
         {
             SteamCmdOutcomeKind.Success when first && id is null =>
-                Result(WorkshopPublishOutcome.Failed, null, run.Lines, "SteamCMD hat keinen Fehler gemeldet, aber auch keine Workshop-ID geliefert. Prüfe die Ausgabe."),
+                Result(WorkshopPublishOutcome.Failed, null, run.Lines, SteamTexts.CmdNoWorkshopId),
             SteamCmdOutcomeKind.Success =>
-                Result(WorkshopPublishOutcome.Success, id, run.Lines, "Die Version wurde auf Steam hochgeladen."),
+                Result(WorkshopPublishOutcome.Success, id, run.Lines, SteamTexts.Uploaded),
             SteamCmdOutcomeKind.LoginRequired => Result(WorkshopPublishOutcome.LoginRequired, id, run.Lines, outcome.Message),
             SteamCmdOutcomeKind.GuardRequired => Result(WorkshopPublishOutcome.GuardRequired, id, run.Lines, outcome.Message),
             SteamCmdOutcomeKind.Timeout => Result(WorkshopPublishOutcome.Timeout, id, run.Lines, outcome.Message),

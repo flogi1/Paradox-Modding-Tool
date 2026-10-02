@@ -1,0 +1,599 @@
+{
+  "version": 1,
+  "trace": {
+    "source": "Vanilla EU V events, common/on_action, common/situations, common/disasters, common/generic_actions, counted 2026-09-26; debug.log format from the PMT Scope Probe run 2026-09-26",
+    "effectBlocks": [ "effect", "immediate", "option", "after", "hidden_effect", "on_*", "every_*", "random_*", "ordered_*" ],
+    "triggerBlocks": [ "trigger", "limit", "potential", "allow", "is_shown", "is_valid", "visible", "can_start", "can_end", "ai_will_do", "weight", "modifier", "trigger_if", "any_*" ],
+    "effectFolders": [ "common/scripted_effects" ],
+    "ifChain": [ "if", "else_if", "else" ],
+    "debugLogSource": "jomini_effect_impl.cpp"
+  },
+  "entries": [
+    {
+      "code": "SUG-000",
+      "name": { "de": "Möglicher Treffer", "en": "Possible match" },
+      "severity": "info",
+      "pattern": "^Possible match: '(?<candidate>[^']+)'",
+      "attachToPrevious": true,
+      "explain": { "de": "Vorschlag des Spiels zur vorherigen Meldung.", "en": "The game's suggestion for the previous message." },
+      "fixes": []
+    },
+    {
+      "code": "EFF-001",
+      "name": { "de": "Unbekannter Effekt", "en": "Unknown effect" },
+      "severity": "error",
+      "pattern": "^Unknown effect (?<name>\\S+) at (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Der Effekt ist weder ein Engine-Effekt noch ein bekannter scripted_effect. Der Aufruf wird ignoriert.", "en": "The effect is neither an engine effect nor a known scripted_effect. The call is ignored." },
+      "tips": {
+        "de": [ "Schreibweise prüfen.", "Stammt der Effekt aus einer anderen Mod (z.B. einem Framework), muss diese Mod im Playset sein und vor dieser Mod laden." ],
+        "en": [ "Check the spelling.", "If the effect comes from another mod (e.g. a framework), that mod must be in the playset and load before this mod." ]
+      },
+      "fixes": [ "jump", "findDefinition", "replaceWithCandidate", "addModToPlayset", "suppress" ]
+    },
+    {
+      "code": "TRG-001",
+      "name": { "de": "Unbekannter Trigger", "en": "Unknown trigger" },
+      "severity": "error",
+      "pattern": "^Unknown trigger (?<name>\\S+) at (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Der Trigger ist weder ein Engine-Trigger noch ein bekannter scripted_trigger.", "en": "The trigger is neither an engine trigger nor a known scripted_trigger." },
+      "tips": {
+        "de": [ "Schreibweise prüfen.", "Stammt der Trigger aus einer anderen Mod, muss diese Mod im Playset sein." ],
+        "en": [ "Check the spelling.", "If the trigger comes from another mod, that mod must be in the playset." ]
+      },
+      "fixes": [ "jump", "findDefinition", "replaceWithCandidate", "addModToPlayset", "suppress" ]
+    },
+    {
+      "code": "TRG-002",
+      "name": { "de": "Skriptprüfung fehlgeschlagen", "en": "Script validation failed" },
+      "severity": "warning",
+      "pattern": "^PostValidate of (?<detail>trigger|effect) '(?<name>[^']+)' returned false at (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Beim Laden prüft das Spiel Trigger und Effekte ein zweites Mal (PostValidate) und konnte diesen Aufruf nicht bestätigen. Häufig prüft das Skript etwas, das es in dieser Spielversion nicht gibt, z.B. has_dlc mit einem DLC, den das Spiel nicht kennt (hier d009_across_the_pillars); die Zeile danach (Script system error) nennt dann den Grund. Der Aufruf bleibt wirkungslos.", "en": "When loading, the game checks triggers and effects a second time (PostValidate) and could not confirm this call. Often the script checks something that does not exist in this game version, e.g. has_dlc with a DLC the game does not know (here d009_across_the_pillars); the line after it (Script system error) then names the reason. The call has no effect." },
+      "tips": { "de": [ "Die folgende Meldung \"Script system error\" nennt meist den Grund.", "Bei has_dlc prüfen, ob der DLC-Name in dieser Spielversion existiert." ], "en": [ "The following \"Script system error\" message usually names the reason.", "For has_dlc check whether the DLC name exists in this game version." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "REF-001",
+      "name": { "de": "Datenbankeintrag nicht gefunden", "en": "Database entry not found" },
+      "severity": "warning",
+      "pattern": "^Failed to find '(?<name>[^']+)' from database for link '(?<detail>[^']+)' at (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Ein Skript verweist auf einen Eintrag (z.B. eine Situation, ein Gesetz oder eine Regierungsreform), den es in der Datenbank dieser Art nicht gibt. Der Eintrag wurde in dieser Spielversion umbenannt oder entfernt, oder er steht in einer Mod, die nicht geladen ist. Die Art des Verweises (link) steht in der Meldung.", "en": "A script refers to an entry (e.g. a situation, a law or a government reform) that is not in the database of that kind. The entry was renamed or removed in this game version, or it is defined in a mod that is not loaded. The kind of link is given in the message." },
+      "tips": { "de": [ "Schreibweise prüfen und den Eintrag in der passenden Datenbank-Datei suchen.", "Steht er in einer anderen Mod, muss sie im Playset sein und vor dieser Mod laden." ], "en": [ "Check the spelling and look for the entry in the matching database file.", "If it is in another mod, that mod must be in the playset and load before this mod." ] },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+    {
+      "code": "VAR-001",
+      "name": { "de": "Variable gesetzt, nie benutzt", "en": "Variable set but never used" },
+      "severity": "warning",
+      "pattern": "^Variable '(?<name>[^']+)' is set but is never used",
+      "explain": { "de": "Die Variable wird gesetzt, aber nirgends gelesen. Verwendung in Lokalisierung und in ungenutzten scripted triggers/effects zählt das Spiel nicht mit.", "en": "The variable is set but never read. The game does not count use in localization or in unused scripted triggers/effects." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen (siehe Vorschläge).", "Wird die Variable nur in Lokalisierung benutzt, ist die Meldung harmlos." ],
+        "en": [ "Check for typos (see suggestions).", "If the variable is only used in localization, the message is harmless." ]
+      },
+      "fixes": [ "showUsages", "locCheck", "replaceWithCandidate", "renameEverywhere", "suppress", "saveCheck", "commentOutSet" ],
+      "saveNames": "variable",
+      "setEffects": [ "set_variable" ]
+    },
+    {
+      "code": "VAR-002",
+      "name": { "de": "Variable benutzt, nie gesetzt", "en": "Variable used but never set" },
+      "severity": "error",
+      "pattern": "^Variable '(?<name>[^']+)' is used but is never set",
+      "explain": { "de": "Die Variable wird gelesen, aber nirgends gesetzt. Setzen in ungenutzten scripted triggers/effects zählt nicht.", "en": "The variable is read but never set. Setting it in unused scripted triggers/effects does not count." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen (siehe Vorschläge).", "Prüfen, ob der setzende Effekt überhaupt aufgerufen wird." ],
+        "en": [ "Check for typos (see suggestions).", "Check whether the effect that sets it is called at all." ]
+      },
+      "fixes": [ "showUsages", "replaceWithCandidate", "renameEverywhere", "suppress", "saveCheck" ],
+      "saveNames": "variable"
+    },
+    {
+      "code": "FLG-001",
+      "name": { "de": "Flag gesetzt, nie benutzt", "en": "Flag set but never used" },
+      "severity": "warning",
+      "pattern": "^Flag '(?<name>[^']+)' is set but is never used",
+      "explain": { "de": "Das Flag wird gesetzt, aber nirgends abgefragt. Verwendung in Lokalisierung zählt das Spiel nicht mit.", "en": "The flag is set but never checked. The game does not count use in localization." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen (siehe Vorschläge).", "Wird das Flag nur in Lokalisierung benutzt, ist die Meldung harmlos." ],
+        "en": [ "Check for typos (see suggestions).", "If the flag is only used in localization, the message is harmless." ]
+      },
+      "fixes": [ "showUsages", "locCheck", "replaceWithCandidate", "renameEverywhere", "suppress", "saveCheck" ],
+      "saveNames": "flag"
+    },
+    {
+      "code": "FLG-002",
+      "name": { "de": "Flag benutzt, nie gesetzt", "en": "Flag used but never set" },
+      "severity": "error",
+      "pattern": "^Flag '(?<name>[^']+)' is used but is never set",
+      "explain": { "de": "Das Flag wird abgefragt, aber nirgends gesetzt.", "en": "The flag is checked but never set." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen (siehe Vorschläge)." ],
+        "en": [ "Check for typos (see suggestions)." ]
+      },
+      "fixes": [ "showUsages", "replaceWithCandidate", "renameEverywhere", "suppress", "saveCheck" ],
+      "saveNames": "flag"
+    },
+    {
+      "code": "EVT-001",
+      "name": { "de": "Event-Target benutzt, nie gesetzt", "en": "Event target used but never set" },
+      "severity": "error",
+      "pattern": "^Event target '(?<name>[^']+)' is used but is never set",
+      "explain": { "de": "Ein gespeicherter Scope (scope:name) wird benutzt, aber nirgends mit save_scope_as oder save_temporary_scope_as gesetzt. Setzen in ungenutzten scripted triggers/effects zählt nicht.", "en": "A saved scope (scope:name) is used but never set with save_scope_as or save_temporary_scope_as. Setting it in unused scripted triggers/effects does not count." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen.", "Prüfen, ob der setzende Effekt überhaupt aufgerufen wird." ],
+        "en": [ "Check for typos.", "Check whether the effect that sets it is called at all." ]
+      },
+      "fixes": [ "showUsages", "replaceWithCandidate", "suppress" ]
+    },
+    {
+      "code": "SVL-001",
+      "name": { "de": "Kein gültiger Skriptwert", "en": "Not a valid script value" },
+      "severity": "error",
+      "pattern": "^Cannot read (?<detail>.*?) as a script value at (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "An dieser Stelle erwartet das Spiel eine Zahl oder einen Skriptwert.", "en": "The game expects a number or script value here." },
+      "tips": { "de": [ "Leere Klammern oder Tippfehler im Wert prüfen." ], "en": [ "Check for empty brackets or typos in the value." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "SVL-002",
+      "name": { "de": "Skriptwert falsch gelesen", "en": "Badly read script value" },
+      "severity": "error",
+      "pattern": "^Badly read script value\\s+(?:(?<detail>\\S+)\\s+)?at (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Das Spiel konnte den Skriptwert an dieser Stelle nicht richtig lesen. Nennt die Meldung einen Wert, konnte das Spiel genau diesen Wert nicht exakt übernehmen, z.B. wegen zu vieler Nachkommastellen. Ohne Wert ist es ein Folgefehler eines ungültigen Skriptwerts an derselben Stelle.", "en": "The game could not read the script value at this location correctly. If the message names a value, the game could not take exactly that value, e.g. because of too many decimal places. Without a value it is a follow-up error of an invalid script value at the same location." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "SAV-002",
+      "name": { "de": "Spielstand nicht lesbar", "en": "Save game not readable" },
+      "severity": "info",
+      "pattern": "^Error: \"(?<detail>.*)\" in file: \"(?:(?<name>save games/[^\"]+))?\"",
+      "explain": { "de": "Ein Spielstand ließ sich nicht ganz lesen, meist weil er aus einer anderen Spielversion oder mit anderen Mods stammt. Nennt das Spiel keine Datei (in file: \"\"), stammen die Daten aus dem Speicher, z.B. einem geladenen Spielstand; eine Mod-Datei nennt immer ihren Pfad. Die Mod selbst ist nicht betroffen.", "en": "A save game could not be read completely, usually because it comes from another game version or other mods. If the game names no file (in file: \"\"), the data comes from memory, e.g. a loaded save game; a mod file always names its path. The mod itself is not affected." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "PAR-001",
+      "name": { "de": "Lesefehler in Datei", "en": "Parsing error in file" },
+      "severity": "error",
+      "pattern": "^Error: \"(?<detail>.*)\" in file: \"(?:(?<file>[^\"]+)\" near line: (?<line>\\d+)|\")",
+      "explain": { "de": "Das Spiel konnte die Datei an dieser Stelle nicht lesen (Syntax, unbekannter Wert, falscher Typ).", "en": "The game could not read the file at this location (syntax, unknown value, wrong type)." },
+      "tips": { "de": [ "Die Meldung in Anführungszeichen nennt den Grund." ], "en": [ "The quoted message states the reason." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "PAR-002",
+      "name": { "de": "Lesefehler, Meldung unvollständig", "en": "Parsing error, message incomplete" },
+      "severity": "error",
+      "pattern": "^Error: \"(?<detail>.+)",
+      "explain": { "de": "Lesefehler, zu dem im Log die Schlusszeile mit Datei und Zeile fehlt: Die Meldung ist abgeschnitten, oder eine andere Meldung wurde dazwischen geschrieben. Datei und Zeile sind daher unbekannt.", "en": "Parsing error whose closing line with file and line is missing from the log: the message is cut off, or another message was written in between. File and line are therefore unknown." },
+      "tips": { "de": [ "Die Meldung in Anführungszeichen nennt den Grund.", "Lief das Spiel beim Einlesen noch, kann erneutes Einlesen die vollständige Meldung zeigen." ], "en": [ "The quoted message states the reason.", "If the game was still running when the log was read, reading it again may show the complete message." ] },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "SAV-001",
+      "name": { "de": "Fehler beim Laden eines Spielstands", "en": "Errors while loading a save game" },
+      "severity": "info",
+      "pattern": "^Load Save Errors Detected! Amount: \\d+, File: \"(?<name>[^\"]*)\", Errors:\\s*(?<detail>.*)",
+      "explain": { "de": "Beim Laden eines Spielstands fand das Spiel Einträge, die es nicht lesen konnte, meist weil der Spielstand mit einer anderen Spielversion oder anderen Mods gespeichert wurde. Die Mod selbst ist nicht betroffen.", "en": "While loading a save game the game found entries it could not read, usually because the save was made with another game version or other mods. The mod itself is not affected." },
+      "tips": { "de": [ "Die Zeilen nach \"Errors:\" nennen, was fehlte; die Meldungen \"Spielstand nicht lesbar\" davor nennen die einzelnen Schlüssel." ], "en": [ "The lines after \"Errors:\" name what was missing; the \"Save game not readable\" messages before it name the single keys." ] },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "GUI-002",
+      "name": { "de": "Doppelte GUI-Eigenschaft", "en": "Duplicate GUI property" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Duplicate property '(?<name>[^']+)'",
+      "explain": { "de": "Eine Eigenschaft steht in einem Widget zweimal.", "en": "A property appears twice in one widget." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-003",
+      "name": { "de": "GUI-Eigenschaft nicht lesbar", "en": "GUI property not readable" },
+      "severity": "error",
+      "pattern": "^failed reading property, at (?<file>.+?\\.gui):(?<line>\\d+)",
+      "explain": { "de": "Das Spiel konnte eine Eigenschaft an dieser Stelle nicht lesen.", "en": "The game could not read a property at this location." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-001",
+      "name": { "de": "Ungültiges Widget, Typ oder Eigenschaft", "en": "Invalid widget, type or property" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - '?(?<name>[^' ]+)'? is not a valid",
+      "explain": { "de": "Der Name ist weder ein Widget noch ein bekannter Typ noch eine Eigenschaft.", "en": "The name is neither a widget nor a known type nor a property." },
+      "tips": { "de": [ "Schreibweise prüfen.", "Kommt der Typ aus einer anderen Mod, muss sie im Playset sein." ], "en": [ "Check the spelling.", "If the type comes from another mod, it must be in the playset." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-004",
+      "name": { "de": "Zu wenige Widgets", "en": "Not enough widget entries" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Not enough widget entries",
+      "explain": { "de": "Eine Widget-Eigenschaft (z.B. tooltipwidget) braucht genau ein Widget.", "en": "A widget property (e.g. tooltipwidget) needs exactly one widget." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-005",
+      "name": { "de": "Textur fehlt (GUI)", "en": "Missing texture (GUI)" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Missing file '(?<name>[^']+)'",
+      "explain": { "de": "Die angegebene Texturdatei existiert nicht.", "en": "The given texture file does not exist." },
+      "tips": { "de": [ "Pfad und Dateiname prüfen." ], "en": [ "Check path and file name." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-006",
+      "name": { "de": "Button ohne Tooltip", "en": "Button without tooltip" },
+      "severity": "info",
+      "pattern": "^Button is missing tooltip! Location: \"(?<file>[^\"]+?):(?<line>\\d+)\"",
+      "explain": { "de": "Ein Button hat keinen Tooltip.", "en": "A button has no tooltip." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-007",
+      "name": { "de": "Eigenschaft passt nicht zum Eltern-Widget", "en": "Property does not fit the parent widget" },
+      "severity": "warning",
+      "pattern": "^Error at (?<file>.+?\\.gui):(?<line>\\d+) \\(property origin is at (?<origin>[^)]*)\\) - (?<detail>.+)",
+      "explain": { "de": "Die GUI-Prüfung meldet eine Eigenschaft, die an dieser Stelle nicht wirkt, z.B. position oder parentanchor bei Kindern einer hbox oder vbox. Woher die Eigenschaft kommt, steht nach 'property origin is at', oft ein Typ in einer anderen Datei.", "en": "The GUI validation reports a property that has no effect here, e.g. position or parentanchor on children of an hbox or vbox. Where the property comes from is given after 'property origin is at', often a type in another file." },
+      "tips": { "de": [ "Bei Kindern einer hbox oder vbox position und parentanchor entfernen, die Box ordnet sie selbst an.", "Stammt die Eigenschaft aus einem Typ, den Typ oder eine eigene Ableitung davon anpassen." ], "en": [ "Remove position and parentanchor from children of an hbox or vbox, the box arranges them itself.", "If the property comes from a type, adjust the type or a derived type of your own." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-008",
+      "name": { "de": "Tooltip mit textcontext", "en": "Tooltip with textcontext" },
+      "severity": "info",
+      "pattern": "^Tooltips should use lowpriotextcontext instead of textcontext! Location: \"(?<file>[^\"]+?):(?<line>\\d+)\"",
+      "explain": { "de": "Ein Tooltip nutzt textcontext. Das Spiel empfiehlt lowpriotextcontext.", "en": "A tooltip uses textcontext. The game recommends lowpriotextcontext." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-009",
+      "name": { "de": "Kein Datenkontext in GUI", "en": "No data context in GUI" },
+      "severity": "info",
+      "pattern": "^No context supplied \\(Use SetDataContext\\), wanted context of type '(?<name>[^']+)' for '(?<detail>[^']+)'",
+      "defaultSuppressed": true,
+      "explain": { "de": "Ein Widget der Oberfläche fragt einen Datenausdruck ab (z.B. UIActionProvider.IsVisible), dem das Spiel keinen Datenkontext zugewiesen hat. Das sind Meldungen der Vanilla-Oberfläche (z.B. gui/shared/main_menu_buttons.gui), oft tausende Zeilen pro Start, und keine Fehlfunktion einer Mod.", "en": "A widget of the interface queries a data expression (e.g. UIActionProvider.IsVisible) for which the game has assigned no data context. These are messages of the vanilla interface (e.g. gui/shared/main_menu_buttons.gui), often thousands of lines per start, and no malfunction of a mod." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "GUI-000",
+      "name": { "de": "GUI-Fehler", "en": "GUI error" },
+      "severity": "warning",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - (?<detail>.+)",
+      "explain": { "de": "Sonstiger Fehler beim Lesen einer GUI-Datei.", "en": "Other error while reading a GUI file." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "TEX-001",
+      "name": { "de": "Textur nicht gefunden", "en": "Texture not found" },
+      "severity": "error",
+      "pattern": "^Could not find texture due to 'VFSOpen Error: (?<name>\\S+) not found'",
+      "explain": { "de": "Eine referenzierte Texturdatei existiert nicht.", "en": "A referenced texture file does not exist." },
+      "tips": { "de": [ "Nach dem Pfad in Mod-Dateien suchen und Schreibweise prüfen." ], "en": [ "Search the mod files for the path and check the spelling." ] },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "TEX-002",
+      "name": { "de": "Textur-Pfad unzulässig", "en": "Texture path not allowed" },
+      "severity": "info",
+      "pattern": "^Could not find texture due to 'VFSOpen Error: (?<name>.+?) filename is illegal or insecure'",
+      "defaultSuppressed": true,
+      "explain": { "de": "Das Spiel öffnet eine Textur über einen absoluten Pfad (z.B. die Vorschau thumbnail.dds eines DLC-Ordners), den das virtuelle Dateisystem nicht zulässt. Das ist eine Meldung von Vanilla und den DLCs, keine fehlende Datei einer Mod.", "en": "The game opens a texture through an absolute path (e.g. the thumbnail.dds preview of a DLC folder) that the virtual file system does not allow. This is a message of vanilla and the DLCs, not a missing file of a mod." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "TEX-003",
+      "name": { "de": "Texturdaten nicht ladbar", "en": "Texture data not loadable" },
+      "severity": "info",
+      "pattern": "^Failed to load texture data from '(?<name>[^']+)'",
+      "defaultSuppressed": true,
+      "explain": { "de": "Das Spiel konnte die Texturdaten nicht laden, meist als Folge der Meldung \"Textur-Pfad unzulässig\" davor (z.B. thumbnail.dds eines DLC). Harmlos.", "en": "The game could not load the texture data, usually as a follow-up of the \"Texture path not allowed\" message before it (e.g. thumbnail.dds of a DLC). Harmless." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "GFX-001",
+      "name": { "de": "Einheitenbild fehlt zur Maske", "en": "Unit illustration missing for mask" },
+      "severity": "warning",
+      "pattern": "^Unit illustration mask '(?<name>[^']+)' has no matching illustration '(?<detail>[^']+)'",
+      "explain": { "de": "Zu einer Maske in gfx/interface/illustrations/units/masks gibt es kein Einheitenbild mit demselben Namen eine Ebene höher. Meist wurde das Bild umbenannt oder entfernt, ohne die Maske anzupassen. Das Spiel ignoriert die Maske.", "en": "A mask in gfx/interface/illustrations/units/masks has no unit illustration with the same name one folder up. Usually the illustration was renamed or removed without renaming its mask. The game ignores the mask." },
+      "tips": { "de": [ "Maske und Bild gleich benennen oder die verwaiste Maske löschen." ], "en": [ "Give mask and illustration the same name or delete the orphaned mask." ] },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "GFX-002",
+      "name": { "de": "Portrait-Vorlage nicht gefunden", "en": "Portrait template not found" },
+      "severity": "warning",
+      "pattern": "^could not find template \\[(?<name>[^\\]]+)\\]\\. (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Ein Portrait-Modifikator verweist auf eine Vorlage (template), die es nicht gibt, z.B. nach einer Umbenennung in einer neuen Spielversion oder weil sie in einer nicht geladenen Mod steht. Der Eintrag bleibt ohne Wirkung.", "en": "A portrait modifier refers to a template that does not exist, e.g. after a rename in a new game version or because it is in a mod that is not loaded. The entry has no effect." },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+    {
+      "code": "RUN-001",
+      "name": { "de": "Laufzeitfehler im Skript", "en": "Script runtime error" },
+      "severity": "error",
+      "pattern": "^Script system error!(?:\\s*\\nError:\\s*(?<detail>[^\\n]*))?(?:\\s*\\nScript location:\\s*(?<file>[^\\n]+?):(?<line>\\d+))?",
+      "explain": { "de": "Ein Skript ist während des Spiels gescheitert, z.B. weil ein Scope nicht gesetzt war.", "en": "A script failed during the game, e.g. because a scope was not set." },
+      "tips": { "de": [ "Die Zeile nach \"Error:\" nennt den Grund." ], "en": [ "The line after \"Error:\" states the reason." ] },
+      "fixes": [ "jump", "traceScope", "suppress" ],
+      "traceGuards": [
+        { "detail": "^Undefined event target '(?<name>[^']+)'", "limit": "NOT = { exists = scope:{name} }" },
+        { "detail": "^Event target link 'scope:(?<name>[^']+)' returned an unset scope", "limit": "NOT = { exists = scope:{name} }" }
+      ]
+    },
+    {
+      "code": "MSG-001",
+      "name": { "de": "Nachrichtentyp fehlt", "en": "Missing message type" },
+      "severity": "info",
+      "pattern": "^Failed to find message type: (?<name>[^\\s.]+)",
+      "explain": { "de": "Für eine Aktion ist kein Nachrichtentyp definiert. Meist harmlos.", "en": "No message type is defined for an action. Usually harmless." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "LOC-001",
+      "name": { "de": "Platzhalter in Lokalisierung", "en": "Placeholder localization" },
+      "severity": "info",
+      "pattern": "^(?:(?<name>[A-Za-z0-9_]+_(?:MAP|LOG|SETUP|TITLE|HEADER|DESC|TOOLTIP)): \"(?<detail>[^\"]*)\"|(?<name>(?<w>[a-z0-9]+)_[A-Za-z0-9_]+): \"(?<detail>(?i:\\k<w>) [A-Za-z0-9 ]+)\")",
+      "explain": { "de": "Der Lokalisierungsschlüssel hat noch einen Platzhaltertext. Fehlt ein Schlüssel ganz, erzeugt das Spiel einen Text aus dem Schlüsselnamen (z.B. iv2_ga_select_historic_SCO_13: \"Iv2 ga select historic SCO 13\"), erkennbar daran, dass der Text nur der Schlüssel in Wörtern ist.", "en": "The localization key still has placeholder text. If a key is missing entirely, the game generates a text from the key name (e.g. iv2_ga_select_historic_SCO_13: \"Iv2 ga select historic SCO 13\"), recognisable by the text being just the key in words." },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "LOC-002",
+      "name": { "de": "Hash-Kollision in Lokalisierung", "en": "Localization key hash collision" },
+      "severity": "warning",
+      "pattern": "^Localization key hash collision\\. Key '(?<name>[^']+)' and '(?<detail>[^']+)'",
+      "explain": { "de": "Zwei Lokalisierungsschlüssel haben denselben Hash. Einer davon kann den falschen Text zeigen.", "en": "Two localization keys have the same hash. One of them may show the wrong text." },
+      "tips": { "de": [ "Einen der beiden Schlüssel umbenennen." ], "en": [ "Rename one of the two keys." ] },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "LOC-003",
+      "name": { "de": "Unbekannte Datenfunktion in Lokalisierung", "en": "Unknown data function in localization" },
+      "severity": "error",
+      "pattern": "^Could not find (?:data system function|promote for) '(?<name>[^']+)' in '(?<detail>[^']+)'",
+      "explain": { "de": "Ein Ausdruck in eckigen Klammern (z.B. [ROOT.GetName]) nutzt eine Funktion oder einen Verweis (promote), den es an dieser Stelle im Spiel nicht gibt. Der Text zeigt dann einen Fehler.", "en": "An expression in square brackets (e.g. [ROOT.GetName]) uses a function or link (promote) the game does not have at this point. The text then shows an error." },
+      "tips": { "de": [ "Schreibweise und Scope prüfen; der Ausdruck steht nach \"in\"." ], "en": [ "Check spelling and scope; the expression follows \"in\"." ] },
+      "fixes": [ "locCheck", "suppress" ]
+    },
+    {
+      "code": "LOC-004",
+      "name": { "de": "Datenausdruck nicht auswertbar", "en": "Data expression failed" },
+      "severity": "warning",
+      "pattern": "^(?:(?:Failed converting statement for|FetchData failed for|Promote '[^']*' returned nullptr, in) '(?<name>[^']+)'|Failed to convert statement for argument '\\d+' for call '[^']+' in '(?<name>.*)')",
+      "explain": { "de": "Ein Ausdruck in eckigen Klammern ließ sich nicht umsetzen oder auswerten, z.B. weil eine Funktion fehlt oder ein Scope leer ist. Meist Folge einer Meldung davor.", "en": "An expression in square brackets could not be converted or evaluated, e.g. because a function is missing or a scope is empty. Usually a follow-up of a message before it." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "LOC-005",
+      "name": { "de": "Datenfehler in Lokalisierungstext", "en": "Data error in localization string" },
+      "severity": "error",
+      "pattern": "^Data error in loc string '(?<name>[^']+)'",
+      "explain": { "de": "Der Lokalisierungstext mit diesem Schlüssel enthält einen Ausdruck, den das Spiel nicht auswerten konnte. Die Meldungen davor nennen den Ausdruck.", "en": "The localization text with this key contains an expression the game could not evaluate. The messages before it name the expression." },
+      "fixes": [ "locCheck", "suppress" ]
+    },
+    {
+      "code": "LOC-006",
+      "name": { "de": "Modifikator ohne Lokalisierung", "en": "Modifier without localization" },
+      "severity": "info",
+      "pattern": "^(?:MODIFIER_TYPE|STATIC_MODIFIER)_(?:NAME|DESC)_(?<name>[A-Za-z0-9_]+): \"(?<detail>[^\"]*)\"",
+      "explain": { "de": "Für den Modifikatortyp (oder statischen Modifikator) fehlt der Lokalisierungsschlüssel MODIFIER_TYPE_NAME_... oder MODIFIER_TYPE_DESC_... (bei statischen Modifikatoren STATIC_MODIFIER_NAME_...). Das Spiel zeigt einen erzeugten Ersatztext (den Namen aus dem Schlüssel oder \"TODO : Write a desc\").", "en": "The localization key MODIFIER_TYPE_NAME_... or MODIFIER_TYPE_DESC_... is missing for the modifier type (for static modifiers STATIC_MODIFIER_NAME_...). The game shows a generated placeholder (the name derived from the key, or \"TODO : Write a desc\")." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "LOC-007",
+      "name": { "de": "Unlokalisierter Text in GUI", "en": "Unlocalized text in GUI" },
+      "severity": "warning",
+      "pattern": "^Unlocalized text '(?<name>[^']+)' at (?<file>.+?\\.gui):(?<line>\\d+)",
+      "explain": { "de": "Ein Widget setzt text auf einen Schlüssel, der in keiner geladenen Lokalisierung steht. Das Spiel zeigt dann den Schlüssel selbst. Entweder den Schlüssel lokalisieren oder raw_text statt text verwenden.", "en": "A widget sets text to a key that is in no loaded localization. The game then shows the key itself. Either localize the key or use raw_text instead of text." },
+      "fixes": [ "jump", "locCheck", "suppress" ]
+    },
+    {
+      "code": "LOC-008",
+      "name": { "de": "Unbekannter Lokalisierungsschlüssel", "en": "Unrecognized localization key" },
+      "severity": "warning",
+      "pattern": "^Unrecognized loc key (?<name>.+?)\\. (?:(?<file>\\S+?\\.txt):(?<line>\\d+)|\\S+)",
+      "explain": { "de": "Ein Text im Skript, z.B. Titel, Beschreibung oder Option eines Events, nutzt einen Lokalisierungsschlüssel, der in keiner geladenen Lokalisierung steht. Das Spiel zeigt dann den Schlüssel selbst. Steht statt einer Datei ein interner Name (z.B. CEventOptionDesc), nennt das Log nur die Art des Textes.", "en": "A text in script, e.g. title, description or option of an event, uses a localization key that is in no loaded localization. The game then shows the key itself. If an internal name (e.g. CEventOptionDesc) stands in place of a file, the log only names the kind of text." },
+      "fixes": [ "jump", "locCheck", "suppress" ]
+    },
+    {
+      "code": "LOC-009",
+      "name": { "de": "Effekt-Lokalisierung fehlt", "en": "Effect localization missing" },
+      "severity": "warning",
+      "pattern": "^Effect localization string missing: (?<name>\\S+)",
+      "explain": { "de": "Zu einem Effekt gehört ein Tooltip-Text (meist ein custom_tooltip oder ein Schlüssel auf _effect_tt), der in keiner geladenen Lokalisierung steht. Der Tooltip zeigt dann den Schlüssel oder bleibt leer.", "en": "An effect has a tooltip text (usually a custom_tooltip or a key ending in _effect_tt) that is in no loaded localization. The tooltip then shows the key or stays empty." },
+      "fixes": [ "locCheck", "suppress" ]
+    },
+    {
+      "code": "MDF-001",
+      "name": { "de": "Symbol für Modifikator fehlt", "en": "Missing icon for modifier" },
+      "severity": "info",
+      "pattern": "^Missing Icon for Modifier : (?<name>\\S+)",
+      "explain": { "de": "Für den Modifikatortyp findet das Spiel kein Symbol. In Tooltips steht dann kein oder ein leeres Symbol.", "en": "The game finds no icon for the modifier type. Tooltips then show no icon or an empty one." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "MDF-002",
+      "name": { "de": "Modifikator am falschen Ort", "en": "Modifier in the wrong place" },
+      "severity": "error",
+      "pattern": "^Modifier type '(?<name>[^']+)' is only allowed in (?<detail>.+?) is accepted here\\. At: (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Der Modifikator gilt nur für einen anderen Scope als den, den dieser Block annimmt, z.B. ein Länder-Modifikator im modifier-Block eines Gebäudes, der nur Orts-Modifikatoren nimmt. Das Spiel ignoriert ihn an dieser Stelle.", "en": "The modifier only applies to another scope than the one this block accepts, e.g. a country modifier in the modifier block of a building, which only takes location modifiers. The game ignores it here." },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+    {
+      "code": "MDF-003",
+      "name": { "de": "Statischer Modifikator ungenutzt", "en": "Static modifier unused" },
+      "severity": "info",
+      "pattern": "^Modifier '(?<name>[^']+)' was not used by the script or code but exists in the database",
+      "explain": { "de": "Ein static_modifier steht in der Datenbank, wird aber von keinem Skript und keinem Spielcode benutzt. Das Spiel meldet ihn als Verschwendung. Kein Fehler, nur toter Inhalt; er lässt sich entfernen oder aus einem Skript heraus anwenden.", "en": "A static_modifier is in the database but no script and no game code uses it. The game reports it as a waste. Not an error, just dead content; it can be removed or applied from a script." },
+      "fixes": [ "showUsages", "findDefinition", "suppress" ]
+    },
+
+    {
+      "code": "GOV-001",
+      "name": { "de": "Ungültige Regierungseinstellung", "en": "Invalid government setting" },
+      "severity": "warning",
+      "pattern": "^Removing invalid (?:bureaucracy|reform|law) '(?<name>[^']+)' for '(?<detail>[^']+)'",
+      "explain": { "de": "Beim Spielstart entfernt das Spiel eine Reform, Bürokratie oder ein Gesetz, die für dieses Land nicht erlaubt sind.", "en": "At game start the game removes a reform, bureaucracy or law that is not allowed for this country." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "GOV-002",
+      "name": { "de": "Land ohne gültigen Regierungstyp", "en": "Country without valid government type" },
+      "severity": "warning",
+      "pattern": "^government_type link: real country (?<name>\\S+) has invalid government type",
+      "explain": { "de": "Ein Skript fragt den Regierungstyp (government_type) eines Landes ab, das keinen gültigen Regierungstyp hat, z.B. ein Hilfsland einer Mod ohne Regierung im Setup. Der Verweis liefert dann nichts. Das Spiel meldet das bei jeder Abfrage, daher oft viele gleiche Zeilen.", "en": "A script asks for the government type (government_type) of a country that has no valid government type, e.g. a helper country of a mod without a government in its setup. The link then returns nothing. The game reports this on every query, so there are often many identical lines." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "SET-001",
+      "name": { "de": "Land im Setup unvollständig", "en": "Country incomplete in setup" },
+      "severity": "warning",
+      "pattern": "^(?:(?:The )?[Cc]ountry (?:'(?<name>[A-Za-z0-9_]+)[^']*'|(?<name>[A-Za-z0-9_]+)) (?<detail>has no .+|has not capital set.*|has a heir-selection that does not match .+|does not know its capital.*)|'(?<name>[A-Za-z0-9_]+)' (?<detail>has no \\S+ defined!))",
+      "explain": { "de": "Beim Spielstart legt das Spiel die Länder aus dem Setup an. Diesem Land fehlt dort eine Angabe, z.B. Regierungstyp, Erbfolge, Hauptstadt, ein Gesetz, Gesellschaftswerte oder der Parlamentstyp; welche, steht in der Meldung. Bei Hilfsländern einer Mod, die nie auf der Karte erscheinen, ist das oft so gewollt.", "en": "At game start the game creates the countries from the setup. This country lacks an entry there, e.g. government type, heir selection, capital, a law, society values or parliament type; the message says which. For helper countries of a mod that never appear on the map this is often intended." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "BLD-001",
+      "name": { "de": "Gebäude-Effizienz zu hoch", "en": "Building efficiency too high" },
+      "severity": "warning",
+      "pattern": "^(?<name>\\S+) has a too high efficiency for",
+      "explain": { "de": "Das Gebäude überschreitet den erlaubten Effizienzwert.", "en": "The building exceeds the allowed efficiency value." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "BLD-002",
+      "name": { "de": "Doppelter Name einer Produktionsmethode", "en": "Duplicated production method name" },
+      "severity": "warning",
+      "pattern": "^duplicated production method name '(?<detail>[^']+)' for (?<name>[^\\s.]+)",
+      "explain": { "de": "Der Name einer Produktionsmethode dieses Gebäudes ist schon vergeben, z.B. weil das Gebäude zweimal definiert ist (eine Mod-Kopie neben dem Original) oder eine Methode denselben Namen wie eine andere hat. Namen von Produktionsmethoden müssen im ganzen Spiel eindeutig sein.", "en": "The name of a production method of this building is already taken, e.g. because the building is defined twice (a mod copy next to the original) or a method has the same name as another one. Production method names must be unique in the whole game." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "PRC-001",
+      "name": { "de": "Modifikatortyp für Preis fehlt", "en": "Missing modifier type for price" },
+      "severity": "error",
+      "pattern": "^Missing modifier type for price\\. (?<name>\\S+)",
+      "explain": { "de": "Zu einem Preis ist kein passender Modifikatortyp definiert.", "en": "No matching modifier type is defined for a price." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "PRM-001",
+      "name": { "de": "Parameterwert nicht erkannt", "en": "Parameter value not recognised" },
+      "severity": "warning",
+      "pattern": "^couldn't convert parameter value to something we recognise",
+      "explain": { "de": "Ein GUI- oder Skriptparameter hat einen Wert, den das Spiel nicht kennt. Das Log nennt keine Stelle.", "en": "A GUI or script parameter has a value the game does not know. The log gives no location." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "MOD-001",
+      "name": { "de": "Mod-Version passt nicht", "en": "Mod version mismatch" },
+      "severity": "info",
+      "pattern": "^Mod (?<detail>.+?) version \\S+ does not match game version",
+      "explain": { "de": "Die in der Mod angegebene Spielversion passt nicht zur installierten.", "en": "The game version declared by the mod does not match the installed one." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "MOD-002",
+      "name": { "de": "Mod-Metadaten nicht lesbar", "en": "Mod metadata not readable" },
+      "severity": "warning",
+      "pattern": "^Mod metadata read error\\. File: .*?/(?<name>[^/]+)/\\.metadata/metadata\\.json Error: (?<detail>.+)",
+      "explain": { "de": "Das Spiel konnte .metadata/metadata.json eines Mod-Ordners nicht öffnen oder lesen. Ohne lesbare metadata.json erscheint die Mod nicht im Launcher und lädt nicht.", "en": "The game could not open or read .metadata/metadata.json of a mod folder. Without a readable metadata.json the mod does not appear in the launcher and does not load." },
+      "tips": {
+        "de": [ "Der Name ist der Mod-Ordner. Fehlt die Datei, ist der Ordner oft ein Rest oder eine unfertige Mod: metadata.json anlegen oder den Ordner entfernen.", "Nennt der Text nach \"Error:\" einen Syntaxfehler, die JSON-Datei reparieren." ],
+        "en": [ "The name is the mod folder. If the file is missing, the folder is often a leftover or an unfinished mod: create metadata.json or remove the folder.", "If the text after \"Error:\" names a syntax error, repair the JSON file." ]
+      },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "MOD-003",
+      "name": { "de": "Mods nach Absturz abgeschaltet", "en": "Mods disabled after a crash" },
+      "severity": "warning",
+      "pattern": "^Found sentinel file from a previous boot",
+      "explain": { "de": "Der letzte Spielstart endete unerwartet, bevor das Spiel das Hauptspiel erreichte, z.B. durch einen Absturz beim Laden. Das Spiel schaltet deshalb für diesen Start alle Mods ab, damit der Mod-Manager im Spiel erreichbar bleibt. Fehlermeldungen der Mods fehlen dann in diesem Log; die Ursache steht im Log des vorherigen Starts.", "en": "The last game start ended unexpectedly before the game reached the main game, e.g. through a crash while loading. The game therefore disables all mods for this start so that the in-game mod manager stays available. Error messages of the mods are then missing from this log; the cause is in the log of the previous start." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "AUD-001",
+      "name": { "de": "Sound-Event nicht gefunden", "en": "Sound event not found" },
+      "severity": "warning",
+      "pattern": "^(?:\\[Wwise\\] (?:Event '(?<name>[^']+)' not found|Failed to create event (?<name>[^,\\s]+))|Could not find audio event '(?<name>[^']+)')",
+      "explain": { "de": "Ein Sound-Event, das Skript oder GUI abspielen will, steht in keiner geladenen Sound-Bank. Der Sound bleibt stumm. Das Spiel meldet dasselbe Event oft zweimal (nicht gefunden, nicht erstellt).", "en": "A sound event that a script or GUI wants to play is in no loaded sound bank. The sound stays silent. The game often reports the same event twice (not found, not created)." },
+      "tips": { "de": [ "Schreibweise des Event-Namens prüfen.", "Findet die Suche den Namen in keiner Mod, stammt der Aufruf aus Vanilla und die Meldung ist harmlos." ], "en": [ "Check the spelling of the event name.", "If the search finds the name in no mod, the call comes from vanilla and the message is harmless." ] },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "MEM-001",
+      "name": { "de": "Speicherbereich zu klein", "en": "Memory arena too small" },
+      "severity": "info",
+      "pattern": "^Arena \\S+ size is too small",
+      "defaultSuppressed": true,
+      "explain": { "de": "Hinweis der Engine zur Speicherplanung, keine Fehlfunktion der Mod.", "en": "Engine hint about memory planning, not a malfunction of the mod." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "INP-001",
+      "name": { "de": "Eingabekontext nicht gesetzt", "en": "Input context not pushed" },
+      "severity": "info",
+      "pattern": "^Could not push the provided stack context",
+      "defaultSuppressed": true,
+      "explain": { "de": "Meldung der Eingabeverarbeitung der Engine, nicht der Mod.", "en": "Message of the engine's input handling, not related to the mod." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "INP-002",
+      "name": { "de": "Eingabeaktion unbekannt", "en": "Unknown input action" },
+      "severity": "warning",
+      "pattern": "^Widget at (?<file>.+?\\.gui):(?<line>\\d+) wants to set input_action '(?<name>[^']+)'",
+      "explain": { "de": "Ein Widget nutzt eine input_action (Tastenkürzel), die in keinem geladenen Eingabeprofil steht. Das Kürzel wirkt dann nicht.", "en": "A widget uses an input_action (keyboard shortcut) that is in no loaded input profile. The shortcut then does nothing." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "DLC-001",
+      "name": { "de": "Store-Eintrag nicht gefunden", "en": "Store item not found" },
+      "severity": "info",
+      "pattern": "^Could not find item in store backend",
+      "defaultSuppressed": true,
+      "explain": { "de": "Meldung der Plattform, nicht der Mod.", "en": "Platform message, not related to the mod." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "DLC-002",
+      "name": { "de": "Falsche DLC-Prüfsumme", "en": "Incorrect DLC checksum" },
+      "severity": "info",
+      "pattern": "^incorrect checksum for DLC",
+      "explain": { "de": "Beim Laden der DLCs und Mods meldet das Spiel eine falsche Prüfsumme. Das Log nennt weder DLC noch Datei, daher lässt sich keine Stelle in einer Mod zuordnen.", "en": "While loading DLCs and mods the game reports an incorrect checksum. The log names neither DLC nor file, so no location in a mod can be assigned." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "GAI-001",
+      "name": { "de": "Aktion in keiner KI-Liste", "en": "Action in no AI list" },
+      "severity": "info",
+      "pattern": "^Action (?<name>\\S+) is not explicitly listed in an ai list",
+      "explain": { "de": "Eine generic_action steht in keiner Liste in common/generic_action_ai_lists. Das Spiel muss sie dann bei jeder KI-Entscheidung prüfen, was Rechenzeit kostet. Funktional ist es kein Fehler.", "en": "A generic_action is in no list in common/generic_action_ai_lists. The game then has to check it for every AI decision, which costs performance. It is not a functional error." },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "GAI-002",
+      "name": { "de": "KI-Liste nennt unbekannte Aktion", "en": "AI list names unknown action" },
+      "severity": "warning",
+      "pattern": "^Action (?<name>\\S+) does not exist in common/generic_actions! (?<file>.+?):(?<line>\\d+)",
+      "explain": { "de": "Eine KI-Liste (common/generic_action_ai_lists) nennt eine generic_action, die es nicht gibt, z.B. wegen eines Tippfehlers, einer Umbenennung oder weil die Aktion nie angelegt wurde. Die Datei und Zeile der Liste stehen in der Meldung.", "en": "An AI list (common/generic_action_ai_lists) names a generic_action that does not exist, e.g. because of a typo, a rename or because the action was never created. The file and line of the list are in the message." },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+
+    {
+      "code": "DLC-003",
+      "name": { "de": "Ungültiger DLC im Setup", "en": "Invalid DLC in setup" },
+      "severity": "warning",
+      "pattern": "^Invalid DLC specified! DLC: \"(?<name>[^\"]+)\"",
+      "explain": { "de": "Eine Setup-Datei prüft mit has_dlc auf einen DLC, den es in dieser Spielversion nicht gibt (z.B. d009_across_the_pillars). Die Bedingung gilt dann als nicht erfüllt.", "en": "A setup file checks with has_dlc for a DLC that does not exist in this game version (e.g. d009_across_the_pillars). The condition then counts as not met." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "OPT-001",
+      "name": { "de": "Optimierungshinweis", "en": "Optimization warning" },
+      "severity": "info",
+      "pattern": "^Optimization warning:",
+      "defaultSuppressed": true,
+      "explain": { "de": "Hinweis des Spiels zur Speicherplanung, keine Fehlfunktion.", "en": "Game hint about memory planning, not a malfunction." },
+      "fixes": [ "suppress" ]
+    }
+  ]
+}

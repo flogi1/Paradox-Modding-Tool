@@ -17,12 +17,29 @@ public static class ScopeName
 public sealed class ScopeDb
 {
     /// <summary>Trigger oder Effect. <see cref="AnyScope"/> heißt: keine Einschränkung bekannt oder ausdrücklich "none".</summary>
-    public sealed record Command(HashSet<string> Scopes, bool AnyScope, HashSet<string> Targets);
+    public sealed record Command(HashSet<string> Scopes, bool AnyScope, HashSet<string> Targets)
+    {
+        /// <summary>Ein Trigger, der einen Wert vergleicht (<c>Traits: &lt;, &lt;=, =, !=, &gt;, &gt;=</c>) und darum auch als Wert am Kettenende taugt.</summary>
+        public bool IsComparison { get; init; }
+
+        /// <summary>Die Beschreibung zeigt eine Form mit Argument (<c>opinion(&lt;target&gt;)</c>).</summary>
+        public bool TakesArgument { get; init; }
+    }
 
     public sealed record EventTarget(HashSet<string> Inputs, HashSet<string> Outputs)
     {
         /// <summary>Der Name braucht einen Schlüssel dahinter (<c>location:paris</c>): ein globaler Verweis, kein Ziel, das man allein hinschreibt.</summary>
         public bool RequiresData { get; set; }
+
+        /// <summary>Es gibt eine Form ohne Schlüssel (<c>culture</c>), benutzbar aus <see cref="PlainInputs"/> (leer: aus jedem Scope).</summary>
+        public bool PlainForm { get; set; }
+
+        public HashSet<string> PlainInputs { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>Es gibt eine Form mit Schlüssel (<c>culture:KEY</c>, <c>modifier:KEY</c>), benutzbar aus <see cref="DataInputs"/> (leer: globaler Verweis).</summary>
+        public bool DataForm { get; set; }
+
+        public HashSet<string> DataInputs { get; } = new(StringComparer.Ordinal);
     }
 
     private static readonly Regex IteratorName = new("^(any|every|random|ordered)_", RegexOptions.Compiled);
@@ -59,19 +76,28 @@ public sealed class ScopeDb
     private void AddCommand(ScriptDocEntry entry)
     {
         var scopes = entry.Scopes.Select(ScopeName.Normalize).ToHashSet();
-        var any = scopes.Count == 0 || scopes.Contains("none");
+        // Ältere Spiel-Builds schreiben "none", neuere "none/any"; die Datenbank kann beides enthalten.
+        var any = scopes.Count == 0 || scopes.Contains("none") || scopes.Contains("none/any");
         scopes.Remove("none");
+        scopes.Remove("none/any");
         var targets = entry.Targets.Select(ScopeName.Normalize).ToHashSet();
+        var comparison = entry.Kind == ScriptDocKind.Trigger && entry.Description.Contains("Traits: <, <=, =, !=, >, >=", StringComparison.Ordinal);
+        var argument = entry.Description.Contains(entry.Name + "(", StringComparison.Ordinal);
 
         if (_commands.TryGetValue(entry.Name, out var known))
         {
             known.Scopes.UnionWith(scopes);
             known.Targets.UnionWith(targets);
-            _commands[entry.Name] = known with { AnyScope = known.AnyScope || any };
+            _commands[entry.Name] = known with
+            {
+                AnyScope = known.AnyScope || any,
+                IsComparison = known.IsComparison || comparison,
+                TakesArgument = known.TakesArgument || argument,
+            };
         }
         else
         {
-            _commands[entry.Name] = new Command(scopes, any, targets);
+            _commands[entry.Name] = new Command(scopes, any, targets) { IsComparison = comparison, TakesArgument = argument };
         }
     }
 
@@ -80,17 +106,45 @@ public sealed class ScopeDb
         var inputs = entry.Scopes.Select(ScopeName.Normalize).ToHashSet();
         var outputs = entry.Targets.Select(ScopeName.Normalize).ToHashSet();
         var requiresData = entry.Extra.TryGetValue("Requires Data", out var flag) && flag.Equals("yes", StringComparison.OrdinalIgnoreCase);
-        if (_targets.TryGetValue(entry.Name, out var known))
+        if (!_targets.TryGetValue(entry.Name, out var target))
         {
-            known.Inputs.UnionWith(inputs);
-            known.Outputs.UnionWith(outputs);
-            known.RequiresData |= requiresData;
+            _targets[entry.Name] = target = new EventTarget(new HashSet<string>(), new HashSet<string>());
+        }
+
+        target.Inputs.UnionWith(inputs);
+        target.Outputs.UnionWith(outputs);
+        target.RequiresData |= requiresData;
+
+        // Neue Datenbanken nennen beide Formen getrennt (ScriptDocImporter.MergeDuplicates); ältere nur "Requires Data" für alles zusammen.
+        var knowsForms = entry.Extra.ContainsKey("Plain Inputs") || entry.Extra.ContainsKey("Data Inputs");
+        if (knowsForms)
+        {
+            if (entry.Extra.TryGetValue("Plain Inputs", out var plain))
+            {
+                target.PlainForm = true;
+                target.PlainInputs.UnionWith(SplitScopes(plain));
+            }
+
+            if (entry.Extra.TryGetValue("Data Inputs", out var data))
+            {
+                target.DataForm = true;
+                target.DataInputs.UnionWith(SplitScopes(data));
+            }
+        }
+        else if (requiresData)
+        {
+            target.DataForm = true;
+            target.DataInputs.UnionWith(inputs);
         }
         else
         {
-            _targets[entry.Name] = new EventTarget(inputs, outputs) { RequiresData = requiresData };
+            target.PlainForm = true;
+            target.PlainInputs.UnionWith(inputs);
         }
     }
+
+    private static IEnumerable<string> SplitScopes(string list) =>
+        list.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(ScopeName.Normalize);
 
     /// <summary>Alle Event-Targets mit ihren Ein- und Ausgabe-Scopes.</summary>
     public IEnumerable<KeyValuePair<string, EventTarget>> Targets => _targets;
@@ -119,6 +173,18 @@ public sealed class ScopeDb
 
         return _modifiers.TryGetValue(key, out var categories) && categories.Count > 0 ? categories : null;
     }
+
+    /// <summary>Ein Scope-Typ, den die Doku-Logs nennen (Scopes und Ziele der Trigger/Effects, Ein- und Ausgaben der Event-Targets); "none" zählt nicht.</summary>
+    public bool IsScopeType(string name)
+    {
+        _scopeTypes ??= _commands.Values.SelectMany(c => c.Scopes.Concat(c.Targets))
+            .Concat(_targets.Values.SelectMany(t => t.Inputs.Concat(t.Outputs)))
+            .Where(s => s != "none")
+            .ToHashSet(StringComparer.Ordinal);
+        return _scopeTypes.Contains(ScopeName.Normalize(name));
+    }
+
+    private HashSet<string>? _scopeTypes;
 
     /// <summary>Ein bekannter Trigger, Effect, Modifier oder Event-Target: ein Name, der kein strukturelles Feld einer Datei ist.</summary>
     public bool IsKnownName(string key) => _commands.ContainsKey(key) || _targets.ContainsKey(key) || _modifiers.ContainsKey(key);

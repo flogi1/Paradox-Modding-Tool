@@ -198,6 +198,17 @@ public class ScriptDocLogParserTests
     }
 
     [Fact]
+    public void NoneAnyScope_OfNewerGameBuilds_IsDroppedLikeNone()
+    {
+        // Neuere Spiel-Builds schreiben "none/any", wo ältere "none" schrieben.
+        var onActions = ScriptDocLogParser.Parse(ScriptDocKind.OnAction, OnActions.Replace("Expected Scope: none", "Expected Scope: none/any"));
+        var customLoc = ScriptDocLogParser.Parse(ScriptDocKind.CustomLocalization, CustomLoc.Replace("Scope: country", "Scope: none/any"));
+
+        Assert.Empty(onActions[0].Scopes);
+        Assert.Empty(customLoc[0].Scopes);
+    }
+
+    [Fact]
     public void EmptyOrUnknownText_GivesNoEntries()
     {
         foreach (var kind in Enum.GetValues<ScriptDocKind>())
@@ -205,6 +216,93 @@ public class ScriptDocLogParserTests
             Assert.Empty(ScriptDocLogParser.Parse(kind, string.Empty));
             Assert.Empty(ScriptDocLogParser.Parse(kind, "irgendein anderer Text\nohne bekanntes Format"));
         }
+    }
+
+    // Auszüge aus den echten Log-Dateien von Crusader Kings III (script_docs, 2026-09-30).
+
+    private const string Sep = "--------------------";
+
+    [Fact]
+    public void Classic_effect_with_target_and_multiline_description()
+    {
+        var text = "Effect Documentation:\n\n" + Sep + "\n\n" +
+            "cancel_great_project - Cancels a great project\n" +
+            "\tcancel_great_project = {\n" +
+            "\t\tcancel_great_project = this\n" +
+            "\t}\n" +
+            "Supported Scopes: none\n" +
+            "Supported Targets: great_project\n\n" + Sep + "\n";
+
+        var entry = Assert.Single(ScriptDocLogParser.Parse(ScriptDocKind.Effect, text));
+
+        Assert.Equal("cancel_great_project", entry.Name);
+        Assert.Contains("Cancels a great project", entry.Description);
+        Assert.Contains("cancel_great_project = this", entry.Description);
+        Assert.Equal(new[] { "none" }, entry.Scopes);
+        Assert.Equal(new[] { "great_project" }, entry.Targets);
+    }
+
+    [Fact]
+    public void Classic_trigger_log_skips_empty_first_entry()
+    {
+        var text = "Trigger Documentation:\n\n" + Sep + "\n\n\n\n" + Sep + "\n\n" +
+            "add_to_temporary_list - Saves a temporary target for use during the trigger execution\n" +
+            "This is used to build lists in triggers.\n" +
+            "Supported Scopes: none\n\n" + Sep + "\n";
+
+        var entry = Assert.Single(ScriptDocLogParser.Parse(ScriptDocKind.Trigger, text));
+
+        Assert.Equal("add_to_temporary_list", entry.Name);
+        Assert.Contains("This is used to build lists in triggers.", entry.Description);
+    }
+
+    [Fact]
+    public void Classic_name_splits_at_first_dash()
+    {
+        var text = "Effect Documentation:\n\n" + Sep + "\n\n" +
+            "make_story_owner -  = character_target  makes the character the new owner of the story\n" +
+            "Supported Scopes: story\n" +
+            "Supported Targets: character\n";
+
+        var entry = Assert.Single(ScriptDocLogParser.Parse(ScriptDocKind.Effect, text));
+
+        Assert.Equal("make_story_owner", entry.Name);
+        Assert.StartsWith("= character_target", entry.Description);
+        Assert.Equal(new[] { "story" }, entry.Scopes);
+    }
+
+    [Fact]
+    public void Classic_event_target()
+    {
+        var text = "Event Target Documentation:\n\n" + Sep + "\n\n" +
+            "array_define - Reference the value of a numeric value in an array define: array_define:Namespace|Name|Index. Index is 0-based.\n" +
+            "Requires Data: yes\n" +
+            "Global Link: yes\n" +
+            "Output Scopes: value\n\n" + Sep + "\n";
+
+        var entry = Assert.Single(ScriptDocLogParser.Parse(ScriptDocKind.EventTarget, text));
+
+        Assert.Equal("array_define", entry.Name);
+        Assert.Equal("yes", entry.Extra["Requires Data"]);
+        Assert.Equal("yes", entry.Extra["Global Link"]);
+        Assert.Equal(new[] { "value" }, entry.Targets);
+    }
+
+    [Fact]
+    public void Ck3_modifier_with_use_areas()
+    {
+        var text = "Printing Modifier Definitions:\n" +
+            "Tag: stationed_$MEN_AT_ARMS_TYPE$_pursuit_add\n" +
+            "Use areas: character, province, and county\n\n" +
+            "Tag: travel_speed\n" +
+            "Use areas: character and terrain\n\n";
+
+        var entries = ScriptDocLogParser.Parse(ScriptDocKind.Modifier, text);
+
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("stationed_$MEN_AT_ARMS_TYPE$_pursuit_add", entries[0].Name);
+        Assert.Equal(new[] { "character", "province", "county" }, entries[0].Scopes);
+        Assert.Equal(new[] { "character", "terrain" }, entries[1].Scopes);
     }
 
     [Fact]

@@ -3,6 +3,7 @@ using System.Windows.Media;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using ParadoxModTool.Editor;
+using ParadoxModTool.Editor.Gui;
 using ParadoxModTool.Settings;
 using ParadoxModTool.Theming;
 
@@ -30,6 +31,12 @@ public partial class MainWindow
         nameof(AppSettings.NotesPanelVisible),
         nameof(AppSettings.HiddenToolbarItems),
         nameof(AppSettings.IconColorsByTheme),
+        nameof(AppSettings.CompatchResultRight),
+        nameof(AppSettings.CompatchKindsSideBySide),
+        nameof(AppSettings.ExplorerButtonsOnLeft),
+        nameof(AppSettings.ExplorerShowErrorMarks),
+        nameof(AppSettings.ExplorerSearchFoldersOnly),
+        nameof(AppSettings.ExplorerHideUgcReferences),
     };
 
     /// <summary>Einmal im Konstruktor: jede Änderung am Modell wird sofort angewendet.</summary>
@@ -37,7 +44,38 @@ public partial class MainWindow
     {
         _settings.Changed += (_, name) => ApplySetting(name);
         _settings.Reloaded += (_, _) => ApplyAllSettings();
+        ExplorerPanelControl.OptionsChanged += (_, _) =>
+        {
+            if (_applyingExplorerOptions)
+            {
+                return;
+            }
+
+            _settings.ExplorerButtonsOnLeft = ExplorerPanelControl.ButtonsOnLeft;
+            _settings.ExplorerShowErrorMarks = ExplorerPanelControl.ShowErrorMarks;
+            _settings.ExplorerSearchFoldersOnly = ExplorerPanelControl.SearchFoldersOnly;
+        };
         ThemeManager.ThemeChanged += (_, _) => ApplyIconColors();
+    }
+
+    /// <summary>Während die Einstellungen in die Übersicht übertragen werden, schreibt die Übersicht nichts zurück (sonst überschrieben halb übernommene Werte die geladenen).</summary>
+    private bool _applyingExplorerOptions;
+
+    /// <summary>Schalter der Verzeichnis-Übersicht aus den Einstellungen (Einstellungsfenster und Werkzeugleiste der Übersicht sind dieselbe Einstellung).</summary>
+    private void ApplyExplorerOptions()
+    {
+        _applyingExplorerOptions = true;
+        try
+        {
+            ExplorerPanelControl.ButtonsOnLeft = _settings.ExplorerButtonsOnLeft;
+            ExplorerPanelControl.ShowErrorMarks = _settings.ExplorerShowErrorMarks;
+            ExplorerPanelControl.SearchFoldersOnly = _settings.ExplorerSearchFoldersOnly;
+            ExplorerPanelControl.HideUgcReferences = _settings.ExplorerHideUgcReferences;
+        }
+        finally
+        {
+            _applyingExplorerOptions = false;
+        }
     }
 
     /// <summary>Die beim Start bekannten Themes (für die einmalige Übernahme der alten Notiz-Farbe).</summary>
@@ -100,6 +138,18 @@ public partial class MainWindow
             case nameof(AppSettings.HiddenToolbarItems):
                 ApplyToolbarVisibility();
                 break;
+            case nameof(AppSettings.ExplorerButtonsOnLeft):
+            case nameof(AppSettings.ExplorerShowErrorMarks):
+            case nameof(AppSettings.ExplorerSearchFoldersOnly):
+            case nameof(AppSettings.ExplorerHideUgcReferences):
+                ApplyExplorerOptions();
+                break;
+            case nameof(AppSettings.CompatchResultRight):
+                CompatchWindow.ResultRight = _settings.CompatchResultRight;
+                break;
+            case nameof(AppSettings.CompatchKindsSideBySide):
+                CompatchWindow.KindsSideBySide = _settings.CompatchKindsSideBySide;
+                break;
             case nameof(AppSettings.IconColorsByTheme):
                 ApplyIconColors();
                 break;
@@ -115,6 +165,7 @@ public partial class MainWindow
         [ToolbarItemIds.GoToLine] = ToolbarGoToLineButton,
         [ToolbarItemIds.GoToBracket] = ToolbarGoToBracketButton,
         [ToolbarItemIds.ScopeFinder] = ToolbarScopeFinderButton,
+        [ToolbarItemIds.GuiDataHelper] = ToolbarGuiDataHelperButton,
         [ToolbarItemIds.Templates] = ToolbarTemplatesButton,
         [ToolbarItemIds.Notes] = ToolbarNotesButton,
         [ToolbarItemIds.Bookmark] = ToolbarBookmarkButton,
@@ -126,6 +177,7 @@ public partial class MainWindow
         [ToolbarItemIds.NotesPanel] = NotesPanelToggle,
         [ToolbarItemIds.AutoComplete] = ScriptAutoCompleteToggle,
         [ToolbarItemIds.Hover] = ScriptHoverToggle,
+        [ToolbarItemIds.ModifierReload] = ToolbarModifierReloadButton,
         [ToolbarItemIds.LaunchOption] = LaunchOptionsCombo,
         [ToolbarItemIds.Playset] = PlaysetsCombo,
         [ToolbarItemIds.LaunchGame] = LaunchGameButton,
@@ -139,7 +191,9 @@ public partial class MainWindow
     {
         foreach (var (id, element) in ToolbarElements())
         {
-            element.Visibility = _settings.IsToolbarItemVisible(id) ? Visibility.Visible : Visibility.Collapsed;
+            // Der GUI-Daten-Helfer gehört zu den GUI-Werkzeugen: bei ausgeschalteten GUI-Werkzeugen ist er nie zu sehen.
+            var offered = id != ToolbarItemIds.GuiDataHelper || GuiSettings.ToolsEnabled;
+            element.Visibility = offered && _settings.IsToolbarItemVisible(id) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         var separators = ToolbarSeparators.VisibleBefore(_settings.IsToolbarItemVisible);

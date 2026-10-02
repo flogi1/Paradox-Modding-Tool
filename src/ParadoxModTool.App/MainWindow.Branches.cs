@@ -19,7 +19,7 @@ public partial class MainWindow
         ExplorerPanelControl.LockMarkProvider = ProvideLockMark;
         ExplorerPanelControl.LockCountBelowProvider = LockCountBelow;
         ExplorerPanelControl.UnlockBelowRequested += (_, folder) => RunUnlockBelow(folder);
-        ExplorerPanelControl.SearchInFolderRequested += (_, folder) => OpenSearchReplaceWindow(folder);
+        ExplorerPanelControl.SearchInPathRequested += (_, path) => OpenSearchReplaceWindow(path);
         TabLockProvider.Provider = TabLockTooltip;
         ProjectMenuItem.SubmenuOpened += (_, e) =>
         {
@@ -147,11 +147,10 @@ public partial class MainWindow
             return;
         }
 
-        var where = relative.Length == 0 ? $"in der Mod \"{mod.Name}\"" : $"im Ordner \"{relative}\" und allen Unterordnern";
         var answer = MessageBox.Show(
             this,
-            $"{count} Sperre(n) {where} aufheben?\n\nDanach können Übertragen und Abgleich diese Dateien wieder überschreiben, verschieben und kopieren.",
-            "Sperren aufheben",
+            relative.Length == 0 ? MainTexts.UnlockConfirmMod(count, mod.Name) : MainTexts.UnlockConfirmFolder(count, relative),
+            MainTexts.UnlockTitle,
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
             MessageBoxResult.No);
@@ -161,7 +160,7 @@ public partial class MainWindow
         }
 
         var removed = registry.ClearPathLocksUnder(mod.Id, relative);
-        ModStatusText.Text = $"{removed} Sperre(n) aufgehoben.";
+        ModStatusText.Text = MainTexts.UnlockDone(removed);
         RefreshLockDisplays();
     }
 
@@ -190,7 +189,7 @@ public partial class MainWindow
         }
         catch (InvalidOperationException ex)
         {
-            MessageBox.Show(this, ex.Message, "Projekt", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ex.Message, MainTexts.ProjectCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -225,7 +224,7 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, ex.Message, "Projekt", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ex.Message, MainTexts.ProjectCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         ExplorerPanelControl.RefreshAll();
@@ -238,7 +237,7 @@ public partial class MainWindow
         var toFolder = BranchTransfer.WorkingFolder(to);
         if (fromFolder is null || toFolder is null)
         {
-            MessageBox.Show(this, $"Der Ordner der Mod \"{(fromFolder is null ? from.Name : to.Name)}\" wurde nicht gefunden.", "Projekt", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, MainTexts.ModFolderMissing(fromFolder is null ? from.Name : to.Name), MainTexts.ProjectCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -247,7 +246,7 @@ public partial class MainWindow
         var missing = !File.Exists(left) ? from : !File.Exists(right) ? to : null;
         if (missing is not null)
         {
-            MessageBox.Show(this, $"Die Datei {relativePath} gibt es in \"{missing.Name}\" nicht.", "Projekt", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, MainTexts.CompareFileMissing(relativePath, missing.Name), MainTexts.ProjectCaption, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -265,7 +264,7 @@ public partial class MainWindow
 
         if (!ModProjects.IsProject(registry, mod))
         {
-            MessageBox.Show(this, $"Die Mod \"{mod.Name}\" gehört zu keinem Projekt. Ordne sie im Fenster \"Mods\" einem Projekt zu.", "Abgleich", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, MainTexts.SyncNoProject(mod.Name), MainTexts.SyncTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -280,7 +279,7 @@ public partial class MainWindow
         }
         else
         {
-            MessageBox.Show(this, "Es ist keine Mod aktiv. Öffne eine Datei einer Mod oder starte den Abgleich im Fenster \"Mods\".", "Abgleich", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, MainTexts.SyncNoActiveMod, MainTexts.SyncTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

@@ -129,7 +129,7 @@ public partial class ModsWindow : Window
         CompatButton.IsEnabled = hasMod;
         LockButton.IsEnabled = hasMod;
         SyncButton.IsEnabled = SelectedMod is { } selected && ModProjects.IsProject(_registry, selected);
-        LockButton.Content = SelectedMod?.IsLocked == true ? "Entsperren" : "Sperren";
+        LockButton.Content = SelectedMod?.IsLocked == true ? ModsTexts.Unlock : ModsTexts.Lock;
         AddPathButton.IsEnabled = hasMod;
         RelinkButton.IsEnabled = hasMod && hasPath;
         RemovePathButton.IsEnabled = hasMod && hasPath;
@@ -163,21 +163,22 @@ public partial class ModsWindow : Window
         {
             Description = description,
             UseDescriptionForTitle = true,
-            InitialDirectory = initial is not null && Directory.Exists(initial) ? initial : string.Empty,
+            InitialDirectory = initial is not null && Directory.Exists(initial) ? ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(initial) : string.Empty,
         };
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("mods.folder");
         return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
     }
 
     private void AddMod_Click(object sender, RoutedEventArgs e)
     {
-        var folder = PickFolder("Mod-Ordner wählen", null);
+        var folder = PickFolder(ModsTexts.PickModFolder, null);
         if (folder is null)
         {
             return;
         }
 
-        var name = TextPromptWindow.Ask(this, "Mod hinzufügen", "Name der Mod:", ModRegistry.SuggestName(folder, _metadataFile));
+        var name = TextPromptWindow.Ask(this, ModsTexts.AddModTitle, ModsTexts.ModNamePrompt, ModRegistry.SuggestName(folder, _metadataFile));
         if (string.IsNullOrWhiteSpace(name))
         {
             return;
@@ -197,7 +198,7 @@ public partial class ModsWindow : Window
             return;
         }
 
-        var name = TextPromptWindow.Ask(this, "Mod umbenennen", "Neuer Name:", mod.Name);
+        var name = TextPromptWindow.Ask(this, ModsTexts.RenameModTitle, ModsTexts.NewNamePrompt, mod.Name);
         if (!string.IsNullOrWhiteSpace(name))
         {
             Apply(() => _registry.Rename(mod.Id, name), mod.Id);
@@ -266,7 +267,7 @@ public partial class ModsWindow : Window
             return;
         }
 
-        if (MessageBox.Show(this, $"Die Mod \"{mod.Name}\" aus der Verwaltung entfernen?\nDie Dateien der Mod bleiben unberührt.", "Mods", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (MessageBox.Show(this, ModsTexts.RemoveConfirm(mod.Name), "Mods", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -274,7 +275,7 @@ public partial class ModsWindow : Window
         var dataDirectory = _registry.DataDirectory(mod.Id);
         var files = Directory.Exists(dataDirectory) ? Directory.EnumerateFiles(dataDirectory, "*", SearchOption.AllDirectories).Count() : 0;
         var deleteData = files > 0
-            && MessageBox.Show(this, $"Zu dieser Mod gehören {files} gespeicherte Datei(en) (z. B. Vorlagen).\nAuch löschen? Bei \"Nein\" bleiben sie im Programmordner liegen.", "Mods", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            && MessageBox.Show(this, ModsTexts.DeleteDataConfirm(files), "Mods", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
 
         if (Apply(() =>
             {
@@ -288,7 +289,7 @@ public partial class ModsWindow : Window
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(this, "Die gespeicherten Dateien konnten nicht gelöscht werden:\n" + ex.Message, "Mods", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, ModsTexts.DeleteDataFailed(ex.Message), "Mods", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }
@@ -300,7 +301,7 @@ public partial class ModsWindow : Window
             return;
         }
 
-        if (PickFolder("Weiteren Ordner der Mod wählen", mod.Paths.FirstOrDefault()) is { } folder)
+        if (PickFolder(ModsTexts.PickAnotherFolder, mod.Paths.FirstOrDefault()) is { } folder)
         {
             Apply(() => _registry.AddPath(mod.Id, folder), mod.Id);
         }
@@ -313,7 +314,7 @@ public partial class ModsWindow : Window
             return;
         }
 
-        if (PickFolder("Neuen Ordner für diese Mod wählen", Path.GetDirectoryName(oldPath)) is { } folder)
+        if (PickFolder(ModsTexts.PickNewFolder, Path.GetDirectoryName(oldPath)) is { } folder)
         {
             Apply(() => _registry.Relink(mod.Id, oldPath, folder), mod.Id);
         }
@@ -378,7 +379,7 @@ public partial class ModsWindow : Window
                     text += "  🔒";
                 }
 
-                return Mod.Paths.Any(p => !Directory.Exists(p)) ? text + "  — Pfad fehlt" : text;
+                return Mod.Paths.Any(p => !Directory.Exists(p)) ? ModsTexts.PathMissing(text) : text;
             }
         }
     }
@@ -392,6 +393,6 @@ public partial class ModsWindow : Window
 
         public string Folder { get; }
 
-        public string Display => Directory.Exists(Folder) ? Folder : Folder + "  — Pfad fehlt";
+        public string Display => Directory.Exists(Folder) ? Folder : ModsTexts.PathMissing(Folder);
     }
 }

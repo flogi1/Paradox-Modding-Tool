@@ -44,8 +44,11 @@ public sealed class MenuTextsTests
     public void MenuNamesFollowTheSpec()
     {
         Assert.Equal("Mod-Projekt", MenuTexts.Project);
-        Assert.Equal("C-U-Tool", MenuTexts.CuTool);
-        Assert.StartsWith("Compare-Update-Tool", MenuTexts.CuToolTip);
+        Assert.Equal("Meine Mods", MenuTexts.MyMods);
+        Assert.Equal("Compare und Update Tool", MenuTexts.CuTool);
+        Assert.StartsWith("Compare und Update Tool: zwei Dateien oder Ordner vergleichen", MenuTexts.CuToolTip);
+        Assert.Equal("Patch-Rezepte", MenuTexts.PatchRecipes);
+        Assert.StartsWith("Patch-Rezepte: ", MenuTexts.PatchRecipesTip);
         Assert.Equal("Mod-Kompatibilität prüfen", MenuTexts.ModCompat);
         Assert.Equal("Komp-Patch Tool", MenuTexts.Compatch);
         Assert.Equal("Template Generator", MenuTexts.Templates);

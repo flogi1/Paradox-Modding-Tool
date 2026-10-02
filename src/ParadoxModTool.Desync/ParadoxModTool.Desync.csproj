@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Desync</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.ErrorLog\ParadoxModTool.ErrorLog.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ModCompat\ParadoxModTool.ModCompat.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Notes\ParadoxModTool.Notes.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.VanillaDiff\ParadoxModTool.VanillaDiff.csproj" />
+  </ItemGroup>
+
+</Project>

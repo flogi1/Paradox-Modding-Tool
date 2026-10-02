@@ -16,6 +16,18 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
     /// <summary>Dateiname des Vorschaubilds (<c>picture</c>, relativ zum Ordner der Metadaten-Datei), leer wenn nicht vorhanden.</summary>
     public string Picture { get; init; } = string.Empty;
 
+    /// <summary>Ordner, deren Vanilla-Dateien die Mod nicht laden lässt (<c>replace_path</c>), in der Form von <see cref="global::ParadoxModTool.Mods.ReplacePaths.Normalize"/>.</summary>
+    public IReadOnlyList<string> ReplacePaths { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Workshop-ID aus der klassischen Metadaten-Datei (<c>remote_file_id</c>, vom Launcher beim Hochladen eingetragen), leer wenn nicht vorhanden.
+    /// Das Launcher-v2-Format kennt kein solches Feld.
+    /// </summary>
+    public string RemoteFileId { get; init; } = string.Empty;
+
+    /// <summary>Abhängigkeiten der Mod (<c>dependencies</c> bzw. <c>relationships</c> mit <c>rel_type</c> <c>dependency</c>), leer wenn keine.</summary>
+    public IReadOnlyList<ModDependency> Dependencies { get; init; } = Array.Empty<ModDependency>();
+
     /// <summary>
     /// Sentinel-Wert für <c>GameProfile.MetadataFile</c>: statt einer JSON-Datei im Mod-Ordner (Launcher-v2-Format)
     /// wird die klassische Paradox-Mod-Metadatendatei gelesen — eine Geschwisterdatei <c>&lt;Ordnername&gt;.mod</c>
@@ -30,6 +42,16 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
     /// weil Steam beim Hochladen genau diese Datei im Inhalt selbst verlangt. Siehe <see cref="ReadClassicFile"/>.
     /// </summary>
     public const string ClassicWorkshopDescriptorFile = "descriptor.mod";
+
+    /// <summary>
+    /// Gehört die Datei zur Beschreibung der Mod und nicht zum Spielinhalt? Das sind alle Dateien direkt im Mod-Ordner (<c>descriptor.mod</c>,
+    /// <c>thumbnail.png</c> …) und alles unter <c>.metadata/</c>. Das Spiel lädt sie nicht als Inhalt; zwei Mods geraten darüber nie in Konflikt.
+    /// </summary>
+    public static bool IsDescriptionFile(string relativePath)
+    {
+        var path = relativePath.Replace('\\', '/').TrimStart('/');
+        return !path.Contains('/') || path.StartsWith(".metadata/", StringComparison.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Liest die Metadaten-Datei (Pfad relativ zum Mod-Ordner, aus dem Spielprofil; siehe auch
@@ -73,6 +95,8 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
                 Id = Field(document.RootElement, "id"),
                 ShortDescription = Field(document.RootElement, "short_description"),
                 Picture = Field(document.RootElement, "picture"),
+                ReplacePaths = JsonReplacePaths(document.RootElement),
+                Dependencies = JsonDependencies(document.RootElement),
             };
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
@@ -96,7 +120,9 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
             return null;
         }
 
-        return ReadClassicFileAt(Path.Combine(parent, name + ".mod"), folder);
+        // Passt keine Geschwisterdatei zum Ordnernamen (z. B. "AGOT Flogis Buildings Mod.mod" neben "AGOT Flogis Buildings"), gilt die descriptor.mod im Ordner.
+        return ReadClassicFileAt(Path.Combine(parent, name + ".mod"), folder)
+            ?? ReadClassicFileAt(Path.Combine(folder, ClassicWorkshopDescriptorFile), folder);
     }
 
     /// <summary>
@@ -134,6 +160,12 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
                 folder)
             {
                 Picture = ClassicField(content, "picture"),
+                ReplacePaths = Regex.Matches(content, @"^[ \t]*replace_path[ \t]*=[ \t]*""([^""]*)""", RegexOptions.IgnoreCase | RegexOptions.Multiline)
+                    .Select(m => global::ParadoxModTool.Mods.ReplacePaths.Normalize(m.Groups[1].Value))
+                    .Where(p => p.Length > 0)
+                    .ToList(),
+                Dependencies = ClassicDependencies(content),
+                RemoteFileId = ClassicField(content, "remote_file_id"),
             };
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
@@ -150,6 +182,73 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
             $@"^[ \t]*{Regex.Escape(key)}[ \t]*=[ \t]*""([^""]*)""",
             RegexOptions.IgnoreCase | RegexOptions.Multiline);
         return match.Success ? match.Groups[1].Value.Trim() : string.Empty;
+    }
+
+    /// <summary>
+    /// Die Namen im Block <c>dependencies = { "A" "B" }</c> (klassisches Format). Kommentare (<c>#</c> bis Zeilenende) zählen nicht, der Block darf
+    /// über mehrere Zeilen gehen.
+    /// </summary>
+    private static IReadOnlyList<ModDependency> ClassicDependencies(string content)
+    {
+        var withoutComments = string.Join("\n", content.Split('\n').Select(line => line.IndexOf('#') is var hash and >= 0 ? line[..hash] : line));
+        var start = Regex.Match(withoutComments, @"^[ \t]*dependencies[ \t]*=[ \t]*\{", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        if (!start.Success)
+        {
+            return Array.Empty<ModDependency>();
+        }
+
+        var end = withoutComments.IndexOf('}', start.Index + start.Length);
+        var block = end < 0 ? withoutComments[(start.Index + start.Length)..] : withoutComments[(start.Index + start.Length)..end];
+        return Regex.Matches(block, "\"([^\"]*)\"")
+            .Select(m => m.Groups[1].Value.Trim())
+            .Where(name => name.Length > 0)
+            .Select(name => new ModDependency(null, name))
+            .ToList();
+    }
+
+    /// <summary>Die <c>relationships</c>-Einträge mit <c>rel_type</c> <c>dependency</c> (Launcher-v2-Format); leer, wenn es keine gibt.</summary>
+    private static IReadOnlyList<ModDependency> JsonDependencies(JsonElement root)
+    {
+        if (!root.TryGetProperty("relationships", out var relationships) || relationships.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<ModDependency>();
+        }
+
+        var result = new List<ModDependency>();
+        foreach (var entry in relationships.EnumerateArray())
+        {
+            if (entry.ValueKind != JsonValueKind.Object || !string.Equals(Field(entry, "rel_type"), "dependency", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var id = Field(entry, "id");
+            var display = Field(entry, "display_name");
+            if (id.Length == 0 && display.Length == 0)
+            {
+                continue;
+            }
+
+            result.Add(new ModDependency(id.Length > 0 ? id : null, display.Length > 0 ? display : id));
+        }
+
+        return result;
+    }
+
+    /// <summary><c>game_custom_data.replace_paths</c> (Launcher-v2-Format); leer, wenn es fehlt oder keine Liste von Texten ist.</summary>
+    private static IReadOnlyList<string> JsonReplacePaths(JsonElement root)
+    {
+        if (!root.TryGetProperty("game_custom_data", out var custom) || custom.ValueKind != JsonValueKind.Object
+            || !custom.TryGetProperty("replace_paths", out var paths) || paths.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<string>();
+        }
+
+        return paths.EnumerateArray()
+            .Where(p => p.ValueKind == JsonValueKind.String)
+            .Select(p => global::ParadoxModTool.Mods.ReplacePaths.Normalize(p.GetString() ?? string.Empty))
+            .Where(p => p.Length > 0)
+            .ToList();
     }
 
     private static string Field(JsonElement root, string name)

@@ -13,6 +13,7 @@ public enum GameEditorOutcome
     SettingsMissing,
     UnknownFormat,
     WriteFailed,
+    Locked,
 }
 
 /// <summary>Ergebnis; <c>Detail</c>: Pfad (SettingsMissing, UnknownFormat), alter Editor (Restored), aktueller Editor (EditorChangedSince) oder Fehlertext.</summary>
@@ -47,6 +48,10 @@ public static class GameEditorRegistration
                 ? PdxSettingsText.ReadEditor(ReadText(settingsPath, out _))
                 : new PdxEditorRead(PdxSettingsProblem.Missing, null);
         }
+        catch (IOException ex) when (IsLocked(ex))
+        {
+            return new PdxEditorRead(PdxSettingsProblem.Locked, null);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return new PdxEditorRead(PdxSettingsProblem.UnknownFormat, null);
@@ -76,17 +81,29 @@ public static class GameEditorRegistration
 
             // Steht noch der früher eingetragene PMT-Pfad drin (z.B. PMT verschoben), bleibt der erste alte Wert; sonst gilt der jetzige.
             var state = ReadState(stateDirectory);
-            if (state is null || !SamePath(current.Editor, state.RegisteredPath))
+            var fresh = state is null || !SamePath(current.Editor, state.RegisteredPath);
+            if (fresh)
             {
                 state = new GameEditorState { HadEditor = current.Editor is not null, PreviousEditor = current.Editor };
             }
 
-            state.RegisteredPath = pmtPath;
+            state!.RegisteredPath = pmtPath;
             Directory.CreateDirectory(stateDirectory);
-            File.Copy(settingsPath, Path.Combine(stateDirectory, BackupFileName), overwrite: true);
+
+            // Die Sicherung gehört zum ersten alten Stand: beim erneuten Eintragen nach dem Verschieben stünde schon der alte PMT-Pfad darin.
+            var backup = Path.Combine(stateDirectory, BackupFileName);
+            if (fresh || !File.Exists(backup))
+            {
+                File.Copy(settingsPath, backup, overwrite: true);
+            }
+
             File.WriteAllText(Path.Combine(stateDirectory, StateFileName), JsonSerializer.Serialize(state));
             WriteText(settingsPath, updated, bom);
             return new GameEditorResult(GameEditorOutcome.Registered);
+        }
+        catch (IOException ex) when (IsLocked(ex))
+        {
+            return new GameEditorResult(GameEditorOutcome.Locked, settingsPath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -125,11 +142,18 @@ public static class GameEditorRegistration
             File.Delete(Path.Combine(stateDirectory, StateFileName));
             return new GameEditorResult(GameEditorOutcome.Restored, previous);
         }
+        catch (IOException ex) when (IsLocked(ex))
+        {
+            return new GameEditorResult(GameEditorOutcome.Locked, settingsPath);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return new GameEditorResult(GameEditorOutcome.WriteFailed, ex.Message);
         }
     }
+
+    /// <summary>Freigabe- oder Sperrverletzung (Win32 32/33): ein anderes Programm (Spiel, Launcher) hält die Datei gerade offen.</summary>
+    private static bool IsLocked(IOException ex) => (ex.HResult & 0xFFFF) is 32 or 33;
 
     public static bool SamePath(string? a, string? b)
     {

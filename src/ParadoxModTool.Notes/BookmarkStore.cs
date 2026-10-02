@@ -38,7 +38,7 @@ public sealed class BookmarkEntry
     public int LastLine => Math.Max(Line, EndLine ?? Line);
 
     /// <summary>Lesbare Zeilenangabe: "Zeile 5" bzw. "Zeilen 5–9".</summary>
-    public string LineText => LastLine > Line ? $"Zeilen {Line}–{LastLine}" : $"Zeile {Line}";
+    public string LineText => BugTexts.LineText(Line, LastLine);
 }
 
 /// <summary>

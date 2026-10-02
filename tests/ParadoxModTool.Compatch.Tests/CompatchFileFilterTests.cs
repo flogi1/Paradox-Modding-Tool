@@ -48,4 +48,20 @@ public class CompatchFileFilterTests
         var filter = new CompatchFileFilter(CompatchFileFilter.DefaultHiddenExtensions, new[] { string.Empty }, skipLocked: true);
         Assert.Equal(SkipReason.Locked, filter.Check("in_game/common/a.txt")!.Reason);
     }
+
+    [Theory]
+    [InlineData("gfx/interface/icons/a.DDS", "Grafik")]
+    [InlineData("sound/x.bank", "Audio")]
+    [InlineData("gfx/models/x.mesh", "Modelle")]
+    [InlineData("common/x.txt", null)]
+    public void KindOf_names_the_file_kind(string path, string? kind) =>
+        Assert.Equal(kind, CompatchFileFilter.KindOf(path));
+
+    [Fact]
+    public void IsHiddenKind_checks_the_chosen_kinds()
+    {
+        Assert.True(CompatchFileFilter.IsHiddenKind("gfx/a.png", new[] { "Grafik" }));
+        Assert.False(CompatchFileFilter.IsHiddenKind("gfx/a.png", new[] { "Audio" }));
+        Assert.False(CompatchFileFilter.IsHiddenKind("common/a.txt", new[] { "Grafik", "Audio", "Modelle", "Schriften" }));
+    }
 }

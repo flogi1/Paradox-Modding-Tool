@@ -11,17 +11,33 @@ public static class ScriptDocImporter
     /// Fasst Einträge mit gleichem Namen zu einem zusammen (die Logs führen z. B. manche Event-Targets zweimal auf, einmal als globalen Verweis und
     /// einmal mit Eingabe-Scope): Scopes und Ziele werden vereinigt, bei Beschreibung und Angaben gilt der erste Eintrag.
     /// </summary>
+    /// <remarks>
+    /// Bei Event-Targets bleiben beide Formen erkennbar: <c>Plain Inputs</c> nennt die Eingabe-Scopes der Einträge ohne <c>Requires Data: yes</c>
+    /// (<c>culture</c> aus einem Land), <c>Data Inputs</c> die der Einträge mit (<c>culture:KEY</c>, <c>modifier:KEY</c>). Fehlt ein Schlüssel, gibt es die
+    /// Form nicht. Die vereinigten <see cref="ScriptDocEntry.Scopes"/> bleiben für die Scope-Verfolgung.
+    /// </remarks>
     public static IReadOnlyList<ScriptDocEntry> MergeDuplicates(IEnumerable<ScriptDocEntry> entries)
     {
         var result = new List<ScriptDocEntry>();
         var byName = new Dictionary<(ScriptDocKind, string), ScriptDocEntry>();
+        var forms = new Dictionary<ScriptDocEntry, (List<string>? Plain, List<string>? Data)>();
         foreach (var entry in entries)
         {
             if (!byName.TryGetValue((entry.Kind, entry.Name), out var first))
             {
                 byName[(entry.Kind, entry.Name)] = entry;
                 result.Add(entry);
+                if (entry.Kind == ScriptDocKind.EventTarget)
+                {
+                    forms[entry] = AddForm((null, null), entry);
+                }
+
                 continue;
+            }
+
+            if (entry.Kind == ScriptDocKind.EventTarget)
+            {
+                forms[first] = AddForm(forms[first], entry);
             }
 
             foreach (var scope in entry.Scopes.Where(x => !first.Scopes.Contains(x)))
@@ -45,7 +61,32 @@ public static class ScriptDocImporter
             }
         }
 
+        foreach (var (entry, (plain, data)) in forms)
+        {
+            if (plain is not null)
+            {
+                entry.Extra["Plain Inputs"] = string.Join(", ", plain);
+            }
+
+            if (data is not null)
+            {
+                entry.Extra["Data Inputs"] = string.Join(", ", data);
+            }
+        }
+
         return result;
+    }
+
+    private static (List<string>? Plain, List<string>? Data) AddForm((List<string>? Plain, List<string>? Data) forms, ScriptDocEntry entry)
+    {
+        var requiresData = entry.Extra.TryGetValue("Requires Data", out var flag) && flag.Equals("yes", StringComparison.OrdinalIgnoreCase);
+        var list = (requiresData ? forms.Data : forms.Plain) ?? new List<string>();
+        foreach (var scope in entry.Scopes.Where(s => !list.Contains(s)))
+        {
+            list.Add(scope);
+        }
+
+        return requiresData ? (forms.Plain, list) : (list, forms.Data);
     }
 
     /// <summary>Schreibzeit (UTC-Ticks) jeder vorhandenen Log-Datei; fehlende Dateien fehlen im Ergebnis.</summary>

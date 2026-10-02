@@ -16,20 +16,38 @@ public sealed class DesiredState
     public IReadOnlyList<MergeAction> OpenConflicts { get; init; } = Array.Empty<MergeAction>();
 }
 
-public sealed record ApplyResult(IReadOnlyDictionary<EntryAddress, DesiredState> Desired, IReadOnlyList<string> Errors);
+/// <summary><see cref="ErrorsByAddress"/>: dieselben Fehler je Adresse, damit eine Teil-Neuberechnung die übrigen übernehmen kann.</summary>
+public sealed record ApplyResult(IReadOnlyDictionary<EntryAddress, DesiredState> Desired, IReadOnlyList<string> Errors, IReadOnlyDictionary<EntryAddress, IReadOnlyList<string>>? ErrorsByAddress = null);
 
 /// <summary>Wendet Entscheidungen an (fehlende = Vorauswahl). Adressen ohne Aktion fehlen im Ergebnis, dort sind A und B gleich.</summary>
 public static class DecisionApplier
 {
-    public static ApplyResult Apply(ResolvedEntries resolved, IReadOnlyList<MergeAction> actions, IReadOnlyDictionary<string, MergeDecision>? decisions, CompatchInput input, IReadOnlyDictionary<EntryAddress, IReadOnlyList<ScriptEntry>>? overrides = null)
+    /// <param name="previous">Mit <paramref name="only"/>: Ergebnis der letzten Anwendung; Adressen außerhalb von <paramref name="only"/> werden daraus übernommen statt neu zusammengeführt.</param>
+    /// <param name="only">Adressen, deren Entscheidungen, Stufen oder Vorgaben sich geändert haben; <see langword="null"/> = alle neu.</param>
+    public static ApplyResult Apply(ResolvedEntries resolved, IReadOnlyList<MergeAction> actions, IReadOnlyDictionary<string, MergeDecision>? decisions, CompatchInput input, IReadOnlyDictionary<EntryAddress, IReadOnlyList<ScriptEntry>>? overrides = null, ApplyResult? previous = null, IReadOnlySet<EntryAddress>? only = null)
     {
         decisions ??= new Dictionary<string, MergeDecision>();
         var byId = actions.ToDictionary(a => a.Id, StringComparer.Ordinal);
         var desired = new Dictionary<EntryAddress, DesiredState>();
-        var errors = new List<string>();
+        var errorsByAddress = new Dictionary<EntryAddress, IReadOnlyList<string>>();
+        var order = new List<EntryAddress>();
 
         foreach (var group in actions.GroupBy(a => a.Address))
         {
+            order.Add(group.Key);
+            if (previous is not null && only is not null && !only.Contains(group.Key) && previous.Desired.TryGetValue(group.Key, out var kept))
+            {
+                desired[group.Key] = kept;
+                if (previous.ErrorsByAddress?.TryGetValue(group.Key, out var keptErrors) == true)
+                {
+                    errorsByAddress[group.Key] = keptErrors;
+                }
+
+                continue;
+            }
+
+            var errors = new List<string>();
+            errorsByAddress[group.Key] = errors;
             var info = resolved.Addresses[group.Key];
             var open = group.Where(a => (a.Stage == MergeStage.Conflict && !decisions.ContainsKey(a.Id)) || a.Stage == MergeStage.Outdated).ToList();
             if (group.Key.Kind == AddressKind.WholeFile)
@@ -79,6 +97,6 @@ public static class DecisionApplier
             desired[group.Key] = new DesiredState { Address = group.Key, Entries = entries, OpenConflicts = open };
         }
 
-        return new ApplyResult(desired, errors);
+        return new ApplyResult(desired, order.SelectMany(a => errorsByAddress.TryGetValue(a, out var list) ? list : Array.Empty<string>()).ToList(), errorsByAddress);
     }
 }

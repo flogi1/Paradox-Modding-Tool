@@ -21,7 +21,7 @@ public static class SteamCmdInstaller
     public static string Install(Stream zip, string folder)
     {
         var target = Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var parent = Path.GetDirectoryName(target) ?? throw new ArgumentException("Der Zielordner hat keinen Elternordner.", nameof(folder));
+        var parent = Path.GetDirectoryName(target) ?? throw new ArgumentException(SteamTexts.InstallNoParent, nameof(folder));
         Directory.CreateDirectory(parent);
         var temp = Path.Combine(parent, Path.GetFileName(target) + ".partial-" + Guid.NewGuid().ToString("N")[..8]);
 
@@ -34,12 +34,12 @@ public static class SteamCmdInstaller
             }
             catch (InvalidDataException)
             {
-                throw new InvalidDataException("Die heruntergeladene Datei ist kein gültiges ZIP-Archiv.");
+                throw new InvalidDataException(SteamTexts.InstallNotZip);
             }
 
             if (!File.Exists(Path.Combine(temp, ExecutableName)))
             {
-                throw new InvalidDataException("Das Archiv enthält keine steamcmd.exe.");
+                throw new InvalidDataException(SteamTexts.InstallNoExe);
             }
 
             foreach (var file in Directory.EnumerateFiles(temp, "*", SearchOption.AllDirectories))

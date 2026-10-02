@@ -66,12 +66,14 @@ public static class ThemeTokens
         new("DiffMod", GroupDiff, "Mod-Seite (Rahmen, Pfad)", "#F59E0B", "#FBB040"),
         new("DiffViewport", GroupDiff, "Sichtbereich in der Übersichtsleiste", "#463C78C8", "#556FA8E0"),
         new("OverviewTrack", GroupDiff, "Spur der Übersichtsleiste", "#28808080", "#40808080"),
+        new("DiffMark", GroupDiff, "Markierte Zeilen (Compare und Update Tool)", "#80A9CBF2", "#8034588F"),
 
         new("CompatchA", GroupCompatch, "Herkunft Mod A", "#1FA3A3", "#3CC8C8"),
         new("CompatchB", GroupCompatch, "Herkunft Mod B", "#E07B1A", "#FFA24D"),
         new("CompatchReview", GroupCompatch, "Prüfen", "#D4B02A", "#D9B84A"),
         new("CompatchConflict", GroupCompatch, "Konflikt", "#D94C4C", "#E05C5C"),
         new("CompatchVanilla", GroupCompatch, "Vanilla und Lücken", "#9E9E9E", "#6E6E6E"),
+        new("CompatchSeen", GroupCompatch, "Gesehen (Auge in der Liste)", "#29A8E0", "#7DD3FC"),
     ];
 
     public static IReadOnlyList<string> Groups { get; } = [GroupUi, GroupEditor, GroupSyntax, GroupDiff, GroupCompatch];

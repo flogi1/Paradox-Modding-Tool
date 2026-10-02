@@ -29,7 +29,7 @@ public static class SteamUploadProtocol
     public static string SerializeRequest(SteamUploadRequest request) => JsonSerializer.Serialize(request, Options);
 
     public static SteamUploadRequest DeserializeRequest(string json) =>
-        JsonSerializer.Deserialize<SteamUploadRequest>(json, Options) ?? throw new JsonException("Die Anfrage ist leer.");
+        JsonSerializer.Deserialize<SteamUploadRequest>(json, Options) ?? throw new JsonException(SteamTexts.RequestEmpty);
 
     public static string ProgressLine(string text) => ProgressPrefix + text.Replace("\r\n", " ").Replace('\n', ' ').Replace('\r', ' ');
 

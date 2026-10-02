@@ -41,6 +41,38 @@ public class KeyPartReaderTests : CompatchTestBase
     }
 
     [Fact]
+    public void Ck3_gui_with_first_wins_rule_also_splits_types_and_templates()
+    {
+        // CK III (gemessen 2026-09-30): GUI-Typen und -Templates gelten "zuerst geladen gewinnt" (FirstWins). Die Datei muss trotzdem je
+        // Typ zerlegt werden, sonst landet der ganze types-Block von z. B. gui/hud.gui im Dateirest.
+        const string Hud = "gui/hud.gui";
+        PutA(Hud, "widget = { name = hud }\ntypes HUD\n{\n\ttype hud_button = button { size = { 1 2 } }\n\ttype hud_icon = icon { }\n}\ntemplate t { x = 1 }\n");
+        var rules = new OverrideRules(new[] { new OverrideRule("gui", OverrideBehavior.FirstWins) });
+
+        var parts = KeyPartReader.Read(MergeSide.A, Hud, Path.Combine(ADir, Hud), rules.Match(Hud), Array.Empty<string>(), new ParseCache());
+
+        Assert.Equal(new[] { "type hud_button", "type hud_icon", "template t" }, parts.Keys.Select(k => k.Address.Key));
+        Assert.Equal("widget", Assert.IsType<ScriptStatement>(Assert.Single(parts.Rest)).Key);
+    }
+
+    [Fact]
+    public void Real_ck3_hud_gui_splits_into_types_when_present()
+    {
+        const string Hud = @"D:\SteamLibrary\steamapps\common\Crusader Kings III\game\gui\hud.gui";
+        if (!File.Exists(Hud))
+        {
+            return;
+        }
+
+        var rules = new OverrideRules(new[] { new OverrideRule("gui", OverrideBehavior.FirstWins) });
+        var parts = KeyPartReader.Read(MergeSide.Vanilla, "gui/hud.gui", Hud, rules.Match("gui/hud.gui"), Array.Empty<string>(), new ParseCache());
+
+        Assert.Null(parts.Error);
+        Assert.True(parts.Keys.Count > 50, $"{parts.Keys.Count} Schlüssel");
+        Assert.True(parts.Rest.Count < 20, $"{parts.Rest.Count} Einträge im Dateirest");
+    }
+
+    [Fact]
     public void Unparseable_file_reports_error()
     {
         var parts = Read("in_game/common/building_types/a.txt", "farm = { x = 1\n");

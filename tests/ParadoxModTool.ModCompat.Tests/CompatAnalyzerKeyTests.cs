@@ -51,16 +51,30 @@ public class CompatAnalyzerKeyTests : CompatTestBase
     }
 
     [Fact]
-    public void Injects_of_the_same_child_key_with_different_values_conflict_but_are_uncertain()
+    public void Injects_of_the_same_child_key_with_different_values_conflict_and_the_later_one_wins()
     {
+        // INJECT überschreibt vorhandene Teilschlüssel (gemessen 2026-10-02 in Europa Universalis V).
         var a = Mod("A", 1);
         var b = Mod("B", 2);
         Put(a, Types + "a.txt", "INJECT:farm = { a = 1 }\n");
         Put(b, Types + "b.txt", "INJECT:farm = { a = 2 }\n");
         var finding = One(Run(new[] { a, b }), "farm");
         Assert.Equal(CompatKind.KeyConflict, finding.Kind);
+        Assert.False(finding.Uncertain);
+        Assert.Equal("B", finding.Winner?.Name);
+        Assert.EndsWith("\"B\".", finding.Message);
+    }
+
+    [Fact]
+    public void Injects_of_the_same_child_block_with_different_values_stay_uncertain()
+    {
+        var a = Mod("A", 1);
+        var b = Mod("B", 2);
+        Put(a, Types + "a.txt", "INJECT:farm = { modifier = { x = 1 } }\n");
+        Put(b, Types + "b.txt", "INJECT:farm = { modifier = { y = 1 } }\n");
+        var finding = One(Run(new[] { a, b }), "farm");
+        Assert.Equal(CompatKind.KeyConflict, finding.Kind);
         Assert.True(finding.Uncertain);
-        Assert.Contains("a", finding.Message);
     }
 
     [Fact]
@@ -129,9 +143,9 @@ public class CompatAnalyzerKeyTests : CompatTestBase
     {
         var a = Mod("A", 1);
         var b = Mod("B", 2);
-        Put(a, "in_game/gui/x.gui", "window_x = { size = { 1 1 } }\n");
-        Put(b, "in_game/gui/y.gui", "window_x = { size = { 2 2 } }\n");
-        Assert.Equal("B", One(Run(new[] { a, b }), "window_x").Winner!.Name);
+        Put(a, "in_game/gui/x.gui", "types X { type window_x = window { size = { 1 1 } } }\n");
+        Put(b, "in_game/gui/y.gui", "types Y { type window_x = window { size = { 2 2 } } }\n");
+        Assert.Equal("B", One(Run(new[] { a, b }), "type window_x").Winner!.Name);
     }
 
     [Fact]

@@ -35,12 +35,18 @@ public static class FileReplaceService
         IEnumerable<string> filePaths,
         string query,
         string replacement,
-        SearchOptions options)
+        SearchOptions options,
+        CancellationToken cancellation = default,
+        IProgress<(int Done, int Total)>? progress = null)
     {
         var plans = new List<FileReplacementPlan>();
+        var files = filePaths.ToList();
+        var done = 0;
 
-        foreach (var filePath in filePaths)
+        foreach (var filePath in files)
         {
+            cancellation.ThrowIfCancellationRequested();
+            progress?.Report((done++, files.Count));
             string text;
             try
             {

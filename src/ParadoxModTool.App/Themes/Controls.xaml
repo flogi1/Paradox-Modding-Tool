@@ -319,6 +319,10 @@
                                           Content="{TemplateBinding SelectionBoxItem}"
                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                           ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                        <!-- Eingabefeld für IsEditable (WPF erwartet den Namen PART_EditableTextBox); lässt rechts Platz für den Pfeil der Aufklapp-Schaltfläche. -->
+                        <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Margin="4,1,22,1" Padding="0" VerticalAlignment="Center"
+                                 Background="Transparent" BorderThickness="0" Foreground="{TemplateBinding Foreground}"
+                                 IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource TemplatedParent}}" />
                         <Popup x:Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True"
                                Focusable="False" PopupAnimation="Fade">
                             <Border MinWidth="{Binding ActualWidth, ElementName=Toggle}" MaxHeight="{TemplateBinding MaxDropDownHeight}"
@@ -331,6 +335,10 @@
                         </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="IsEditable" Value="True">
+                            <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
+                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource Theme.TextDisabled}" />
                         </Trigger>

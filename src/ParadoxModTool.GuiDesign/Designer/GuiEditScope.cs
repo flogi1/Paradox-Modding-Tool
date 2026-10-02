@@ -25,7 +25,7 @@ public sealed record GuiEditScope(GuiNode? Definition, GuiDefinitionKind Kind, i
                 var isType = current.Kind == GuiNodeKind.TypeDefinition;
                 var usageKind = isType ? GuiUsageKind.Widget : GuiUsageKind.Using;
                 var name = current.Name;
-                var saved = index.UsagesOf(name).Count(u => u.Kind == usageKind && (filePath is null || !GuiTypeEdits.SamePath(u.File.FullPath, filePath)));
+                var saved = index.UsagesOf(name).Count(u => u.Kind == usageKind && !GuiTypeEdits.IsShownFile(u.File.FullPath, index, filePath));
                 var live = filePath is null
                     ? 0
                     : node.Root.Descendants().Count(n => isType

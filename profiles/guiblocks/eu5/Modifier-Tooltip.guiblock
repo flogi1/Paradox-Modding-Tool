@@ -1,0 +1,34 @@
+# block: Modifier-Tooltip
+# group: Anzeige
+# description: Modifikatoren des eigenen Landes, je Zeile Icon, Name und Wert, Tooltip mit den Quellen; Schlüssel sind Modifier-Typen (common/modifier_type_definitions), keine statischen Modifier. Vorbild: in_game/gui/panels/organization/common_header.gui, in_game/gui/army_builder.gui
+# repeat: mods | Modifikatoren | 1
+# param: mods.key | Modifikator | discipline | modifier
+# requires: CountryModifier_tooltip, text_single
+
+vbox = {
+	spacing = 5
+
+	$repeat mods$
+	hbox = {
+		datacontext = "[Player.GetModifierTooltipContext('$mods.key$')]"
+		spacing = 5
+		tooltipwidget = {
+			using = CountryModifier_tooltip
+		}
+
+		icon = {
+			size = { 25 25 }
+			texture = "[CountryModifierWrap.GetIcon]"
+		}
+
+		text_single = {
+			text = "[CountryModifierWrap.GetName]"
+		}
+
+		text_single = {
+			text = "[Player.GetModifierValue('$mods.key$')]"
+		}
+	}
+
+	$end mods$
+}

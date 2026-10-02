@@ -39,7 +39,7 @@ public static class RuleEditing
     {
         var copy = rule.Clone();
         copy.Id = Guid.NewGuid().ToString("N");
-        copy.Name = rule.Name + " (Kopie)";
+        copy.Name = rule.Name + TemplatesTexts.CopySuffix;
         copy.Enabled = true;
         return copy;
     }

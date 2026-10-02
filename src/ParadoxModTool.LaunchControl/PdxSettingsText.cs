@@ -8,6 +8,7 @@ public enum PdxSettingsProblem
     None,
     Missing,
     UnknownFormat,
+    Locked,
 }
 
 /// <summary>Eingetragener Editor (<c>System.editor</c>); <c>Editor</c> null = keiner eingetragen.</summary>

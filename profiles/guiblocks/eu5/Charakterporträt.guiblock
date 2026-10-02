@@ -1,0 +1,11 @@
+# block: Charakterporträt
+# group: Anzeige
+# description: Porträt im Rahmen (108×128) mit Tooltip und Klick zum Charakter; mit der Vorgabe zeigt es den eigenen Herrscher. Andere Größen: character_frame_small, character_frame_big. Vorbild: in_game/gui/alertmanager.gui, in_game/gui/shared/cards.gui
+# param: character | Charakter (Datenkontext) | Player.GetGovernment.GetRulerOrRegent
+# requires: character_frame_medium
+
+character_frame_medium = {
+	blockoverride "portrait_datacontext" {
+		datacontext = "[$character$]"
+	}
+}

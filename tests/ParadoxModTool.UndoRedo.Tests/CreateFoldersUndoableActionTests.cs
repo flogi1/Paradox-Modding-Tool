@@ -42,6 +42,28 @@ public sealed class CreateFoldersUndoableActionTests : IDisposable
     }
 
     [Fact]
+    public void AFolderThatCannotBeDeletedRightNowIsLeftWithoutError()
+    {
+        var gui = Path.Combine(_root, "in_game", "gui");
+        var action = new CreateFoldersUndoableAction("x", new[] { gui });
+        action.Do();
+        var info = new DirectoryInfo(gui);
+        info.Attributes |= FileAttributes.ReadOnly;
+        try
+        {
+            var error = Record.Exception(action.Undo);
+
+            Assert.Null(error);
+            Assert.True(Directory.Exists(gui));
+            Assert.True(Directory.Exists(Path.Combine(_root, "in_game")));
+        }
+        finally
+        {
+            info.Attributes &= ~FileAttributes.ReadOnly;
+        }
+    }
+
+    [Fact]
     public void FoldersWithOtherContentStay()
     {
         var gui = Path.Combine(_root, "in_game", "gui");

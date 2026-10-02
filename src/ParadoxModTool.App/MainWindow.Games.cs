@@ -89,7 +89,7 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or IOException)
         {
-            MessageBox.Show(this, $"Das Fenster konnte nicht gestartet werden: {ex.Message}", "Neues Fenster", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, MainTexts.NewWindowFailed(ex.Message), MainTexts.NewWindowTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

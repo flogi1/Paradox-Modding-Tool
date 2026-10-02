@@ -22,6 +22,15 @@ public class StorageLocationsTests : IDisposable
     }
 
     [Fact]
+    public void Patch_recipes_live_outside_the_mod_unless_inside_mode()
+    {
+        var modRoot = @"C:\Mods\My Cool Mod";
+
+        Assert.Equal(Path.Combine(@"C:\Backups", "My Cool Mod Patch Recipes"), StorageLocations.ResolvePatchRecipesDirectory(modRoot, new StorageSettings(@"C:\Backups", false)));
+        Assert.Equal(Path.Combine(modRoot, ".pmt-patches"), StorageLocations.ResolvePatchRecipesDirectory(modRoot, new StorageSettings(@"C:\Backups", true)));
+    }
+
+    [Fact]
     public void ImModOrdner_NutztFruehereOrdnernamen()
     {
         var settings = new StorageSettings(@"C:\Backups", true);

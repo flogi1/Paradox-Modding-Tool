@@ -39,7 +39,7 @@ public sealed unsafe class SteamworksNative : ISteamworksApi
 
         if (!File.Exists(_dllPath))
         {
-            throw new SteamworksUnavailableException("Die Steamworks-Bibliothek des Spiels wurde nicht gefunden. Ist das Spiel installiert?");
+            throw new SteamworksUnavailableException(SteamTexts.ApiDllMissing);
         }
 
         SetEnvironment("SteamAppId", _appId);
@@ -51,13 +51,13 @@ public sealed unsafe class SteamworksNative : ISteamworksApi
         }
         catch (Exception ex) when (ex is DllNotFoundException or BadImageFormatException)
         {
-            throw new SteamworksUnavailableException("Die Steamworks-Bibliothek konnte nicht geladen werden: " + ex.Message);
+            throw new SteamworksUnavailableException(SteamTexts.ApiLoadFailed(ex.Message));
         }
 
         if (!CallInit(out var detail))
         {
             throw new SteamworksUnavailableException(
-                "Steam läuft nicht oder du bist nicht angemeldet. Starte Steam und melde dich an." + (string.IsNullOrWhiteSpace(detail) ? string.Empty : " (" + detail + ")"));
+                SteamTexts.ApiNotRunning + (string.IsNullOrWhiteSpace(detail) ? string.Empty : " (" + detail + ")"));
         }
 
         _initialized = true;
@@ -69,7 +69,7 @@ public sealed unsafe class SteamworksNative : ISteamworksApi
             _utils = ((delegate* unmanaged[Cdecl]<IntPtr>)utilsAccessor)();
             if (_ugc == IntPtr.Zero || _utils == IntPtr.Zero)
             {
-                throw new SteamworksUnavailableException("Steam hat die Workshop-Schnittstelle nicht bereitgestellt.");
+                throw new SteamworksUnavailableException(SteamTexts.ApiNoUgc);
             }
 
             foreach (var name in UgcFunctions)
@@ -215,21 +215,21 @@ public sealed unsafe class SteamworksNative : ISteamworksApi
             }
         }
 
-        throw new SteamworksUnavailableException("Die Steamworks-Bibliothek dieser Version bietet SteamAPI_Init nicht an.");
+        throw new SteamworksUnavailableException(SteamTexts.ApiMissingExport("SteamAPI_Init"));
     }
 
     private IntPtr FindAccessor(string prefix)
     {
         var name = AccessorSearch.Find(prefix, candidate => NativeLibrary.TryGetExport(_library, candidate, out _));
         return name is null
-            ? throw new SteamworksUnavailableException($"Die Steamworks-Bibliothek dieser Version bietet {prefix}_v### nicht an.")
+            ? throw new SteamworksUnavailableException(SteamTexts.ApiMissingExport(prefix + "_v###"))
             : NativeLibrary.GetExport(_library, name);
     }
 
     private IntPtr Require(string name) =>
         NativeLibrary.TryGetExport(_library, name, out var pointer)
             ? pointer
-            : throw new SteamworksUnavailableException($"Die Steamworks-Bibliothek dieser Version bietet {name} nicht an.");
+            : throw new SteamworksUnavailableException(SteamTexts.ApiMissingExport(name));
 
     private static void SetEnvironment(string name, string value)
     {

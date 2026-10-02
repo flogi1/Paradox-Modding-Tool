@@ -7,7 +7,13 @@ public enum ScriptOperator
     LessThan,
     LessOrEqual,
     GreaterThan,
-    GreaterOrEqual
+    GreaterOrEqual,
+
+    /// <summary>"?=": gleich, falls das Ziel existiert (CK III, EU V).</summary>
+    EqualsIfExists,
+
+    /// <summary>"!=": ungleich.</summary>
+    NotEquals
 }
 
 /// <summary>Der Wert einer Anweisung oder eines Listeneintrags: entweder ein Skalar oder ein Block.</summary>

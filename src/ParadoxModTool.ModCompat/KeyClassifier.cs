@@ -35,23 +35,23 @@ internal static class KeyClassifier
 
         if (all.All(c => c.Operator == all[0].Operator) && AllSame(all))
         {
-            return Make(CompatKind.KeyIdentical, CompatSeverity.Info, $"Der Schlüssel \"{group.Key}\" ist in {names} inhaltsgleich.");
+            return Make(CompatKind.KeyIdentical, CompatSeverity.Info, ModCompatTexts.FindingKeyIdentical(group.Key, names));
         }
 
         switch (group.Behavior)
         {
             case OverrideBehavior.FirstWins:
-                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, $"Der Schlüssel \"{group.Key}\" ist in {names} verschieden definiert. Die zuerst geladene Fassung gewinnt: \"{all[0].Participant.Name}\".", all[0], CompatSuggestion.NeedsCompatch);
+                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingFirstWins(group.Key, names, all[0].Participant.Name), all[0], CompatSuggestion.NeedsCompatch);
             case OverrideBehavior.LastWins:
             case OverrideBehavior.PartialKeys:
-                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, $"Der Schlüssel \"{group.Key}\" ist in {names} verschieden gesetzt. Es gilt die zuletzt geladene Fassung: \"{all[^1].Participant.Name}\".", all[^1], CompatSuggestion.NeedsCompatch);
+                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingLastWins(group.Key, names, all[^1].Participant.Name), all[^1], CompatSuggestion.NeedsCompatch);
             case OverrideBehavior.AppendOnly:
-                return Make(CompatKind.KeyCombinable, CompatSeverity.Hint, $"\"{group.Key}\" wird von {names} ergänzt. Das Spiel hängt an; prüfe, ob Trigger- oder Effect-Blöcke doppelt gesetzt werden.", extraUncertain: true);
+                return Make(CompatKind.KeyCombinable, CompatSeverity.Hint, ModCompatTexts.FindingAppendOnly(group.Key, names), extraUncertain: true);
             case OverrideBehavior.LocalizationKeys:
             {
                 var replacing = all.Where(c => c.Operator == OverrideOperator.Replace).ToList();
                 var winner = replacing.Count > 0 ? replacing[^1] : all[^1];
-                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, $"Der Lokalisierungsschlüssel \"{group.Key}\" ist in {names} verschieden. Es gilt die Fassung von \"{winner.Participant.Name}\".", winner, CompatSuggestion.NeedsCompatch, extraUncertain: replacing.Count == 0);
+                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingLocalizationKey(group.Key, names, winner.Participant.Name), winner, CompatSuggestion.NeedsCompatch, extraUncertain: replacing.Count == 0);
             }
 
             default:
@@ -70,31 +70,37 @@ internal static class KeyClassifier
             var winner = replaces[^1];
             if (replaces.Select(r => r.Participant.Id).Distinct().Count() > 1)
             {
-                return make(CompatKind.KeyConflict, CompatSeverity.Conflict, $"Mehrere Mods ersetzen \"{group.Key}\" ({Names(replaces)}). Nur die Fassung von \"{winner.Participant.Name}\" gilt.", winner, CompatSuggestion.NeedsCompatch, false);
+                return make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingMultipleReplace(group.Key, Names(replaces), winner.Participant.Name), winner, CompatSuggestion.NeedsCompatch, false);
             }
 
             var lostInjects = injects.Where(i => i.Participant.Id != winner.Participant.Id).ToList();
             if (lostInjects.Count > 0)
             {
-                return make(CompatKind.KeyLoss, CompatSeverity.Conflict, $"\"{winner.Participant.Name}\" ersetzt \"{group.Key}\" (REPLACE). Der INJECT-Beitrag von {Names(lostInjects)} geht verloren, weil REPLACE laut Wiki nach INJECT verarbeitet wird.", winner, CompatSuggestion.ReviewBothSides, false);
+                return make(CompatKind.KeyLoss, CompatSeverity.Conflict, ModCompatTexts.FindingInjectLost(winner.Participant.Name, group.Key, Names(lostInjects)), winner, CompatSuggestion.ReviewBothSides, false);
             }
 
-            return make(CompatKind.KeyLoss, CompatSeverity.Hint, $"\"{winner.Participant.Name}\" ersetzt die Definition von \"{group.Key}\" aus {Names(plains)} vollständig (REPLACE).", winner, CompatSuggestion.None, false);
+            return make(CompatKind.KeyLoss, CompatSeverity.Hint, ModCompatTexts.FindingReplacesDefinition(winner.Participant.Name, group.Key, Names(plains)), winner, CompatSuggestion.None, false);
         }
 
         if (plains.Select(p => p.Participant.Id).Distinct().Count() > 1 && !AllSame(plains))
         {
             var winner = plains[^1];
-            return make(CompatKind.KeyConflict, CompatSeverity.Conflict, $"{Names(plains)} definieren \"{group.Key}\" jeweils vollständig. Nur die Fassung von \"{winner.Participant.Name}\" gilt.", winner, CompatSuggestion.NeedsCompatch, false);
+            return make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingPlainConflict(Names(plains), group.Key, winner.Participant.Name), winner, CompatSuggestion.NeedsCompatch, false);
         }
 
-        var clashes = OverlappingChildKeys(injects.Concat(plains).ToList());
+        var pool = injects.Concat(plains).ToList();
+        var clashes = OverlappingChildKeys(pool);
         if (clashes.Count > 0)
         {
-            return make(CompatKind.KeyConflict, CompatSeverity.Conflict, $"{names} setzen die Teilschlüssel {string.Join(", ", clashes)} von \"{group.Key}\" verschieden. Ob INJECT einen vorhandenen Teilschlüssel überschreibt, nennt das Wiki nicht.", null, CompatSuggestion.NeedsCompatch, true);
+            // INJECT überschreibt vorhandene Teilschlüssel, das zuletzt angewendete gewinnt (gemessen 2026-10-02 in Europa Universalis V mit einem
+            // einfachen Wert). Bei Unterblöcken ist offen, ob das Spiel ersetzt oder tiefer zusammenführt.
+            // Ein Konflikt braucht zwei Mods mit verschiedenem Wert; Definitionen ohne Präfix stammen hier von höchstens einer Mod, also ist ein INJECT dabei.
+            var winner = injects.LastOrDefault(i => clashes.Any(Children(i).ContainsKey)) ?? pool[^1];
+            var blockClash = clashes.Any(key => pool.Any(c => Children(c).TryGetValue(key, out var values) && values.Any(v => v is ScriptBlock)));
+            return make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingChildOverwrite(names, string.Join(", ", clashes), group.Key, winner.Participant.Name), winner, CompatSuggestion.NeedsCompatch, blockClash);
         }
 
-        return make(CompatKind.KeyCombinable, CompatSeverity.Hint, $"{names} ändern \"{group.Key}\" an verschiedenen Teilschlüsseln. INJECT kombiniert sie.", null, CompatSuggestion.None, false);
+        return make(CompatKind.KeyCombinable, CompatSeverity.Hint, ModCompatTexts.FindingChildCombine(names, group.Key), null, CompatSuggestion.None, false);
     }
 
     private static string Names(IEnumerable<CompatContribution> contributions) =>

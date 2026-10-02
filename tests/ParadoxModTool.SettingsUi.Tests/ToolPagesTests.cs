@@ -84,6 +84,49 @@ public sealed class ToolPagesTests
     });
 
     [Fact]
+    public void ErrorLogPageWritesTheStandaloneSwitch() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new ErrorLogPage(host);
+        Assert.False(UiFind.CheckBox(page, SettingsTexts.ErrorLogStandalone).IsChecked);
+
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ErrorLogStandalone));
+
+        Assert.True(host.Settings.ErrorLogStandalone);
+    });
+
+    [Fact]
+    public void SaveExplorerPageWritesTheStandaloneSwitch() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new SaveExplorerPage(host);
+        Assert.False(UiFind.CheckBox(page, SettingsTexts.SaveExplorerStandalone).IsChecked);
+
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.SaveExplorerStandalone));
+
+        Assert.True(host.Settings.SaveExplorerStandalone);
+    });
+
+    [Fact]
+    public void ExplorerPageWritesSwitches() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new ExplorerPage(host);
+        Assert.True(UiFind.CheckBox(page, SettingsTexts.ExplorerBugMarks).IsChecked);
+        Assert.True(UiFind.CheckBox(page, SettingsTexts.ExplorerHideUgc).IsChecked);
+
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ExplorerButtonsLeft));
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ExplorerBugMarks));
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ExplorerFoldersOnly));
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.ExplorerHideUgc));
+
+        Assert.True(host.Settings.ExplorerButtonsOnLeft);
+        Assert.False(host.Settings.ExplorerShowErrorMarks);
+        Assert.True(host.Settings.ExplorerSearchFoldersOnly);
+        Assert.False(host.Settings.ExplorerHideUgcReferences);
+    });
+
+    [Fact]
     public void CompatchPageWritesSwitchesAndDefaultView() => Sta.Run(() =>
     {
         var host = new FakeHost();
@@ -92,11 +135,46 @@ public sealed class ToolPagesTests
 
         UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.CompatchCautious));
         UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.CompatchSkipLocked));
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.CompatchResultRight));
         UiFind.Choose(UiFind.Radio(page, CompatchTexts.View(CompatchView.Cards)));
 
         Assert.True(host.Settings.CompatchCautiousWrite);
         Assert.True(host.Settings.CompatchSkipLocked);
+        Assert.True(host.Settings.CompatchResultRight);
         Assert.Equal("C", host.Settings.CompatchDefaultView);
+    });
+
+    [Fact]
+    public void CompatchPageWritesDefaultsForNewWorkStates() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new CompatchPage(host);
+
+        foreach (var label in new[] { CompatchTexts.MainAsBase, CompatchTexts.FillMissing, CompatchTexts.FilterHideFilled, CompatchTexts.FilterHideReplaced, CompatchTexts.FilterHideDecided, CompatchTexts.FilterUncertain })
+        {
+            UiFind.Toggle(UiFind.CheckBox(page, label));
+        }
+
+        Assert.True(host.Settings.CompatchMainAsBase);
+        Assert.True(host.Settings.CompatchFillMissing);
+        Assert.True(host.Settings.CompatchHideFilled);
+        Assert.True(host.Settings.CompatchHideReplaced);
+        Assert.True(host.Settings.CompatchHideDecided);
+        Assert.True(host.Settings.CompatchUncertainOnly);
+    });
+
+    [Fact]
+    public void CompatchPageChoosesHowTheStartWindowListsFileKinds() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new CompatchPage(host);
+        Assert.True(UiFind.Radio(page, SettingsTexts.CompatchKindsList).IsChecked);
+
+        UiFind.Choose(UiFind.Radio(page, SettingsTexts.CompatchKindsSideBySide));
+        Assert.True(host.Settings.CompatchKindsSideBySide);
+
+        UiFind.Choose(UiFind.Radio(page, SettingsTexts.CompatchKindsList));
+        Assert.False(host.Settings.CompatchKindsSideBySide);
     });
 
     [Fact]

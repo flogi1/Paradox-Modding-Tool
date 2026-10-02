@@ -78,11 +78,15 @@ public static class ExplorerSearch
     public const int DefaultLimit = 500;
 
     /// <param name="roots">Wurzeln als (Pfad, Anzeigename).</param>
+    /// <param name="foldersOnly">Nur Ordner als Treffer (Dateien werden nicht geprüft).</param>
+    /// <param name="hideUgcReferences">Workshop-Verweise (<see cref="UgcReference"/>) nie als Treffer.</param>
     public static ExplorerSearchResult Run(
         IEnumerable<(string Path, string DisplayName)> roots,
         NamePattern pattern,
         int limit,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool foldersOnly = false,
+        bool hideUgcReferences = false)
     {
         var hits = new List<ExplorerSearchHit>();
 
@@ -107,7 +111,7 @@ public static class ExplorerSearch
                 {
                     var name = System.IO.Path.GetFileName(entry.Path);
 
-                    if (pattern.IsMatch(name))
+                    if ((entry.IsDirectory || (!foldersOnly && !(hideUgcReferences && UgcReference.IsMatch(name)))) && pattern.IsMatch(name))
                     {
                         if (hits.Count >= limit)
                         {

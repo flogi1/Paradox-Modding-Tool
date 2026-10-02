@@ -98,6 +98,32 @@ public class GuiPaletteTests
     }
 
     [Fact]
+    public void BlockEntries_HaveNoSnippetAndSkipBuiltInAndBroken()
+    {
+        var blocks = new List<Blocks.GuiBlock>(new Blocks.GuiBlockLibrary(null, null, null).Effective)
+        {
+            Blocks.GuiBlockParser.Parse("# block: Knopf\nbutton = { }\n", Blocks.GuiBlockLayer.Game, @"C:\x\Knopf.guiblock"),
+            Blocks.GuiBlockParser.Parse("# block: Fenster\nwindow = { }\n", Blocks.GuiBlockLayer.Shipped, @"C:\x\Fenster.guiblock"),
+            Blocks.GuiBlockParser.Parse("# block: Kaputt\nx = $q$\n", Blocks.GuiBlockLayer.Game, @"C:\x\Kaputt.guiblock"),
+        };
+
+        var entries = GuiPalette.BlockEntries(blocks);
+
+        Assert.Equal(new[] { "Knopf", "Fenster" }, entries.Select(e => e.Name));
+        Assert.All(entries, e =>
+        {
+            Assert.Equal(GuiPaletteKind.Block, e.Kind);
+            Assert.Null(e.Snippet);
+            Assert.Equal("Bausteine", e.Group);
+            Assert.Equal(GuiTexts.PaletteBlocksGroup, e.Group);
+            Assert.NotNull(e.Block);
+            Assert.Null(e.Definition);
+        });
+        Assert.Equal(GuiLayer.Mod, entries[0].Layer);
+        Assert.Equal(GuiLayer.Vanilla, entries[1].Layer);
+    }
+
+    [Fact]
     public void VanillaPaletteReportsItsDuration()
     {
         if (!VanillaGui.Exists)

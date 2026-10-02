@@ -25,6 +25,8 @@ public sealed class GuiPaletteView : UserControl
     private readonly DispatcherTimer _filterTimer = new() { Interval = TimeSpan.FromMilliseconds(200) };
     private readonly MenuItem _inspect = new() { Header = GuiTexts.ContextInspect };
     private ListCollectionView? _view;
+    private IReadOnlyList<GuiPaletteEntry> _indexEntries = Array.Empty<GuiPaletteEntry>();
+    private IReadOnlyList<GuiPaletteEntry> _blockEntries = Array.Empty<GuiPaletteEntry>();
     private GuiWorkspace? _workspace;
     private CancellationTokenSource? _run;
     private Point? _dragStart;
@@ -137,6 +139,20 @@ public sealed class GuiPaletteView : UserControl
             {
                 Rebuild();
             }
+            else
+            {
+                // Aktive Mod oder eigene Bausteine können sich geändert haben: nur die Bausteingruppe neu lesen.
+                LoadBlocks();
+                ShowEntries();
+            }
+        };
+        GuiSettings.BlocksChanged += (_, _) =>
+        {
+            if (_built)
+            {
+                LoadBlocks();
+                ShowEntries();
+            }
         };
     }
 
@@ -153,10 +169,11 @@ public sealed class GuiPaletteView : UserControl
         _built = true;
         _workspace = GuiSettings.Workspace;
         _run?.Cancel();
+        LoadBlocks();
         if (_workspace is not { } workspace)
         {
-            _list.ItemsSource = null;
-            _view = null;
+            _indexEntries = Array.Empty<GuiPaletteEntry>();
+            ShowEntries();
             _status.Text = GuiSettings.Status;
             return;
         }
@@ -178,17 +195,27 @@ public sealed class GuiPaletteView : UserControl
                     return;
                 }
 
-                // Die Einträge kommen schon sortiert; ListCollectionView gruppiert in Reihenfolge des ersten Auftretens.
-                var view = new ListCollectionView(task.Result.ToList());
-                view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(GuiPaletteEntry.Group)));
-                view.Filter = item => GuiPalette.Matches((GuiPaletteEntry)item, _search.Text.Trim());
-                _view = view;
-                _list.ItemsSource = view;
+                _indexEntries = task.Result;
+                ShowEntries();
                 _status.Text = string.Empty;
             },
             CancellationToken.None,
             TaskContinuationOptions.None,
             TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    /// <summary>Bausteine des aktiven Spiels (auf dem UI-Thread, Teil-2-Ruling 1).</summary>
+    private void LoadBlocks() =>
+        _blockEntries = GuiSettings.BlockSource is { } source ? GuiPalette.BlockEntries(source()) : Array.Empty<GuiPaletteEntry>();
+
+    /// <summary>Bausteingruppe oben, darunter die Einträge des Index; ListCollectionView gruppiert in Reihenfolge des ersten Auftretens.</summary>
+    private void ShowEntries()
+    {
+        var view = new ListCollectionView(_blockEntries.Concat(_indexEntries).ToList());
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(GuiPaletteEntry.Group)));
+        view.Filter = item => GuiPalette.Matches((GuiPaletteEntry)item, _search.Text.Trim());
+        _view = view;
+        _list.ItemsSource = view;
     }
 
     private static ListBoxItem? ItemAt(DependencyObject? source)
@@ -256,7 +283,7 @@ public sealed class GuiPaletteView : UserControl
     private sealed class UsagesConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-            value is int count ? GuiTexts.PaletteUsages(count) : null;
+            value is int count ? count < 0 ? string.Empty : GuiTexts.PaletteUsages(count) : null;
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
     }

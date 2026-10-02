@@ -34,6 +34,8 @@ public sealed class ExplorerEntry : INotifyPropertyChanged
     private bool _childrenLoaded;
     private bool _isExpanded;
     private string? _lockTooltip;
+    private string? _errorBadge;
+    private string? _errorTooltip;
 
     public required string FullPath { get; init; }
 
@@ -119,6 +121,24 @@ public sealed class ExplorerEntry : INotifyPropertyChanged
                 OnPropertyChanged(nameof(LockTooltip));
             }
         }
+    }
+
+    /// <summary>Text der Fehlermarkierung (z.B. "⚠3"); <see langword="null"/> = keine Markierung. Siehe <c>ExplorerPanel.ErrorMarkProvider</c>.</summary>
+    public string? ErrorBadge => _errorBadge;
+
+    public string? ErrorTooltip => _errorTooltip;
+
+    public void SetErrorMark(string? badge, string? tooltip)
+    {
+        if (badge == _errorBadge && tooltip == _errorTooltip)
+        {
+            return;
+        }
+
+        _errorBadge = badge;
+        _errorTooltip = tooltip;
+        OnPropertyChanged(nameof(ErrorBadge));
+        OnPropertyChanged(nameof(ErrorTooltip));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

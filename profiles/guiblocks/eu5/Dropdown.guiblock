@@ -1,0 +1,22 @@
+# block: Dropdown
+# group: Bedienelemente
+# description: Auswahlliste; ohne datamodel erscheint sie nicht. Die Auswahl (onselectionchanged, selectedindex) steuern in Vanilla nur Funktionen des Spiels, nicht GetVariableSystem. Vorbild: in_game/gui/ai_diplomatic_objectives_viewer.gui, in_game/gui/ui_library.gui
+# param: name | Name | my_dropdown
+# param: datamodel | Liste (datamodel) | Player.GetProvinces
+# param: item_text | Text je Eintrag | Province.GetName
+# requires: dropdown_menu_default
+
+dropdown_menu_default = {
+	name = "$name$"
+	datamodel = "[$datamodel$]"
+	# onselectionchanged = "[...]"
+	# selectedindex = "[...]"
+
+	blockoverride "dropdown_active_item_properties" {
+		raw_text = "[$item_text$]"
+	}
+
+	blockoverride "dropdown_item_properties" {
+		raw_text = "[$item_text$]"
+	}
+}

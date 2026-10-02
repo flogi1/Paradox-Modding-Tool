@@ -182,8 +182,8 @@ public partial class RuleEditWindow : Window
     {
         var lines = RulePreview.Evaluate(_snippet(), BuildRule());
         PreviewCount.Text = lines.Count == 0
-            ? "Diese Regel trifft im aktuellen Snippet keinen Namen."
-            : $"Diese Regel trifft {lines.Count} Namen im aktuellen Snippet:";
+            ? TemplateWindowTexts.PreviewNone
+            : TemplateWindowTexts.PreviewCount(lines.Count);
         PreviewList.ItemsSource = lines.Select(BuildLine).ToList();
     }
 
@@ -233,7 +233,7 @@ public partial class RuleEditWindow : Window
         var errors = RuleValidator.Validate(rule).ToList();
         if (CurrentLayer == RuleLayer.AllGames && rule.Games.Count == 0)
         {
-            errors.Add("Wähle mindestens ein Spiel oder „alle Spiele“.");
+            errors.Add(TemplateWindowTexts.ChooseGame);
         }
 
         if (errors.Count > 0)

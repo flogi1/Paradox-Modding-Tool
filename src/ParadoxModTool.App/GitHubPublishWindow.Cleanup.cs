@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using ParadoxModTool.GitIntegration;
+using ParadoxModTool.Localization;
 using MessageBox = System.Windows.MessageBox;
 
 namespace ParadoxModTool.App;
@@ -33,19 +34,19 @@ public partial class GitHubPublishWindow
 
         if (_gh is null || !_ghLoggedIn)
         {
-            CleanupText.Text = "gh ist nicht eingerichtet oder nicht angemeldet.";
+            CleanupText.Text = PublishTexts.CleanupGhMissing;
             return;
         }
 
         if (CleanupRepoBox.SelectedItem is not string repo)
         {
-            CleanupText.Text = "Es ist kein Repository gewählt.";
+            CleanupText.Text = PublishTexts.CleanupNoRepo;
             return;
         }
 
         _cleanupBusy = true;
         CleanupLoadButton.IsEnabled = false;
-        CleanupText.Text = "Wird geladen …";
+        CleanupText.Text = PublishTexts.CleanupLoading;
         try
         {
             var info = await _gh.GetRepoAsync(repo, CancellationToken.None);
@@ -55,20 +56,20 @@ public partial class GitHubPublishWindow
             _cleanupRepo = repo;
             _cleanupDefaultBranch = info.DefaultBranch;
             CleanupReleaseList.ItemsSource = releases
-                .Select(r => new CleanupRow(r.Tag, $"{r.Tag}  {r.Name}{(r.IsDraft ? "  (Entwurf)" : string.Empty)}{(r.IsPrerelease ? "  (Vorabversion)" : string.Empty)}", true))
+                .Select(r => new CleanupRow(r.Tag, $"{r.Tag}  {r.Name}{(r.IsDraft ? "  " + PublishTexts.CleanupDraft : string.Empty)}{(r.IsPrerelease ? "  " + PublishTexts.CleanupPreRelease : string.Empty)}", true))
                 .ToList();
             CleanupTagList.ItemsSource = tags.Select(t => new CleanupRow(t, t, true)).ToList();
             CleanupBranchList.ItemsSource = branches
                 .Select(b => new CleanupRow(
                     b.Name,
-                    b.Name + (b.Name == info.DefaultBranch ? "  (Standard-Branch)" : string.Empty) + (b.Protected ? "  (geschützt)" : string.Empty),
+                    b.Name + (b.Name == info.DefaultBranch ? "  " + PublishTexts.CleanupDefaultBranch : string.Empty) + (b.Protected ? "  " + PublishTexts.CleanupProtected : string.Empty),
                     b.Name != info.DefaultBranch))
                 .ToList();
-            CleanupText.Text = $"{repo}: {releases.Count} Release(s), {tags.Count} Tag(s), {branches.Count} Branch(es).";
+            CleanupText.Text = PublishTexts.CleanupSummary(repo, releases.Count, tags.Count, branches.Count);
         }
         catch (GhException ex)
         {
-            CleanupText.Text = "Das Laden ist fehlgeschlagen: " + ex.Message;
+            CleanupText.Text = PublishTexts.CleanupLoadFailed(ex.Message);
         }
         finally
         {
@@ -88,7 +89,7 @@ public partial class GitHubPublishWindow
     }
 
     private bool ConfirmDelete(string what, string repo, string extra = "") =>
-        MessageBox.Show(this, $"{what} in {repo} löschen?{extra}\n\nDas lässt sich nicht rückgängig machen.", "Löschen", MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
+        MessageBox.Show(this, PublishTexts.CleanupConfirmDelete(what, repo, extra), CommonTexts.Delete, MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
 
     private void RemoveMark(string repo, string tag)
     {
@@ -98,7 +99,7 @@ public partial class GitHubPublishWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            CleanupText.Text = "Der Vermerk in den Releases konnte nicht entfernt werden: " + ex.Message;
+            CleanupText.Text = PublishTexts.CleanupMarkFailed(ex.Message);
         }
     }
 
@@ -117,7 +118,7 @@ public partial class GitHubPublishWindow
         }
         catch (GhException ex)
         {
-            Report("Das Löschen ist fehlgeschlagen: " + ex.Message);
+            Report(PublishTexts.CleanupDeleteFailed(ex.Message));
         }
         finally
         {
@@ -136,7 +137,7 @@ public partial class GitHubPublishWindow
         }
 
         var withTag = CleanupTagCheck.IsChecked == true;
-        if (!ConfirmDelete($"Das Release {row.Name}", repo, withTag ? "\nDer Tag wird mitgelöscht." : string.Empty))
+        if (!ConfirmDelete(PublishTexts.CleanupReleaseWhat(row.Name), repo, withTag ? "\n" + PublishTexts.CleanupTagAlso : string.Empty))
         {
             return;
         }
@@ -146,7 +147,7 @@ public partial class GitHubPublishWindow
 
     private async void CleanupDeleteTag_Click(object sender, RoutedEventArgs e)
     {
-        if (CleanupTagList.SelectedItem is not CleanupRow { Deletable: true } row || _cleanupRepo is not { } repo || !ConfirmDelete($"Den Tag {row.Name}", repo))
+        if (CleanupTagList.SelectedItem is not CleanupRow { Deletable: true } row || _cleanupRepo is not { } repo || !ConfirmDelete(PublishTexts.CleanupTagWhat(row.Name), repo))
         {
             return;
         }
@@ -163,18 +164,18 @@ public partial class GitHubPublishWindow
 
         if (row.Name == _cleanupDefaultBranch)
         {
-            Report("Der Standard-Branch eines Repositories wird nie gelöscht.");
+            Report(PublishTexts.CleanupDefaultBranchKept);
             return;
         }
 
-        if (!ConfirmDelete($"Den Branch {row.Name}", repo))
+        if (!ConfirmDelete(PublishTexts.CleanupBranchWhat(row.Name), repo))
         {
             return;
         }
 
-        if (TextPromptWindow.Ask(this, "Branch löschen", $"Tippe zur Bestätigung den Namen des Branches ein:\n{row.Name}", string.Empty)?.Trim() != row.Name)
+        if (TextPromptWindow.Ask(this, PublishTexts.CleanupBranchPromptTitle, PublishTexts.CleanupBranchPrompt(row.Name), string.Empty)?.Trim() != row.Name)
         {
-            Report("Der Name stimmt nicht überein. Der Branch wurde nicht gelöscht.");
+            Report(PublishTexts.CleanupBranchMismatch);
             return;
         }
 

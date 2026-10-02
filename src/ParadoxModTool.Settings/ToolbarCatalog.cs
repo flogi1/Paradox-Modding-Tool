@@ -9,6 +9,7 @@ public static class ToolbarItemIds
     public const string GoToLine = "goToLine";
     public const string GoToBracket = "goToBracket";
     public const string ScopeFinder = "scopeFinder";
+    public const string GuiDataHelper = "guiDataHelper";
     public const string Templates = "templates";
     public const string Notes = "notes";
     public const string Bookmark = "bookmark";
@@ -20,6 +21,7 @@ public static class ToolbarItemIds
     public const string NotesPanel = "notesPanel";
     public const string AutoComplete = "autoComplete";
     public const string Hover = "hover";
+    public const string ModifierReload = "modifierReload";
     public const string LaunchOption = "launchOption";
     public const string Playset = "playset";
     public const string LaunchGame = "launchGame";
@@ -47,6 +49,7 @@ public static class ToolbarCatalog
         new ToolbarItem(ToolbarItemIds.GoToLine, ToolbarGroup.Tools),
         new ToolbarItem(ToolbarItemIds.GoToBracket, ToolbarGroup.Tools),
         new ToolbarItem(ToolbarItemIds.ScopeFinder, ToolbarGroup.Tools),
+        new ToolbarItem(ToolbarItemIds.GuiDataHelper, ToolbarGroup.Tools),
         new ToolbarItem(ToolbarItemIds.Templates, ToolbarGroup.Tools),
         new ToolbarItem(ToolbarItemIds.Format, ToolbarGroup.Tools),
         new ToolbarItem(ToolbarItemIds.Notes, ToolbarGroup.Tools),
@@ -58,6 +61,7 @@ public static class ToolbarCatalog
         new ToolbarItem(ToolbarItemIds.NotesPanel, ToolbarGroup.Toggles),
         new ToolbarItem(ToolbarItemIds.AutoComplete, ToolbarGroup.Toggles),
         new ToolbarItem(ToolbarItemIds.Hover, ToolbarGroup.Toggles),
+        new ToolbarItem(ToolbarItemIds.ModifierReload, ToolbarGroup.Toggles),
         new ToolbarItem(ToolbarItemIds.LaunchOption, ToolbarGroup.Launch),
         new ToolbarItem(ToolbarItemIds.Playset, ToolbarGroup.Launch),
         new ToolbarItem(ToolbarItemIds.LaunchGame, ToolbarGroup.Launch),

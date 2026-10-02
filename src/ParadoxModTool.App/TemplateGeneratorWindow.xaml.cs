@@ -277,7 +277,7 @@ public partial class TemplateGeneratorWindow : Window
             RepeatCount = index => index >= 0 && index < _model.Groups.Count ? _model.Groups[index].Count : 1,
             GetShape = shape => _model?.Shapes.FirstOrDefault(x => x.Shape == shape),
             SetShapeNumbers = SetShapeNumbers,
-            MultiRuleText = () => (MultiBox.SelectedItem as ComboBoxItem)?.Content as string ?? "erste zählt",
+            MultiRuleText = () => (MultiBox.SelectedItem as ComboBoxItem)?.Content as string ?? TemplateWindowTexts.MultiFirst,
             DefaultEnabled = point => _defaults?.Points.FirstOrDefault(p => p.Key == point.Key)?.Enabled,
         };
         _pointRows = _model.Points.Select(p => new PointRow(p, OnPointChanged, context)).ToList();
@@ -418,7 +418,7 @@ public partial class TemplateGeneratorWindow : Window
     {
         _listedPoints = _pointRows.Where(PointVisible).Select(r => r.Point).ToHashSet();
         var visible = _listedPoints.Count;
-        PointCountText.Text = visible == _pointRows.Count ? $"{visible} Stellen" : $"{visible} von {_pointRows.Count} Stellen angezeigt";
+        PointCountText.Text = visible == _pointRows.Count ? TemplateWindowTexts.SpotCount(visible) : TemplateWindowTexts.SpotCountFiltered(visible, _pointRows.Count);
 
         // Die Markierungen in Snippet und Ergebnis folgen der Liste.
         SnippetEditor.TextArea.TextView.Redraw();
@@ -514,19 +514,19 @@ public partial class TemplateGeneratorWindow : Window
             if (PointFilterBox.Text.Length > 0)
             {
                 PointFilterBox.Text = string.Empty;
-                relaxed.Add("Textfilter");
+                relaxed.Add(TemplateWindowTexts.RelaxTextFilter);
             }
 
             if (PointShowBox.SelectedIndex != 0)
             {
                 PointShowBox.SelectedIndex = 0;
-                relaxed.Add("Auswahl \"alle\"");
+                relaxed.Add(TemplateWindowTexts.RelaxShowAll);
             }
 
-            Relax(HideIgnoredItem.IsChecked == true && point.IgnoredReason.Length > 0 && !point.Enabled, HideIgnoredItem, "Ignorierte Stellen");
-            Relax(HideNumbersItem.IsChecked == true && point.Kind == PointKind.Number, HideNumbersItem, "Einzelne Zahlen");
-            Relax(HideTextsItem.IsChecked == true && point.Kind == PointKind.Text, HideTextsItem, "Zahlen in Texten");
-            Relax(HideRuleItem.IsChecked == true && point.RuleDisabled && point.IgnoredReason.Length == 0, HideRuleItem, "Durch die Regel abgeschaltete");
+            Relax(HideIgnoredItem.IsChecked == true && point.IgnoredReason.Length > 0 && !point.Enabled, HideIgnoredItem, TemplateWindowTexts.RelaxIgnored);
+            Relax(HideNumbersItem.IsChecked == true && point.Kind == PointKind.Number, HideNumbersItem, TemplateWindowTexts.RelaxNumbers);
+            Relax(HideTextsItem.IsChecked == true && point.Kind == PointKind.Text, HideTextsItem, TemplateWindowTexts.HideTexts);
+            Relax(HideRuleItem.IsChecked == true && point.RuleDisabled && point.IgnoredReason.Length == 0, HideRuleItem, TemplateWindowTexts.RelaxRule);
             ApplyPointFilter();
         }
 
@@ -542,7 +542,7 @@ public partial class TemplateGeneratorWindow : Window
         }
 
         StatusText.Text = row.Label + " – " + row.Note
-            + (relaxed.Count > 0 ? ". In der Liste eingeblendet durch Lockern von: " + string.Join(", ", relaxed) : string.Empty);
+            + (relaxed.Count > 0 ? TemplateWindowTexts.RelaxedBy(string.Join(", ", relaxed)) : string.Empty);
     }
 
     private void ResetPoints_Click(object sender, RoutedEventArgs e)
@@ -552,7 +552,7 @@ public partial class TemplateGeneratorWindow : Window
         _model = null;
         _defaults = null;
         Reanalyze();
-        StatusText.Text = "Alle Änderungen an den Zählpunkten zurückgesetzt.";
+        StatusText.Text = TemplateWindowTexts.PointsReset;
     }
 
     private void SyncLocFromControls()
@@ -616,19 +616,19 @@ public partial class TemplateGeneratorWindow : Window
         var parts = new List<string>();
         if (_model.ExampleCount >= 2)
         {
-            parts.Add($"{_model.ExampleCount} Beispiele zu einer Vorlage zusammengefasst");
+            parts.Add(TemplateWindowTexts.ExamplesMerged(_model.ExampleCount));
         }
 
         if (_model.Groups.Count > 0)
         {
-            parts.Add($"{_model.Groups.Count} wiederholte Unterblöcke");
+            parts.Add(TemplateWindowTexts.RepeatedGroups(_model.Groups.Count));
         }
 
-        parts.Add($"{_model.Points.Count(p => p.Enabled)} von {_model.Points.Count} Zählpunkten aktiv");
-        parts.Add($"{count} Durchläufe");
+        parts.Add(TemplateWindowTexts.PointsActive(_model.Points.Count(p => p.Enabled), _model.Points.Count));
+        parts.Add(TemplateWindowTexts.Passes(count));
         if (_model.Points.Any(p => p.Irregular))
         {
-            parts.Add("Achtung: Zählung in den Beispielen unregelmäßig (Prüfmodus)");
+            parts.Add(TemplateWindowTexts.IrregularWarning);
         }
 
         StatusText.Text = string.Join(" · ", parts);
@@ -772,7 +772,7 @@ public partial class TemplateGeneratorWindow : Window
 
         if (found is null)
         {
-            StatusText.Text = "Hier steht keine Zahl, die als Zählpunkt in Frage kommt.";
+            StatusText.Text = TemplateWindowTexts.NoPointHere;
             return;
         }
 
@@ -863,7 +863,7 @@ public partial class TemplateGeneratorWindow : Window
         CodePreview.TextArea.TextView.Redraw();
 
         var count = (FindTarget == CodePreview ? _previewMatches : _snippetMatches).Count;
-        FindStatusText.Text = query.Length == 0 ? string.Empty : count == 0 ? "Kein Treffer" : count >= MaxMatches ? $"über {MaxMatches} Treffer" : $"{count} Treffer";
+        FindStatusText.Text = query.Length == 0 ? string.Empty : count == 0 ? TemplateWindowTexts.NoMatch : count >= MaxMatches ? TemplateWindowTexts.MoreThanMatches(MaxMatches) : TemplateWindowTexts.Matches(count);
     }
 
     private List<(int Start, int Length, Brush Brush)> FindMatches(TextEditor editor, string query)
@@ -894,7 +894,7 @@ public partial class TemplateGeneratorWindow : Window
         var match = ParadoxModTool.SearchReplace.TextSearch.FindNext(editor.Text, FindBox.Text, from, SearchSettings());
         if (match is null)
         {
-            FindStatusText.Text = "Kein Treffer";
+            FindStatusText.Text = TemplateWindowTexts.NoMatch;
             return false;
         }
 
@@ -911,7 +911,7 @@ public partial class TemplateGeneratorWindow : Window
             return true;
         }
 
-        FindStatusText.Text = "Die Vorschau ist nur zum Suchen. Ersetzen gilt für das Snippet.";
+        FindStatusText.Text = TemplateWindowTexts.PreviewSearchOnly;
         return false;
     }
 
@@ -946,7 +946,7 @@ public partial class TemplateGeneratorWindow : Window
             SnippetEditor.Document.Replace(0, SnippetEditor.Document.TextLength, newText);
         }
 
-        FindStatusText.Text = count == 0 ? "Kein Treffer" : $"{count} ersetzt";
+        FindStatusText.Text = count == 0 ? TemplateWindowTexts.NoMatch : TemplateWindowTexts.Replaced(count);
     }
 
     // ---- Vorlagen speichern und laden -----------------------------------------------------------------------------------------------------------------
@@ -1063,14 +1063,14 @@ public partial class TemplateGeneratorWindow : Window
         var name = TemplateNameBox.Text.Trim();
         if (name.Length == 0)
         {
-            MessageBox.Show(this, "Gib im Feld neben \"Vorlage\" einen Namen ein.", "Templates erzeugen", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, TemplateWindowTexts.EnterName, TemplateWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var layer = SelectedLayer;
         var where = layer == StoreLayer.Mod ? " (Mod)" : string.Empty;
         if (_store.List(layer).Contains(TemplateStore.SafeName(name), StringComparer.OrdinalIgnoreCase)
-            && MessageBox.Show(this, $"Die Vorlage \"{name}\"{where} gibt es schon. Überschreiben?", "Templates erzeugen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            && MessageBox.Show(this, TemplateWindowTexts.ConfirmOverwrite(name, where), TemplateWindowTexts.Title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -1081,12 +1081,12 @@ public partial class TemplateGeneratorWindow : Window
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, "Die Vorlage konnte nicht gespeichert werden:\n" + ex.Message, "Templates erzeugen", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, TemplateWindowTexts.SaveFailed(ex.Message), TemplateWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         RefreshTemplateList();
-        StatusText.Text = $"Vorlage \"{name}\"{where} gespeichert.";
+        StatusText.Text = TemplateWindowTexts.Saved(name, where);
     }
 
     private void LoadTemplate_Click(object sender, RoutedEventArgs e)
@@ -1096,12 +1096,12 @@ public partial class TemplateGeneratorWindow : Window
         var template = layer is { } found ? _store.Load(name, found) : null;
         if (template is null)
         {
-            MessageBox.Show(this, "Diese Vorlage gibt es nicht.", "Templates erzeugen", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, TemplateWindowTexts.NotFound, TemplateWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         ApplyState(template);
-        StatusText.Text = $"Vorlage \"{name}\"{(layer == StoreLayer.Mod ? " (Mod)" : string.Empty)} geladen.";
+        StatusText.Text = TemplateWindowTexts.Loaded(name, layer == StoreLayer.Mod ? " (Mod)" : string.Empty);
     }
 
     private void DeleteTemplate_Click(object sender, RoutedEventArgs e)
@@ -1114,7 +1114,7 @@ public partial class TemplateGeneratorWindow : Window
         }
 
         var where = found == StoreLayer.Mod ? " (Mod)" : string.Empty;
-        if (MessageBox.Show(this, $"Vorlage \"{name}\"{where} löschen?", "Templates erzeugen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (MessageBox.Show(this, TemplateWindowTexts.ConfirmDelete(name, where), TemplateWindowTexts.Title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -1129,14 +1129,14 @@ public partial class TemplateGeneratorWindow : Window
     /// <summary>Die Ebenen, auf denen der Nutzer Regeln anlegen darf: Vorlage, Mod (nur bei gewählter Mod), Spiel, Alle Spiele.</summary>
     private IReadOnlyList<LayerChoice> LayerChoices()
     {
-        var choices = new List<LayerChoice> { new(RuleLayer.Template, "Vorlage") };
+        var choices = new List<LayerChoice> { new(RuleLayer.Template, RuleLayerNames.Of(RuleLayer.Template)) };
         if (_ruleStore.HasLayer(RuleLayer.Mod))
         {
             choices.Add(new LayerChoice(RuleLayer.Mod, "Mod: " + ((ModBox.SelectedItem as ModChoice)?.Mod?.Name ?? "Mod")));
         }
 
-        choices.Add(new LayerChoice(RuleLayer.Game, "Spiel"));
-        choices.Add(new LayerChoice(RuleLayer.AllGames, "Alle Spiele"));
+        choices.Add(new LayerChoice(RuleLayer.Game, RuleLayerNames.Of(RuleLayer.Game)));
+        choices.Add(new LayerChoice(RuleLayer.AllGames, RuleLayerNames.Of(RuleLayer.AllGames)));
         return choices;
     }
 
@@ -1211,7 +1211,7 @@ public partial class TemplateGeneratorWindow : Window
         }
         else
         {
-            StatusText.Text = "Setze den Cursor auf eine Zahl im Snippet, um eine Regel daraus zu erstellen.";
+            StatusText.Text = TemplateWindowTexts.PutCaretOnNumber;
         }
     }
 
@@ -1223,14 +1223,14 @@ public partial class TemplateGeneratorWindow : Window
         }
         else
         {
-            StatusText.Text = "Wähle zuerst in der Liste eine Zahl aus.";
+            StatusText.Text = TemplateWindowTexts.ChooseNumberFirst;
         }
     }
 
     /// <summary>Öffnet den Dialog mit einer Regel, die aus dem Namen dieses Zählpunkts gebaut ist (die Zahl als <c>[#]</c>, Aktion "Nur markierte zählt").</summary>
     private void CreateRuleFor(VariationPoint point)
     {
-        var rule = CountingRule.Create("Regel für " + point.Label);
+        var rule = CountingRule.Create(TemplateWindowTexts.RuleFor(point.Label));
         rule.Patterns.Add(RulePatternBuilder.FromShape(point.Shape, point.RunIndex));
         rule.Action = RuleAction.OnlyMarkedCounts;
 
@@ -1245,11 +1245,11 @@ public partial class TemplateGeneratorWindow : Window
         try
         {
             _workspace.Modify(chosen, f => RuleEditing.Add(f, edited));
-            StatusText.Text = $"Regel „{edited.Name}“ auf der Ebene {RuleLayerNames.Of(chosen)} angelegt.";
+            StatusText.Text = TemplateWindowTexts.RuleCreated(edited.Name, RuleLayerNames.Of(chosen));
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, "Die Regel konnte nicht gespeichert werden:\n" + ex.Message, "Zählregeln", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, TemplateWindowTexts.RuleSaveFailed(ex.Message), TemplateWindowTexts.RulesTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1302,18 +1302,18 @@ public partial class TemplateGeneratorWindow : Window
         var automatic = LocalizationProfileResolver.FindAutomatic(learned, _host.SourceRelativeFolder());
         var items = new List<LocProfileChoice>
         {
-            new(LocalizationProfileResolver.Automatic, "automatisch: " + (automatic ?? "Rückfall (Name + _desc)")),
-            new(LocalizationProfileResolver.Fallback, "Rückfall (Name + _desc)"),
+            new(LocalizationProfileResolver.Automatic, TemplatesTexts.ProfileAutomatic(automatic ?? TemplatesTexts.ProfileFallback)),
+            new(LocalizationProfileResolver.Fallback, TemplatesTexts.ProfileFallback),
         };
         if (learned is not null)
         {
-            items.AddRange(learned.Profiles.Select(p => new LocProfileChoice(p.Path, $"{p.Path} ({p.ObjectCount} Objekte, {p.Fields.Count} Felder)")));
+            items.AddRange(learned.Profiles.Select(p => new LocProfileChoice(p.Path, TemplateWindowTexts.ProfileChoice(p.Path, p.ObjectCount, p.Fields.Count))));
         }
 
         var selected = _loc.ProfilePath ?? string.Empty;
         if (!items.Any(i => string.Equals(i.Path, selected, StringComparison.OrdinalIgnoreCase)))
         {
-            items.Add(new LocProfileChoice(selected, selected + " (nicht gelernt)"));
+            items.Add(new LocProfileChoice(selected, TemplateWindowTexts.ProfileNotLearned(selected)));
         }
 
         _updatingProfileBox = true;
@@ -1385,7 +1385,7 @@ public partial class TemplateGeneratorWindow : Window
         }
 
         _host.InsertAtCaret(text);
-        StatusText.Text = "Eingefügt.";
+        StatusText.Text = TemplateWindowTexts.Inserted;
     }
 
     private void NewDocument(string text)
@@ -1396,7 +1396,7 @@ public partial class TemplateGeneratorWindow : Window
         }
 
         _host.NewDocument(text);
-        StatusText.Text = "In neuem Dokument geöffnet.";
+        StatusText.Text = TemplateWindowTexts.OpenedInNewDocument;
     }
 
     private void CopyText(string text)
@@ -1409,18 +1409,18 @@ public partial class TemplateGeneratorWindow : Window
         try
         {
             System.Windows.Clipboard.SetText(text);
-            StatusText.Text = "In die Zwischenablage kopiert.";
+            StatusText.Text = TemplateWindowTexts.Copied;
         }
         catch (System.Runtime.InteropServices.COMException)
         {
-            StatusText.Text = "Die Zwischenablage ist gerade belegt. Bitte noch einmal versuchen.";
+            StatusText.Text = TemplateWindowTexts.ClipboardBusy;
         }
     }
 
     private void CodeAppend_Click(object sender, RoutedEventArgs e)
     {
         var code = Code();
-        if (code.Length == 0 || PickFile("Code an Datei anhängen", "Skriptdateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*", null) is not { } path)
+        if (code.Length == 0 || PickFile(TemplateWindowTexts.AppendCodeTitle, TemplateWindowTexts.ScriptFileFilter, null) is not { } path)
         {
             return;
         }
@@ -1431,24 +1431,24 @@ public partial class TemplateGeneratorWindow : Window
             if (open is not null)
             {
                 _host.ReplaceOpenDocumentText(path, TemplateFileWriter.AppendCodeText(open, code));
-                StatusText.Text = "Im offenen Dokument angehängt (noch nicht gespeichert).";
+                StatusText.Text = TemplateWindowTexts.AppendedInOpenDocument;
             }
             else
             {
                 TemplateFileWriter.AppendCodeToFile(path, code);
-                StatusText.Text = "An " + path + " angehängt.";
+                StatusText.Text = TemplateWindowTexts.AppendedTo(path);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Die Datei konnte nicht geschrieben werden:\n" + ex.Message, "Templates erzeugen", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, TemplateWindowTexts.WriteFailed(ex.Message), TemplateWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
     private void LocAppend_Click(object sender, RoutedEventArgs e)
     {
         var entries = Entries();
-        if (entries.Count == 0 || PickFile("Lokalisierung an Datei anhängen", "Lokalisierung (*.yml)|*.yml|Alle Dateien (*.*)|*.*", "localization") is not { } path)
+        if (entries.Count == 0 || PickFile(TemplateWindowTexts.AppendLocTitle, TemplateWindowTexts.LocFileFilter, "localization") is not { } path)
         {
             return;
         }
@@ -1465,8 +1465,8 @@ public partial class TemplateGeneratorWindow : Window
                 var sample = string.Join(", ", duplicates.Take(5)) + (duplicates.Count > 5 ? ", …" : string.Empty);
                 var answer = MessageBox.Show(
                     this,
-                    $"{duplicates.Count} Schlüssel gibt es in der Datei schon ({sample}).\n\nJa = diese überspringen\nNein = trotzdem anhängen (doppelte Schlüssel)\nAbbrechen = nichts tun",
-                    "Templates erzeugen",
+                    TemplateWindowTexts.DuplicateKeys(duplicates.Count, sample),
+                    TemplateWindowTexts.Title,
                     MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
                 if (answer == MessageBoxResult.Cancel)
@@ -1479,7 +1479,7 @@ public partial class TemplateGeneratorWindow : Window
 
             var existingLanguage = TemplateFileWriter.ReadLanguage(existing);
             if (existingLanguage is not null && !string.Equals(existingLanguage, _loc.Language, StringComparison.OrdinalIgnoreCase)
-                && MessageBox.Show(this, $"Die Datei ist für die Sprache \"{existingLanguage}\", eingestellt ist \"{_loc.Language}\". Trotzdem anhängen?", "Templates erzeugen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                && MessageBox.Show(this, TemplateWindowTexts.LanguageMismatch(existingLanguage, _loc.Language), TemplateWindowTexts.Title, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             {
                 return;
             }
@@ -1496,11 +1496,11 @@ public partial class TemplateGeneratorWindow : Window
                 result = TemplateFileWriter.AppendLocalizationToFile(path, entries, _loc.Language, skip);
             }
 
-            StatusText.Text = $"{result.Added} Einträge angehängt" + (result.Skipped > 0 ? $", {result.Skipped} übersprungen" : string.Empty) + (open is not null ? " (im offenen Dokument, noch nicht gespeichert)." : ".");
+            StatusText.Text = TemplateWindowTexts.EntriesAppended(result.Added) + (result.Skipped > 0 ? TemplateWindowTexts.EntriesSkipped(result.Skipped) : string.Empty) + (open is not null ? TemplateWindowTexts.InOpenDocumentNotSaved : ".");
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Die Datei konnte nicht geschrieben werden:\n" + ex.Message, "Templates erzeugen", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, TemplateWindowTexts.WriteFailed(ex.Message), TemplateWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1534,6 +1534,7 @@ public partial class TemplateGeneratorWindow : Window
 
         try
         {
+            dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("templates.file");
             return dialog.ShowDialog(this) == true ? dialog.FileName : null;
         }
         catch (ArgumentException)

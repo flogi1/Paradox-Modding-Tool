@@ -14,13 +14,18 @@
     <StartupObject>ParadoxModTool.App.Program</StartupObject>
     <!-- Versionsnummer des Programms: erscheint im Startbild, im Über-Fenster, im Update-Vergleich und im
          Fehlerbericht. Bei jedem veröffentlichten Release hier hochzählen (und den Git-Tag "v<Version>" setzen). -->
-    <Version>0.3.0</Version>
+    <Version>0.9.1</Version>
     <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ParadoxModTool.Compatch\ParadoxModTool.Compatch.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Desync\ParadoxModTool.Desync.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.BugTracking\ParadoxModTool.BugTracking.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Editor\ParadoxModTool.Editor.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Modifiers\ParadoxModTool.Modifiers.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ErrorLog\ParadoxModTool.ErrorLog.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SaveGames\ParadoxModTool.SaveGames.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Explorer\ParadoxModTool.Explorer.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GitIntegration\ParadoxModTool.GitIntegration.csproj" />
@@ -29,6 +34,7 @@
     <ProjectReference Include="..\ParadoxModTool.LaunchControl\ParadoxModTool.LaunchControl.csproj" />
     <ProjectReference Include="..\ParadoxModTool.ModCompat\ParadoxModTool.ModCompat.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Mods\ParadoxModTool.Mods.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ModOverview\ParadoxModTool.ModOverview.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Notes\ParadoxModTool.Notes.csproj" />
     <ProjectReference Include="..\ParadoxModTool.SearchReplace\ParadoxModTool.SearchReplace.csproj" />
     <ProjectReference Include="..\ParadoxModTool.ScriptDocs\ParadoxModTool.ScriptDocs.csproj" />
@@ -37,6 +43,7 @@
     <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
     <ProjectReference Include="..\ParadoxModTool.SettingsUi\ParadoxModTool.SettingsUi.csproj" />
     <ProjectReference Include="..\ParadoxModTool.SteamIntegration\ParadoxModTool.SteamIntegration.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Patches\ParadoxModTool.Patches.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Syntax\ParadoxModTool.Syntax.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Templates\ParadoxModTool.Templates.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Tools\ParadoxModTool.Tools.csproj" />
@@ -66,8 +73,21 @@
     <None Include="..\..\profiles\scriptdocs\*.json" Link="profiles\scriptdocs\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\profiles\errorlog\*.json" Link="profiles\errorlog\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\desync\*.json" Link="profiles\desync\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\guiblocks\**\*.guiblock" Link="profiles\guiblocks\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\syntax-templates\jomini-script.xshd" Link="syntax-templates\jomini-script.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Readme\Changelog.txt" Link="Readme\Changelog.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 

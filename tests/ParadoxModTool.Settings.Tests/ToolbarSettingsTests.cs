@@ -17,7 +17,7 @@ public sealed class ToolbarSettingsTests
     {
         var ids = ToolbarCatalog.All.Select(i => i.Id).ToList();
 
-        Assert.Equal(20, ids.Count);
+        Assert.Equal(22, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct().Count());
         var groups = ToolbarCatalog.All.Select(i => (int)i.Group).ToList();
         Assert.Equal(groups.OrderBy(g => g), groups);
@@ -31,7 +31,7 @@ public sealed class ToolbarSettingsTests
         var tools = ToolbarCatalog.All.Where(i => i.Group == ToolbarGroup.Tools).Select(i => i.Id).ToList();
 
         Assert.Equal(
-            new[] { ToolbarItemIds.Search, ToolbarItemIds.GoToLine, ToolbarItemIds.GoToBracket, ToolbarItemIds.ScopeFinder, ToolbarItemIds.Templates, ToolbarItemIds.Format, ToolbarItemIds.Notes, ToolbarItemIds.Bookmark, ToolbarItemIds.Bug, ToolbarItemIds.BugTracker },
+            new[] { ToolbarItemIds.Search, ToolbarItemIds.GoToLine, ToolbarItemIds.GoToBracket, ToolbarItemIds.ScopeFinder, ToolbarItemIds.GuiDataHelper, ToolbarItemIds.Templates, ToolbarItemIds.Format, ToolbarItemIds.Notes, ToolbarItemIds.Bookmark, ToolbarItemIds.Bug, ToolbarItemIds.BugTracker },
             tools);
     }
 

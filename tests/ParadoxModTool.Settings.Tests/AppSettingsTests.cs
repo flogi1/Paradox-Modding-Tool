@@ -19,10 +19,39 @@ public sealed class AppSettingsTests
         nameof(AppSessionState.CheckForUpdatesOnStartup),
         nameof(AppSessionState.CompatchCautiousWrite),
         nameof(AppSessionState.CompatchSkipLocked),
+        nameof(AppSessionState.CompatchResultRight),
+        nameof(AppSessionState.CompatchMainAsBase),
+        nameof(AppSessionState.CompatchFillMissing),
+        nameof(AppSessionState.CompatchHideFilled),
+        nameof(AppSessionState.CompatchHideReplaced),
+        nameof(AppSessionState.CompatchHideDecided),
+        nameof(AppSessionState.CompatchUncertainOnly),
+        nameof(AppSessionState.CompatchKindsSideBySide),
+        nameof(AppSessionState.ExplorerButtonsOnLeft),
+        nameof(AppSessionState.ExplorerShowErrorMarks),
+        nameof(AppSessionState.ExplorerSearchFoldersOnly),
+        nameof(AppSessionState.ExplorerHideUgcReferences),
         nameof(AppSessionState.CompatchDefaultView),
         nameof(AppSessionState.UiLanguage),
         nameof(AppSessionState.SettingsWindowCategory),
         nameof(AppSessionState.SettingsWindowBounds),
+        nameof(AppSessionState.ErrorLogStandalone),
+        nameof(AppSessionState.ErrorLogWindowBounds),
+        nameof(AppSessionState.SaveExplorerStandalone),
+        nameof(AppSessionState.SaveExplorerWindowBounds),
+        nameof(AppSessionState.MyModsView),
+        nameof(AppSessionState.MyModsGrouping),
+        nameof(AppSessionState.MyModsSort),
+        nameof(AppSessionState.MyModsSortDescending),
+        nameof(AppSessionState.MyModsOnlyPublished),
+        nameof(AppSessionState.MyModsOnlyOpenBugs),
+        nameof(AppSessionState.MyModsOnlyWarnings),
+        nameof(AppSessionState.MyModsGameOrder),
+        nameof(AppSessionState.MyModsHiddenGames),
+        nameof(AppSessionState.MyModsAlertsCollapsed),
+        nameof(AppSessionState.MyModsWindowBounds),
+        nameof(AppSessionState.MyModsHiddenAlertKinds),
+        nameof(AppSessionState.MyModsStartMaximized),
     };
 
     private static AppSessionState NonDefaultState() => new()
@@ -37,11 +66,76 @@ public sealed class AppSettingsTests
         CheckForUpdatesOnStartup = false,
         CompatchCautiousWrite = true,
         CompatchSkipLocked = true,
+        CompatchResultRight = true,
+        CompatchMainAsBase = true,
+        CompatchFillMissing = true,
+        CompatchHideFilled = true,
+        CompatchHideReplaced = true,
+        CompatchHideDecided = true,
+        CompatchUncertainOnly = true,
+        CompatchKindsSideBySide = true,
+        ExplorerButtonsOnLeft = true,
+        ExplorerShowErrorMarks = false,
+        ExplorerSearchFoldersOnly = true,
+        ExplorerHideUgcReferences = false,
         CompatchDefaultView = "C",
         UiLanguage = "en",
         SettingsWindowCategory = "Hotkeys",
         SettingsWindowBounds = new WindowBoundsState { Left = 10, Top = 20, Width = 700, Height = 500 },
+        ErrorLogStandalone = true,
+        ErrorLogWindowBounds = new WindowBoundsState { Left = 30, Top = 40, Width = 900, Height = 600, IsMaximized = true },
+        SaveExplorerStandalone = true,
+        SaveExplorerWindowBounds = new WindowBoundsState { Left = 50, Top = 60, Width = 1000, Height = 700 },
+        MyModsView = "List",
+        MyModsGrouping = "All",
+        MyModsSort = "Subscribers",
+        MyModsSortDescending = true,
+        MyModsOnlyPublished = true,
+        MyModsOnlyOpenBugs = true,
+        MyModsOnlyWarnings = true,
+        MyModsGameOrder = new List<string> { "ck3", "eu4" },
+        MyModsHiddenGames = new List<string> { "eu5" },
+        MyModsAlertsCollapsed = true,
+        MyModsWindowBounds = new WindowBoundsState { Left = 1, Top = 2, Width = 3, Height = 4 },
+        MyModsHiddenAlertKinds = new List<string> { "ReleaseStatus" },
+        MyModsStartMaximized = false,
     };
+
+    [Fact]
+    public void MyModsStartsMaximizedByDefault()
+    {
+        Assert.True(new AppSessionState().MyModsStartMaximized);
+        Assert.True(new AppSettings().MyModsStartMaximized);
+    }
+
+    [Fact]
+    public void MyModsView_NormalizesUnknown()
+    {
+        var settings = new AppSettings { MyModsView = "Foo", MyModsGrouping = "Foo", MyModsSort = "Foo" };
+
+        Assert.Equal("Tiles", settings.MyModsView);
+        Assert.Equal("Games", settings.MyModsGrouping);
+        Assert.Equal("Name", settings.MyModsSort);
+
+        settings.MyModsView = "List";
+        settings.MyModsSort = "LastRelease";
+        Assert.Equal("List", settings.MyModsView);
+        Assert.Equal("LastRelease", settings.MyModsSort);
+    }
+
+    [Fact]
+    public void MyModsGameOrder_ChangedOnlyWhenContentDiffers()
+    {
+        var settings = new AppSettings();
+        var names = new List<string>();
+        settings.Changed += (_, name) => names.Add(name);
+
+        settings.MyModsGameOrder = new[] { "eu4", "ck3" };
+        settings.MyModsGameOrder = new List<string> { "eu4", "ck3" };
+
+        Assert.Equal(new[] { nameof(AppSettings.MyModsGameOrder) }, names);
+        Assert.Equal(new[] { "eu4", "ck3" }, settings.MyModsGameOrder);
+    }
 
     private static string Json(AppSessionState state, string name) =>
         JsonSerializer.SerializeToNode(state)!.AsObject()[name]?.ToJsonString() ?? "null";

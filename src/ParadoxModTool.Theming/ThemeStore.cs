@@ -36,7 +36,7 @@ public static class ThemeStore
     {
         if (theme.IsBuiltIn)
         {
-            throw new InvalidOperationException("Eingebaute Themes sind schreibgeschützt.");
+            throw new InvalidOperationException(ThemingTexts.BuiltInReadOnly);
         }
 
         Directory.CreateDirectory(directory);

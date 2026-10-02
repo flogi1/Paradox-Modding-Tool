@@ -109,6 +109,25 @@ public sealed class SessionRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void FolderFilters_AreKeptPerGame()
+    {
+        var repo = Repo();
+        var eu = repo.Load("eu4");
+        eu.State.FolderFilters = new List<ParadoxModTool.Categories.FolderFilterDefinition>
+        {
+            new() { Id = "f1", Name = "Idea Variation Hauptmod", FolderPath = @"C:\mod\Idea Variation", ShowInBar = false },
+        };
+        repo.Save("eu4", eu);
+
+        var again = repo.Load("eu4").State.FolderFilters.Single();
+
+        Assert.Equal("Idea Variation Hauptmod", again.Name);
+        Assert.Equal(@"C:\mod\Idea Variation", again.FolderPath);
+        Assert.False(again.ShowInBar);
+        Assert.Empty(repo.Load("eu5").State.FolderFilters);
+    }
+
+    [Fact]
     public void Games_KeepTheirStateSeparateButShareGlobalSettings()
     {
         var repo = Repo();

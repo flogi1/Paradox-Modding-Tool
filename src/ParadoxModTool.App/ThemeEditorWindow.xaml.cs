@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Settings;
 using ParadoxModTool.Theming;
 // WPF + Windows Forms: mehrdeutige Typnamen (CS0104) explizit auflösen.
@@ -31,7 +32,7 @@ public partial class ThemeEditorWindow : Window
 {
     private sealed record ThemeEntry(ThemeDefinition Theme)
     {
-        public string Display => Theme.IsBuiltIn ? $"{Theme.Name} (eingebaut)" : Theme.Name;
+        public string Display => Theme.IsBuiltIn ? MiscWindowTexts.ThemeBuiltInEntry(ThemingTexts.DisplayName(Theme)) : Theme.Name;
     }
 
     private sealed record TokenRow(Border Swatch, TextBox Box);
@@ -74,7 +75,7 @@ public partial class ThemeEditorWindow : Window
         {
             RowsPanel.Children.Add(new TextBlock
             {
-                Text = group,
+                Text = ThemingTexts.GroupLabel(group),
                 FontWeight = FontWeights.SemiBold,
                 FontSize = 14,
                 Margin = new Thickness(0, 10, 0, 4),
@@ -87,7 +88,7 @@ public partial class ThemeEditorWindow : Window
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-                var label = new TextBlock { Text = token.Label, VerticalAlignment = VerticalAlignment.Center };
+                var label = new TextBlock { Text = ThemingTexts.TokenLabel(token), VerticalAlignment = VerticalAlignment.Center };
                 var swatch = new Border
                 {
                     Width = 34,
@@ -95,7 +96,7 @@ public partial class ThemeEditorWindow : Window
                     Margin = new Thickness(8, 0, 6, 0),
                     BorderThickness = new Thickness(1),
                     Cursor = System.Windows.Input.Cursors.Hand,
-                    ToolTip = "Farbe wählen",
+                    ToolTip = MiscWindowTexts.ThemePickColorTip,
                 };
                 swatch.SetResourceReference(Border.BorderBrushProperty, "Theme.ControlBorder");
                 var box = new TextBox { Width = 92, VerticalContentAlignment = VerticalAlignment.Center, FontFamily = new System.Windows.Media.FontFamily("Consolas") };
@@ -265,7 +266,7 @@ public partial class ThemeEditorWindow : Window
     /// <summary>Legt eine eigene Kopie des Themes an, speichert sie und wählt sie in der Liste aus.</summary>
     private void CreateCopyOf(ThemeDefinition source)
     {
-        var copy = ThemeManager.CreateCustomCopy(source, source.Name + " (Kopie)");
+        var copy = ThemeManager.CreateCustomCopy(source, MiscWindowTexts.ThemeCopyName(ThemingTexts.DisplayName(source)));
         ThemeManager.SaveCustom(copy);
         _entries.Add(new ThemeEntry(copy));
         RefreshList(copy.Id);
@@ -278,7 +279,7 @@ public partial class ThemeEditorWindow : Window
             return;
         }
 
-        if (MessageBox.Show(this, $"Das Theme „{theme.Name}“ wirklich löschen?", "Theme löschen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (MessageBox.Show(this, MiscWindowTexts.ThemeDeleteConfirm(theme.Name), MiscWindowTexts.ThemeDeleteTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -296,7 +297,8 @@ public partial class ThemeEditorWindow : Window
 
     private void Import_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog { Filter = "Theme-Datei (*.json)|*.json|Alle Dateien (*.*)|*.*", Title = "Theme importieren" };
+        var dialog = new OpenFileDialog { Filter = MiscWindowTexts.ThemeImportFilter, Title = MiscWindowTexts.ThemeImportTitle };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("theme.import");
         if (dialog.ShowDialog(this) != true)
         {
             return;
@@ -305,7 +307,7 @@ public partial class ThemeEditorWindow : Window
         var imported = ThemeStore.Import(dialog.FileName);
         if (imported is null)
         {
-            MessageBox.Show(this, "Die Datei ist kein gültiges Theme.", "Import nicht möglich", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, MiscWindowTexts.ThemeInvalidFile, MiscWindowTexts.ThemeImportFailedTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -323,10 +325,11 @@ public partial class ThemeEditorWindow : Window
 
         var dialog = new SaveFileDialog
         {
-            Filter = "Theme-Datei (*.json)|*.json",
-            Title = "Theme exportieren",
+            Filter = MiscWindowTexts.ThemeExportFilter,
+            Title = MiscWindowTexts.ThemeExportTitle,
             FileName = new string(theme.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray()) + ".json",
         };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("theme.export");
         if (dialog.ShowDialog(this) != true)
         {
             return;
@@ -345,7 +348,7 @@ public partial class ThemeEditorWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, $"Die Datei konnte nicht geschrieben werden: {ex.Message}", "Fehler");
+            MessageBox.Show(this, MiscWindowTexts.ThemeWriteFailed(ex.Message), CommonTexts.Error);
         }
     }
 

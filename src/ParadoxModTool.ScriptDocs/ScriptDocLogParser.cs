@@ -12,29 +12,149 @@ public static class ScriptDocLogParser
     public static IReadOnlyList<ScriptDocEntry> Parse(ScriptDocKind kind, string text) => kind switch
     {
         ScriptDocKind.Modifier => ParseModifiers(text),
-        ScriptDocKind.Trigger => ParseMarkdown(text, ScriptDocKind.Trigger, "## "),
-        ScriptDocKind.Effect => ParseMarkdown(text, ScriptDocKind.Effect, "## "),
-        ScriptDocKind.EventTarget => ParseEventTargets(text),
+        ScriptDocKind.Trigger => IsClassic(text) ? ParseClassic(text, ScriptDocKind.Trigger) : ParseMarkdown(text, ScriptDocKind.Trigger, "## "),
+        ScriptDocKind.Effect => IsClassic(text) ? ParseClassic(text, ScriptDocKind.Effect) : ParseMarkdown(text, ScriptDocKind.Effect, "## "),
+        ScriptDocKind.EventTarget => IsClassic(text) ? ParseClassic(text, ScriptDocKind.EventTarget) : ParseEventTargets(text),
         ScriptDocKind.OnAction => ParseOnActions(text),
         ScriptDocKind.CustomLocalization => ParseCustomLocalization(text),
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    /// <summary>Zeilen wie <c>Tag: name, Categories: Country, , All, </c>. "All" und "None" sind Markierungen, keine Scopes.</summary>
+    /// <summary>
+    /// Klassisches Format (Crusader Kings III): erste nicht leere Zeile wie <c>Effect Documentation:</c> statt der Markdown-Überschrift
+    /// <c># Effect Documentation</c> von Europa Universalis V.
+    /// </summary>
+    public static bool IsClassic(string text)
+    {
+        var first = Lines(text).Select(l => l.Trim().TrimStart('﻿')).FirstOrDefault(l => l.Length > 0);
+        return first is not null && !first.StartsWith('#') && first.EndsWith("Documentation:", StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Trigger, Effects und Event-Targets im klassischen Format: Blöcke zwischen Trennlinien, erste Zeile <c>name - Beschreibung</c>
+    /// (getrennt am ersten <c> - </c>), danach weitere Beschreibung und die Angaben wie <c>Supported Scopes: a, b</c>.
+    /// </summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseClassic(string text, ScriptDocKind kind)
+    {
+        var result = new List<ScriptDocEntry>();
+        foreach (var block in Blocks(text))
+        {
+            var header = block[0];
+            if (block.Count == 1 && header.EndsWith("Documentation:", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var dash = header.IndexOf(" - ", StringComparison.Ordinal);
+            var name = (dash < 0 ? header : header[..dash]).Trim();
+            if (name.Length == 0)
+            {
+                continue;
+            }
+
+            var entry = new ScriptDocEntry { Kind = kind, Name = name };
+            var body = new List<string>();
+            if (dash >= 0 && header[(dash + 3)..].Trim() is { Length: > 0 } first)
+            {
+                body.Add(first);
+            }
+
+            foreach (var line in block.Skip(1))
+            {
+                if (!ApplyClassicLabel(entry, line))
+                {
+                    body.Add(line);
+                }
+            }
+
+            entry.Description = JoinBody(body);
+            result.Add(entry);
+        }
+
+        return result;
+    }
+
+    /// <summary>Übernimmt eine Angabe des klassischen Formats in den Eintrag; <see langword="false"/>, wenn die Zeile zur Beschreibung gehört.</summary>
+    private static bool ApplyClassicLabel(ScriptDocEntry entry, string line)
+    {
+        if (entry.Kind == ScriptDocKind.EventTarget)
+        {
+            if (TryLabel(line, "Input Scopes:", out var input))
+            {
+                entry.Scopes = SplitList(input);
+            }
+            else if (TryLabel(line, "Output Scopes:", out var output))
+            {
+                entry.Targets = SplitList(output);
+            }
+            else if (TryLabel(line, "Requires Data:", out var requires))
+            {
+                entry.Extra["Requires Data"] = requires.Trim();
+            }
+            else if (TryLabel(line, "Global Link:", out var global))
+            {
+                entry.Extra["Global Link"] = global.Trim();
+            }
+            else if (TryLabel(line, "Wild Card:", out var wild))
+            {
+                entry.Extra["Wild Card"] = wild.Trim();
+            }
+            else
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        if (TryLabel(line, "Supported Scopes:", out var scopes))
+        {
+            entry.Scopes = SplitList(scopes);
+            return true;
+        }
+
+        if (TryLabel(line, "Supported Targets:", out var targets))
+        {
+            entry.Targets = SplitList(targets);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Zeilen wie <c>Tag: name, Categories: Country, , All, </c> (EU V; "All" und "None" sind Markierungen, keine Scopes) oder, im Format von
+    /// Crusader Kings III, <c>Tag: name</c> mit einer folgenden Zeile <c>Use areas: character, province, and county</c>.
+    /// </summary>
     public static IReadOnlyList<ScriptDocEntry> ParseModifiers(string text)
     {
         var result = new List<ScriptDocEntry>();
+        ScriptDocEntry? pending = null;
         foreach (var line in Lines(text))
         {
+            if (pending is not null && TryLabel(line, "Use areas:", out var areas))
+            {
+                pending.Scopes = SplitList(areas.Replace(", and ", ",", StringComparison.Ordinal).Replace(" and ", ",", StringComparison.Ordinal));
+                pending = null;
+                continue;
+            }
+
             if (!line.StartsWith("Tag:", StringComparison.Ordinal))
             {
                 continue;
             }
 
+            pending = null;
             var rest = line["Tag:".Length..];
             var split = rest.IndexOf(", Categories:", StringComparison.Ordinal);
             if (split < 0)
             {
+                if (rest.Trim() is { Length: > 0 } tag)
+                {
+                    pending = new ScriptDocEntry { Kind = ScriptDocKind.Modifier, Name = tag };
+                    result.Add(pending);
+                }
+
                 continue;
             }
 
@@ -207,7 +327,7 @@ public static class ScriptDocLogParser
 
             var entry = new ScriptDocEntry { Kind = ScriptDocKind.OnAction, Name = name };
             entry.Extra["From Code"] = fromCode;
-            if (!string.IsNullOrEmpty(scope) && !scope.Equals("none", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(scope) && !IsNoScope(scope))
             {
                 entry.Scopes.Add(scope);
             }
@@ -275,7 +395,7 @@ public static class ScriptDocLogParser
                 Description = JoinBody(entries),
                 Extra = extra,
             };
-            if (!string.IsNullOrEmpty(scope) && !scope.Equals("none", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(scope) && !IsNoScope(scope))
             {
                 entry.Scopes.Add(scope);
             }
@@ -328,6 +448,10 @@ public static class ScriptDocLogParser
         value = string.Empty;
         return false;
     }
+
+    /// <summary>"none" (ältere Spiel-Builds) und "none/any" (neuere) heißen: kein bestimmter Scope.</summary>
+    private static bool IsNoScope(string scope) =>
+        scope.Equals("none", StringComparison.OrdinalIgnoreCase) || scope.Equals("none/any", StringComparison.OrdinalIgnoreCase);
 
     private static List<string> SplitList(string text) =>
         text.Split(',').Select(t => t.Trim()).Where(t => t.Length > 0).ToList();

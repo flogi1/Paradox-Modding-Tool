@@ -9,6 +9,9 @@ public enum GuiPaletteKind
     EngineWidget,
     Type,
     Template,
+
+    /// <summary>GUI-Baustein; eingefügt wird der im Fenster "Bausteine" erzeugte Code (nie <c>Name = { }</c> oder <c>using</c>).</summary>
+    Block,
 }
 
 /// <summary>
@@ -26,8 +29,14 @@ public sealed record GuiPaletteEntry(
 {
     public bool IsMod => Layer == GuiLayer.Mod;
 
-    /// <summary>Code zum Einfügen als Widget; null bei Templates (sie kommen als <c>using</c> in die Auswahl).</summary>
-    public string? Snippet => Kind == GuiPaletteKind.Template ? null : $"{Name} = {{ }}";
+    /// <summary>Baustein eines Eintrags der Art <see cref="GuiPaletteKind.Block"/>.</summary>
+    public Blocks.GuiBlock? Block { get; init; }
+
+    /// <summary>
+    /// Code zum Einfügen als Widget; null bei Templates (sie kommen als <c>using</c> in die Auswahl) und Bausteinen (Code aus dem Fenster
+    /// "Bausteine").
+    /// </summary>
+    public string? Snippet => Kind is GuiPaletteKind.Template or GuiPaletteKind.Block ? null : $"{Name} = {{ }}";
 }
 
 /// <summary>
@@ -95,6 +104,26 @@ public static class GuiPalette
         });
         return engine.Concat(files).ToList();
     }
+
+    /// <summary>
+    /// Palettengruppe "Bausteine" (Plan-Ruling 1): fehlerfreie Bausteine ohne die eingebauten (die "Leere Datei" erzeugt keinen Code); eigene in
+    /// Akzentfarbe (Ebene Mod), mitgelieferte wie Vanilla. Ohne Anzahl der Verwendungen (-1).
+    /// </summary>
+    public static IReadOnlyList<GuiPaletteEntry> BlockEntries(IEnumerable<Blocks.GuiBlock> blocks) =>
+        blocks
+            .Where(b => b.IsValid && !b.IsBuiltIn)
+            .Select(b => new GuiPaletteEntry(
+                b.Name,
+                GuiPaletteKind.Block,
+                GuiTexts.PaletteBlocksGroup,
+                b.Layer == Blocks.GuiBlockLayer.Shipped ? GuiLayer.Vanilla : GuiLayer.Mod,
+                -1,
+                GuiWidgetCategory.Other,
+                null)
+            {
+                Block = b,
+            })
+            .ToList();
 
     public static bool Matches(GuiPaletteEntry entry, string text) =>
         text.Length == 0 || entry.Name.Contains(text, StringComparison.OrdinalIgnoreCase);

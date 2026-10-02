@@ -1,4 +1,5 @@
 using System.Windows;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Mods;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -21,8 +22,8 @@ public sealed record ProjectAssignResult(string? ParentModId, ModRole Role, IRea
 public sealed class ProjectAssignDialog : Window
 {
     private readonly ModInfo _mod;
-    private readonly RadioButton _asChild = new() { Content = "Diese Mod gehört zu einem Hauptmod", GroupName = "mode" };
-    private readonly RadioButton _asMain = new() { Content = "Diese Mod ist Hauptmod eines Projekts", GroupName = "mode", Margin = new Thickness(0, 4, 0, 0) };
+    private readonly RadioButton _asChild = new() { Content = MainTexts.AssignAsChild, GroupName = "mode" };
+    private readonly RadioButton _asMain = new() { Content = MainTexts.AssignAsMain, GroupName = "mode", Margin = new Thickness(0, 4, 0, 0) };
     private readonly ComboBox _parent = new();
     private readonly ComboBox _role = new();
     private readonly StackPanel _childPanel = new();
@@ -32,7 +33,7 @@ public sealed class ProjectAssignDialog : Window
     private ProjectAssignDialog(ModRegistry registry, ModInfo mod)
     {
         _mod = mod;
-        Title = "Projekt zuordnen";
+        Title = MainTexts.AssignTitle;
         Width = 520;
         SizeToContent = SizeToContent.Height;
         MaxHeight = 640;
@@ -43,21 +44,21 @@ public sealed class ProjectAssignDialog : Window
         var hasChildren = registry.Mods.Any(m => m.ParentModId == mod.Id);
         var canBeMain = mod.ParentModId is null;
 
-        _parent.Items.Add(new Choice<string?>("Kein Projekt (eigenständige Mod)", null));
+        _parent.Items.Add(new Choice<string?>(MainTexts.AssignNoProject, null));
         foreach (var candidate in registry.Mods.Where(m => m.Id != mod.Id && m.ParentModId is null && !hasChildren))
         {
             _parent.Items.Add(new Choice<string?>(candidate.Name, candidate.Id));
         }
 
-        _role.Items.Add(new Choice<ModRole>("Dev-Branch (Testversion, Beta)", ModRole.DevBranch));
-        _role.Items.Add(new Choice<ModRole>("Submod (hängt vom Hauptmod ab)", ModRole.Submod));
+        _role.Items.Add(new Choice<ModRole>(MainTexts.AssignRoleDevLong, ModRole.DevBranch));
+        _role.Items.Add(new Choice<ModRole>(MainTexts.AssignRoleSubmodLong, ModRole.Submod));
         _parent.SelectedIndex = Math.Max(0, _parent.Items.Cast<Choice<string?>>().ToList().FindIndex(c => c.Value == mod.ParentModId));
         _role.SelectedIndex = mod.Role == ModRole.Submod ? 1 : 0;
         _role.IsEnabled = _parent.SelectedIndex > 0;
         _parent.SelectionChanged += (_, _) => _role.IsEnabled = _parent.SelectedIndex > 0;
-        _childPanel.Children.Add(new TextBlock { Text = "Hauptmod des Projekts:", Margin = new Thickness(0, 0, 0, 2) });
+        _childPanel.Children.Add(new TextBlock { Text = MainTexts.AssignMainMod, Margin = new Thickness(0, 0, 0, 2) });
         _childPanel.Children.Add(_parent);
-        _childPanel.Children.Add(new TextBlock { Text = "Rolle:", Margin = new Thickness(0, 8, 0, 2) });
+        _childPanel.Children.Add(new TextBlock { Text = MainTexts.AssignRole, Margin = new Thickness(0, 8, 0, 2) });
         _childPanel.Children.Add(_role);
 
         var list = new StackPanel();
@@ -66,7 +67,7 @@ public sealed class ProjectAssignDialog : Window
             var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
             var check = new CheckBox { Content = candidate.Name, Width = 250, IsChecked = candidate.ParentModId == mod.Id, VerticalAlignment = VerticalAlignment.Center };
             var role = new ComboBox { Width = 200 };
-            role.Items.Add(new Choice<ModRole>("Dev-Branch", ModRole.DevBranch));
+            role.Items.Add(new Choice<ModRole>(MainTexts.AssignRoleDev, ModRole.DevBranch));
             role.Items.Add(new Choice<ModRole>("Submod", ModRole.Submod));
             role.SelectedIndex = candidate.Role == ModRole.Submod ? 1 : 0;
             role.IsEnabled = check.IsChecked == true;
@@ -77,9 +78,9 @@ public sealed class ProjectAssignDialog : Window
             _candidates.Add((check, role, candidate.Id));
         }
 
-        _mainPanel.Children.Add(new TextBlock { Text = "Mods, die zu diesem Projekt gehören:", Margin = new Thickness(0, 0, 0, 4) });
+        _mainPanel.Children.Add(new TextBlock { Text = MainTexts.AssignMembers, Margin = new Thickness(0, 0, 0, 4) });
         _mainPanel.Children.Add(_candidates.Count == 0
-            ? new TextBlock { Text = "Es gibt keine weiteren Mods, die zugeordnet werden können.", Foreground = System.Windows.Media.Brushes.Gray }
+            ? new TextBlock { Text = MainTexts.AssignNoCandidates, Foreground = System.Windows.Media.Brushes.Gray }
             : new ScrollViewer { Content = list, MaxHeight = 320, VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto });
 
         void UpdateMode()
@@ -95,9 +96,9 @@ public sealed class ProjectAssignDialog : Window
         (hasChildren || (canBeMain && mod.ParentModId is null && _candidates.Any(c => c.Check.IsChecked == true)) ? _asMain : _asChild).IsChecked = true;
         UpdateMode();
 
-        var ok = new Button { Content = "OK", Width = 90, Margin = new Thickness(0, 0, 6, 0), IsDefault = true };
+        var ok = new Button { Content = CommonTexts.Ok, Width = 90, Margin = new Thickness(0, 0, 6, 0), IsDefault = true };
         ok.Click += (_, _) => DialogResult = true;
-        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        var cancel = new Button { Content = CommonTexts.Cancel, Width = 90, IsCancel = true };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
         buttons.Children.Add(ok);
         buttons.Children.Add(cancel);

@@ -8,12 +8,16 @@ public enum SettingsCategory
     Workspace,
     WorkspaceToolbar,
     NotesPanel,
+    Explorer,
     Compatch,
     GuiTools,
+    ErrorLog,
+    SaveExplorer,
     Layout,
     Language,
     Themes,
     Hotkeys,
+    BugTracker,
     Update,
 }
 

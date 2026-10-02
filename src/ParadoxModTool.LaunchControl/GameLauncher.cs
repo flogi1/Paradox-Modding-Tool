@@ -46,12 +46,12 @@ public static class GameLauncher
     {
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            return LaunchResult.Failure("Es ist noch kein Pfad zur Spiel-.exe eingestellt.");
+            return LaunchResult.Failure(LaunchTexts.NoExecutablePath);
         }
 
         if (!File.Exists(executablePath))
         {
-            return LaunchResult.Failure($"Die Datei \"{executablePath}\" wurde nicht gefunden.");
+            return LaunchResult.Failure(LaunchTexts.FileNotFound(executablePath));
         }
 
         try
@@ -62,11 +62,11 @@ public static class GameLauncher
         }
         catch (Win32Exception ex)
         {
-            return LaunchResult.Failure($"Das Spiel konnte nicht gestartet werden: {ex.Message}");
+            return LaunchResult.Failure(LaunchTexts.StartFailed(ex.Message));
         }
         catch (InvalidOperationException ex)
         {
-            return LaunchResult.Failure($"Das Spiel konnte nicht gestartet werden: {ex.Message}");
+            return LaunchResult.Failure(LaunchTexts.StartFailed(ex.Message));
         }
     }
 }

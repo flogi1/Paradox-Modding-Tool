@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Microsoft.Win32;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Catalog;
+using ParadoxModTool.GuiDesign.Conditions;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Resolve;
@@ -293,7 +294,7 @@ public sealed class GuiPropertyEditor : UserControl
                     IsEnabled = _editable,
                 };
                 _read = () => GuiPropertyInput.ValueText(editor, choice.Text, wasQuoted);
-                return choice;
+                return WithDataHelper(choice, () => EditableField(choice), name, input, always: false);
 
             case GuiValueEditor.Binding:
                 var binding = new ComboBox
@@ -305,7 +306,7 @@ public sealed class GuiPropertyEditor : UserControl
                     IsEnabled = _editable,
                 };
                 _read = () => GuiPropertyInput.ValueText(editor, binding.Text, wasQuoted);
-                return binding;
+                return WithDataHelper(binding, () => EditableField(binding), name, input, always: true);
 
             case GuiValueEditor.Pair:
                 var (first, second) = GuiPropertyInput.SplitPair(input);
@@ -358,8 +359,122 @@ public sealed class GuiPropertyEditor : UserControl
             default:
                 var box = new TextBox { Text = input, MinWidth = 220, IsEnabled = _editable };
                 _read = () => GuiPropertyInput.ValueText(editor, box.Text, wasQuoted);
-                return box;
+                return editor == GuiValueEditor.Text ? WithDataHelper(box, () => box, name, input, always: false) : box;
         }
+    }
+
+    private static TextBox? EditableField(ComboBox box) => box.Template?.FindName("PART_EditableTextBox", box) as TextBox;
+
+    /// <summary>
+    /// Knopf "Daten-Helfer" neben dem Feld, wenn das Hauptfenster den Helfer anbietet und das Feld einen Datenausdruck aufnehmen kann (immer bei
+    /// Ausdrucksfeldern, sonst nach <see cref="GuiPropertyInput.AcceptsDataExpression"/>, z. B. visible = yes). Der Ausdruck ersetzt eine Markierung,
+    /// sonst kommt er an die Cursorstelle; ein Ja/Nein-Wert wie yes wird dabei ganz ersetzt.
+    /// </summary>
+    private FrameworkElement WithDataHelper(FrameworkElement input, Func<TextBox?> field, string name, string value, bool always)
+    {
+        if (ConditionTarget.IsConditionProperty(name) && GuiSettings.ConditionHelper is { } conditionHelper && _editable && _selected is not null)
+        {
+            return WithConditionHelper(input, field, value, conditionHelper);
+        }
+
+        if (GuiSettings.DataHelper is not { } helper || !_editable || _selected is null || _element is null
+            || (!always && !GuiPropertyInput.AcceptsDataExpression(name, _element.BaseWidget, Catalog, value)))
+        {
+            return input;
+        }
+
+        // Unter dem Feld statt daneben: die Zeile bricht nicht um, in einer schmalen Eigenschaftsspalte wäre der Knopf sonst abgeschnitten.
+        var open = new Button
+        {
+            Content = GuiDataTexts.OpenHelper,
+            ToolTip = GuiDataTexts.OpenHelperTip,
+            Padding = new Thickness(6, 1, 6, 1),
+            Margin = new Thickness(0, 4, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        open.Click += (_, _) =>
+        {
+            if (_selected is not { } element || helper(element) is not { } expression || field() is not { } text)
+            {
+                return;
+            }
+
+            InsertAtCaret(text, expression);
+            input.Focus();
+        };
+        return Stacked(input, open);
+    }
+
+    /// <summary>Ersetzt eine Markierung, sonst Einfügen an der Cursorstelle; ein Wert ohne Datenausdruck (yes) wird ganz ersetzt.</summary>
+    private static void InsertAtCaret(TextBox text, string expression)
+    {
+        if (text.SelectionLength == 0 && !text.Text.Contains('['))
+        {
+            text.SelectAll();
+        }
+
+        text.SelectedText = expression;
+        text.CaretIndex = text.SelectionStart + expression.Length;
+        text.SelectionLength = 0;
+    }
+
+    /// <summary>
+    /// Bedingungs-Eigenschaften (visible, enabled, down, checked): Knopf immer, auch bei einem Ja/Nein-Wert; der Bedingungs-Helfer bekommt den Feldwert. Ein
+    /// Ergebnis aus dem Tab "Bedingung" ersetzt den ganzen Wert, eines aus "Kette"/"Nachschlagen" kommt wie beim Daten-Helfer an die Cursorstelle.
+    /// </summary>
+    private FrameworkElement WithConditionHelper(FrameworkElement input, Func<TextBox?> field, string value, Func<GuiNode, string, GuiHelperResult?> helper)
+    {
+        var open = new Button
+        {
+            Content = GuiDataTexts.OpenHelper,
+            ToolTip = GuiDataTexts.OpenHelperTip,
+            Padding = new Thickness(6, 1, 6, 1),
+            Margin = new Thickness(0, 4, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        open.Click += (_, _) =>
+        {
+            var text = field();
+            var current = text?.Text ?? (input as ComboBox)?.Text ?? (input as TextBox)?.Text ?? value;
+            if (_selected is not { } element || helper(element, current) is not { } result)
+            {
+                return;
+            }
+
+            var expression = result.Expression;
+            text ??= input as TextBox;
+            if (result.IsCondition)
+            {
+                if (text is not null)
+                {
+                    text.Text = expression;
+                    text.CaretIndex = expression.Length;
+                }
+                else if (input is ComboBox combo)
+                {
+                    combo.Text = expression;
+                }
+            }
+            else if (text is not null)
+            {
+                InsertAtCaret(text, expression);
+            }
+            else if (input is ComboBox combo)
+            {
+                combo.Text = combo.Text.Contains('[') ? combo.Text + expression : expression;
+            }
+
+            input.Focus();
+        };
+        return Stacked(input, open);
+    }
+
+    private static StackPanel Stacked(FrameworkElement input, Button open)
+    {
+        var stack = new StackPanel { Orientation = Orientation.Vertical };
+        stack.Children.Add(input);
+        stack.Children.Add(open);
+        return stack;
     }
 
     /// <summary>Plan-Ruling 4: Wert aus einer Zeile dieser Datei wird dort geändert, ein geerbter bekommt eine neue Zeile am Element.</summary>
@@ -412,6 +527,7 @@ public sealed class GuiPropertyEditor : UserControl
             dialog.InitialDirectory = start;
         }
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("gui.texture");
         if (dialog.ShowDialog(Window.GetWindow(this)) != true)
         {
             return;

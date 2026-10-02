@@ -123,6 +123,10 @@ public static class BugReportStore
             report.Body ??= string.Empty;
             report.Author ??= string.Empty;
             report.Links ??= new List<BugLink>();
+            report.Attachments = (report.Attachments ?? new List<BugAttachment>())
+                .Where(a => a is not null && !string.IsNullOrEmpty(a.Url))
+                .Select(a => a with { FileName = a.FileName ?? string.Empty, ContentType = a.ContentType ?? string.Empty })
+                .ToList();
             report.Links.RemoveAll(l => l is null || string.IsNullOrEmpty(l.Key));
         }
 

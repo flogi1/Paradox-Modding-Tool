@@ -43,11 +43,11 @@ public static class RuleLayerNames
 {
     public static string Of(RuleLayer layer) => layer switch
     {
-        RuleLayer.Shipped => "mitgeliefert",
-        RuleLayer.AllGames => "Alle Spiele",
-        RuleLayer.Game => "Spiel",
+        RuleLayer.Shipped => TemplatesTexts.LayerShipped,
+        RuleLayer.AllGames => TemplatesTexts.LayerAllGames,
+        RuleLayer.Game => TemplatesTexts.LayerGame,
         RuleLayer.Mod => "Mod",
-        RuleLayer.Template => "Vorlage",
+        RuleLayer.Template => TemplatesTexts.LayerTemplate,
         _ => layer.ToString(),
     };
 }
@@ -115,5 +115,5 @@ public sealed class RuleFile
 public sealed record EffectiveRule(CountingRule Rule, RuleLayer Layer)
 {
     /// <summary>Text für die Anzeige, warum eine Zahl zählt oder nicht zählt.</summary>
-    public string Reason => $"Regel „{Rule.Name}“ ({RuleLayerNames.Of(Layer)})";
+    public string Reason => TemplatesTexts.Reason(Rule.Name, RuleLayerNames.Of(Layer));
 }

@@ -7,4 +7,8 @@
     <RootNamespace>ParadoxModTool.Theming</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
 </Project>

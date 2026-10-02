@@ -93,7 +93,7 @@ public sealed class ReleaseLog
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            log.LoadWarning = "releases.json war nicht lesbar; eine Kopie liegt als releases.json.bad neben der Datei.";
+            log.LoadWarning = ModsTexts.ReleasesLoadWarning;
             try
             {
                 File.Copy(path, path + ".bad", overwrite: true);
@@ -117,7 +117,7 @@ public sealed class ReleaseLog
         ValidateDate(date);
         if (IndexOf(number) >= 0)
         {
-            throw new InvalidOperationException($"Die Version {number.Text} ist schon als Release erfasst.");
+            throw new InvalidOperationException(ModsTexts.ReleaseExists(number.Text));
         }
 
         var entry = new ReleaseEntry { Version = number.Text, Date = date };
@@ -129,7 +129,7 @@ public sealed class ReleaseLog
     public void SetDate(string version, string date)
     {
         ValidateDate(date);
-        var entry = Find(version) ?? throw new InvalidOperationException($"Die Version {version} ist nicht erfasst.");
+        var entry = Find(version) ?? throw new InvalidOperationException(ModsTexts.ReleaseNotRecorded(version));
         entry.Date = date;
         Save();
     }
@@ -137,7 +137,7 @@ public sealed class ReleaseLog
     /// <summary>Vermerkt die Veröffentlichung einer erfassten Version auf Steam. Wirft <see cref="InvalidOperationException"/>, wenn die Version nicht erfasst ist.</summary>
     public void SetSteam(string version, SteamPublication publication)
     {
-        var entry = Find(version) ?? throw new InvalidOperationException($"Die Version {version} ist nicht erfasst.");
+        var entry = Find(version) ?? throw new InvalidOperationException(ModsTexts.ReleaseNotRecorded(version));
         entry.Steam = publication;
         Save();
     }
@@ -151,7 +151,7 @@ public sealed class ReleaseLog
     /// <summary>Vermerkt GitHub-Veröffentlichungen einer erfassten Version; ein Eintrag mit gleichem Repo (Groß-/Kleinschreibung egal) und Tag wird ersetzt, sonst ergänzt.</summary>
     public void SetGitHub(string version, IEnumerable<GitHubPublication> publications)
     {
-        var entry = Find(version) ?? throw new InvalidOperationException($"Die Version {version} ist nicht erfasst.");
+        var entry = Find(version) ?? throw new InvalidOperationException(ModsTexts.ReleaseNotRecorded(version));
         var list = entry.GitHub ?? new List<GitHubPublication>();
         foreach (var publication in publications)
         {
@@ -186,7 +186,7 @@ public sealed class ReleaseLog
 
     public void Remove(string version)
     {
-        var entry = Find(version) ?? throw new InvalidOperationException($"Die Version {version} ist nicht erfasst.");
+        var entry = Find(version) ?? throw new InvalidOperationException(ModsTexts.ReleaseNotRecorded(version));
         _releases.Remove(entry);
         Save();
     }
@@ -198,7 +198,7 @@ public sealed class ReleaseLog
         VersionNumber.TryParse(version, out var number) ? number : default;
 
     private static VersionNumber ParseVersion(string version) =>
-        VersionNumber.TryParse(version, out var number) ? number : throw new ArgumentException($"\"{version}\" ist keine Versionsnummer.", nameof(version));
+        VersionNumber.TryParse(version, out var number) ? number : throw new ArgumentException(ModsTexts.NotAVersion(version), nameof(version));
 
     private static bool IsValidDate(string? date) =>
         string.IsNullOrEmpty(date) || DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
@@ -207,7 +207,7 @@ public sealed class ReleaseLog
     {
         if (!IsValidDate(date))
         {
-            throw new ArgumentException($"\"{date}\" ist kein Datum (erwartet yyyy-MM-dd).", nameof(date));
+            throw new ArgumentException(ModsTexts.NotADate(date), nameof(date));
         }
     }
 

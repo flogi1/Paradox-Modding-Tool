@@ -24,6 +24,10 @@ public static class MenuTexts
 
     public static string ModsTip => T("menu.mods.tip", "Mods dieses Spiels verwalten: umbenennen, Ordner verknüpfen, entfernen");
 
+    public static string MyMods => T("menu.myMods", "Meine Mods");
+
+    public static string MyModsTip => T("menu.myMods.tip", "Übersicht über die eigenen Mods aller Spiele: Steam-Zahlen, Bugs, Releases und Hinweise");
+
     public static string Project => T("menu.project", "Mod-Projekt");
 
     public static string ProjectTip => T("menu.project.tip", "Aktive Datei zwischen den Mods eines Projekts kopieren, verschieben oder vergleichen");
@@ -38,9 +42,13 @@ public static class MenuTexts
 
     public static string ProjectSyncTip => T("menu.project.sync.tip", "Zwei Mods des Projekts ordnerweit vergleichen und einzelne Dateien übernehmen");
 
-    public static string CuTool => T("menu.cuTool", "C-U-Tool");
+    public static string CuTool => T("menu.cuTool", "Compare und Update Tool");
 
-    public static string CuToolTip => T("menu.cuTool.tip", "Compare-Update-Tool: vergleicht Mod-Dateien mit Vanilla, mit Einklappen und optionalem 3-Wege-Merge nach Spiel-Updates");
+    public static string CuToolTip => T("menu.cuTool.tip", "Compare und Update Tool: zwei Dateien oder Ordner vergleichen (Compare) und Mod-Dateien mit Vanilla abgleichen, mit 3-Wege-Merge nach Spiel-Updates (Update). Markierte Zeilen übernimmt U in die andere Seite. Ersetzungslisten ersetzen gespeicherte Wörter in einem Mod-Ordner mit einem Knopf, z.B. nach einem Spiel-Patch.");
+
+    public static string PatchRecipes => T("menu.patchRecipes", "Patch-Rezepte");
+
+    public static string PatchRecipesTip => T("menu.patchRecipes.tip", "Patch-Rezepte: wiederholbare Regel-Patches für die Mod (Tabelle plus Regeln), nach jedem Vanilla-Update erneut anwendbar");
 
     public static string ModCompat => T("menu.modCompat", "Mod-Kompatibilität prüfen");
 
@@ -68,7 +76,26 @@ public static class MenuTexts
 
     public static string ReportBugTip => T("menu.help.reportBug.tip", "Öffnet ein neues GitHub-Issue mit Programmversion und Systemangaben");
 
+    public static string Changelog => T("menu.help.changelog", "Changelog");
+
+    public static string ChangelogTip => T("menu.help.changelog.tip", "Öffnet die Liste der Änderungen je Version (Readme\\Changelog.txt)");
+
+    public static string ChangelogMissingTip => T("menu.help.changelog.missing", "Readme\\Changelog.txt fehlt im Programmordner.");
+
     public static string NoRepositoryTip => T("menu.help.noRepository", "Noch nicht verfügbar: In AppInfo.GitHubRepository ist kein GitHub-Repository eingetragen.");
+
+    // Menü "Unterstützen"
+    public static string Support => T("menu.support", "Unterstützen");
+
+    public static string SupportTip => T("menu.support.tip", "PMT bleibt kostenlos; eine Spende hilft bei der Weiterentwicklung.");
+
+    public static string SupportGitHub => T("menu.support.github", "GitHub Sponsors");
+
+    public static string SupportGitHubTip => T("menu.support.github.tip", "Öffnet die GitHub-Sponsors-Seite im Browser");
+
+    public static string SupportKofi => T("menu.support.kofi", "Ko-fi");
+
+    public static string SupportKofiTip => T("menu.support.kofi.tip", "Öffnet die Ko-fi-Seite im Browser");
 
     public static string About => T("menu.help.about", "Über Paradox Modding Tool");
 
@@ -84,6 +111,7 @@ public static class MenuTexts
         ToolbarItemIds.Bug => "🐞 " + SettingsTexts.ToolbarItemLabel(id),
         ToolbarItemIds.BugTracker => "📋 " + SettingsTexts.ToolbarItemLabel(id),
         ToolbarItemIds.LaunchGame => "▶ " + SettingsTexts.ToolbarItemLabel(id),
+        ToolbarItemIds.ModifierReload => "↻ " + SettingsTexts.ToolbarItemLabel(id),
         _ => SettingsTexts.ToolbarItemLabel(id),
     };
 
@@ -94,7 +122,8 @@ public static class MenuTexts
         ToolbarItemIds.Search => T("menu.toolbar.search.tip", "Suchen & Ersetzen, auch in allen Dateien eines Ordners (Strg+F)"),
         ToolbarItemIds.GoToLine => T("menu.toolbar.goToLine.tip", "Zu einer Zeile im aktiven Dokument springen (Strg+G)"),
         ToolbarItemIds.GoToBracket => T("menu.toolbar.goToBracket.tip", "Zur Klammer springen, die zu der am Cursor gehört (Strg+B); ein zweiter Sprung führt zurück"),
-        ToolbarItemIds.ScopeFinder => T("menu.toolbar.scopeFinder.tip", "Wege zwischen Scopes vorschlagen, z. B. von root zu owner.capital; Einfügen per Doppelklick (Strg+Umschalt+P)"),
+        ToolbarItemIds.ScopeFinder => T("menu.toolbar.scopeFinder.tip", "Scope-Ketten bauen oder Wege zwischen Scopes suchen, z. B. von root zu owner.capital (Strg+Umschalt+P)"),
+        ToolbarItemIds.GuiDataHelper => T("menu.toolbar.guiDataHelper.tip", "GUI-Datentypen nachschlagen und einen Ausdruck wie [Country.GetCapital.GetName] bauen (Strg+Umschalt+D)"),
         ToolbarItemIds.Templates => TemplatesTip,
         ToolbarItemIds.Format => T("menu.toolbar.format.tip", "Überschüssige Leerzeichen und Leerzeilen bereinigen oder die Struktur des aktiven Dokuments neu formatieren; rückgängig mit Strg+Z"),
         ToolbarItemIds.Notes => T("menu.toolbar.notes.tip", "Persönliche Notiz zur aktiven Datei. Sie steht nicht in der Datei, nur im Programm."),
@@ -106,6 +135,7 @@ public static class MenuTexts
         ToolbarItemIds.NotesPanel => T("menu.toolbar.notesPanel.tip", "Rechtes Panel mit Notiz und Lesezeichen der aktiven Datei ein- oder ausblenden"),
         ToolbarItemIds.AutoComplete => T("menu.toolbar.autoComplete.tip", "Vorschlagsliste beim Tippen (Autovervollständigung für Script-Namen) ein- oder ausschalten"),
         ToolbarItemIds.Hover => T("menu.toolbar.hover.tip", "Tooltip mit Beschreibung und Scopes beim Verweilen auf Modifiern, Triggern und Effects ein- oder ausschalten"),
+        ToolbarItemIds.ModifierReload => T("menu.toolbar.modifierReload.tip", "Liest Formate, Script-Values, Konstanten und Modifier-Namen von Spiel und Mod neu ein, z. B. nach Änderungen an script_values-Dateien"),
         ToolbarItemIds.LaunchOption => T("menu.toolbar.launchOption.tip", "Startoption für das Spiel (aus dem aktiven Spielprofil)"),
         ToolbarItemIds.Playset => T("menu.toolbar.playset.tip", "Playset, mit dem gestartet wird (aus playsets.json); wird beim Start als aktives Playset gesetzt, falls abweichend"),
         ToolbarItemIds.LaunchGame => T("menu.toolbar.launchGame.tip", "Startet die eingestellte Spiel-.exe mit der gewählten Startoption"),

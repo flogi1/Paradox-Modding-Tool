@@ -25,7 +25,7 @@ public partial class MainWindow
     {
         NotesPanelControl.NewBugRequested += (_, _) => CreateBug(PanelPane, attach: false);
         NotesPanelControl.EditBugRequested += (_, report) => EditBug(report);
-        NotesPanelControl.BugStatusRequested += (_, args) => SetBugStatus(args.Report, args.Status);
+        NotesPanelControl.BugStatusRequested += async (_, args) => await SetBugStatusAsync(args.Report.Id, args.Status);
         NotesPanelControl.DeleteBugRequested += (_, report) => DeleteBug(report);
         NotesPanelControl.OpenBugRequested += (_, row) =>
         {
@@ -180,10 +180,6 @@ public partial class MainWindow
         ChangeBugs(data => BugEditing.UpdateLocal(data, report.Id, dialog.BugTitle, dialog.Description));
     }
 
-    /// <summary>Status setzen. Plan 1: nur lokal; ab Plan 2 gehen externe Meldungen zuerst an den Dienst.</summary>
-    private void SetBugStatus(BugReport report, BugStatus status) =>
-        ChangeBugs(data => BugEditing.SetStatus(data, report.Id, status));
-
     private void DeleteBug(BugReport report)
     {
         if (report.Source != BugSource.Local
@@ -212,11 +208,16 @@ public partial class MainWindow
     /// Lädt die Meldungen frisch von der Platte, wendet die Änderung an, speichert und zieht Tab-Symbole, Panel (und ab Task 7/8 Fenster und Zähler)
     /// nach. Bei einem Fehler bleibt die Datei unverändert.
     /// </summary>
-    private void ChangeBugs(Action<BugData> change)
+    private void ChangeBugs(Action<BugData> change) => TryChangeBugs(change);
+
+    /// <summary>Wie <see cref="ChangeBugs"/>, meldet aber, ob gespeichert wurde (<c>false</c> nach der Fehlermeldung).</summary>
+    private bool TryChangeBugs(Action<BugData> change)
     {
+        var saved = false;
         try
         {
             BugReportStore.Update(BugsPath, change);
+            saved = true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -224,6 +225,7 @@ public partial class MainWindow
         }
 
         RefreshBugViews();
+        return saved;
     }
 
     private void RefreshBugViews()
@@ -238,11 +240,19 @@ public partial class MainWindow
         UpdateBugTrackerButton();
     }
 
-    /// <summary>Beschriftung des Bugtracker-Knopfs mit der Zahl ungesehener Meldungen des aktiven Projekts ("📋 Bugtracker (3 neu)").</summary>
+    /// <summary>
+    /// Beschriftung des Bugtracker-Knopfs mit der Zahl ungesehener Meldungen des aktiven Projekts ("📋 Bugtracker (3 neu)") und einem Warnzeichen,
+    /// wenn der letzte Abruf dieses Projekts Fehler hatte.
+    /// </summary>
     private void UpdateBugTrackerButton()
     {
-        var count = BugQueries.UnseenCount(BugReportStore.Load(BugsPath), ActiveBugProjectId, CurrentBugProjects);
+        var projectId = ActiveBugProjectId;
+        var count = BugQueries.UnseenCount(BugReportStore.Load(BugsPath), projectId, CurrentBugProjects);
         var label = MenuTexts.ToolbarLabel(ToolbarItemIds.BugTracker);
-        ToolbarBugTrackerButton.Content = count > 0 ? $"{label} ({BugTexts.NewCount(count)})" : label;
+        var failed = BugRefreshError(projectId) is not null;
+        ToolbarBugTrackerButton.Content = (count > 0 ? $"{label} ({BugTexts.NewCount(count)})" : label) + (failed ? " ⚠" : string.Empty);
+        ToolbarBugTrackerButton.ToolTip = failed
+            ? MenuTexts.ToolbarTip(ToolbarItemIds.BugTracker) + "\n" + BugTexts.RefreshFailedTip
+            : MenuTexts.ToolbarTip(ToolbarItemIds.BugTracker);
     }
 }

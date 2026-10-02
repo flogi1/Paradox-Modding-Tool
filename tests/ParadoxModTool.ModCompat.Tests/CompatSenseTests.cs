@@ -10,7 +10,7 @@ public class CompatSenseTests : CompatTestBase
         CompatAnalyzer.Analyze(new CompatRequest { Participants = all, Rules = Rules(), FocusId = focus });
 
     private static IEnumerable<CompatFinding> Sense(CompatResult result) =>
-        result.Findings.Where(f => f.Kind is CompatKind.RedundantOverride or CompatKind.TooCoarse or CompatKind.AdditiveOnly or CompatKind.ReplaceNeeded);
+        result.Findings.Where(f => f.Kind is CompatKind.RedundantOverride or CompatKind.TooCoarse or CompatKind.AdditiveOnly or CompatKind.ValueChangeOnly or CompatKind.ReplaceNeeded);
 
     private (CompatParticipant Vanilla, CompatParticipant Mine) Setup(string vanillaText, string mineText, string file = "a.txt")
     {
@@ -33,6 +33,23 @@ public class CompatSenseTests : CompatTestBase
     }
 
     [Fact]
+    public void Hidden_vanilla_file_is_no_base_for_redundant_override()
+    {
+        var (v, m) = Setup("farm = { cost = 1 }\n", "farm = { cost = 1 }\n");
+
+        var result = CompatAnalyzer.Analyze(new CompatRequest
+        {
+            Participants = new[] { v, m },
+            Rules = Rules(),
+            FocusId = "Mine",
+            HiddenVanillaFolders = new[] { "common/building_types" },
+            ReplacePathRoots = new[] { "in_game", "main_menu", "loading_screen" },
+        });
+
+        Assert.Empty(Sense(result));
+    }
+
+    [Fact]
     public void Formatting_only_difference_is_redundant()
     {
         var (v, m) = Setup("farm = { cost = 1 }\n", "farm = {\n  cost = 1 # egal\n}\n");
@@ -40,7 +57,7 @@ public class CompatSenseTests : CompatTestBase
     }
 
     [Fact]
-    public void Copied_file_with_one_changed_entry_is_too_coarse_and_names_the_replace_need()
+    public void Copied_file_with_one_changed_entry_is_too_coarse_and_names_the_inject_need()
     {
         var (v, m) = Setup(
             "farm = { cost = 1 }\nmine = { cost = 2 }\nwell = { cost = 3 }\n",
@@ -49,10 +66,10 @@ public class CompatSenseTests : CompatTestBase
         var coarse = Assert.Single(findings, f => f.Kind == CompatKind.TooCoarse);
         Assert.Contains("2 von 3", coarse.Message);
         Assert.Equal(CompatSuggestion.ProvideOnlyChanged, coarse.Suggestion);
-        var replace = Assert.Single(findings, f => f.Kind == CompatKind.ReplaceNeeded);
-        Assert.Equal("well", replace.Key);
-        Assert.Equal(CompatSeverity.Info, replace.Severity);
-        Assert.Equal(CompatSuggestion.UseReplace, replace.Suggestion);
+        var change = Assert.Single(findings, f => f.Kind == CompatKind.ValueChangeOnly);
+        Assert.Equal("well", change.Key);
+        Assert.Equal(CompatSeverity.Hint, change.Severity);
+        Assert.Equal(CompatSuggestion.UseInject, change.Suggestion);
     }
 
     [Fact]
@@ -67,11 +84,34 @@ public class CompatSenseTests : CompatTestBase
     }
 
     [Fact]
-    public void Changed_child_value_needs_replace()
+    public void Changed_simple_child_value_suggests_inject()
     {
         var (v, m) = Setup("farm = { cost = 1 }\n", "farm = { cost = 2 }\n");
         var finding = Assert.Single(Sense(Run(new[] { v, m })));
-        Assert.Equal(CompatKind.ReplaceNeeded, finding.Kind);
+        Assert.Equal(CompatKind.ValueChangeOnly, finding.Kind);
+        Assert.Equal("farm", finding.Key);
+        Assert.Equal(CompatSuggestion.UseInject, finding.Suggestion);
+        Assert.Equal(CompatSeverity.Hint, finding.Severity);
+    }
+
+    [Fact]
+    public void Changed_and_added_simple_child_keys_suggest_inject()
+    {
+        var (v, m) = Setup("farm = { cost = 1 time = 1 }\n", "farm = { cost = 2 time = 1 extra = 5 }\n");
+        Assert.Equal(CompatKind.ValueChangeOnly, Assert.Single(Sense(Run(new[] { v, m }))).Kind);
+    }
+
+    [Theory]
+    [InlineData("farm = { cost = 1 mod = { x = 1 } }", "farm = { cost = 1 mod = { x = 2 } }")]
+    [InlineData("farm = { cost = 1 time = 1 }", "farm = { cost = 1 }")]
+    [InlineData("farm = { cost = 1 time = 1 }", "farm = { time = 1 cost = 2 }")]
+    [InlineData("farm = { cost = 1 }", "farm = { cost = 1 cost = 2 }")]
+    [InlineData("farm = { cost = 1 }", "farm = { cost ?= 1 }")]
+    [InlineData("farm = { a = 1 else = { b = 1 } }", "farm = { a = 1 else_if = { c = 1 } else = { b = 1 } }")]
+    public void Changes_INJECT_cannot_express_need_replace(string vanilla, string mine)
+    {
+        var (v, m) = Setup(vanilla + "\n", mine + "\n");
+        Assert.Equal(CompatKind.ReplaceNeeded, Assert.Single(Sense(Run(new[] { v, m }))).Kind);
     }
 
     [Fact]

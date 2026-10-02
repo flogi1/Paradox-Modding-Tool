@@ -55,6 +55,12 @@ public partial class MainWindow
     /// </summary>
     private void OpenEditorRequest(EditorRequest request)
     {
+        if (request.Kind != HandOffKind.OpenFile)
+        {
+            RunModCommand(request);
+            return;
+        }
+
         HandOffLog.Append(HandOffLogPath, $"open: {request.Path}, line: {request.Line?.ToString() ?? "-"}", DateTime.Now);
         if (!File.Exists(request.Path))
         {
@@ -68,7 +74,17 @@ public partial class MainWindow
         }
 
         Activate();
-        JumpToBookmarkInFile(request.Path, request.Line ?? 1);
+        try
+        {
+            JumpToBookmarkInFile(request.Path, request.Line ?? 1);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Gesperrt oder ohne Leserecht: Meldung statt Absturz (der Aufruf kommt aus Dispatcher.BeginInvoke).
+            MessageBox.Show(this, GuiTexts.HandOffReadFailed(request.Path, ex.Message), GuiTexts.GameEditorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         if (request.Line is not { } line || !request.Path.EndsWith(".gui", StringComparison.OrdinalIgnoreCase) || GuiSettings.Workspace is not { } workspace)
         {
             return;
@@ -98,13 +114,14 @@ public partial class MainWindow
     /// </summary>
     private void ViewInGame()
     {
+        var running = GameProcess.RunningSince(_gameExecutablePath);
         if (!SaveModDocumentsForGame())
         {
-            MessageBox.Show(this, GuiTexts.ViewInGameUnsaved, GuiTexts.ViewInGame, MessageBoxButton.OK, MessageBoxImage.Information);
+            var text = running.Count > 0 ? GuiTexts.ViewInGameUnsavedRunning : GuiTexts.ViewInGameUnsaved;
+            MessageBox.Show(this, text, GuiTexts.ViewInGame, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        var running = GameProcess.RunningSince(_gameExecutablePath);
         if (running.Count > 0)
         {
             // Neu angelegte Dateien lädt das Spiel erst nach einem Neustart (Spec-Testpunkt 1, Rückmeldung des Nutzers).
@@ -127,7 +144,7 @@ public partial class MainWindow
 
     /// <summary>
     /// Speichert alle geänderten Mod-Dateien ohne Rückfrage (Spec Schritt 1); ein Vanilla-Entwurf öffnet dabei "In Mod übernehmen". False, wenn danach
-    /// noch eine davon ungespeichert ist (abgebrochen).
+    /// noch eine davon ungespeichert ist (abgebrochen). Entwürfe kommen zuletzt: "In Mod übernehmen" sperrt sich, solange ein geändertes Ziel offen ist.
     /// </summary>
     private bool SaveModDocumentsForGame()
     {
@@ -137,6 +154,7 @@ public partial class MainWindow
             .Where(x => x.Document.IsModified
                 && (x.Document.IsGuiDraft
                     || (x.Document.FilePath is { } path && (x.Document.Origin == FileOrigin.Mod || registry?.Resolve(path) is not null))))
+            .OrderBy(x => x.Document.IsGuiDraft)
             .ToList();
         foreach (var (pane, document) in targets)
         {
@@ -177,7 +195,7 @@ public partial class MainWindow
     {
         if (PdxSettingsPath is not { } path)
         {
-            return string.Empty;
+            return GuiTexts.GameEditorNoPath;
         }
 
         var current = GameEditorRegistration.CurrentEditor(path);
@@ -185,6 +203,7 @@ public partial class MainWindow
         {
             PdxSettingsProblem.Missing => GuiTexts.GameEditorUnavailable(path),
             PdxSettingsProblem.UnknownFormat => GuiTexts.GameEditorUnknownFormat(path),
+            PdxSettingsProblem.Locked => GuiTexts.GameEditorLocked(path),
             _ when current.Editor is null => GuiTexts.GameEditorStatusNone,
             _ when GameEditorRegistration.SamePath(current.Editor, Environment.ProcessPath) => GuiTexts.GameEditorStatusPmt,
             _ => GuiTexts.GameEditorStatus(current.Editor),
@@ -250,9 +269,10 @@ public partial class MainWindow
             GameEditorOutcome.EditorChangedSince => GuiTexts.GameEditorChangedSince(result.Detail ?? string.Empty),
             GameEditorOutcome.SettingsMissing => GuiTexts.GameEditorUnavailable(result.Detail ?? string.Empty),
             GameEditorOutcome.UnknownFormat => GuiTexts.GameEditorUnknownFormat(result.Detail ?? string.Empty),
+            GameEditorOutcome.Locked => GuiTexts.GameEditorLocked(result.Detail ?? string.Empty),
             _ => GuiTexts.GameEditorWriteFailed(result.Detail ?? string.Empty),
         };
-        var failed = result.Outcome is GameEditorOutcome.UnknownFormat or GameEditorOutcome.WriteFailed or GameEditorOutcome.EditorChangedSince;
+        var failed = result.Outcome is GameEditorOutcome.UnknownFormat or GameEditorOutcome.WriteFailed or GameEditorOutcome.EditorChangedSince or GameEditorOutcome.Locked;
         MessageBox.Show(this, text, GuiTexts.GameEditorTitle, MessageBoxButton.OK, failed ? MessageBoxImage.Warning : MessageBoxImage.Information);
     }
 }

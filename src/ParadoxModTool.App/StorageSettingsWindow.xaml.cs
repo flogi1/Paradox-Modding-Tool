@@ -45,19 +45,20 @@ public partial class StorageSettingsWindow : Window
 
         var parent = ParentTextBox.Text.Trim();
         PreviewText.Text = string.IsNullOrEmpty(parent)
-            ? "Bitte einen Oberordner angeben."
-            : $"Es werden angelegt:\n  {Path.Combine(parent, StorageLocations.VanillaHistoryFolderName)}\n  {Path.Combine(parent, "[Modname]" + StorageLocations.SnapshotsFolderSuffix)}";
+            ? MiscWindowTexts.StorageParentRequired
+            : MiscWindowTexts.StorageWillCreate(Path.Combine(parent, StorageLocations.VanillaHistoryFolderName), Path.Combine(parent, MiscWindowTexts.StorageModNamePlaceholder + StorageLocations.SnapshotsFolderSuffix));
     }
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
         using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "Oberordner für Snapshots und Vanilla-Historie wählen",
+            Description = MiscWindowTexts.StorageBrowseDescription,
             UseDescriptionForTitle = true,
-            SelectedPath = Directory.Exists(ParentTextBox.Text) ? ParentTextBox.Text : string.Empty,
+            SelectedPath = Directory.Exists(ParentTextBox.Text) ? ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(ParentTextBox.Text) : string.Empty,
         };
 
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("storage.folder");
         if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
             ParentTextBox.Text = dialog.SelectedPath;
@@ -70,8 +71,8 @@ public partial class StorageSettingsWindow : Window
         {
             var confirm = MessageBox.Show(
                 this,
-                "Snapshots und Vanilla-Historie im Mod-Ordner werden von Steam mit hochgeladen. Trotzdem im Mod-Ordner speichern?",
-                "Nicht empfohlen",
+                MiscWindowTexts.StorageInsideConfirm,
+                MiscWindowTexts.StorageNotRecommended,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning,
                 MessageBoxResult.No);
@@ -88,7 +89,7 @@ public partial class StorageSettingsWindow : Window
             var parent = ParentTextBox.Text.Trim();
             if (string.IsNullOrEmpty(parent) || !Path.IsPathRooted(parent))
             {
-                MessageBox.Show(this, "Bitte einen gültigen absoluten Ordnerpfad angeben.", "Ungültiger Ordner");
+                MessageBox.Show(this, MiscWindowTexts.StorageInvalidFolder, MiscWindowTexts.StorageInvalidFolderTitle);
                 return;
             }
 

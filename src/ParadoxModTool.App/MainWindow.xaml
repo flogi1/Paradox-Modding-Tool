@@ -18,6 +18,8 @@
         <!-- Menüleiste in der Reihenfolge der UI-Reorganisation (Spec "Menüleiste"). Alle Texte setzt MainWindow.Menu.cs aus MenuTexts;
              Einstellungen und GUI behalten ihre Texte aus SettingsTexts bzw. GuiTexts. -->
         <Menu DockPanel.Dock="Top">
+            <!-- Übersicht über die Mods aller Spiele (MainWindow.MyMods.cs), ganz links. -->
+            <MenuItem x:Name="MyModsMenuItem" Click="OpenMyMods_Click" />
             <!-- Weiteres Spiel in einem eigenen Fenster öffnen (siehe MainWindow.Games.cs); die Einträge entstehen beim Öffnen. -->
             <MenuItem x:Name="WindowMenuItem" SubmenuOpened="WindowMenuItem_SubmenuOpened">
                 <MenuItem />
@@ -33,12 +35,18 @@
             <!-- Einstellungen: ein Klick öffnet das Einstellungsfenster (MainWindow.SettingsHost.cs). -->
             <MenuItem x:Name="SettingsMenuItem" Click="OpenSettings_Click" />
             <MenuItem x:Name="CuToolMenuItem" Click="OpenVanillaDiffWindow_Click" />
+            <MenuItem x:Name="PatchRecipesMenuItem" Click="OpenPatchRecipes_Click" />
             <MenuItem x:Name="ModCompatMenuItem" Click="OpenModCompat_Click" />
             <MenuItem x:Name="CompatchMenuItem" Click="OpenCompatch_Click" />
+            <MenuItem x:Name="ErrorLogMenuItem" Click="OpenErrorLog_Click" />
+            <MenuItem x:Name="DesyncMenuItem" Click="OpenDesync_Click" />
+            <MenuItem x:Name="SaveExplorerMenuItem" Click="OpenSaveExplorer_Click" ToolTipService.ShowOnDisabled="True" />
             <MenuItem x:Name="ScriptDocsMenuItem" Click="OpenScriptDocsWindow_Click" />
             <!-- GUI: Texte aus GuiTexts (MainWindow.Gui.cs); "GUI-Inspektor" ist ausgeblendet, wenn die GUI-Werkzeuge aus sind. -->
             <MenuItem x:Name="GuiMenuItem">
                 <MenuItem x:Name="GuiInspectMenuItem" Click="GuiInspectMenuItem_Click" />
+                <MenuItem x:Name="GuiDataHelperMenuItem" Click="GuiDataHelper_Click" />
+                <MenuItem x:Name="GuiBlocksMenuItem" Click="GuiBlocks_Click" />
                 <MenuItem x:Name="GuiNewFileMenuItem" Click="NewGuiFile_Click" />
                 <MenuItem x:Name="GuiModSettingsMenuItem" Click="GuiModSettings_Click" />
             </MenuItem>
@@ -46,8 +54,14 @@
             <MenuItem x:Name="HelpMenuItem">
                 <MenuItem x:Name="CheckUpdatesMenuItem" Click="CheckUpdatesMenuItem_Click" />
                 <MenuItem x:Name="ReportBugMenuItem" Click="ReportBugMenuItem_Click" />
+                <MenuItem x:Name="ChangelogMenuItem" Click="ChangelogMenuItem_Click" ToolTipService.ShowOnDisabled="True" />
                 <Separator />
                 <MenuItem x:Name="AboutMenuItem" Click="AboutMenuItem_Click" />
+            </MenuItem>
+            <!-- Unterstützen: Spendenseiten (AppInfo.SponsorUrl, AppInfo.KofiUrl). -->
+            <MenuItem x:Name="SupportMenuItem">
+                <MenuItem x:Name="SponsorMenuItem" Click="SponsorMenuItem_Click" />
+                <MenuItem x:Name="KofiMenuItem" Click="KofiMenuItem_Click" />
             </MenuItem>
         </Menu>
         <!-- Hinweisleiste "Neue Version verfügbar" (Nutzerwunsch: Update-Hinweis über GitHub Releases). -->
@@ -72,6 +86,7 @@
             <Button x:Name="ToolbarGoToLineButton" Click="GoToLine_Click" />
             <Button x:Name="ToolbarGoToBracketButton" Click="GoToMatchingBracket_Click" />
             <Button x:Name="ToolbarScopeFinderButton" Click="ScopePaths_Click" />
+            <Button x:Name="ToolbarGuiDataHelperButton" Click="GuiDataHelper_Click" />
             <Button x:Name="ToolbarTemplatesButton" Click="OpenTemplateGenerator_Click" />
             <Button x:Name="ToolbarFormatButton" Click="FormatDocument_Click" />
             <Button x:Name="ToolbarNotesButton" Click="FileNote_Click" />
@@ -84,6 +99,7 @@
             <ToggleButton x:Name="NotesPanelToggle" Click="NotesPanelToggle_Click" IsChecked="True" />
             <ToggleButton x:Name="ScriptAutoCompleteToggle" Click="ScriptAutoCompleteToggle_Click" IsChecked="True" />
             <ToggleButton x:Name="ScriptHoverToggle" Click="ScriptHoverToggle_Click" IsChecked="True" />
+            <Button x:Name="ToolbarModifierReloadButton" Click="ModifierReload_Click" />
             <Separator x:Name="ToolbarLaunchSeparator" />
             <!-- Startoptionen kommen aus dem aktiven Spielprofil (GameProfile.LaunchOptions), Playsets aus playsets.json (PlaysetStore).
                  Ohne Playsets bleibt die Combo leer und "Spiel starten" wechselt kein Playset. -->
@@ -95,7 +111,7 @@
         <Border x:Name="ModStatusBar" DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="0,1,0,0" Padding="8,2">
             <TextBlock x:Name="ModStatusText" Text="Mod: —" Foreground="{DynamicResource Theme.TextMuted}" Cursor="Hand" TextTrimming="CharacterEllipsis"
                        MouseLeftButtonUp="ModStatus_Click"
-                       ToolTip="Die Mod, zu der die offene Datei (oder der Explorer-Ordner) gehört. Klick öffnet die Mod-Verwaltung." />
+                       ToolTip="{x:Static local:MainTexts.ModStatusTip}" />
         </Border>
         <!-- Ergebnisleiste für "Suchen & Ersetzen" (Abschnitt 5b, Nutzer-Feedback: "Suchergebnisse
              [...] in einem Fenster über meinem Arbeitsbereich anzeigen [...], wie bei Notepad").
@@ -112,24 +128,25 @@
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="4,4,4,2">
                     <Button DockPanel.Dock="Right" Content="✕" Click="CloseResultsPanel_Click"
-                            Padding="6,0" ToolTip="Ergebnisleiste ausblenden (Treffer bleiben im Suchen-Fenster erhalten)" />
+                            Padding="6,0" ToolTip="{x:Static local:MainTexts.ResultsHideTip}" />
                     <CheckBox x:Name="ResultsPanelHideDescriptionCheckBox" DockPanel.Dock="Right"
-                              Content="Nur gefundenen Code anzeigen" Margin="0,0,12,0"
+                              Content="{x:Static local:MainTexts.ResultsCodeOnly}" Margin="0,0,12,0"
                               Click="ResultsPanelHideDescriptionCheckBox_Changed" />
-                    <TextBlock Text="Suchergebnisse" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static local:MainTexts.ResultsTitle}" FontWeight="Bold" VerticalAlignment="Center" />
                 </DockPanel>
+                <!-- Code der markierten Treffer: hier lassen sich Teile eines Treffers markieren und kopieren. -->
+                <TextBox x:Name="ResultsPanelDetail" DockPanel.Dock="Bottom" Margin="4,2,4,4" IsReadOnly="True" FontFamily="Consolas"
+                         MinHeight="36" MaxHeight="90" AcceptsReturn="True" TextWrapping="NoWrap"
+                         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" />
                 <ListBox x:Name="ResultsPanelList" MaxHeight="180" FontFamily="Consolas"
                          MouseDoubleClick="ResultsPanelList_MouseDoubleClick"
-                         ToolTip="Doppelklick springt zum Treffer">
+                         ToolTip="{x:Static local:MainTexts.ResultsListTip}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Margin="4,3">
                                 <TextBlock Text="{Binding Description}" Visibility="{Binding DescriptionVisibility}"
                                            TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource Theme.TextMuted}" Margin="0,0,0,2" />
-                                <TextBox Text="{Binding MatchedText, Mode=OneWay}" IsReadOnly="True"
-                                         BorderThickness="0" Background="Transparent" Padding="0"
-                                         FontFamily="Consolas" TextWrapping="Wrap" AcceptsReturn="True"
-                                         IsReadOnlyCaretVisible="True" />
+                                <TextBlock Text="{Binding MatchedText, Mode=OneWay}" FontFamily="Consolas" TextWrapping="Wrap" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

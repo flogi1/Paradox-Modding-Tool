@@ -23,9 +23,9 @@ public static class FolderScanner
     /// (alphabetisch, ohne Beachtung von Groß-/Kleinschreibung), danach alle Dateien
     /// (ebenso alphabetisch) — dieselbe Reihenfolge wie in den meisten Datei-Explorern üblich.
     /// Liefert eine leere Liste (statt einer Ausnahme), wenn der Ordner nicht (mehr) existiert
-    /// oder nicht lesbar ist.
+    /// oder nicht lesbar ist. Mit <paramref name="hideUgcReferences"/> fehlen Workshop-Verweise (<see cref="UgcReference"/>).
     /// </summary>
-    public static IReadOnlyList<ExplorerEntry> GetChildren(string folderPath)
+    public static IReadOnlyList<ExplorerEntry> GetChildren(string folderPath, bool hideUgcReferences = false)
     {
         var result = new List<ExplorerEntry>();
 
@@ -63,7 +63,7 @@ public static class FolderScanner
             files = Array.Empty<string>();
         }
 
-        foreach (var file in files.OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase))
+        foreach (var file in files.Where(f => !(hideUgcReferences && UgcReference.IsMatch(Path.GetFileName(f)))).OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase))
         {
             result.Add(new ExplorerEntry
             {

@@ -46,7 +46,7 @@ internal static class GameContext
         {
             if (!IdPattern.IsMatch(requested) || (Profiles.Count > 0 && Profiles.All(e => e.Profile.Id != requested)))
             {
-                error = $"Für '{requested}' gibt es kein Spielprofil (Ordner 'profiles' neben der Programmdatei).";
+                error = StartupTexts.NoGameProfile(requested);
                 return false;
             }
 
@@ -76,14 +76,15 @@ internal static class GameContext
 
             _lock = gameLock;
             GameId = id;
+            GameDialogMemory.CurrentGameId = id;
             Repository.RecordLastGame(id);
             Session = Repository.Load(id);
             return true;
         }
 
         error = requested is not null
-            ? $"{DisplayNameOf(requested)} ist schon in einem anderen Fenster geöffnet."
-            : "Alle Spiele sind schon in einem anderen Fenster geöffnet.";
+            ? StartupTexts.GameAlreadyOpen(DisplayNameOf(requested))
+            : StartupTexts.AllGamesAlreadyOpen;
         return false;
     }
 
@@ -99,7 +100,7 @@ internal static class GameContext
     /// <summary>Startet das Programm neu für ein anderes Spiel (eigener Prozess, eigenes Fenster).</summary>
     public static void LaunchWindow(string gameId)
     {
-        var processPath = Environment.ProcessPath ?? throw new InvalidOperationException("Programmpfad unbekannt.");
+        var processPath = Environment.ProcessPath ?? throw new InvalidOperationException(MainTexts.NewWindowNoProcessPath);
         var arguments = $"--game {gameId}";
 
         // Beim Start über "dotnet ParadoxModTool.dll" ist der Prozess dotnet.exe - dann muss die Programm-DLL mitgegeben werden.

@@ -39,6 +39,9 @@ public sealed record GuiDesignerAction(GuiDesignerActionKind Kind, GuiNode? Node
     /// <summary>Insert: Eintrag der Palette.</summary>
     public GuiPaletteEntry? Entry { get; init; }
 
+    /// <summary>Insert: fertiger Code (Baustein aus dem Fenster "Bausteine"); geht vor dem Schnipsel des Palette-Eintrags.</summary>
+    public string? Code { get; init; }
+
     /// <summary>Eigenschaftsname (SetProperty), Box-Schlüssel (WrapIn), Blockname (OverrideBlock), neuer Typname (DeriveType, ExtractType) oder neuer Schlüssel (Retype).</summary>
     public string? Name { get; init; }
 

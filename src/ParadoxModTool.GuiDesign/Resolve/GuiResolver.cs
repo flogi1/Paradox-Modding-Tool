@@ -157,7 +157,9 @@ public sealed class GuiResolver
             return element;
         }
 
-        if (role == GuiRole.TypeInstance && expanding.Contains(node.Name))
+        // Was direkt in der Datei steht (z. B. vbox in vbox), ist endlicher Text und keine Schleife. Nur Inhalt aus Typen, Templates und
+        // blockoverrides kann sich selbst wieder einsetzen.
+        if (role == GuiRole.TypeInstance && element.Origin.Kind != GuiOriginKind.Here && expanding.Contains(node.Name))
         {
             element.Issues.Add(new GuiResolveIssue(GuiResolveIssueKind.TypeCycle, $"{node.Name} enthält sich selbst", node));
             return element;

@@ -32,6 +32,21 @@ public class CompatAnalyzerFileTests : CompatTestBase
     }
 
     [Fact]
+    public void Metadata_and_root_files_of_the_mods_are_no_conflict()
+    {
+        var a = Mod("A", 1);
+        var b = Mod("B", 2);
+        Put(a, ".metadata/metadata.json", "{ \"name\": \"A\" }");
+        Put(b, ".metadata/metadata.json", "{ \"name\": \"B\" }");
+        Put(a, "descriptor.mod", "name=\"A\"");
+        Put(b, "descriptor.mod", "name=\"B\"");
+        Put(a, "thumbnail.png", "a");
+        Put(b, "thumbnail.png", "b");
+
+        Assert.Empty(Run(new[] { a, b }).Findings);
+    }
+
+    [Fact]
     public void Same_path_with_identical_content_is_info()
     {
         var a = Mod("A", 1);

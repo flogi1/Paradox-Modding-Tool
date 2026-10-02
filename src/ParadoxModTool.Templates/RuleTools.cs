@@ -40,31 +40,31 @@ public static class RuleValidator
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(rule.Name))
         {
-            errors.Add("Gib der Regel einen Namen.");
+            errors.Add(TemplatesTexts.ValidateNoName);
         }
 
         var patterns = rule.Patterns.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
         if (patterns.Count == 0)
         {
-            errors.Add("Mindestens ein Muster ist nötig.");
+            errors.Add(TemplatesTexts.ValidateNoPattern);
         }
 
         foreach (var pattern in patterns.Where(p => Markers(p) > 1))
         {
-            errors.Add($"Das Muster „{pattern}“ enthält [#] mehrfach; erlaubt ist ein [#] je Muster.");
+            errors.Add(TemplatesTexts.ValidateMultipleMarkers(pattern));
         }
 
         if (rule.Action is RuleAction.OnlyMarkedCounts or RuleAction.MarkedDoesNotCount)
         {
             foreach (var pattern in patterns.Where(p => Markers(p) == 0))
             {
-                errors.Add($"Die Aktion „{RuleSummary.ActionText(rule.Action)}“ braucht in jedem Muster ein [#]; es fehlt in „{pattern}“.");
+                errors.Add(TemplatesTexts.ValidateMarkerMissing(RuleSummary.ActionText(rule.Action), pattern));
             }
         }
 
         if (rule.Where == RuleWhere.InsideKey && string.IsNullOrWhiteSpace(rule.WhereKey))
         {
-            errors.Add("Gib den Schlüssel an, innerhalb dessen die Regel gilt.");
+            errors.Add(TemplatesTexts.ValidateNoKey);
         }
 
         return errors;
@@ -89,23 +89,23 @@ public static class RuleSummary
 {
     public static string ActionText(RuleAction action) => action switch
     {
-        RuleAction.Ignore => "Ignorieren",
-        RuleAction.OnlyMarkedCounts => "Nur markierte zählt",
-        RuleAction.AllCount => "Alle zählen",
-        RuleAction.MarkedDoesNotCount => "Markierte zählt nicht",
+        RuleAction.Ignore => TemplatesTexts.ActionIgnore,
+        RuleAction.OnlyMarkedCounts => TemplatesTexts.ActionOnlyMarkedCounts,
+        RuleAction.AllCount => TemplatesTexts.ActionAllCount,
+        RuleAction.MarkedDoesNotCount => TemplatesTexts.ActionMarkedDoesNotCount,
         _ => action.ToString(),
     };
 
     public static string ActionHelp(RuleAction action) => action switch
     {
-        RuleAction.Ignore => "Keine Zahl des getroffenen Namens zählt.",
-        RuleAction.OnlyMarkedCounts => "Nur die Zahl bei [#] zählt, alle anderen Zahlen des Namens nicht.",
-        RuleAction.AllCount => "Alle Zahlen des Namens zählen, auch Namenszahlen und einzelne Zahlen.",
-        RuleAction.MarkedDoesNotCount => "Nur die Zahl bei [#] zählt nicht; über die anderen Zahlen des Namens entscheiden die übrigen Regeln.",
+        RuleAction.Ignore => TemplatesTexts.ActionIgnoreHelp,
+        RuleAction.OnlyMarkedCounts => TemplatesTexts.ActionOnlyMarkedCountsHelp,
+        RuleAction.AllCount => TemplatesTexts.ActionAllCountHelp,
+        RuleAction.MarkedDoesNotCount => TemplatesTexts.ActionMarkedDoesNotCountHelp,
         _ => string.Empty,
     };
 
-    public static string WhereText(CountingRule rule) => rule.Where == RuleWhere.InsideKey ? "innerhalb von " + rule.WhereKey : "überall";
+    public static string WhereText(CountingRule rule) => rule.Where == RuleWhere.InsideKey ? TemplatesTexts.WhereInsideKey(rule.WhereKey) : TemplatesTexts.WhereAnywhere;
 
     public static string PatternsText(CountingRule rule, int max = 60)
     {
@@ -121,7 +121,7 @@ public static class RuleSummary
             return string.Empty;
         }
 
-        return rule.Games.Count == 0 || rule.Games.Contains("*") ? "alle" : string.Join(", ", rule.Games);
+        return rule.Games.Count == 0 || rule.Games.Contains("*") ? TemplatesTexts.GamesAll : string.Join(", ", rule.Games);
     }
 }
 

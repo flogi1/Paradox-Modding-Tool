@@ -2,9 +2,12 @@
   "id": "eu5",
   "steamAppId": "3450310",
   "displayName": "Europa Universalis V",
+  "releaseDate": "2025-11-04",
   "engineFamily": "clausewitz-jomini",
   "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Europa Universalis V/mod",
   "metadataFile": ".metadata/metadata.json",
+  "replacePathHidesEarlierMods": true,
+  "replacePathRoots": [ "in_game", "main_menu", "loading_screen" ],
   "loadOrderRule": "alphabetical-filename-wins",
   "vanillaHistoryFolderName": "EU V Vanilla History",
   "folderCategories": [
@@ -15,9 +18,9 @@
     { "path": "localization", "label": "Lokalisierung", "defaultColor": "#D94A4A", "description": "YAML-Lokalisierungsdateien (.yml)" },
     { "path": "map", "label": "Karte", "defaultColor": "#4AC7D9" },
     { "path": "history", "label": "Historie", "defaultColor": "#B08AD9" },
-    { "path": "in_game", "label": "In-Game (Wurzel)", "defaultColor": "#808080", "description": "Oberste Ebene für In-Game-Inhalte, siehe Wiki-Ordnerstruktur" },
-    { "path": "main_menu", "label": "Hauptmenü", "defaultColor": "#808080" },
-    { "path": "loading_screen", "label": "Ladebildschirm", "defaultColor": "#808080" }
+    { "path": "in_game", "labelKey": "profiles.folder.inGame", "label": "In-Game (Wurzel)", "defaultColor": "#808080", "descriptionKey": "profiles.folder.inGame.description", "description": "Oberste Ebene für In-Game-Inhalte, siehe Wiki-Ordnerstruktur" },
+    { "path": "main_menu", "labelKey": "profiles.folder.mainMenu", "label": "Hauptmenü", "defaultColor": "#808080" },
+    { "path": "loading_screen", "labelKey": "profiles.folder.loadingScreen", "label": "Ladebildschirm", "defaultColor": "#808080" }
   ],
   "fileTypes": [
     { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" },
@@ -26,10 +29,10 @@
     { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" }
   ],
   "launchOptions": [
-    { "label": "Normal", "args": "" },
-    { "label": "Debug-Modus (Konsole, Dev-Tools, Hotload)", "args": "-debug_mode" },
-    { "label": "Nach Absturz beim Ressourcen-Laden trotzdem mit Mods starten", "args": "--ignore-disable-mods-on-crash" },
-    { "label": "Debug-Modus + trotz Absturz mit Mods starten", "args": "-debug_mode --ignore-disable-mods-on-crash" }
+    { "labelKey": "menu.launch.normal", "label": "Normal", "args": "" },
+    { "labelKey": "profiles.launch.debug", "label": "Debug-Modus (Konsole, Dev-Tools, Hotload)", "args": "-debug_mode" },
+    { "labelKey": "profiles.launch.ignoreCrash", "label": "Nach Absturz beim Ressourcen-Laden trotzdem mit Mods starten", "args": "--ignore-disable-mods-on-crash" },
+    { "labelKey": "profiles.launch.debugIgnoreCrash", "label": "Debug-Modus + trotz Absturz mit Mods starten", "args": "-debug_mode --ignore-disable-mods-on-crash" }
   ],
   "keyOperators": [ "INJECT", "REPLACE", "TRY_INJECT", "TRY_REPLACE", "INJECT_OR_CREATE", "REPLACE_OR_CREATE" ],
   "overrideRules": [
@@ -45,8 +48,45 @@
     { "folder": "*/music", "behavior": "WholeFile", "certain": true },
     { "folder": "*/map_data", "behavior": "WholeFile", "certain": true }
   ],
-  "errorLogRules": "eu5-error-patterns",
-  "notes": "Quelle für loadOrderRule und launchOptions: https://eu5.paradoxwikis.com/Modding sowie reale Error-Logs des Nutzers (siehe Architektur-Spezifikation Abschnitt 9). Quelle für overrideRules: https://eu5.paradoxwikis.com/Mod_compatibility.",
+  "errorLogRules": "errorlog/eu5.json",
+  "desyncRules": "desync/eu5.json",
+  "modifierFormats": {
+    "source": "definitions",
+    "folders": ["main_menu/common/modifier_type_definitions"],
+    "defaultDecimals": 2,
+    "trimTrailingZeros": true,
+    "formats": {
+      "FormatPopCaps": { "factor": 1000 },
+      "FormatManPower": { "factor": 1000 },
+      "FormatGold": { "factor": 1 }
+    },
+    "nameLocFolders": ["main_menu/localization", "in_game/localization"],
+    "nameKeys": ["MODIFIER_TYPE_NAME_{name}"]
+  },
+  "saveGames": {
+    "folder": "save games",
+    "extension": ".eu5",
+    "textMarker": { "prefix": "SAV", "offset": 5, "value": "00" },
+    "objectKinds": [
+      { "path": "countries/database/*", "labelKey": "saveexplorer.kind.country", "label": "Länder", "nameSource": "table", "nameTable": "countries/tags" },
+      { "path": "character_db/database/*", "labelKey": "saveexplorer.kind.character", "label": "Charaktere", "nameSource": "field", "nameField": "first_name", "tagField": "country", "tagTable": "countries/tags", "scriptReference": "character:{0}" },
+      { "path": "provinces/database/*", "labelKey": "saveexplorer.kind.province", "label": "Provinzen", "nameSource": "id" },
+      { "path": "locations/locations/*", "labelKey": "saveexplorer.kind.location", "label": "Orte", "nameSource": "id" },
+      { "path": "situation_manager/*", "labelKey": "saveexplorer.kind.situation", "label": "Situationen", "nameSource": "pathSegment" },
+      { "path": "international_organization_manager/database/*", "labelKey": "saveexplorer.kind.io", "label": "Internationale Organisationen", "nameSource": "id" },
+      { "path": "event_manager/triggered_event/scope", "labelKey": "saveexplorer.kind.event", "label": "Events", "nameSource": "pathSegment" }
+    ],
+    "valueTypes": {
+      "value": { "format": "fixedPoint", "factor": 100000 },
+      "date": { "format": "tickDate", "ticksPerDay": 24, "epochYear": -5000 },
+      "ctry": { "format": "objectName", "objectPath": "countries/database" },
+      "char": { "format": "objectName", "objectPath": "character_db/database" },
+      "boolean": { "format": "yesNo" },
+      "flag": { "format": "flagName" }
+    },
+    "notes": "Quelle: Debug-Spielstand des Nutzers (2026-09-26, Spielversion 1.3.99). Ab dem nächsten Hauptrelease von EU V zählen Datumswerte keine Stunden mehr; dann ticksPerDay anpassen."
+  },
+  "notes": "Quelle für loadOrderRule und launchOptions: https://eu5.paradoxwikis.com/Modding sowie reale Error-Logs des Nutzers (siehe Architektur-Spezifikation Abschnitt 9). Quelle für overrideRules: https://eu5.paradoxwikis.com/Mod_compatibility. replace_paths nennt die Ordner ohne in_game/, main_menu/ oder loading_screen/ davor (common/x blendet in_game/common/x aus; in_game/common/x und main_menu/gui/x wirken nicht). Es blendet Vanilla und die Mods aus, die im Playset davor laden; spätere Mods bleiben (gemessen 2026-09-30 mit zwei Test-Mods in beiden Reihenfolgen). Einmal fehlte dabei auch die eigene Datei der zuerst ladenden Mod im eigenen Ordner; PMT bildet das nicht nach.",
   "gui": {
     "structuredBlocks": [
       "modify_texture", "glow", "state", "animation", "start_sound", "end_sound",

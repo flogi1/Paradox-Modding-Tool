@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "trace": {
+    "source": "Block names as in the EU V catalog plus CK III trigger blocks; debug.log format from the PMT Error Probe run of Crusader Kings III 1.19.0.6, 2026-09-30, repeated with 1.20.0.2 (same messages; save-load messages from loading a 1.19 save) (debug_log from jomini_effect_impl.cpp, debug_log_scopes from effectimpl.cpp)",
+    "effectBlocks": [ "effect", "immediate", "option", "after", "hidden_effect", "on_*", "every_*", "random_*", "ordered_*" ],
+    "triggerBlocks": [ "trigger", "limit", "potential", "allow", "is_shown", "is_valid", "is_valid_showing_failures_only", "can_be_picked", "visible", "ai_will_do", "weight", "modifier", "trigger_if", "any_*" ],
+    "effectFolders": [ "common/scripted_effects" ],
+    "ifChain": [ "if", "else_if", "else" ],
+    "debugLogSource": "jomini_effect_impl.cpp",
+    "debugScopeSource": "effectimpl.cpp"
+  },
+  "entries": [
+    {
+      "code": "SUG-000",
+      "name": { "de": "Möglicher Treffer", "en": "Possible match" },
+      "severity": "info",
+      "pattern": "^Possible match: '(?<candidate>[^']+)'",
+      "attachToPrevious": true,
+      "explain": { "de": "Vorschlag des Spiels zur vorherigen Meldung.", "en": "The game's suggestion for the previous message." },
+      "fixes": []
+    },
+    {
+      "code": "EFF-001",
+      "name": { "de": "Unbekannter Effekt", "en": "Unknown effect" },
+      "severity": "error",
+      "pattern": "^Error: \"Unknown effect: (?<name>[^,\\s]+), near line: (?:\\d+ \\(expanded from file: (?<file>[^\\n]+?) line: (?<line>\\d+)\\)|(?<line>\\d+)[\\s\\S]*?\" in file: \"(?<file>[^\"]+)\")",
+      "explain": { "de": "Der Effekt ist weder ein Engine-Effekt noch ein bekannter scripted_effect. Crusader Kings III meldet das beim Lesen der Datei; der Aufruf wird ignoriert.", "en": "The effect is neither an engine effect nor a known scripted_effect. Crusader Kings III reports this while reading the file; the call is ignored." },
+      "tips": {
+        "de": [ "Schreibweise prüfen.", "Die Meldung kann in weiteren Zeilen noch mehr unbekannte Effekte oder Trigger derselben Datei nennen.", "Stammt der Effekt aus einer anderen Mod, muss diese Mod im Playset sein und vor dieser Mod laden." ],
+        "en": [ "Check the spelling.", "The message can name more unknown effects or triggers of the same file in further lines.", "If the effect comes from another mod, that mod must be in the playset and load before this mod." ]
+      },
+      "fixes": [ "jump", "findDefinition", "replaceWithCandidate", "addModToPlayset", "suppress" ]
+    },
+    {
+      "code": "TRG-001",
+      "name": { "de": "Unbekannter Trigger", "en": "Unknown trigger" },
+      "severity": "error",
+      "pattern": "^Error: \"Unknown trigger: (?<name>[^,\\s]+), near line: (?:\\d+ \\(expanded from file: (?<file>[^\\n]+?) line: (?<line>\\d+)\\)|(?<line>\\d+)[\\s\\S]*?\" in file: \"(?<file>[^\"]+)\")",
+      "explain": { "de": "Der Trigger ist weder ein Engine-Trigger noch ein bekannter scripted_trigger. Crusader Kings III meldet das beim Lesen der Datei.", "en": "The trigger is neither an engine trigger nor a known scripted_trigger. Crusader Kings III reports this while reading the file." },
+      "tips": {
+        "de": [ "Schreibweise prüfen.", "Die Meldung kann in weiteren Zeilen noch mehr unbekannte Effekte oder Trigger derselben Datei nennen.", "Stammt der Trigger aus einer anderen Mod, muss diese Mod im Playset sein." ],
+        "en": [ "Check the spelling.", "The message can name more unknown effects or triggers of the same file in further lines.", "If the trigger comes from another mod, that mod must be in the playset." ]
+      },
+      "fixes": [ "jump", "findDefinition", "replaceWithCandidate", "addModToPlayset", "suppress" ]
+    },
+    {
+      "code": "SAV-001",
+      "name": { "de": "Spielstand nicht lesbar", "en": "Save game not readable" },
+      "severity": "info",
+      "pattern": "^Error: \"(?<detail>.*)\" in file: \"(?:(?<name>save games/[^\"]+))?\"",
+      "explain": { "de": "Ein Spielstand ließ sich nicht lesen, meist weil er aus einer anderen Spielversion oder mit anderen Mods stammt. Nennt das Spiel keine Datei (in file: \"\"), stammen die Daten aus dem Speicher, z.B. einem geladenen Spielstand; eine Mod-Datei nennt immer ihren Pfad. Die Mod selbst ist nicht betroffen.", "en": "A save game could not be read, usually because it comes from another game version or other mods. If the game names no file (in file: \"\"), the data comes from memory, e.g. a loaded save game; a mod file always names its path. The mod itself is not affected." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "SAV-002",
+      "name": { "de": "Dynastie-Vorlage im Spielstand unbekannt", "en": "Unknown dynasty template in save game" },
+      "severity": "info",
+      "pattern": "^Unknown dynasty template '(?<detail>[^']+)' in save",
+      "explain": { "de": "Ein geladener Spielstand nennt eine Dynastie-Vorlage, die das Spiel nicht mehr kennt, meist nach einem Spiel-Update. Das Spiel erzeugt stattdessen einen kulturellen Namen. Die Mod selbst ist nicht betroffen.", "en": "A loaded save game names a dynasty template the game no longer knows, usually after a game update. The game generates a cultural name instead. The mod itself is not affected." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "SAV-003",
+      "name": { "de": "Unbekannter Schlüssel im Spielstand", "en": "Unknown key in save game" },
+      "severity": "info",
+      "pattern": "^Failed to read key reference (?<detail>\\S+) from database file:\\s+line: \\d+",
+      "explain": { "de": "Beim Laden eines Spielstands verweist ein Eintrag auf einen Schlüssel (z.B. einen Glauben), den das Spiel nicht mehr kennt, meist nach einem Spiel-Update. Das Spiel nennt dabei keine Datei. Die Mod selbst ist nicht betroffen.", "en": "While loading a save game an entry refers to a key (e.g. a faith) the game no longer knows, usually after a game update. The game names no file for it. The mod itself is not affected." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "PAR-001",
+      "name": { "de": "Lesefehler in Datei", "en": "Parsing error in file" },
+      "severity": "error",
+      "pattern": "^Error: \"(?<detail>[\\s\\S]*)\" in file: \"(?:(?<file>[^\"]+)\" near line: (?<line>\\d+)|\")",
+      "explain": { "de": "Das Spiel konnte die Datei an dieser Stelle nicht lesen (Syntax, unbekannter Wert, falscher Typ).", "en": "The game could not read the file at this location (syntax, unknown value, wrong type)." },
+      "tips": { "de": [ "Die Meldung in Anführungszeichen nennt den Grund." ], "en": [ "The quoted message states the reason." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "PAR-002",
+      "name": { "de": "Lesefehler, Meldung unvollständig", "en": "Parsing error, message incomplete" },
+      "severity": "error",
+      "pattern": "^Error: \"(?<detail>[\\s\\S]+)",
+      "explain": { "de": "Lesefehler, zu dem im Log die Schlusszeile mit Datei und Zeile fehlt: Die Meldung ist abgeschnitten, oder eine andere Meldung wurde dazwischen geschrieben. Datei und Zeile sind daher unbekannt.", "en": "Parsing error whose closing line with file and line is missing from the log: the message is cut off, or another message was written in between. File and line are therefore unknown." },
+      "tips": { "de": [ "Die Meldung in Anführungszeichen nennt den Grund.", "Lief das Spiel beim Einlesen noch, kann erneutes Einlesen die vollständige Meldung zeigen." ], "en": [ "The quoted message states the reason.", "If the game was still running when the log was read, reading it again may show the complete message." ] },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "VAR-001",
+      "name": { "de": "Variable gesetzt, nie benutzt", "en": "Variable set but never used" },
+      "severity": "warning",
+      "pattern": "^Variable '(?<name>[^']+)' is set but is never used",
+      "explain": { "de": "Die Variable (in Crusader Kings III auch ein Flag, z.B. aus add_character_flag) wird gesetzt, aber nirgends gelesen. Verwendung in Lokalisierung und in ungenutzten scripted triggers/effects zählt das Spiel nicht mit.", "en": "The variable (in Crusader Kings III also a flag, e.g. from add_character_flag) is set but never read. The game does not count use in localization or in unused scripted triggers/effects." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen (siehe Vorschläge).", "Wird die Variable nur in Lokalisierung benutzt, ist die Meldung harmlos." ],
+        "en": [ "Check for typos (see suggestions).", "If the variable is only used in localization, the message is harmless." ]
+      },
+      "fixes": [ "showUsages", "locCheck", "replaceWithCandidate", "renameEverywhere", "suppress", "commentOutSet" ],
+      "setEffects": [ "set_variable" ]
+    },
+    {
+      "code": "VAR-002",
+      "name": { "de": "Variable benutzt, nie gesetzt", "en": "Variable used but never set" },
+      "severity": "error",
+      "pattern": "^Variable '(?<name>[^']+)' is used but is never set",
+      "explain": { "de": "Die Variable (in Crusader Kings III auch ein Flag, z.B. aus has_character_flag) wird gelesen, aber nirgends gesetzt. Setzen in ungenutzten scripted triggers/effects zählt nicht.", "en": "The variable (in Crusader Kings III also a flag, e.g. from has_character_flag) is read but never set. Setting it in unused scripted triggers/effects does not count." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen (siehe Vorschläge).", "Prüfen, ob der setzende Effekt überhaupt aufgerufen wird." ],
+        "en": [ "Check for typos (see suggestions).", "Check whether the effect that sets it is called at all." ]
+      },
+      "fixes": [ "showUsages", "replaceWithCandidate", "renameEverywhere", "suppress" ]
+    },
+    {
+      "code": "EVT-001",
+      "name": { "de": "Event-Target benutzt, nie gesetzt", "en": "Event target used but never set" },
+      "severity": "error",
+      "pattern": "^Event target '(?<name>[^']+)' is used but is never set",
+      "explain": { "de": "Ein gespeicherter Scope (scope:name) wird benutzt, aber nirgends mit save_scope_as oder save_temporary_scope_as gesetzt. Setzen in ungenutzten scripted triggers/effects zählt nicht.", "en": "A saved scope (scope:name) is used but never set with save_scope_as or save_temporary_scope_as. Setting it in unused scripted triggers/effects does not count." },
+      "tips": {
+        "de": [ "Auf Tippfehler prüfen.", "Prüfen, ob der setzende Effekt überhaupt aufgerufen wird." ],
+        "en": [ "Check for typos.", "Check whether the effect that sets it is called at all." ]
+      },
+      "fixes": [ "showUsages", "replaceWithCandidate", "suppress" ]
+    },
+    {
+      "code": "EVT-002",
+      "name": { "de": "Unbekannter Event-Target-Link", "en": "Unknown event target link" },
+      "severity": "error",
+      "pattern": "^Failed to find a valid event target link '(?<name>[^']+)' at file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": { "de": "Der Name ist weder ein Event-Target (z.B. primary_title) noch ein Skriptwert oder gespeicherter Scope. Oft steht ein Wort, wo eine Zahl oder ein Skriptwert erwartet wird.", "en": "The name is neither an event target (e.g. primary_title) nor a script value or saved scope. Often a word stands where a number or script value is expected." },
+      "tips": { "de": [ "Schreibweise prüfen.", "Ist ein Skriptwert gemeint, muss er in common/script_values definiert sein." ], "en": [ "Check the spelling.", "If a script value is meant, it must be defined in common/script_values." ] },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+    {
+      "code": "EVT-003",
+      "name": { "de": "Event wird nie ausgelöst", "en": "Event is never fired" },
+      "severity": "warning",
+      "pattern": "^Event (?<name>\\S+) is orphaned",
+      "explain": { "de": "Kein On-Action, keine Entscheidung und kein anderes Event löst dieses Event aus. Es kommt im Spiel nie vor.", "en": "No on_action, decision or other event fires this event. It never happens in the game." },
+      "tips": { "de": [ "Prüfen, ob trigger_event oder ein On-Action die richtige Event-ID nennt.", "Auch eine fehlende schließende Klammer davor kann das Event aus seinem Zusammenhang lösen." ], "en": [ "Check whether trigger_event or an on_action names the right event id.", "A missing closing brace before it can also cut the event off from its context." ] },
+      "fixes": [ "findDefinition", "showUsages", "suppress" ]
+    },
+    {
+      "code": "SCP-001",
+      "name": { "de": "Effekt oder Trigger im falschen Scope", "en": "Effect or trigger in the wrong scope" },
+      "severity": "error",
+      "pattern": "^Inconsistent (?:effect|trigger) scopes \\((?<detail>[^)]*)\\) infile: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": { "de": "Beim Lesen erkennt das Spiel, dass der Effekt oder Trigger im aktuellen Scope nicht gilt. In Klammern stehen der Scope an der Stelle und der Scope, den der Effekt oder Trigger braucht.", "en": "While reading, the game sees that the effect or trigger does not work in the current scope. The brackets give the scope at that place and the scope the effect or trigger needs." },
+      "tips": { "de": [ "Mit einem Scope-Wechsel (z.B. holder, liege) in den passenden Scope gehen." ], "en": [ "Switch to the right scope first (e.g. holder, liege)." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "SVL-001",
+      "name": { "de": "Kein gültiger Skriptwert", "en": "Not a valid script value" },
+      "severity": "error",
+      "pattern": "^Cannot read \\[(?<name>[^\\]]*)\\] as a script value",
+      "explain": { "de": "An dieser Stelle erwartet das Spiel eine Zahl oder einen Skriptwert. Crusader Kings III nennt die Stelle in der folgenden Meldung \"Badly read script value\".", "en": "The game expects a number or script value here. Crusader Kings III names the place in the following \"Badly read script value\" message." },
+      "tips": { "de": [ "Leere Klammern oder Tippfehler im Wert prüfen." ], "en": [ "Check for empty brackets or typos in the value." ] },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "SVL-002",
+      "name": { "de": "Skriptwert falsch gelesen", "en": "Badly read script value" },
+      "severity": "error",
+      "pattern": "^Badly read script value\\s+(?<name>\\S*)\\s*at file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": { "de": "Folgefehler eines ungültigen Skriptwerts an dieser Stelle.", "en": "Follow-up error of an invalid script value at this location." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-002",
+      "name": { "de": "Doppelte GUI-Eigenschaft", "en": "Duplicate GUI property" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Duplicate property '(?<name>[^']+)'",
+      "explain": { "de": "Eine Eigenschaft steht in einem Widget zweimal.", "en": "A property appears twice in one widget." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-003",
+      "name": { "de": "GUI-Eigenschaft nicht lesbar", "en": "GUI property not readable" },
+      "severity": "error",
+      "pattern": "^failed reading property, at (?:line (?<line>\\d+) in file (?<file>.+?\\.gui)|(?<file>.+?\\.gui):(?<line>\\d+))",
+      "explain": { "de": "Das Spiel konnte eine Eigenschaft an dieser Stelle nicht lesen.", "en": "The game could not read a property at this location." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-001",
+      "name": { "de": "Ungültiges Widget, Typ oder Eigenschaft", "en": "Invalid widget, type or property" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - '?(?<name>[^' ]+)'? is not a valid",
+      "explain": { "de": "Der Name ist weder ein Widget noch ein bekannter Typ noch eine Eigenschaft.", "en": "The name is neither a widget nor a known type nor a property." },
+      "tips": { "de": [ "Schreibweise prüfen.", "Kommt der Typ aus einer anderen Mod, muss sie im Playset sein." ], "en": [ "Check the spelling.", "If the type comes from another mod, it must be in the playset." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-004",
+      "name": { "de": "Zu wenige Widgets", "en": "Not enough widget entries" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Not enough widget entries",
+      "explain": { "de": "Eine Widget-Eigenschaft (z.B. tooltipwidget) braucht genau ein Widget.", "en": "A widget property (e.g. tooltipwidget) needs exactly one widget." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-005",
+      "name": { "de": "Textur fehlt (GUI)", "en": "Missing texture (GUI)" },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Missing file '(?<name>[^']+)'",
+      "explain": { "de": "Die angegebene Texturdatei existiert nicht.", "en": "The given texture file does not exist." },
+      "tips": { "de": [ "Pfad und Dateiname prüfen." ], "en": [ "Check path and file name." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-006",
+      "name": { "de": "Button ohne Tooltip", "en": "Button without tooltip" },
+      "severity": "info",
+      "pattern": "^Button is missing tooltip! Location: \"(?<file>[^\"]+?):(?<line>\\d+)\"",
+      "explain": { "de": "Ein Button hat keinen Tooltip.", "en": "A button has no tooltip." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-007",
+      "name": { "de": "Eigenschaft passt nicht zum Eltern-Widget", "en": "Property does not fit the parent widget" },
+      "severity": "warning",
+      "pattern": "^Error at (?<file>.+?\\.gui):(?<line>\\d+) \\(property origin is at (?<origin>[^)]*)\\) - (?<detail>.+)",
+      "explain": { "de": "Die GUI-Prüfung meldet eine Eigenschaft, die an dieser Stelle nicht wirkt, z.B. position oder parentanchor bei Kindern einer hbox oder vbox. Woher die Eigenschaft kommt, steht nach 'property origin is at', oft ein Typ in einer anderen Datei.", "en": "The GUI validation reports a property that has no effect here, e.g. position or parentanchor on children of an hbox or vbox. Where the property comes from is given after 'property origin is at', often a type in another file." },
+      "tips": { "de": [ "Bei Kindern einer hbox oder vbox position und parentanchor entfernen, die Box ordnet sie selbst an." ], "en": [ "Remove position and parentanchor from children of an hbox or vbox, the box arranges them itself." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "GUI-000",
+      "name": { "de": "GUI-Fehler", "en": "GUI error" },
+      "severity": "warning",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - (?<detail>.+)",
+      "explain": { "de": "Sonstiger Fehler beim Lesen einer GUI-Datei.", "en": "Other error while reading a GUI file." },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "TEX-001",
+      "name": { "de": "Textur nicht gefunden", "en": "Texture not found" },
+      "severity": "error",
+      "pattern": "^Could not find texture due to 'VFSOpen Error: (?<name>\\S+) not found'",
+      "explain": { "de": "Eine referenzierte Texturdatei existiert nicht.", "en": "A referenced texture file does not exist." },
+      "tips": { "de": [ "Nach dem Pfad in Mod-Dateien suchen und Schreibweise prüfen." ], "en": [ "Search the mod files for the path and check the spelling." ] },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "RUN-001",
+      "name": { "de": "Laufzeitfehler im Skript", "en": "Script runtime error" },
+      "severity": "error",
+      "pattern": "^Script system error!(?:\\s*\\nError:\\s*(?<detail>[^\\n]*))?(?:\\s*\\nScript location:\\s*file: (?<file>[^\\n]+?) line: (?<line>\\d+))?",
+      "explain": { "de": "Ein Skript ist während des Spiels gescheitert, z.B. weil ein Scope nicht gesetzt war. Die Zeilen unter \"Script location\" zeigen die Aufrufkette.", "en": "A script failed during the game, e.g. because a scope was not set. The lines under \"Script location\" show the call chain." },
+      "tips": { "de": [ "Die Zeile nach \"Error:\" nennt den Grund." ], "en": [ "The line after \"Error:\" states the reason." ] },
+      "fixes": [ "jump", "traceScope", "suppress" ],
+      "traceGuards": [
+        { "detail": "^Undefined event target '(?<name>[^']+)'", "limit": "NOT = { exists = scope:{name} }" }
+      ]
+    },
+    {
+      "code": "LOC-002",
+      "name": { "de": "Hash-Kollision in Lokalisierung", "en": "Localization key hash collision" },
+      "severity": "warning",
+      "pattern": "^Localization key hash collision\\. Key '(?<name>[^']+)' and '(?<detail>[^']+)'",
+      "explain": { "de": "Zwei Lokalisierungsschlüssel haben denselben Hash. Einer davon kann den falschen Text zeigen.", "en": "Two localization keys have the same hash. One of them may show the wrong text." },
+      "tips": { "de": [ "Einen der beiden Schlüssel umbenennen." ], "en": [ "Rename one of the two keys." ] },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "LOC-003",
+      "name": { "de": "Unbekannte Datenfunktion in Lokalisierung", "en": "Unknown data function in localization" },
+      "severity": "error",
+      "pattern": "^Could not find data system function '(?<name>[^']+)' in '(?<detail>[^']+)'",
+      "explain": { "de": "Ein Ausdruck in eckigen Klammern (z.B. [ROOT.Char.GetName]) nutzt eine Funktion, die es im Spiel nicht gibt. Der Text zeigt dann einen Fehler.", "en": "An expression in square brackets (e.g. [ROOT.Char.GetName]) uses a function the game does not have. The text then shows an error." },
+      "tips": { "de": [ "Schreibweise und Scope prüfen; der Ausdruck steht nach \"in\".", "Die Datentyp-Liste (logs/data_types) nennt alle Funktionen." ], "en": [ "Check spelling and scope; the expression follows \"in\".", "The data type list (logs/data_types) names all functions." ] },
+      "fixes": [ "locCheck", "suppress" ]
+    },
+    {
+      "code": "LOC-004",
+      "name": { "de": "Datenausdruck nicht auswertbar", "en": "Data expression failed" },
+      "severity": "warning",
+      "pattern": "^(?:Failed converting statement for|FetchData failed for|Promote '[^']*' returned nullptr, in) '(?<name>[^']+)'",
+      "explain": { "de": "Ein Ausdruck in eckigen Klammern ließ sich nicht umsetzen oder auswerten, z.B. weil eine Funktion fehlt oder ein Scope leer ist. Meist Folge einer Meldung davor.", "en": "An expression in square brackets could not be converted or evaluated, e.g. because a function is missing or a scope is empty. Usually a follow-up of a message before it." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "LOC-005",
+      "name": { "de": "Datenfehler in Lokalisierungstext", "en": "Data error in localization string" },
+      "severity": "error",
+      "pattern": "^Data error in loc string '(?<name>[^']+)'",
+      "explain": { "de": "Der Lokalisierungstext mit diesem Schlüssel enthält einen Ausdruck, den das Spiel nicht auswerten konnte. Die Meldungen davor nennen den Ausdruck.", "en": "The localization text with this key contains an expression the game could not evaluate. The messages before it name the expression." },
+      "fixes": [ "locCheck", "suppress" ]
+    },
+    {
+      "code": "LOC-006",
+      "name": { "de": "Doppelter Lokalisierungsschlüssel", "en": "Duplicate localization key" },
+      "severity": "warning",
+      "pattern": "^Duplicate localization key\\. Key '(?<name>[^']+)' is defined in both '(?<file>[^']+)' and '(?<detail>[^']+)'",
+      "explain": { "de": "Derselbe Schlüssel steht zweimal in den Lokalisierungsdateien. Nur einer der beiden Texte wird angezeigt. Überschreiben ist nur über den Unterordner localization/replace vorgesehen.", "en": "The same key appears twice in the localization files. Only one of the two texts is shown. Overriding is meant to go through the subfolder localization/replace." },
+      "tips": { "de": [ "Einen der beiden Einträge löschen oder umbenennen.", "Soll ein Vanilla-Text ersetzt werden, die Datei nach localization/replace legen." ], "en": [ "Delete or rename one of the two entries.", "To replace a vanilla text, put the file into localization/replace." ] },
+      "fixes": [ "jump", "showUsages", "suppress" ]
+    },
+    {
+      "code": "LOC-007",
+      "name": { "de": "Lokalisierungsschlüssel fehlt", "en": "Missing localization key" },
+      "severity": "warning",
+      "pattern": "^Unrecognized loc key (?<name>.+?)\\. file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": { "de": "Das Skript nennt einen Lokalisierungsschlüssel, den keine Lokalisierungsdatei definiert. Im Spiel erscheint dann der Schlüssel selbst.", "en": "The script names a localization key that no localization file defines. The game then shows the key itself." },
+      "tips": { "de": [ "Schlüssel in einer .yml-Datei unter localization/<sprache> ergänzen (UTF-8 mit BOM, Dateiname endet auf _l_<sprache>.yml)." ], "en": [ "Add the key to a .yml file under localization/<language> (UTF-8 with BOM, file name ends with _l_<language>.yml)." ] },
+      "fixes": [ "jump", "locCheck", "suppress" ]
+    },
+    {
+      "code": "CRT-001",
+      "name": { "de": "Kein Kultur-Set für Hofszene", "en": "No culture set for court scene" },
+      "severity": "info",
+      "pattern": "^Failed to find applicable culture set for character with id \\d+",
+      "defaultSuppressed": true,
+      "explain": { "de": "Die Hofszene fand für eine Figur kein passendes Kultur-Set (Kleidung, Aussehen). Die Id 4294967295 steht für keine Figur. Meldung aus Vanilla (Spielversion 1.20), keine Fehlfunktion der Mod.", "en": "The court scene found no matching culture set (clothing, look) for a character. The id 4294967295 means no character. Vanilla message (game version 1.20), not a malfunction of the mod." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "RIT-001",
+      "name": { "de": "Oberhaupt-Titel eines Ritus fehlt", "en": "Head title of a rite missing" },
+      "severity": "warning",
+      "pattern": "^Head of rite title '(?<name>[^']+)' referenced by rite '(?<detail>.+?)' does not exist",
+      "explain": { "de": "Ein Glaube (Ritus) nennt als Titel seines Oberhaupts einen Titel, den es nicht gibt. Tritt beim Laden eines Spielstands nach einem Spiel-Update auf, oder wenn der Glaube einer Mod einen nicht vorhandenen Titel nennt.", "en": "A faith (rite) names a title for its head that does not exist. Happens when loading a save game after a game update, or when a mod's faith names a title that does not exist." },
+      "tips": { "de": [ "Findet die Suche den Titel in keiner Mod, stammt die Meldung aus dem Spielstand und ist für die Mod harmlos." ], "en": [ "If the search finds the title in no mod, the message comes from the save game and is harmless for the mod." ] },
+      "fixes": [ "showUsages", "suppress" ]
+    },
+    {
+      "code": "AST-001",
+      "name": { "de": "Interne Prüfung der Engine fehlgeschlagen", "en": "Engine assertion failed" },
+      "severity": "info",
+      "pattern": "^Assertion failed: (?<detail>.+)",
+      "explain": { "de": "Eine interne Prüfung der Engine schlug fehl. Das Log nennt keine Skriptstelle; meist Folge eines Spielstands aus einer anderen Version oder eines Fehlers im Spiel.", "en": "An internal check of the engine failed. The log names no script location; usually a follow-up of a save game from another version or of a bug in the game." },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "MOD-001",
+      "name": { "de": "Ungültige supported_version", "en": "Invalid supported_version" },
+      "severity": "info",
+      "pattern": "^Invalid supported_version in file: (?<name>.+?\\.mod) line: \\d+",
+      "explain": { "de": "Die Mod-Beschreibung (.mod) nennt eine Spielversion in einer Form, die der Launcher nicht versteht, z.B. \"1.*\" statt \"1.19.*\". Das betrifft nur die Anzeige der Kompatibilität im Launcher.", "en": "The mod descriptor (.mod) gives a game version in a form the launcher does not understand, e.g. \"1.*\" instead of \"1.19.*\". This only affects the compatibility display in the launcher." },
+      "tips": { "de": [ "In descriptor.mod und der .mod-Datei daneben supported_version wie \"1.19.*\" schreiben." ], "en": [ "Write supported_version like \"1.19.*\" in descriptor.mod and the .mod file next to the folder." ] },
+      "fixes": [ "suppress" ]
+    }
+  ]
+}

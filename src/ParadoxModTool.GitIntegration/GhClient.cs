@@ -22,7 +22,7 @@ public sealed record GhRepoInfo(string DefaultBranch, string ViewerPermission, b
     /// <summary>Das Repository hat noch keinen Commit (keinen Standard-Branch); ein Release ist dort nicht möglich.</summary>
     public bool IsEmpty => DefaultBranch.Length == 0;
 
-    public const string EmptyMessage = "Das Repository ist leer. Lege auf GitHub einen ersten Commit an (z. B. eine README) oder pushe den Mod-Ordner im Git-Reiter.";
+    public static string EmptyMessage => GitTexts.RepoEmpty;
 }
 
 public sealed record GhReleaseInfo(string Tag, string Url, bool IsDraft);
@@ -35,7 +35,7 @@ public sealed record GhBranch(string Name, bool Protected);
 public sealed record GhReleaseSpec(string Repo, string Tag, string Title, string NotesFile, string? Target, bool Draft, bool Prerelease);
 
 /// <summary>Dünne Schicht über die Aufrufe von <c>gh</c>. Die Anmeldung gehört <c>gh</c>; das Programm sieht nie ein Token. Fehler kommen als <see cref="GhException"/> mit den letzten Zeilen der Ausgabe.</summary>
-public sealed class GhClient
+public sealed partial class GhClient
 {
     private static readonly IReadOnlyDictionary<string, string> Environment = new Dictionary<string, string>
     {
@@ -88,7 +88,7 @@ public sealed class GhClient
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {
-            throw new GhException("Die Antwort von gh zum Repository war nicht lesbar.", output);
+            throw new GhException(GitTexts.RepoUnreadable, output);
         }
     }
 
@@ -116,7 +116,7 @@ public sealed class GhClient
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {
-            throw new GhException("Die Antwort von gh zum Release war nicht lesbar.", result.Output);
+            throw new GhException(GitTexts.ReleaseUnreadable, result.Output);
         }
     }
 
@@ -180,7 +180,7 @@ public sealed class GhClient
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {
-            throw new GhException("Die Liste der Releases war nicht lesbar.", output);
+            throw new GhException(GitTexts.ReleaseListUnreadable, output);
         }
     }
 
@@ -224,7 +224,7 @@ public sealed class GhClient
         var result = await RunAsync(args, timeout, progress, cancellation);
         if (result.TimedOut)
         {
-            throw new GhException("gh hat nicht rechtzeitig geantwortet.", result.Output);
+            throw new GhException(GitTexts.GhTimeout, result.Output);
         }
 
         return result.ExitCode == 0 ? result.Output : throw Failure(result);
@@ -234,8 +234,8 @@ public sealed class GhClient
     {
         var lines = result.Error.Concat(result.Output).Where(l => !string.IsNullOrWhiteSpace(l)).TakeLast(3).Select(l => l.Trim()).ToList();
         var message = result.TimedOut
-            ? "gh hat nicht rechtzeitig geantwortet."
-            : lines.Count == 0 ? $"gh meldet Fehler (Exitcode {result.ExitCode})." : string.Join(" ", lines);
+            ? GitTexts.GhTimeout
+            : lines.Count == 0 ? GitTexts.GhExitCode(result.ExitCode) : string.Join(" ", lines);
         return new GhException(message, result.Output);
     }
 
@@ -247,7 +247,7 @@ public sealed class GhClient
         }
         catch (Win32Exception ex)
         {
-            throw new GhException("gh konnte nicht gestartet werden: " + ex.Message, Array.Empty<string>());
+            throw new GhException(GitTexts.GhStartFailed(ex.Message), Array.Empty<string>());
         }
     }
 }

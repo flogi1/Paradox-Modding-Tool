@@ -22,18 +22,12 @@ public partial class FormatDocumentWindow : Window
 
         if (structuralFormattingAvailable)
         {
-            PrettyPrintHintText.Text =
-                "Baut den Aufbau der Datei (Schlüssel/Wert-Paare, Blöcke) komplett neu auf und " +
-                "vereinheitlicht dabei die Einrückung. Schlägt fehl, ohne etwas zu ändern, falls " +
-                "die Datei nicht als gültiges Paradox-Skript gelesen werden kann.";
+            PrettyPrintHintText.Text = MiscWindowTexts.FormatPrettyPrintHint;
         }
         else
         {
             PrettyPrintCheckBox.IsEnabled = false;
-            PrettyPrintHintText.Text =
-                "Für diesen Dateityp nicht verfügbar - die Struktur-Neuformatierung versteht nur " +
-                "das Paradox-Skriptformat (.txt/.gui/.gfx/.vml), nicht z. B. YML-Lokalisierungs- " +
-                "oder LUA-Dateien.";
+            PrettyPrintHintText.Text = MiscWindowTexts.FormatPrettyPrintUnavailable;
         }
     }
 

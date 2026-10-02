@@ -22,6 +22,30 @@ public sealed class CompatchInput
 
     public CompatchFileFilter Filter { get; init; } = CompatchFileFilter.Default;
 
+    /// <summary>
+    /// Ordner, deren Vanilla-Dateien A oder B mit <c>replace_path</c> ausblenden (siehe <see cref="ParadoxModTool.Mods.ReplacePaths"/>): Das Spiel lädt
+    /// sie nicht, also gibt es dort keine Vanilla-Seite. Nur Dateien direkt im Ordner, nicht in Unterordnern.
+    /// </summary>
+    public IReadOnlyCollection<string> HiddenVanillaFolders { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Ordner, deren Dateien von A das Spiel nicht lädt, weil B nach A lädt und sie mit <c>replace_path</c> ausblendet (Crusader Kings III und
+    /// Europa Universalis V, gemessen 2026-09-30). Leer bei Spielen, in denen <c>replace_path</c> nur Vanilla betrifft.
+    /// </summary>
+    public IReadOnlyCollection<string> HiddenFoldersOfA { get; init; } = Array.Empty<string>();
+
+    /// <summary>Wie <see cref="HiddenFoldersOfA"/> für die Dateien von B (A lädt nach B).</summary>
+    public IReadOnlyCollection<string> HiddenFoldersOfB { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Update-Modus: Dateien ohne alte Vanilla-Fassung (relativer Pfad). Dort ist jede Abweichung unsicher, darum wird nichts automatisch
+    /// entschieden und die Fassung der Mod ist vorausgewählt (Spec 2026-09-30-vanilla-update-merge, Abschnitt 6).
+    /// </summary>
+    public IReadOnlyCollection<string> NoBasePaths { get; init; } = Array.Empty<string>();
+
+    /// <summary>Wurzelordner, die <c>replace_path</c> nicht mitnennt (siehe <c>GameProfile.ReplacePathRoots</c>).</summary>
+    public IReadOnlyCollection<string> ReplacePathRoots { get; init; } = Array.Empty<string>();
+
     /// <summary>Beim Ziel "Basis-Mod": PMT-eigene Patch-Dateien dieser Seite nicht lesen (sie sind der frühere Patch, nicht Teil der Mod).</summary>
     public MergeSide? ExcludeOwnPatchFilesOf { get; init; }
 

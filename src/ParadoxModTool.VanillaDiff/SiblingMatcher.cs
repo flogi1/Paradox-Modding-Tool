@@ -45,12 +45,18 @@ public static class SiblingMatcher
             var refs = referenceGroups.TryGetValue(group.Key, out var found) ? found : new List<EntryUnit>();
             var (pairs, unclear) = MatchGroup(refs, others);
             var freshCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+            var identities = others.Select(IdentityOf).ToList();
             for (var j = 0; j < others.Count; j++)
             {
                 EntryUnit rekeyed;
                 if (pairs[j] is { } i)
                 {
                     rekeyed = others[j].WithKey(refs[i].Key, refs[i].Display);
+                }
+                else if (identities[j] is { } identity && identities.Count(x => x?.Field == identity.Field && x?.Value == identity.Value) == 1)
+                {
+                    // Neuer Block mit Kennung (key/name/id): Schlüssel aus der Kennung, damit dieselbe Kennung in A und B denselben Schlüssel bekommt.
+                    rekeyed = others[j].WithKey($"{group.Key}@{identity.Field}={identity.Value}", $"{others[j].BaseDisplay}[{identity.Value}]");
                 }
                 else
                 {
@@ -139,6 +145,8 @@ public static class SiblingMatcher
         ScriptOperator.LessOrEqual => "<=",
         ScriptOperator.GreaterThan => ">",
         ScriptOperator.GreaterOrEqual => ">=",
+        ScriptOperator.EqualsIfExists => "?=",
+        ScriptOperator.NotEquals => "!=",
         _ => "=",
     };
 
@@ -194,6 +202,8 @@ public static class SiblingMatcher
         var score = new double[n, m];
         var refSignatures = refs.Select(u => u.Value is ScriptBlock b ? Signatures(b) : (new List<string>(), new List<string>())).ToArray();
         var otherSignatures = others.Select(u => u.Value is ScriptBlock b ? Signatures(b) : (new List<string>(), new List<string>())).ToArray();
+        var refIds = refs.Select(IdentityOf).ToArray();
+        var otherIds = others.Select(IdentityOf).ToArray();
         for (var i = 0; i < n; i++)
         {
             for (var j = 0; j < m; j++)
@@ -202,6 +212,12 @@ public static class SiblingMatcher
                     && EntryUnits.HeaderText(refs[i].Header) == EntryUnits.HeaderText(others[j].Header))
                 {
                     score[i, j] = Exact;
+                }
+                else if (refIds[i] is { } refId && otherIds[j] is { } otherId && refId.Field == otherId.Field)
+                {
+                    // Kennung (key/name/id) auf beiden Seiten: nur sie zählt. Gleich = derselbe Block, auch wenn sonst alles anders ist;
+                    // verschieden = nie derselbe Block, auch wenn der Rest fast gleich ist (Beispiel modifier_definition in estates_preload).
+                    score[i, j] = refId.Value == otherId.Value ? 1.0 : 0.0;
                 }
                 else if (refs[i].Value is ScriptBlock && others[j].Value is ScriptBlock)
                 {
@@ -269,6 +285,28 @@ public static class SiblingMatcher
         }
 
         return (pairs, ambiguous);
+    }
+
+    /// <summary>Felder, die einen wiederholten Block eindeutig benennen (in dieser Reihenfolge gesucht).</summary>
+    private static readonly string[] IdentityFields = { "name", "key", "id" };
+
+    /// <summary>Kennung eines Blocks: das erste Feld aus <see cref="IdentityFields"/> mit einfachem Wert in der obersten Ebene des Blocks.</summary>
+    private static (string Field, string Value)? IdentityOf(EntryUnit unit)
+    {
+        if (unit.Value is not ScriptBlock block)
+        {
+            return null;
+        }
+
+        foreach (var field in IdentityFields)
+        {
+            if (block.Entries.OfType<ScriptStatement>().FirstOrDefault(s => string.Equals(s.Key, field, StringComparison.OrdinalIgnoreCase)) is { Value: ScriptScalar { Text.Length: > 0 } value })
+            {
+                return (field, value.Text);
+            }
+        }
+
+        return null;
     }
 
     private static (List<string> Full, List<string> Keys) Signatures(ScriptBlock block)

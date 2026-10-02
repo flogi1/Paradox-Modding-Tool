@@ -78,6 +78,54 @@ public sealed class ScopeLearnerTests : IDisposable
     }
 
     [Fact]
+    public void Events_without_type_use_the_default_event_type()
+    {
+        Write("events\\e.txt", "mod.1 = { id = a immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
+
+        var rules = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, defaultEventType: "country_event").Rules;
+
+        Assert.Equal("country", rules.Fields["events/country_event/immediate"].Scope);
+        Assert.Equal("country_event", rules.DefaultEventType);
+    }
+
+    [Fact]
+    public void Scripted_definitions_in_event_files_get_no_default_type()
+    {
+        Write("events\\e.txt",
+            "mod.1 = { immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n" +
+            "scripted_trigger my_check = { immediate = { is_capital = yes is_capital = no is_capital = yes is_capital = no is_capital = yes } }\n");
+
+        var rule = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, defaultEventType: "country_event").Rules.Fields["events/country_event/immediate"];
+
+        Assert.Equal("country", rule.Scope);
+        Assert.Equal(5, rule.Total);
+    }
+
+    [Fact]
+    public void Events_without_type_are_skipped_without_default()
+    {
+        Write("events\\e.txt", "mod.1 = { id = a immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
+
+        var rules = Learn();
+
+        Assert.DoesNotContain(rules.Fields.Keys, k => k.StartsWith("events/", StringComparison.Ordinal));
+        Assert.Null(rules.DefaultEventType);
+    }
+
+    [Fact]
+    public void Events_with_their_own_root_scope_do_not_vote()
+    {
+        Write("events\\e.txt",
+            "mod.1 = { type = country_event immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n" +
+            "mod.2 = { type = country_event scope = location immediate = { is_capital = yes is_capital = no is_capital = yes is_capital = no is_capital = yes is_capital = no } }\n");
+
+        var rule = Learn().Fields["events/country_event/immediate"];
+
+        Assert.Equal("country", rule.Scope);
+        Assert.Equal(5, rule.Total);
+    }
+
+    [Fact]
     public void Events_UseTheEventTypeAsObjectPart_AndReadmesAreIgnored()
     {
         Write("events\\e.txt", "mod.1 = { type = country_event id = a immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
@@ -243,6 +291,35 @@ public sealed class ScopeLearnerTests : IDisposable
 
         File.WriteAllText(path, "{ kaputt");
         Assert.Null(store.TryLoad());
+    }
+
+    [Fact]
+    public void Learn_CollectsScriptValueNames()
+    {
+        Write("common/script_values/values.txt", "my_value = { value = 1 }\n");
+
+        Assert.Equal(new[] { "my_value" }, Learn().ScriptValues);
+    }
+
+    [Fact]
+    public void Store_IgnoresRulesOfVersion2()
+    {
+        var store = new ScopeRulesStore(Path.Combine(_root, "rules-v2.json"));
+        store.Save(new ScopeRules { Version = 2 });
+
+        Assert.Null(store.TryLoad());
+        Assert.Equal(3, ScopeRules.CurrentVersion);
+    }
+
+    [Fact]
+    public void Fingerprint_ChangesWhenAScriptValueFileChanges()
+    {
+        var path = Write("common/script_values/values.txt", "my_value = 1\n");
+        var before = ScopeRuleLearner.ComputeFingerprint(ScopeRuleLearner.EnumerateFiles(new[] { _root }));
+
+        File.WriteAllText(path, "my_value = 1\nnew_value = 2\n");
+
+        Assert.NotEqual(before, ScopeRuleLearner.ComputeFingerprint(ScopeRuleLearner.EnumerateFiles(new[] { _root })));
     }
 
     [Fact]

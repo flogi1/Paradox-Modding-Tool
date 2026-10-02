@@ -13,7 +13,7 @@ public static class ModLocks
         var segments = text.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (text.Length == 0 || text.StartsWith('/') || Path.IsPathRooted(text) || text.Contains(':') || segments.Length == 0 || segments.Any(s => s == ".."))
         {
-            throw new InvalidOperationException($"Ungültiger Pfad innerhalb der Mod: \"{relativePath}\".");
+            throw new InvalidOperationException(ModsTexts.LockInvalidPath(relativePath));
         }
 
         return string.Join('/', segments.Where(s => s != "."));
@@ -85,11 +85,11 @@ public static class ModLocks
     {
         var what = reason.Kind switch
         {
-            LockReasonKind.WholeMod => "Die ganze Mod ist gesperrt.",
-            LockReasonKind.ThisPath => isDirectory ? "Dieser Ordner ist gesperrt." : "Diese Datei ist gesperrt.",
-            _ => $"Der Ordner {reason.ByPath} darüber ist gesperrt.",
+            LockReasonKind.WholeMod => ModsTexts.LockWholeMod,
+            LockReasonKind.ThisPath => isDirectory ? ModsTexts.LockThisFolder : ModsTexts.LockThisFile,
+            _ => ModsTexts.LockParentFolder(reason.ByPath),
         };
-        return what + " Übertragen und Abgleich lassen sie unangetastet: nichts wird hineingeschrieben, nichts herauskopiert oder verschoben. Der Editor bleibt unberührt.";
+        return what + " " + ModsTexts.LockEffect;
     }
 
     /// <summary>Anzahl der Sperr-Einträge in <see cref="ModInfo.LockedPaths"/> im Ordner (auch der Ordner selbst und alles darunter); ein leerer Pfad meint die ganze Mod. Die Sperre der ganzen Mod zählt nicht.</summary>

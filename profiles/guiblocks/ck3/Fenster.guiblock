@@ -1,0 +1,38 @@
+# block: Fenster
+# group: Fenster
+# description: Verschiebbares Fenster mit Hintergrund, Kopfzeile und Schließen-Knopf in der Kopfzeile. Der Schließen-Knopf braucht noch eine Aktion (onclick). Vorbild: gui/pdx_account/legal_docs_viewer.gui, gui/debug/window_component_library.gui
+# param: name | Name des Fensters | my_window
+# param: title | Titel (Lokalisierungsschlüssel) | MY_WINDOW_TITLE
+# requires: Window_Movable, Window_Background, Window_Decoration, Window_Margins, header_pattern
+
+window = {
+	name = "$name$"
+	parentanchor = center
+	size = { 600 400 }
+	layer = windows_layer
+
+	using = Window_Movable
+	using = Window_Background
+	using = Window_Decoration
+
+	vbox = {
+		using = Window_Margins
+
+		header_pattern = {
+			layoutpolicy_horizontal = expanding
+
+			blockoverride "header_text" {
+				text = "$title$"
+			}
+
+			blockoverride "button_close" {
+				# onclick = "[...]"
+			}
+		}
+
+		widget = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+		}
+	}
+}

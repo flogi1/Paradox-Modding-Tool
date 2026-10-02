@@ -74,6 +74,9 @@ public sealed class MergeAction
 
     public string? Note { get; init; }
 
+    /// <summary>Stelle aus "Fehlende Blöcke der Hauptmod übernehmen" (Option 2): die Hauptmod hat sie, das Ziel gar nicht.</summary>
+    public bool FillsMissing { get; init; }
+
     /// <summary>Prüfsumme der A- und B-Werte (Plan 2 bindet Entscheidungen daran).</summary>
     public string ValueHash { get; init; } = string.Empty;
 }

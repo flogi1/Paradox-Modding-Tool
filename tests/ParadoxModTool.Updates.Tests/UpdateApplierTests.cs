@@ -105,6 +105,28 @@ public class UpdateApplierTests : IDisposable
         Assert.Equal(old, Snapshot(Target));
     }
     [Fact]
+    public void Halb_wiederhergestellte_Sicherung_bleibt_beim_Aufraeumen_und_beim_naechsten_Update_erhalten()
+    {
+        CreateOldAndNew();
+        var applier = new UpdateApplier(Log, attempts: 2, retryDelay: TimeSpan.Zero);
+        applier.Swap(Target, Staging);
+        var backup = Path.Combine(Target, UpdatePaths.BackupFolderName);
+        using (File.Open(Path.Combine(backup, "nur-alt.dll"), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            Assert.ThrowsAny<IOException>(() => applier.Rollback(Target));
+        }
+
+        Assert.True(File.Exists(Path.Combine(backup, "nur-alt.dll")));
+
+        UpdateApplier.CleanupAfterStart(Target, new UpdatePaths(_temp.Combine("updates")), new AppVersion(0, 2, 0), Log);
+        Assert.True(File.Exists(Path.Combine(backup, "nur-alt.dll")));
+
+        var error = Assert.Throws<UpdateApplyException>(() => applier.Swap(Target, Staging));
+        Assert.True(error.RolledBack);
+        Assert.True(File.Exists(Path.Combine(backup, "nur-alt.dll")));
+    }
+
+    [Fact]
     public void Aufraeumen_loescht_Sicherung_und_alte_Update_Ordner()
     {
         _temp.WriteFile(Path.Combine("Programm Ä", UpdatePaths.BackupFolderName, "x.dll"), "x");

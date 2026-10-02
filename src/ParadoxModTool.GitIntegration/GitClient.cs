@@ -94,51 +94,51 @@ public sealed class GitClient
     {
         if (string.IsNullOrWhiteSpace(message))
         {
-            return new GitOperationResult(false, "Die Commit-Nachricht fehlt.", Array.Empty<string>());
+            return new GitOperationResult(false, GitTexts.CommitMessageMissing, Array.Empty<string>());
         }
 
         var add = await RunAsync(folder, TimeSpan.FromMinutes(2), cancellation, "add", "-A");
         if (add.ExitCode != 0 || add.TimedOut)
         {
-            return Failure("Die Änderungen konnten nicht vorgemerkt werden.", add);
+            return Failure(GitTexts.StageFailed, add);
         }
 
         var commit = await RunAsync(folder, TimeSpan.FromMinutes(2), cancellation, "commit", "-m", message.Trim());
         return commit.ExitCode == 0 && !commit.TimedOut
-            ? new GitOperationResult(true, "Die Änderungen wurden committet.", commit.Output)
-            : Failure("Der Commit ist fehlgeschlagen.", commit);
+            ? new GitOperationResult(true, GitTexts.Committed, commit.Output)
+            : Failure(GitTexts.CommitFailed, commit);
     }
 
     public async Task<GitOperationResult> PushAsync(string folder, GitState state, CancellationToken cancellation)
     {
         if (state.Branch is null)
         {
-            return new GitOperationResult(false, "Der Ordner steht auf einem losgelösten HEAD; gepusht wird nur ein Branch.", Array.Empty<string>());
+            return new GitOperationResult(false, GitTexts.PushDetached, Array.Empty<string>());
         }
 
         if (state.Behind > 0)
         {
-            return new GitOperationResult(false, $"Der Branch ist {state.Behind} Commit(s) hinter {state.Upstream}. Hole die Änderungen mit deinem Git-Werkzeug, dann pushe erneut.", Array.Empty<string>());
+            return new GitOperationResult(false, GitTexts.PushBehind(state.Behind, state.Upstream), Array.Empty<string>());
         }
 
         var args = state.Upstream is null ? new[] { "push", "-u", "origin", state.Branch } : new[] { "push" };
         var result = await RunAsync(folder, TimeSpan.FromMinutes(5), cancellation, args);
         if (result.ExitCode == 0 && !result.TimedOut)
         {
-            return new GitOperationResult(true, "Der Branch wurde gepusht.", result.Output.Concat(result.Error).ToList());
+            return new GitOperationResult(true, GitTexts.Pushed, result.Output.Concat(result.Error).ToList());
         }
 
         var text = string.Join(" ", result.Error.Concat(result.Output));
         var hint = text.Contains("could not read Username", StringComparison.OrdinalIgnoreCase) || text.Contains("Authentication failed", StringComparison.OrdinalIgnoreCase)
-            ? " Git hat keine Anmeldung für GitHub. Melde dich einmal in deinem Git-Werkzeug an (z. B. mit dem Git Credential Manager)."
+            ? GitTexts.PushNoCredentials
             : string.Empty;
-        return Failure("Das Pushen ist fehlgeschlagen." + hint, result);
+        return Failure(GitTexts.PushFailed + hint, result);
     }
 
     private static GitOperationResult Failure(string message, ProcessResult result)
     {
         var details = result.TimedOut
-            ? "Zeitüberschreitung."
+            ? GitTexts.Timeout
             : string.Join(" ", result.Error.Concat(result.Output).Where(l => !string.IsNullOrWhiteSpace(l)).TakeLast(3));
         return new GitOperationResult(false, details.Length == 0 ? message : message + " " + details, result.Output.Concat(result.Error).ToList());
     }

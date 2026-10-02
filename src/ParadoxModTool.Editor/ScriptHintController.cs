@@ -8,6 +8,7 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
+using ParadoxModTool.Modifiers;
 using ParadoxModTool.Scopes;
 using ParadoxModTool.ScriptDocs;
 
@@ -67,7 +68,7 @@ internal sealed class ScriptHintController
 
     private void OnMouseHover(object sender, MouseEventArgs e)
     {
-        if (!ScriptHintSettings.HoverEnabled || ScriptHintSettings.Provider is not { } provider || _completion is not null || !IsScriptDocument())
+        if (_completion is not null || !IsScriptDocument())
         {
             return;
         }
@@ -82,7 +83,18 @@ internal sealed class ScriptHintController
 
         var line = _editor.Document.GetLineByNumber(position.Line);
         var lineText = _editor.Document.GetText(line.Offset, line.Length);
-        if (ScriptWords.WordAt(lineText, position.Column - 1) is not { } word
+        if (ModifierValueSettings.HoverEnabled && ModifierValueAt(lineText, position.Column - 1) is (var modifier, var value, var format))
+        {
+            _tip ??= CreateTip();
+            _tip.Content = BuildValueTip(modifier, value, format);
+            _tip.IsOpen = true;
+            e.Handled = true;
+            return;
+        }
+
+        if (!ScriptHintSettings.HoverEnabled
+            || ScriptHintSettings.Provider is not { } provider
+            || ScriptWords.WordAt(lineText, position.Column - 1) is not { } word
             || !ScriptWords.IsCodeContext(lineText[..word.Start]))
         {
             return;
@@ -100,6 +112,39 @@ internal sealed class ScriptHintController
         _tip.Content = BuildTipContent(hints, scopeLine);
         _tip.IsOpen = true;
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// Der Modifier, sein Zahlenwert und sein Anzeigeformat an der Spalte: die Zahl hinter dem Modifier (<c>x = 0.1</c>) oder ein Script-Value bzw. eine Konstante,
+    /// die sich zu einer Zahl auflösen lässt (<c>x = mein_script_value</c>, <c>x = @konstante</c>); sonst <see langword="null"/>.
+    /// </summary>
+    private (string Modifier, decimal Value, ModifierFormat Format)? ModifierValueAt(string lineText, int column)
+    {
+        if (ScriptWords.NumberAt(lineText, column) is { } number)
+        {
+            return ModifierValueSettings.Index.Find(number.Key) is { } numberFormat ? (number.Key, number.Value, numberFormat) : null;
+        }
+
+        if (ScriptWords.ValueRefAt(lineText, column) is not { } reference || ModifierValueSettings.Index.Find(reference.Key) is not { } format)
+        {
+            return null;
+        }
+
+        // Konstanten am Dateianfang (@preis = 0.5) gelten nur in ihrer Datei, also zuerst im offenen Text suchen.
+        var local = ScriptValueIndex.Read(_editor.Document.Text);
+        return ModifierValueSettings.ScriptValues.Find(reference.Name, local) is { } resolved ? (reference.Key, resolved, format) : null;
+    }
+
+    private static TextBlock BuildValueTip(string modifier, decimal value, ModifierFormat format)
+    {
+        var text = new TextBlock();
+        text.Inlines.Add(new System.Windows.Documents.Run(ModifierTexts.InGame(ModifierValueFormatter.Format(value, format), format.Estimated)));
+        if (ModifierValueSettings.NamesEnabled && ModifierValueSettings.Names.Find(modifier) is { } name)
+        {
+            text.Inlines.Add(new System.Windows.Documents.Run("  ·  " + name));
+        }
+
+        return text;
     }
 
     private ToolTip CreateTip()
@@ -141,9 +186,9 @@ internal sealed class ScriptHintController
         var (result, supported) = engine.Check(word, context);
         return result switch
         {
-            ScopeCheck.Allowed => $"Hier: {context.CurrentScope} – erlaubt",
-            ScopeCheck.NotAllowed when context.Confident => $"Hier: {context.CurrentScope} – gilt nur in {string.Join(", ", supported)}",
-            ScopeCheck.NotAllowed => $"Hier: {context.CurrentScope} (unsicher) – vermutlich nur in {string.Join(", ", supported)}",
+            ScopeCheck.Allowed => ScriptHintTexts.ScopeAllowed(context.CurrentScope),
+            ScopeCheck.NotAllowed when context.Confident => ScriptHintTexts.ScopeOnlyIn(context.CurrentScope, string.Join(", ", supported)),
+            ScopeCheck.NotAllowed => ScriptHintTexts.ScopeProbablyOnlyIn(context.CurrentScope, string.Join(", ", supported)),
             _ => null,
         };
     }
@@ -184,7 +229,7 @@ internal sealed class ScriptHintController
 
         if (hints.Count > MaxHintsInTip)
         {
-            panel.Children.Add(new TextBlock { Text = $"… und {hints.Count - MaxHintsInTip} weitere", Foreground = Brushes.Gray, Margin = new Thickness(0, 6, 0, 0) });
+            panel.Children.Add(new TextBlock { Text = ScriptHintTexts.MoreHints(hints.Count - MaxHintsInTip), Foreground = Brushes.Gray, Margin = new Thickness(0, 6, 0, 0) });
         }
 
         return panel;
@@ -195,21 +240,21 @@ internal sealed class ScriptHintController
         var parts = new List<string>();
         if (hint.Scopes.Count > 0)
         {
-            parts.Add((hint.Kind == ScriptDocKind.Modifier ? "Kategorien: " : "Scopes: ") + string.Join(", ", hint.Scopes));
+            parts.Add((hint.Kind == ScriptDocKind.Modifier ? ScriptHintTexts.Categories + ": " : "Scopes: ") + string.Join(", ", hint.Scopes));
         }
 
         if (hint.Targets.Count > 0)
         {
-            parts.Add((hint.Kind == ScriptDocKind.EventTarget ? "Ergebnis: " : "Ziele: ") + string.Join(", ", hint.Targets));
+            parts.Add((hint.Kind == ScriptDocKind.EventTarget ? ScriptHintTexts.Output : ScriptHintTexts.Targets) + ": " + string.Join(", ", hint.Targets));
         }
 
         if (hint.IsOutdated)
         {
-            parts.Add("veraltet");
+            parts.Add(ScriptHintTexts.Outdated);
         }
         else if (hint.IsNew)
         {
-            parts.Add("neu");
+            parts.Add(ScriptHintTexts.New);
         }
 
         return string.Join("  ·  ", parts);
@@ -273,7 +318,7 @@ internal sealed class ScriptHintController
             return;
         }
 
-        var hints = provider.Complete(prefix, MaxCompletionItems);
+        var hints = provider.Complete(prefix, MaxCompletionItems, ScriptHintSettings.CompleteCustomLocalizations);
         if (hints.Count == 0 || (hints.Count == 1 && hints[0].Name == prefix))
         {
             return;
@@ -301,7 +346,7 @@ internal sealed class ScriptHintController
             content.Children.Add(new TextBlock { Text = hint.Name });
             content.Children.Add(new TextBlock
             {
-                Text = ScriptDocLogFiles.DisplayNameOf(hint.Kind) + (hint.IsOutdated ? " · veraltet" : string.Empty),
+                Text = ScriptDocLogFiles.DisplayNameOf(hint.Kind) + (hint.IsOutdated ? " · " + ScriptHintTexts.Outdated : string.Empty),
                 Foreground = Brushes.Gray,
                 Margin = new Thickness(12, 0, 0, 0),
             });

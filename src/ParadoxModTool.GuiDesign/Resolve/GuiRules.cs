@@ -1,4 +1,5 @@
 using ParadoxModTool.GameProfiles;
+using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Syntax;
 
 namespace ParadoxModTool.GuiDesign.Resolve;
@@ -24,11 +25,20 @@ public enum GuiRole
 public sealed class GuiRules
 {
     public GuiRules(IEnumerable<string> structuredBlocks, IEnumerable<string> widgetHolders, IEnumerable<string> layoutHolders)
+        : this(structuredBlocks, widgetHolders, layoutHolders, GuiLayout.Default)
+    {
+    }
+
+    public GuiRules(IEnumerable<string> structuredBlocks, IEnumerable<string> widgetHolders, IEnumerable<string> layoutHolders, GuiLayout layout)
     {
         StructuredBlocks = new HashSet<string>(structuredBlocks, StringComparer.Ordinal);
         WidgetHolders = new HashSet<string>(widgetHolders, StringComparer.Ordinal);
         LayoutHolders = new HashSet<string>(layoutHolders, StringComparer.Ordinal);
+        Layout = layout;
     }
+
+    /// <summary>Kontextordner und Überschreib-Reihenfolge des Spiels.</summary>
+    public GuiLayout Layout { get; }
 
     public static GuiRules Empty { get; } = new(Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
 
@@ -39,7 +49,15 @@ public sealed class GuiRules
     public IReadOnlySet<string> LayoutHolders { get; }
 
     public static GuiRules FromProfile(GameProfile profile) =>
-        profile.Gui is { } gui ? new GuiRules(gui.StructuredBlocks, gui.WidgetHolders, gui.LayoutHolders) : Empty;
+        profile.Gui is { } gui
+            ? new GuiRules(
+                gui.StructuredBlocks,
+                gui.WidgetHolders,
+                gui.LayoutHolders,
+                new GuiLayout(
+                    gui.Contexts is { } contexts ? contexts.ToList() : GuiLayout.Default.Contexts,
+                    string.Equals(gui.TypeOverride, "firstWins", StringComparison.OrdinalIgnoreCase)))
+            : Empty;
 
     /// <summary>
     /// Einordnung: Typname → Typ-Instanz; Profilliste → strukturierter Block bzw. Widget-Halter; nur Listeneinträge → Wertblock;

@@ -66,7 +66,7 @@ public partial class MainWindow
         ModStatusText.Text = _mods.ActiveMod is { } mod
             ? $"Mod: {mod.Name}{ProjectSuffix(mod, (_modSourcePane ?? PanelPane).CurrentFilePath)}"
             : _mods.UnmanagedFolder is { } unmanaged
-                ? $"Mod: — ({Path.GetFileName(unmanaged)} ist nicht angelegt, Klick öffnet die Mod-Verwaltung)"
+                ? MainTexts.ModStatusUnmanaged(Path.GetFileName(unmanaged))
                 : "Mod: —";
         if (_mods.Registry.LoadWarning is { } warning)
         {
@@ -84,6 +84,10 @@ public partial class MainWindow
         }
 
         UpdateBugTrackerButton();
+        if (ActiveBugProjectId is { } bugProjectId)
+        {
+            RefreshBugsInBackground(bugProjectId);
+        }
 
         // Aktive Mod kann gewechselt haben: GUI-Index nachziehen (baut nur neu, wenn sich Mod-Ordner oder Abhängigkeiten geändert haben).
         _ = UpdateGuiWorkspaceAsync(force: false);
@@ -102,7 +106,7 @@ public partial class MainWindow
             && _mods.Registry.ToRelative(mod.Id, filePath) is { Length: > 0 } relative
             && ModLocks.LockedBy(mod, relative) is { } by)
         {
-            suffix += string.Equals(by, relative, StringComparison.OrdinalIgnoreCase) ? " · 🔒 Datei" : " · 🔒 Ordner";
+            suffix += " · 🔒 " + (string.Equals(by, relative, StringComparison.OrdinalIgnoreCase) ? MainTexts.ModStatusLockedFile : MainTexts.ModStatusLockedFolder);
         }
 
         return suffix;
@@ -127,14 +131,14 @@ public partial class MainWindow
         {
             var answer = MessageBox.Show(
                 this,
-                $"Der Ordner\n{folder}\nenthält eine Metadaten-Datei und sieht wie eine Mod aus.\n\nAls Mod anlegen?\n\nJa: anlegen\nNein: nicht mehr fragen\nAbbrechen: später",
-                "Mod anlegen",
+                MainTexts.AddModPrompt(folder),
+                MainTexts.AddModTitle,
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Question);
 
             if (answer == MessageBoxResult.Yes)
             {
-                var name = TextPromptWindow.Ask(this, "Mod anlegen", "Name der Mod:", ModRegistry.SuggestName(folder, _mods.MetadataFile));
+                var name = TextPromptWindow.Ask(this, MainTexts.AddModTitle, MainTexts.AddModName, ModRegistry.SuggestName(folder, _mods.MetadataFile));
                 if (!string.IsNullOrWhiteSpace(name))
                 {
                     registry.Add(name, folder);
@@ -148,7 +152,7 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {
-            MessageBox.Show(this, ex.Message, "Mod anlegen", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ex.Message, MainTexts.AddModTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
         {
@@ -164,6 +168,7 @@ public partial class MainWindow
         _mods?.SyncNoteKeys();
         RefreshActiveMod();
         RefreshLockDisplays();
+        _errorLog?.RefreshSources();
     }
 
     /// <summary>Die Angaben dieses Spiels für das Veröffentlichen auf Steam.</summary>

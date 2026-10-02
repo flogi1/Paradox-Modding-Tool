@@ -5,6 +5,9 @@ public sealed class UpdatePaths(string root)
 {
     public const string BackupFolderName = ".update-backup";
 
+    /// <summary>Markierung in der Sicherung, solange ein Rückfall läuft oder gescheitert ist: dann ist sie der einzige Rest der alten Version.</summary>
+    public const string IncompleteMarkerName = ".incomplete";
+
     public const string ExecutableName = "ParadoxModTool.exe";
 
     /// <summary>Liste der obersten Einträge, die zu PMT gehören; nur diese fasst ein Update an. Liegt in jedem Release-Paket.</summary>

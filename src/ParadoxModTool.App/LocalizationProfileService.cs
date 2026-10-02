@@ -21,7 +21,7 @@ public sealed class LocalizationProfileService
     private readonly SemaphoreSlim _gate = new(1, 1);
     private LocalizationProfiles? _profiles;
     private bool _loaded;
-    private string _status = "Lokalisierungs-Profile: noch nicht gelernt, Rückfall aktiv.";
+    private string _status = LearningStatusTexts.LocProfilesNotLearned;
 
     public LocalizationProfileService(string profilesFilePath, Func<IReadOnlyList<string>> getVanillaRoots)
     {
@@ -60,7 +60,7 @@ public sealed class LocalizationProfileService
             var learned = false;
             if (learn)
             {
-                _status = "Lokalisierungs-Profile werden gelernt …";
+                _status = LearningStatusTexts.LocProfilesLearning;
                 try
                 {
                     var result = await Task.Run(() => LocalizationProfileLearner.Learn(roots, Language, DateTime.UtcNow, cancellation, progress), cancellation);
@@ -97,10 +97,10 @@ public sealed class LocalizationProfileService
         if (profiles is null)
         {
             return canLearn
-                ? "Lokalisierungs-Profile: noch nicht gelernt, Rückfall aktiv."
-                : "Lokalisierungs-Profile: kein Vanilla-Ordner bekannt (Einstellungen › Spielpfad einstellen), Rückfall aktiv.";
+                ? LearningStatusTexts.LocProfilesNotLearned
+                : LearningStatusTexts.LocProfilesNoVanilla;
         }
 
-        return $"Lokalisierungs-Profile gelernt am {profiles.LearnedUtc.ToLocalTime():g} ({profiles.Profiles.Count} Ordner).";
+        return LearningStatusTexts.LocProfilesLearned(profiles.LearnedUtc.ToLocalTime(), profiles.Profiles.Count);
     }
 }

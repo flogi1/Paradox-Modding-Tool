@@ -37,7 +37,7 @@ public sealed class SteamClientProcessBackend : IWorkshopBackend
     {
         if (string.IsNullOrWhiteSpace(upload.AppId) || !upload.AppId.All(char.IsAsciiDigit))
         {
-            throw new ArgumentException("Die AppID muss eine Zahl sein.", nameof(upload));
+            throw new ArgumentException(SteamTexts.AppIdNotNumber, nameof(upload));
         }
 
         var request = new SteamUploadRequest(_dllPath, upload.AppId, upload, (int)_poll.TotalMilliseconds, (int)_timeout.TotalSeconds);
@@ -70,22 +70,22 @@ public sealed class SteamClientProcessBackend : IWorkshopBackend
             }
             catch (OperationCanceledException)
             {
-                return result ?? new WorkshopBackendResult(WorkshopPublishOutcome.Cancelled, upload.WorkshopId, Array.Empty<string>(), "Der Upload wurde abgebrochen.");
+                return result ?? new WorkshopBackendResult(WorkshopPublishOutcome.Cancelled, upload.WorkshopId, Array.Empty<string>(), SteamTexts.UploadCancelled);
             }
             catch (Exception ex) when (ex is Win32Exception or IOException or InvalidOperationException or UnauthorizedAccessException)
             {
-                return new WorkshopBackendResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), "Der Steam-Hilfsprozess konnte nicht gestartet werden: " + ex.Message);
+                return new WorkshopBackendResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), SteamTexts.HelperStartFailed(ex.Message));
             }
 
             return result ?? new WorkshopBackendResult(
                 WorkshopPublishOutcome.Failed,
                 upload.WorkshopId,
                 Array.Empty<string>(),
-                "Der Steam-Hilfsprozess endete ohne Ergebnis (Exitcode " + exitCode.ToString(CultureInfo.InvariantCulture) + ").");
+                SteamTexts.HelperNoResult(exitCode.ToString(CultureInfo.InvariantCulture)));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return new WorkshopBackendResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), "Die Anfrage an den Steam-Hilfsprozess konnte nicht geschrieben werden: " + ex.Message);
+            return new WorkshopBackendResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), SteamTexts.HelperWriteFailed(ex.Message));
         }
         finally
         {

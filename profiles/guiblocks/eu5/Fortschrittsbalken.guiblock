@@ -1,0 +1,19 @@
+# block: Fortschrittsbalken
+# group: Anzeige
+# description: Balken mit einem Wert zwischen Minimum und Maximum; für Spielwerte "[...]" eintragen. Ohne using = progress_bar_* bleibt der Balken unsichtbar. Vorbild: in_game/gui/advances_lateralview.gui, main_menu/gui/shared/progressbars.gui
+# param: name | Name | my_progress
+# param: width | Breite | 200
+# param: height | Höhe | 16
+# param: min | Minimum | 0
+# param: max | Maximum | 100
+# param: value | Wert | 50
+# requires: progressbar, progress_bar_green_alt
+
+progressbar = {
+	name = "$name$"
+	size = { $width$ $height$ }
+	using = progress_bar_green_alt
+	min = $min$
+	max = $max$
+	value = $value$
+}

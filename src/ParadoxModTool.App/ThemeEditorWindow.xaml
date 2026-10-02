@@ -1,7 +1,9 @@
 <Window x:Class="ParadoxModTool.App.ThemeEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Theme-Editor" Width="820" Height="660" MinWidth="640" MinHeight="420"
+        xmlns:loc="clr-namespace:ParadoxModTool.Localization;assembly=ParadoxModTool.Localization"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        Title="{x:Static local:MiscWindowTexts.ThemeEditorTitle}" Width="820" Height="660" MinWidth="640" MinHeight="420"
         WindowStartupLocation="CenterOwner" Closing="Window_Closing">
     <!-- Theme-Editor (Paket 12b): links die Themes (Hell/Dunkel eingebaut, eigene bearbeitbar), rechts alle Farb-Tokens nach
          Gruppen mit Farbwähler und Hex-Feld. Änderungen zeigen sich sofort in der ganzen Anwendung (Live-Vorschau);
@@ -20,11 +22,11 @@
         <DockPanel Grid.Row="0" Grid.Column="0">
             <TextBlock DockPanel.Dock="Top" Text="Themes" FontWeight="SemiBold" Margin="0,0,0,4" />
             <WrapPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
-                <Button Content="Neu (Kopie)" Margin="0,0,4,4" Click="NewCopy_Click"
-                        ToolTip="Legt eine eigene, bearbeitbare Kopie des gewählten Themes an" />
-                <Button x:Name="DeleteButton" Content="Löschen" Margin="0,0,4,4" Click="Delete_Click" ToolTip="Löscht das gewählte eigene Theme" />
-                <Button Content="Importieren" Margin="0,0,4,4" Click="Import_Click" ToolTip="Liest ein Theme aus einer Datei (JSON) als neues eigenes Theme" />
-                <Button Content="Exportieren" Margin="0,0,4,4" Click="Export_Click" ToolTip="Speichert das gewählte Theme als Datei zum Weitergeben" />
+                <Button Content="{x:Static local:MiscWindowTexts.ThemeNewCopy}" Margin="0,0,4,4" Click="NewCopy_Click"
+                        ToolTip="{x:Static local:MiscWindowTexts.ThemeNewCopyTip}" />
+                <Button x:Name="DeleteButton" Content="{x:Static loc:CommonTexts.Delete}" Margin="0,0,4,4" Click="Delete_Click" ToolTip="{x:Static local:MiscWindowTexts.ThemeDeleteTip}" />
+                <Button Content="{x:Static local:MiscWindowTexts.ThemeImport}" Margin="0,0,4,4" Click="Import_Click" ToolTip="{x:Static local:MiscWindowTexts.ThemeImportTip}" />
+                <Button Content="{x:Static local:MiscWindowTexts.ThemeExport}" Margin="0,0,4,4" Click="Export_Click" ToolTip="{x:Static local:MiscWindowTexts.ThemeExportTip}" />
             </WrapPanel>
             <ListBox x:Name="ThemeList" DisplayMemberPath="Display" SelectionChanged="ThemeList_SelectionChanged" />
         </DockPanel>
@@ -38,22 +40,22 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Name:" VerticalAlignment="Center" Margin="0,0,6,0" />
                 <TextBox x:Name="NameBox" Grid.Column="1" TextChanged="NameBox_TextChanged" />
-                <CheckBox x:Name="DarkCheck" Grid.Column="2" Content="Dunkles Theme" Margin="12,0,0,0" VerticalAlignment="Center"
+                <CheckBox x:Name="DarkCheck" Grid.Column="2" Content="{x:Static local:MiscWindowTexts.ThemeDark}" Margin="12,0,0,0" VerticalAlignment="Center"
                           Click="DarkCheck_Click"
-                          ToolTip="Schaltet die dunkle Windows-Titelleiste ein und bestimmt, aus welchem eingebauten Theme fehlende Farben ergänzt werden" />
+                          ToolTip="{x:Static local:MiscWindowTexts.ThemeDarkTip}" />
             </Grid>
             <TextBlock x:Name="InfoText" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,6" Foreground="{DynamicResource Theme.TextMuted}"
-                       Text="Eingebaute Themes sind schreibgeschützt. Mit „Neu (Kopie)“ entsteht eine eigene Version, die du frei anpassen kannst." />
+                       Text="{x:Static local:MiscWindowTexts.ThemeBuiltInInfo}" />
             <TextBlock DockPanel.Dock="Bottom" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}"
-                       Text="Farben: #RRGGBB, bei einigen Feldern auch #AARRGGBB (mit Transparenz). Die Farben der Dateikategorien stellst du unter Einstellungen → Kategorie-Farben ein." />
+                       Text="{x:Static local:MiscWindowTexts.ThemeColorsHint}" />
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="RowsPanel" Margin="0,0,8,0" />
             </ScrollViewer>
         </DockPanel>
 
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="OK" Width="90" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click" />
-            <Button Content="Abbrechen" Width="90" IsCancel="True" />
+            <Button Content="{x:Static loc:CommonTexts.Ok}" Width="90" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click" />
+            <Button Content="{x:Static loc:CommonTexts.Cancel}" Width="90" IsCancel="True" />
         </StackPanel>
     </Grid>
 </Window>

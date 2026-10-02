@@ -1,4 +1,5 @@
 using System.Windows;
+using ParadoxModTool.Localization;
 using ParadoxModTool.ModCompat;
 using Binding = System.Windows.Data.Binding;
 using Button = System.Windows.Controls.Button;
@@ -27,9 +28,9 @@ public sealed class OverrideRulesWindow : Window
 
         public string BehaviorText => CompatText.Behavior(Rule.Behavior);
 
-        public string CertainText => Rule.Certain ? "gesichert" : "unsicher";
+        public string CertainText => Rule.Certain ? TemplateWindowTexts.OverrideCertain : TemplateWindowTexts.OverrideUncertain;
 
-        public string Layer => IsGame ? (OverridesDefault ? "Spiel (ersetzt Standard)" : "Spiel") : "Standard";
+        public string Layer => IsGame ? (OverridesDefault ? TemplateWindowTexts.OverrideLayerGameReplaces : TemplateWindowTexts.OverrideLayerGame) : TemplateWindowTexts.OverrideLayerDefault;
     }
 
     private sealed record BehaviorChoice(OverrideBehavior Behavior)
@@ -43,8 +44,8 @@ public sealed class OverrideRulesWindow : Window
     private readonly ListView _list = new();
     private readonly TextBox _folder = new();
     private readonly ComboBox _behavior = new();
-    private readonly CheckBox _certain = new() { Content = "Laut Wiki gesichert", IsChecked = true, Margin = new Thickness(0, 6, 0, 0) };
-    private readonly Button _remove = new() { Content = "Entfernen", Padding = new Thickness(8, 2, 8, 2), IsEnabled = false };
+    private readonly CheckBox _certain = new() { Content = TemplateWindowTexts.OverrideCertainCheck, IsChecked = true, Margin = new Thickness(0, 6, 0, 0) };
+    private readonly Button _remove = new() { Content = CommonTexts.Remove, Padding = new Thickness(8, 2, 8, 2), IsEnabled = false };
 
     public OverrideRulesWindow(IReadOnlyList<OverrideRule> shipped, string rulesFile)
     {
@@ -52,7 +53,7 @@ public sealed class OverrideRulesWindow : Window
         _file = rulesFile;
         _game = OverrideRulesStore.Load(rulesFile);
 
-        Title = "Überschreib-Regeln";
+        Title = TemplateWindowTexts.OverrideTitle;
         Width = 760;
         Height = 560;
         MinHeight = 400;
@@ -64,31 +65,29 @@ public sealed class OverrideRulesWindow : Window
         {
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 0, 0, 8),
-            Text = "Der Ordner steht relativ zum Wurzelordner der Spielinhalte, zum Beispiel \"*/common/on_action\". Ein Stern steht für genau einen Ordnernamen "
-                + "(in_game, main_menu, loading_screen). Der längste passende Ordner gilt. Ein Spiel-Eintrag ersetzt den Standard-Eintrag desselben Ordners; "
-                + "wird er entfernt, gilt wieder der Standard. \"Unsicher\" markiert Funde als nicht durch das Wiki gesichert. Änderungen gelten ab der nächsten Prüfung.",
+            Text = TemplateWindowTexts.OverrideHelp,
         };
         DockPanel.SetDock(help, System.Windows.Controls.Dock.Top);
         root.Children.Add(help);
 
         var form = new StackPanel { Margin = new Thickness(0, 10, 0, 0) };
         DockPanel.SetDock(form, System.Windows.Controls.Dock.Bottom);
-        form.Children.Add(new TextBlock { Text = "Ordner", FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 2) });
+        form.Children.Add(new TextBlock { Text = TemplateWindowTexts.OverrideFolder, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 2) });
         form.Children.Add(_folder);
-        form.Children.Add(new TextBlock { Text = "Verhalten", FontWeight = FontWeights.Bold, Margin = new Thickness(0, 6, 0, 2) });
+        form.Children.Add(new TextBlock { Text = TemplateWindowTexts.OverrideBehavior, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 6, 0, 2) });
         _behavior.ItemsSource = Enum.GetValues<OverrideBehavior>().Select(b => new BehaviorChoice(b)).ToList();
         _behavior.DisplayMemberPath = nameof(BehaviorChoice.Text);
         _behavior.SelectedIndex = 1;
         form.Children.Add(_behavior);
         form.Children.Add(_certain);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
-        var apply = new Button { Content = "Übernehmen", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
+        var apply = new Button { Content = TemplateWindowTexts.OverrideApply, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
         apply.Click += (_, _) => Apply();
-        var clear = new Button { Content = "Neuer Eintrag", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
+        var clear = new Button { Content = TemplateWindowTexts.OverrideNewEntry, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
         clear.Click += (_, _) => NewEntry();
         _remove.Margin = new Thickness(0, 0, 6, 0);
         _remove.Click += (_, _) => RemoveSelected();
-        var close = new Button { Content = "Schließen", Padding = new Thickness(8, 2, 8, 2), IsCancel = true };
+        var close = new Button { Content = CommonTexts.Close, Padding = new Thickness(8, 2, 8, 2), IsCancel = true };
         buttons.Children.Add(apply);
         buttons.Children.Add(clear);
         buttons.Children.Add(_remove);
@@ -97,10 +96,10 @@ public sealed class OverrideRulesWindow : Window
         root.Children.Add(form);
 
         var grid = new GridView();
-        grid.Columns.Add(new GridViewColumn { Header = "Ordner", Width = 260, DisplayMemberBinding = new Binding(nameof(RuleRow.Folder)) });
-        grid.Columns.Add(new GridViewColumn { Header = "Verhalten", Width = 190, DisplayMemberBinding = new Binding(nameof(RuleRow.BehaviorText)) });
-        grid.Columns.Add(new GridViewColumn { Header = "Sicherheit", Width = 80, DisplayMemberBinding = new Binding(nameof(RuleRow.CertainText)) });
-        grid.Columns.Add(new GridViewColumn { Header = "Ebene", Width = 150, DisplayMemberBinding = new Binding(nameof(RuleRow.Layer)) });
+        grid.Columns.Add(new GridViewColumn { Header = TemplateWindowTexts.OverrideFolder, Width = 260, DisplayMemberBinding = new Binding(nameof(RuleRow.Folder)) });
+        grid.Columns.Add(new GridViewColumn { Header = TemplateWindowTexts.OverrideBehavior, Width = 190, DisplayMemberBinding = new Binding(nameof(RuleRow.BehaviorText)) });
+        grid.Columns.Add(new GridViewColumn { Header = TemplateWindowTexts.OverrideCertainty, Width = 80, DisplayMemberBinding = new Binding(nameof(RuleRow.CertainText)) });
+        grid.Columns.Add(new GridViewColumn { Header = TemplateWindowTexts.ColumnLayer, Width = 150, DisplayMemberBinding = new Binding(nameof(RuleRow.Layer)) });
         _list.View = grid;
         _list.SelectionChanged += (_, _) => LoadSelected();
         root.Children.Add(_list);
@@ -158,7 +157,7 @@ public sealed class OverrideRulesWindow : Window
         var folder = _folder.Text.Trim().Replace('\\', '/').Trim('/');
         if (folder.Length == 0 || _behavior.SelectedItem is not BehaviorChoice choice)
         {
-            System.Windows.MessageBox.Show(this, "Gib einen Ordner an und wähle ein Verhalten.", "Überschreib-Regeln", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, TemplateWindowTexts.OverrideMissingInput, TemplateWindowTexts.OverrideTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

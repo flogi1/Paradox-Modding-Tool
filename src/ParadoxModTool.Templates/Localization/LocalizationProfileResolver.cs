@@ -96,12 +96,12 @@ public static class LocalizationProfileResolver
             .Select(f => new ResolvedFieldPattern(f.Name, f.Share, f.Preselected, Active(FieldKey(path, f.Name), FieldKey(AllProfiles, f.Name), f.Preselected)))
             .ToList();
 
-        var name = profile is null ? "Rückfall (Name + _desc)" : profile.Path;
+        var name = profile is null ? TemplatesTexts.ProfileFallback : profile.Path;
         return new ResolvedLocProfile
         {
             Path = path,
             IsFallback = profile is null,
-            Description = automatic ? "automatisch: " + name : name,
+            Description = automatic ? TemplatesTexts.ProfileAutomatic(name) : name,
             Objects = objects,
             Fields = fields,
         };

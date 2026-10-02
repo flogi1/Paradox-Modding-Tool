@@ -14,7 +14,7 @@ public sealed partial class CompatchWindow
     private readonly Controls.ListBox _fileList = new();
     private readonly Controls.TextBox _filePreview = new() { IsReadOnly = true, FontFamily = new System.Windows.Media.FontFamily("Consolas"), VerticalScrollBarVisibility = Controls.ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = Controls.ScrollBarVisibility.Auto };
     private readonly Controls.ListBox _issueList = new() { MaxHeight = 140 };
-    private readonly Controls.CheckBox _hideUnchanged = new() { Content = CompatchTexts.HideUnchanged, IsChecked = true, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+    private readonly Controls.CheckBox _hideUnchanged = new() { Content = new Controls.TextBlock { Text = CompatchTexts.HideUnchanged }, IsChecked = true, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
     private PreparedWrite? _prepared;
     private bool _filesStale = true;
 
@@ -177,7 +177,7 @@ public sealed partial class CompatchWindow
         {
             var folder = _state.TargetFolder;
             result = PatchWriter.Commit(prepared, folder, () =>
-                new ModVersionManager(folder, StorageLocations.ResolveSnapshotsDirectory(folder, _host.Storage())).CreateSnapshot("vor-kompatch"));
+                new ModVersionManager(folder, StorageLocations.ResolveSnapshotsDirectory(folder, _host.Storage())).CreateSnapshot(IsUpdate ? "vor-vanilla-update_" + _state.UpdateNewVersion : "vor-kompatch"));
         }
         catch (CompatchWriteException ex)
         {
@@ -202,7 +202,64 @@ public sealed partial class CompatchWindow
         }
 
         SaveStateNow();
+        if (IsUpdate)
+        {
+            RecordUpdatedVersions(prepared);
+        }
+
         CompatchReportWindow.Show(this, result, prepared);
         OnSessionChanged();
+        _afterUpdateWrite?.Invoke();
+        OfferPatchRecipesAfterUpdate();
+    }
+
+    /// <summary>
+    /// Update-Modus nach dem Schreiben: Dateien des Laufs ohne offene Stelle stehen jetzt auf der neuen Vanilla-Version (Spec, Abschnitt 8).
+    /// Dateien mit offenen Stellen behalten ihren alten Eintrag, damit der nächste Lauf sie wieder gegen ihre alte Fassung vergleicht.
+    /// </summary>
+    private void RecordUpdatedVersions(PreparedWrite prepared)
+    {
+        if (_session is null || _state.UpdateNewVersion is not { } version || _updateInput?.Filter.OnlyPaths is not { } files)
+        {
+            return;
+        }
+
+        var open = _session.Actions
+            .Where(a => a.Stage is MergeStage.Conflict or MergeStage.Review or MergeStage.Outdated && !_session.IsExplicit(a.Id))
+            .Select(a => a.File)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var ledger = VanillaVersionLedger.Load(Path.GetDirectoryName(_store.Directory)!);
+            ledger.Set(VanillaUpdateRun.UpdatedFiles(files, open, prepared), version);
+            ledger.Save();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _status.Text = ex.Message;
+        }
+    }
+
+    /// <summary>Nach einem Vanilla-Update: hat die Mod Patch-Rezepte, bietet PMT an, sie zu öffnen und neu anzuwenden (Spec, Etappe 2).</summary>
+    private void OfferPatchRecipesAfterUpdate()
+    {
+        var folder = _state.TargetFolder;
+        if (IsUpdate && !string.IsNullOrEmpty(folder))
+        {
+            // Der Merge hat Mod-Dateien geändert: ein offener Wächter-Scan dieser Mod zeigt den alten Stand.
+            _host.PatchFilesChanged?.Invoke(folder);
+        }
+
+        if (!IsUpdate || _host.OpenPatchRecipes is not { } open || string.IsNullOrEmpty(folder)
+            || !(ParadoxModTool.Patches.PatchRecipeStore.HasRecipes(StorageLocations.ResolvePatchRecipesDirectory(folder, _host.Storage()))
+                || ParadoxModTool.Patches.PatchRecipeStore.HasRecipes(ParadoxModTool.Patches.PatchRecipeStore.Folder(folder))))
+        {
+            return;
+        }
+
+        if (MessageBox.Show(this, PatchRecipeTexts.ReapplyAfterUpdate, PatchRecipeTexts.Title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            open(folder);
+        }
     }
 }

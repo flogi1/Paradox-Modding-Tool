@@ -1,0 +1,98 @@
+<UserControl x:Class="ParadoxModTool.App.ReplaceListTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ParadoxModTool.App">
+    <DockPanel Margin="6">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <TextBlock Text="{x:Static local:ReplaceListTexts.ListLabel}" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <ComboBox x:Name="ListCombo" Width="280" SelectionChanged="ListCombo_SelectionChanged" />
+            <Button x:Name="NewButton" Padding="10,0" Margin="6,0,0,0" Click="NewButton_Click" Content="{x:Static local:ReplaceListTexts.New}" />
+            <Button x:Name="RenameButton" Padding="10,0" Margin="6,0,0,0" Click="RenameButton_Click" Content="{x:Static local:ReplaceListTexts.Rename}" />
+            <Button x:Name="DeleteButton" Padding="10,0" Margin="6,0,0,0" Click="DeleteButton_Click" Content="{x:Static local:ReplaceListTexts.Delete}" />
+            <Button x:Name="ExportButton" Padding="10,0" Margin="6,0,0,0" Click="ExportButton_Click" Content="{x:Static local:ReplaceListTexts.Export}" />
+            <Button x:Name="ImportButton" Padding="10,0" Margin="6,0,0,0" Click="ImportButton_Click" Content="{x:Static local:ReplaceListTexts.Import}" HorizontalAlignment="Left" />
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <TextBlock Text="{x:Static local:ReplaceListTexts.TargetFolderLabel}" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <Button x:Name="FolderButton" DockPanel.Dock="Right" Padding="10,0" Margin="6,0,0,0" Click="FolderButton_Click" Content="{x:Static local:ReplaceListTexts.ChooseFolder}" />
+            <TextBlock x:Name="FolderText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" />
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
+            <Button x:Name="RunButton" DockPanel.Dock="Right" Padding="16,2" FontWeight="SemiBold" Click="RunButton_Click"
+                    Content="{x:Static local:ReplaceListTexts.Run}" ToolTip="{x:Static local:ReplaceListTexts.RunTip}" />
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" />
+        </DockPanel>
+        <StackPanel x:Name="RuleButtons" DockPanel.Dock="Right" Margin="6,0,0,0" Width="130">
+            <Button Margin="0,0,0,4" Click="AddRule_Click" Content="{x:Static local:ReplaceListTexts.AddRule}" />
+            <Button Margin="0,0,0,4" Click="RemoveRule_Click" Content="{x:Static local:ReplaceListTexts.RemoveRule}" />
+            <Button Margin="0,0,0,4" Click="MoveUp_Click" Content="{x:Static local:ReplaceListTexts.MoveUp}" />
+            <Button Margin="0,0,0,4" Click="MoveDown_Click" Content="{x:Static local:ReplaceListTexts.MoveDown}" />
+        </StackPanel>
+        <ListView x:Name="RulesGrid" SelectionMode="Single" ToolTip="{x:Static local:ReplaceListTexts.GridTip}" PreviewKeyDown="RulesGrid_PreviewKeyDown">
+            <ListView.Resources>
+                <Style x:Key="RuleText" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                    <Setter Property="ToolTip" Value="{Binding Tip}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding State}" Value="Invalid">
+                            <Setter Property="Foreground" Value="{DynamicResource Theme.Danger}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding State}" Value="Zero">
+                            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="{x:Static local:ReplaceListTexts.ColumnEnabled}" Width="60">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="{x:Static local:ReplaceListTexts.ColumnMode}" Width="120">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{x:Static local:ReplaceRuleRow.ModeChoices}" DisplayMemberPath="Text" SelectedValuePath="Mode"
+                                          SelectedValue="{Binding Mode, Mode=TwoWay}" MinWidth="100" ToolTip="{x:Static local:ReplaceListTexts.ModeTip}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="{x:Static local:ReplaceListTexts.ColumnSearch}" Width="250">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Search, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource RuleText}" MinWidth="230" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="{x:Static local:ReplaceListTexts.ColumnReplace}" Width="280">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Replace, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource RuleText}" MinWidth="260" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="130">
+                        <GridViewColumn.Header>
+                            <TextBlock Text="{x:Static local:ReplaceListTexts.ColumnSafe}" ToolTip="{x:Static local:ReplaceListTexts.SafeTip}" />
+                        </GridViewColumn.Header>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding SafeComment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding SafeEnabled}"
+                                          HorizontalAlignment="Center" ToolTip="{x:Static local:ReplaceListTexts.SafeTip}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="{x:Static local:ReplaceListTexts.ColumnMatches}" Width="90">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Matches}" ToolTip="{Binding Tip}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
+</UserControl>

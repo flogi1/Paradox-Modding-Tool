@@ -64,6 +64,17 @@ public sealed class HotkeyCatalogTests
     }
 
     [Fact]
+    public void GuiBlocksShortcutIsListed()
+    {
+        Assert.Contains(HotkeyCatalog.Entries, entry => entry.TextId == "main.guiBlocks"
+            && entry.Group == HotkeyGroup.Main
+            && entry.Modifiers == (HotkeyModifiers.Ctrl | HotkeyModifiers.Shift)
+            && entry.Key == "B"
+            && entry.SourceFile == "MainWindow.xaml.cs");
+        Assert.Equal("GUI-Bausteine öffnen (nur mit eingeschalteten GUI-Werkzeugen)", SettingsTexts.HotkeyDescription("main.guiBlocks"));
+    }
+
+    [Fact]
     public void UndoAndRedoComeFirstInTheMainWindowGroup()
     {
         var main = HotkeyCatalog.Entries.Where(entry => entry.Group == HotkeyGroup.Main).ToList();

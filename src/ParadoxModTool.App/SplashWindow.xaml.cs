@@ -13,7 +13,7 @@ public partial class SplashWindow : Window
     {
         InitializeComponent();
         VersionText.Text = $"Version {AppInfo.Version}";
-        StatusText.Text = "Wird gestartet…";
+        StatusText.Text = MiscWindowTexts.SplashStarting;
     }
 
     /// <summary>

@@ -1,0 +1,31 @@
+# block: Knopf mit Icon
+# group: Bedienelemente
+# description: Knopf mit Icon und Text nebeneinander; die Aktion läuft über ein scripted_gui mit dem eigenen Charakter als root. Icons liegen in gfx/interface/icons/flat_icons. Vorbild: gui/debug/window_component_library.gui, gui/activity_window_widgets/funeral_deceased_selection_button.gui
+# param: name | Name | my_icon_button
+# param: texture | Icon (Texturpfad) | gfx/interface/icons/flat_icons/council.dds
+# param: text | Text (Lokalisierungsschlüssel) | MY_ICON_BUTTON
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_ICON_BUTTON_TT
+# param: scripted_gui | scripted_gui | my_scripted_gui
+# requires: button_standard, text_single
+
+button_standard = {
+	name = "$name$"
+	size = { 200 38 }
+	tooltip = "$tooltip$"
+	onclick = "[GetScriptedGui('$scripted_gui$').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+
+	hbox = {
+		margin = { 10 0 }
+		spacing = 5
+
+		icon = {
+			size = { 25 25 }
+			texture = "$texture$"
+		}
+
+		text_single = {
+			text = "$text$"
+			default_format = "#clickable"
+		}
+	}
+}

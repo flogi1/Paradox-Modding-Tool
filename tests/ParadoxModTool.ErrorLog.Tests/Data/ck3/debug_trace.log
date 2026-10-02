@@ -1,0 +1,17 @@
+[11:23:28][D][jomini_effect_impl.cpp:450]: file: common/on_action/pmt_probe_on_actions.txt line: 8 (pmt_probe_start): PMT probe start
+[11:23:28][D][effectimpl.cpp:642]: Vratislav Přemyslid of d_bohemia (Internal ID: 32769 - Historical ID 522) weak (Character - 32769)!
+[11:23:28][D][jomini_effect_impl.cpp:450]: file: events/pmt_probe_events.txt line: 9 (pmt_probe.1:immediate): PMT probe event 1
+[11:23:28][D][effectimpl.cpp:642]: Vratislav Přemyslid of d_bohemia (Internal ID: 32769 - Historical ID 522) weak (Character - 32769)!
+Root: Vratislav Přemyslid of d_bohemia (Internal ID: 32769 - Historical ID 522) weak (Character - 32769)!
+
+Saved event targets:
+holder: Mahmud_Togrul Hasanid of k_zhetysu (Internal ID: 32686 - Historical ID 144107) weak (Character - 32686)!
+new_nomad_title: The Hasanid Nomadic Camp (Internal ID: 18173 - Internal Key: x_c_nomad_714) weak (Landed_title - 18173)!
+astrologer_character: Abd-al-Mu_min Hasanid of  (Internal ID: 35032 - Historical ID extra_karakhanids_21) weak (Character - 35032)!
+new_councillor: Abd-al-Mu_min Hasanid of  (Internal ID: 35032 - Historical ID extra_karakhanids_21) weak (Character - 35032)!
+governor: Shao_97F6 Wáng of d_qincheng (Internal ID: 32536 - Historical ID han_7897) weak (Character - 32536)!
+pool_province: Edo (Internal ID: 8073) weak (Province - 8073)!
+disciple: Chengzong_627F_5B97 Chu of c_jizhou_1 (Internal ID: 32646 - Historical ID khitan_magistrate_fic_11) weak (Character - 32646)!
+elder: Tiebu Yelü of k_youji (Internal ID: 29126 - Historical ID nn_yelu_tiebu) weak (Character - 29126)!
+top_liege: Yorimichi Hok-ke of e_japan (Internal ID: 26785 - Historical ID japanese_fujiwara_9) weak (Character - 26785)!
+nf_holder: Suemune Sanjō of c_nf_minamoto_sanjo (Internal ID: 36584 - Historical ID japanese_minamoto_sanjo_3) weak (Character - 36584)!

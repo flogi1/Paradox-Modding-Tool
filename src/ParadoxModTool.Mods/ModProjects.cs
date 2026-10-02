@@ -91,9 +91,9 @@ public static class ModProjects
         var root = Root(registry, mod);
         return mod.Role switch
         {
-            ModRole.DevBranch => $"Dev-Branch von {root.Name}",
-            ModRole.Submod => $"Submod von {root.Name}",
-            _ => $"Hauptmod (Projekt, {Members(registry, mod).Count} Mods)",
+            ModRole.DevBranch => ModsTexts.RoleDevBranch(root.Name),
+            ModRole.Submod => ModsTexts.RoleSubmod(root.Name),
+            _ => ModsTexts.RoleMain(Members(registry, mod).Count),
         };
     }
 }

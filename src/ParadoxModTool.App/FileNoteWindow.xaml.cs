@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Notes;
 using MessageBox = System.Windows.MessageBox;
 
@@ -50,7 +51,7 @@ public partial class FileNoteWindow : Window
         _bookmarksFilePath = bookmarksFilePath;
         _jumpToLine = jumpToLine;
 
-        FileNameText.Text = $"Notiz zu: {Path.GetFileName(filePath)}";
+        FileNameText.Text = MiscWindowTexts.NotesNoteFor(Path.GetFileName(filePath));
         FileNameText.ToolTip = filePath;
 
         var notes = FileNoteStore.TryLoad(_notesFilePath);
@@ -71,7 +72,7 @@ public partial class FileNoteWindow : Window
         var entries = BookmarkStore.GetBookmarks(bookmarks, _filePath);
 
         BookmarksList.ItemsSource = entries
-            .Select(b => new BookmarkRow { Line = b.Line, DisplayText = $"Zeile {b.Line}: {b.Preview}" })
+            .Select(b => new BookmarkRow { Line = b.Line, DisplayText = MiscWindowTexts.BookmarkLineWithPreview(b.Line, b.Preview) })
             .ToList();
     }
 
@@ -88,11 +89,11 @@ public partial class FileNoteWindow : Window
         }
         catch (IOException ex)
         {
-            MessageBox.Show($"Notiz konnte nicht gespeichert werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MiscWindowTexts.NotesSaveFailed(ex.Message), CommonTexts.Error);
         }
         catch (UnauthorizedAccessException ex)
         {
-            MessageBox.Show($"Notiz konnte nicht gespeichert werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MiscWindowTexts.NotesSaveFailed(ex.Message), CommonTexts.Error);
         }
     }
 
@@ -130,12 +131,12 @@ public partial class FileNoteWindow : Window
         }
         catch (IOException ex)
         {
-            MessageBox.Show($"Bookmark konnte nicht entfernt werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MiscWindowTexts.BookmarkRemoveFailed(ex.Message), CommonTexts.Error);
             return;
         }
         catch (UnauthorizedAccessException ex)
         {
-            MessageBox.Show($"Bookmark konnte nicht entfernt werden: {ex.Message}", "Fehler");
+            MessageBox.Show(MiscWindowTexts.BookmarkRemoveFailed(ex.Message), CommonTexts.Error);
             return;
         }
 

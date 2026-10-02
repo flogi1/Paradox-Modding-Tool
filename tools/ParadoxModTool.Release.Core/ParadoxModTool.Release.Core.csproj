@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Release</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ParadoxModTool.Updates\ParadoxModTool.Updates.csproj" />
+    <ProjectReference Include="..\..\src\ParadoxModTool.GitIntegration\ParadoxModTool.GitIntegration.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParadoxModTool.Release.Tests" />
+  </ItemGroup>
+
+</Project>

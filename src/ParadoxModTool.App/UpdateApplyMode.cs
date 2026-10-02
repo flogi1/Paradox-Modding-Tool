@@ -19,7 +19,7 @@ internal static class UpdateApplyMode
     {
         var log = new UpdateLog(UpdatePaths.Default.LogFile);
         var arguments = ApplyUpdateArguments.Parse(args);
-        UiText.Load(Path.Combine(AppContext.BaseDirectory, "locales"), arguments?.Language);
+        UiText.Load(LocaleSources.Default(), arguments?.Language);
         if (arguments is null)
         {
             log.Write("Ungültiger Aufruf des Update-Modus: " + CommandLine.Join(args));
@@ -76,7 +76,16 @@ internal static class UpdateApplyMode
 
     private sealed class WindowUi(TaskProgressWindow window) : IUpdateRunnerUi
     {
-        public void Status(UpdateRunnerPhase phase, int waitingFor) => window.Report(new CompatProgress(UpdateTexts.Phase(phase, waitingFor), 0, 0));
+        public void Status(UpdateRunnerPhase phase, int waitingFor)
+        {
+            // Nach dem Warten lässt sich das Update nicht mehr abbrechen (Tausch, Start, Rückfall): der Knopf wird gesperrt statt still zu wirken.
+            if (phase != UpdateRunnerPhase.Waiting)
+            {
+                window.DisableCancel();
+            }
+
+            window.Report(new CompatProgress(UpdateTexts.Phase(phase, waitingFor), 0, 0));
+        }
 
         public Task<bool> KeepWaitingAsync(int count) =>
             Task.FromResult(MessageBox.Show(window, UpdateTexts.KeepWaiting(count), UpdateTexts.KeepWaitingTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes);

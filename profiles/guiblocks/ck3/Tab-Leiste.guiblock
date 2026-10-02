@@ -1,0 +1,57 @@
+# block: Tab-Leiste
+# group: Fenster
+# description: Tab-Leiste mit Inhaltsbereich für ein vorhandenes Fenster; Umschaltung über GetVariableSystem, der Start-Tab wird beim Einblenden gesetzt. Vorbild: gui/debug/window_component_library.gui
+# param: var | Variable für den aktiven Tab | my_tabs
+# param: start_tab | Start-Tab (Kennung) | tab_1
+# repeat: tabs | Tabs | 3
+# param: tabs.id | Kennung | tab_$index$
+# param: tabs.title | Titel (Lokalisierungsschlüssel) | TAB_$index$
+# requires: button_tab, Background_Tab_Area
+
+vbox = {
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	state = {
+		name = _show
+		on_start = "[GetVariableSystem.Set( '$var$', '$start_tab$' )]"
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+
+		$repeat tabs$
+		button_tab = {
+			layoutpolicy_horizontal = expanding
+			text = "$tabs.title$"
+			onclick = "[GetVariableSystem.Set( '$var$', '$tabs.id$' )]"
+			down = "[GetVariableSystem.HasValue( '$var$', '$tabs.id$' )]"
+
+			blockoverride "icon_visible" {
+				visible = no
+			}
+		}
+
+		$end tabs$
+	}
+
+	vbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+
+		background = {
+			using = Background_Tab_Area
+		}
+
+		$repeat tabs$
+		vbox = {
+			visible = "[GetVariableSystem.HasValue( '$var$', '$tabs.id$' )]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			margin = { 10 10 }
+			# Inhalt von $tabs.id$
+		}
+
+		$end tabs$
+	}
+}

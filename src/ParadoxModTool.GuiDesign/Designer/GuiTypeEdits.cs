@@ -67,7 +67,28 @@ public static class GuiTypeEdits
 
     /// <summary>Verwendungen des Schlüssels als Widget in anderen Dateien (gespeicherter Stand im Index).</summary>
     public static int UsagesElsewhere(GuiIndex index, string key, string? filePath) =>
-        index.UsagesOf(key).Count(u => u.Kind == GuiUsageKind.Widget && (filePath is null || !SamePath(u.File.FullPath, filePath)));
+        index.UsagesOf(key).Count(u => u.Kind == GuiUsageKind.Widget && !IsShownFile(u.File.FullPath, index, filePath));
+
+    /// <summary>
+    /// Gehört <paramref name="path"/> zum angezeigten Text von <paramref name="filePath"/>? Die Datei selbst und, bei einem Vanilla-Entwurf auf
+    /// Abhängigkeits-Basis, deren Kopie in der Abhängigkeit: der Entwurf geht von ihr aus, ihre Stellen stehen schon im Text (3c-Review).
+    /// </summary>
+    public static bool IsShownFile(string path, GuiIndex index, string? filePath)
+    {
+        if (filePath is null)
+        {
+            return false;
+        }
+
+        if (SamePath(path, filePath))
+        {
+            return true;
+        }
+
+        return index.Files.FirstOrDefault(f => SamePath(f.FullPath, filePath)) is { } shown
+            && GuiDraft.DependencyCopyOf(shown, index) is { } copy
+            && SamePath(path, copy.FullPath);
+    }
 
     /// <summary>blockoverride-Namen der Stelle, die kein Typ der Kette des neuen Schlüssels als <c>block</c> anbietet.</summary>
     public static IReadOnlyList<string> LostBlockOverrides(GuiNode instance, string newKey, GuiResolver resolver)

@@ -61,6 +61,13 @@ public static class GuiPropertyInput
             : GuiValueClassifier.ClassifyScalar(current.Value, current.IsQuoted));
     }
 
+    /// <summary>
+    /// Kann das Feld einen Datenausdruck (<c>[…]</c>) aufnehmen? Ja, wenn der Wert schon einer ist oder Vanilla bei dieser Eigenschaft Datenausdrücke
+    /// benutzt, auch wenn sonst meist <c>yes</c>/<c>no</c> dasteht (<c>visible</c>, <c>enabled</c>). Dann bietet der Designer den GUI-Daten-Helfer an.
+    /// </summary>
+    public static bool AcceptsDataExpression(string name, string baseWidget, GuiPropertyCatalog catalog, string input) =>
+        input.Contains('[') || catalog.Property(baseWidget, name)?.Forms.ContainsKey(GuiValueForm.Binding) == true;
+
     /// <summary>In Vanilla gesehene Werte, die häufigsten zuerst.</summary>
     public static IReadOnlyList<string> EnumOptions(string name, string baseWidget, GuiPropertyCatalog catalog) =>
         catalog.Property(baseWidget, name) is { } stats
@@ -122,6 +129,12 @@ public static class GuiPropertyInput
                 return parts.Length is 3 or 4 && parts.All(IsWord) ? $"{{ {string.Join(" ", parts)} }}" : null;
 
             default:
+                // Ein Datenausdruck ([GetVariableSystem.HasValue( 'a', 'b' )]) darf in jedem Feld stehen, auch mit Leerzeichen; er steht immer in Anführungszeichen.
+                if (value.StartsWith('[') && value.EndsWith(']'))
+                {
+                    return $"\"{value}\"";
+                }
+
                 if (value.Length == 0 || !IsWord(value))
                 {
                     return null;

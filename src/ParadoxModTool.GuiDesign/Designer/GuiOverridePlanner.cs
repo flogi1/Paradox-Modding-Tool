@@ -338,7 +338,7 @@ public static class GuiOverridePlanner
             _request = request;
             _draft = draft;
             _draftEdits = new GuiTextEdits(draft);
-            _context = GuiContexts.Of(request.Source.RelativePath) ?? GuiContexts.Default;
+            _context = GuiContexts.Of(request.Source.RelativePath, request.Index.Layout) ?? GuiContexts.DefaultOf(request.Index.Layout);
             _stem = GuiModTargets.BaseName(System.IO.Path.GetFileNameWithoutExtension(request.Source.RelativePath));
         }
 

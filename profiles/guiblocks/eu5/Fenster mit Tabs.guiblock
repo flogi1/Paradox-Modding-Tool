@@ -1,0 +1,113 @@
+# block: Fenster mit Tabs
+# group: Fenster
+# description: Fenster mit Kopfzeile und Tab-Leiste, je Tab wahlweise eine Untertab-Leiste (Anzahl 1). Umschaltung über GetVariableSystem, eine Variable je Fenster und je Tab. Vorbild: in_game/gui/ui_library.gui
+# param: name | Name des Fensters | my_window
+# param: title | Titel (Lokalisierungsschlüssel) | MY_WINDOW_TITLE
+# param: start_tab | Start-Tab (Kennung) | tab_1
+# repeat: tabs | Tabs | 3
+# param: tabs.id | Kennung | tab_$index$
+# param: tabs.title | Titel (Lokalisierungsschlüssel) | TAB_$index$
+# repeat: tabs.sub | Untertab-Leiste (0 = keine, 1 = mit Untertabs) | 0
+# param: tabs.sub.start | Start-Untertab (Kennung) | $tabs.id$_sub_1
+# repeat: tabs.sub.items | Untertabs | 3
+# param: tabs.sub.items.id | Kennung | $tabs.id$_sub_$index$
+# param: tabs.sub.items.title | Titel (Lokalisierungsschlüssel) | $tabs.title$_SUB_$index$
+# requires: bg_window_default_alt, window_margin_alt, window_header_alt, header_main_tabs, button_main_tab_alt, layoutpolicy_expanding, bg_main_inner_alt, window_main_tabs_margin_alt, header_secondary_tabs, button_secondary_tab_alt, ui_direction_button_holder_right, button_close_alt
+
+window = {
+	name = "$name$"
+	parentanchor = center
+	widgetanchor = center
+	size = { 800 600 }
+	movable = yes
+	using = bg_window_default_alt
+
+	state = {
+		name = _show
+		on_start = "[GetVariableSystem.Set( '$name$_tab', '$start_tab$' )]"
+	}
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" {
+				text = "$title$"
+			}
+		}
+
+		header_main_tabs = {
+			blockoverride "content" {
+				$repeat tabs$
+				button_main_tab_alt = {
+					using = layoutpolicy_expanding
+					blockoverride "tab_text" {
+						text = "$tabs.title$"
+					}
+					onclick = "[GetVariableSystem.Set( '$name$_tab', '$tabs.id$' )]"
+					$repeat tabs.sub$
+					onclick = "[GetVariableSystem.Set( '$name$_$tabs.id$', '$tabs.sub.start$' )]"
+					$end tabs.sub$
+					down = "[GetVariableSystem.HasValue( '$name$_tab', '$tabs.id$' )]"
+				}
+
+				$end tabs$
+			}
+		}
+
+		vbox = {
+			using = layoutpolicy_expanding
+			using = bg_main_inner_alt
+
+			$repeat tabs$
+			vbox = {
+				visible = "[GetVariableSystem.HasValue( '$name$_tab', '$tabs.id$' )]"
+				using = layoutpolicy_expanding
+				using = window_main_tabs_margin_alt
+
+				$repeat tabs.sub$
+				header_secondary_tabs = {
+					blockoverride "content" {
+						$repeat tabs.sub.items$
+						button_secondary_tab_alt = {
+							using = layoutpolicy_expanding
+							text = "$tabs.sub.items.title$"
+							onclick = "[GetVariableSystem.Set( '$name$_$tabs.id$', '$tabs.sub.items.id$' )]"
+							down = "[GetVariableSystem.HasValue( '$name$_$tabs.id$', '$tabs.sub.items.id$' )]"
+						}
+
+						$end tabs.sub.items$
+					}
+				}
+
+				$repeat tabs.sub.items$
+				vbox = {
+					visible = "[GetVariableSystem.HasValue( '$name$_$tabs.id$', '$tabs.sub.items.id$' )]"
+					using = layoutpolicy_expanding
+					# Inhalt von $tabs.sub.items.id$
+				}
+
+				$end tabs.sub.items$
+				$end tabs.sub$
+				vbox = {
+					using = layoutpolicy_expanding
+					# Inhalt von $tabs.id$
+				}
+			}
+
+			$end tabs$
+		}
+	}
+
+	widget = {
+		parentanchor = right
+		position = { -5 5 }
+		size = { 40 40 }
+
+		ui_direction_button_holder_right = {}
+
+		button_close_alt = {
+			# blockoverride "close_on_action" { on_action = "[...]" }
+		}
+	}
+}

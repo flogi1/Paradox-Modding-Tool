@@ -37,10 +37,17 @@ public static class FileSearchService
     /// bewusst NICHT über <c>Directory.EnumerateFiles(..., SearchOption.AllDirectories)</c>, da
     /// dessen Aufzählung beim ersten nicht zugänglichen Unterordner komplett abbricht —
     /// stattdessen wird jeder Ordner einzeln besucht: ein einzelner nicht lesbarer Unterordner
-    /// wird übersprungen, die übrigen aber trotzdem weiter durchsucht.
+    /// wird übersprungen, die übrigen aber trotzdem weiter durchsucht. Ist <paramref name="rootFolder"/> eine einzelne Datei
+    /// (Rechtsklick "In Dateien suchen" auf eine Datei), wird genau diese Datei geliefert, unabhängig von ihrer Endung.
     /// </summary>
     public static IEnumerable<string> EnumerateSearchableFiles(string rootFolder, IReadOnlyCollection<string>? extensions = null)
     {
+        if (File.Exists(rootFolder))
+        {
+            yield return rootFolder;
+            yield break;
+        }
+
         var allowedExtensions = extensions ?? DefaultExtensions;
         var directories = new Stack<string>();
         directories.Push(rootFolder);
@@ -98,18 +105,25 @@ public static class FileSearchService
 
     /// <summary>
     /// Durchsucht alle Dateien unter <paramref name="rootFolder"/> nach <paramref name="query"/>.
-    /// Eine einzelne nicht lesbare Datei bricht die Suche der übrigen Dateien nicht ab.
+    /// Eine einzelne nicht lesbare Datei bricht die Suche der übrigen Dateien nicht ab. Mit <paramref name="cancellation"/> lässt sie sich zwischen
+    /// zwei Dateien abbrechen (<see cref="OperationCanceledException"/>), <paramref name="progress"/> meldet erledigte und alle Dateien.
     /// </summary>
     public static IReadOnlyList<FileSearchMatch> Search(
         string rootFolder,
         string query,
         SearchOptions options,
-        IReadOnlyCollection<string>? extensions = null)
+        IReadOnlyCollection<string>? extensions = null,
+        CancellationToken cancellation = default,
+        IProgress<(int Done, int Total)>? progress = null)
     {
         var results = new List<FileSearchMatch>();
+        var files = EnumerateSearchableFiles(rootFolder, extensions).ToList();
+        var done = 0;
 
-        foreach (var file in EnumerateSearchableFiles(rootFolder, extensions))
+        foreach (var file in files)
         {
+            cancellation.ThrowIfCancellationRequested();
+            progress?.Report((done++, files.Count));
             string text;
             try
             {

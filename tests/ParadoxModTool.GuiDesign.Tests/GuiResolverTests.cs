@@ -176,6 +176,23 @@ public class GuiResolverTests
     }
 
     [Fact]
+    public void SameTypeNestedInTheFile_IsNoCycle()
+    {
+        // vbox in vbox: in EU V ist vbox ein Typ (type vbox = ubervbox); zwei geschachtelte Instanzen in der Datei sind keine Schleife.
+        var (resolver, doc) = Setup(
+            "box = {\n\talpha = 1\n\tbox = {\n\t\talpha = 2\n\t\tvisible = \"[GetPlayer.IsValid]\"\n\t\tbox = { alpha = 3 }\n\t}\n}",
+            "types T { type box = widget { } }");
+
+        var element = resolver.Resolve(Top(doc, "box"));
+        var inner = Assert.Single(element.Children);
+
+        Assert.DoesNotContain(element.Issues.Concat(inner.Issues), i => i.Kind == GuiResolveIssueKind.TypeCycle);
+        Assert.Equal("2", inner.Property("alpha")!.Value);
+        Assert.NotNull(inner.Property("visible"));
+        Assert.Equal("3", Assert.Single(inner.Children).Property("alpha")!.Value);
+    }
+
+    [Fact]
     public void SelfContainingTypeStopsImmediately()
     {
         var (resolver, doc) = Setup("types M { type a = widget { a = { } a = { } } }\na = { }");

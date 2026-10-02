@@ -8,6 +8,10 @@ public static class GuiCatalogLearner
 {
     private const int MaxWordsPerProperty = 60;
     private const int MaxBindingsPerContext = 200;
+    private const int MaxExamplesPerKey = 5;
+
+    /// <summary>Anteil der Ausdrücke in den Einträgen einer Liste, die mit demselben Typ beginnen müssen, damit er als Elementtyp gilt.</summary>
+    private const double ItemTypeShare = 0.6;
 
     public static GuiPropertyCatalog Learn(GuiIndex index, GuiRules rules, string fingerprint)
     {
@@ -26,6 +30,8 @@ public static class GuiCatalogLearner
             return baseWidget;
         }
 
+        var examples = new Dictionary<string, Dictionary<string, (int Count, string File)>>(StringComparer.Ordinal);
+        var itemTypes = new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
         foreach (var file in index.Files.Where(f => f.Layer == GuiLayer.Vanilla))
         {
             foreach (var node in index.DocumentOf(file).Root.Descendants())
@@ -38,10 +44,39 @@ public static class GuiCatalogLearner
                 {
                     Record(catalog, BaseOf(node.Name), node, resolver);
                 }
-                else if (node is { Kind: GuiNodeKind.Property, IsQuoted: true } && node.Name != "datacontext" && node.Value?.Contains('[') == true)
+                else if (node is { Kind: GuiNodeKind.Property, IsQuoted: true } && node.Value?.Contains('[') == true)
                 {
-                    RecordBindings(catalog, node);
+                    if (node.Name != "datacontext")
+                    {
+                        RecordBindings(catalog, node);
+                    }
+
+                    RecordExamples(examples, node.Value!, file.RelativePath);
+                    if (node.Name == "datamodel")
+                    {
+                        RecordItemType(itemTypes, node);
+                    }
                 }
+            }
+        }
+
+        foreach (var (key, found) in examples)
+        {
+            catalog.Examples[key] = found
+                .OrderByDescending(p => p.Value.Count)
+                .ThenBy(p => p.Key, StringComparer.Ordinal)
+                .Take(MaxExamplesPerKey)
+                .Select(p => new GuiExample(p.Key, p.Value.File))
+                .ToList();
+        }
+
+        foreach (var (list, counts) in itemTypes)
+        {
+            var total = counts.Values.Sum();
+            var best = counts.OrderByDescending(p => p.Value).ThenBy(p => p.Key, StringComparer.Ordinal).First();
+            if (best.Value >= ItemTypeShare * total)
+            {
+                catalog.ListItemTypes[list] = best.Key;
             }
         }
 
@@ -135,6 +170,98 @@ public static class GuiCatalogLearner
             expressions[expression] = expressions.GetValueOrDefault(expression) + 1;
         }
     }
+
+    /// <summary>
+    /// Merkt jeden <c>[…]</c>-Ausdruck als Beispiel unter den Schlüsseln seiner Ketten: erster Bezeichner, die ersten beiden (<c>Country.GetCapital</c>) und
+    /// Namen globaler Funktionen (<c>Not</c>). Tiefere Glieder nicht: ihr Besitzer-Typ ist ohne Datentypen unbekannt.
+    /// </summary>
+    private static void RecordExamples(Dictionary<string, Dictionary<string, (int Count, string File)>> examples, string value, string file)
+    {
+        foreach (var expression in BracketExpressions(value))
+        {
+            foreach (var key in ExampleKeys(expression).Distinct(StringComparer.Ordinal))
+            {
+                if (!examples.TryGetValue(key, out var found))
+                {
+                    examples[key] = found = new Dictionary<string, (int, string)>(StringComparer.Ordinal);
+                }
+
+                found[expression] = found.TryGetValue(expression, out var known) ? (known.Count + 1, known.File) : (1, file);
+            }
+        }
+    }
+
+    private static IEnumerable<string> ExampleKeys(string expression)
+    {
+        foreach (var chain in DataTypes.DataExpression.Chains(expression))
+        {
+            yield return chain.Parts[0];
+            if (chain.Parts.Count > 1)
+            {
+                yield return chain.Parts[0] + "." + chain.Parts[1];
+            }
+        }
+    }
+
+    /// <summary>Zählt, mit welchem Typ die Ausdrücke im <c>item</c>-Block neben einem <c>datamodel</c> beginnen.</summary>
+    private static void RecordItemType(Dictionary<string, Dictionary<string, int>> itemTypes, GuiNode datamodel)
+    {
+        var list = DataTypes.DataExpression.Strip(datamodel.Value!);
+        if (datamodel.Parent?.Children.FirstOrDefault(c => c.Kind == GuiNodeKind.KeyedBlock && c.Name == "item") is not { } item)
+        {
+            return;
+        }
+
+        if (!itemTypes.TryGetValue(list, out var counts))
+        {
+            itemTypes[list] = counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        }
+
+        foreach (var property in ItemExpressions(item))
+        {
+            foreach (var expression in BracketExpressions(property.Value!))
+            {
+                // Der Kontext-Typ ist der Anfang der ersten Kette, die kein Aufruf einer globalen Funktion ist (Not(Location.HasOwner) → Location).
+                // Das Widget selbst (PdxGuiWidget.GetIndexInDataModel) und globale Promotes (GetPlayer, Player) zählen nicht.
+                if (DataTypes.DataExpression.Chains(expression)
+                        .FirstOrDefault(c => !(c.IsCall && c.Parts.Count == 1) && !IsContextFreeStart(c.Parts[0])) is { } chain
+                    && char.IsUpper(chain.Parts[0][0]))
+                {
+                    counts[chain.Parts[0]] = counts.GetValueOrDefault(chain.Parts[0]) + 1;
+                }
+            }
+        }
+
+        if (counts.Count == 0)
+        {
+            itemTypes.Remove(list);
+        }
+    }
+
+    /// <summary>Datenausdrücke in einem Eintrag; Unterelemente mit eigenem <c>datacontext</c> gehören zu einem anderen Kontext und bleiben außen vor.</summary>
+    private static IEnumerable<GuiNode> ItemExpressions(GuiNode container)
+    {
+        foreach (var child in container.Children)
+        {
+            if (child is { Kind: GuiNodeKind.Property, IsQuoted: true } && child.Name != "datacontext" && child.Value?.Contains('[') == true)
+            {
+                yield return child;
+            }
+            else if (child.Children.Count > 0 && !child.Children.Any(c => c.Kind == GuiNodeKind.Property && c.Name == "datacontext"))
+            {
+                foreach (var nested in ItemExpressions(child))
+                {
+                    yield return nested;
+                }
+            }
+        }
+    }
+
+    /// <summary>Anfänge, die nicht den Eintrag meinen: das Widget selbst (<c>PdxGuiWidget</c>) und globale Promotes (<c>GetPlayer</c>, <c>Player</c>).</summary>
+    private static bool IsContextFreeStart(string identifier) =>
+        identifier.StartsWith("Pdx", StringComparison.Ordinal)
+        || identifier.StartsWith("Get", StringComparison.Ordinal)
+        || identifier is "Player" or "GuiScope" or "JominiPlayer" or "EmptyScope";
 
     /// <summary>Wert des nächsten <c>datacontext</c> am Container oder einem seiner Vorfahren.</summary>
     private static string? DataContextOf(GuiNode? container)

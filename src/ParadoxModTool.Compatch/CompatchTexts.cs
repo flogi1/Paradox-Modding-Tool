@@ -31,9 +31,42 @@ public static class CompatchTexts
 
     public static string NoteMissingInTarget => T("compatch.note.missingInTarget", "fehlte im Ziel");
 
+    /// <summary>Blockknoten für den Dateirest (alles außerhalb von Schlüsseln).</summary>
+    public static string FileRestBlock => T("compatch.tree.fileRestBlock", "Dateirest");
+
+    public static string NoteAmbiguous => T("compatch.note.ambiguous", "Zuordnung unklar");
+
+    public static string NoteLogicBlock => T("compatch.note.logicBlock", "Logikblock");
+
+    public static string NoteNoOldVersion => T("compatch.note.noOldVersion", "keine alte Vanilla-Version, deine Fassung ist vorausgewählt");
+
+    public static string NoteNotScript => T("compatch.note.notScript", "keine Skriptdatei");
+
+    /// <summary>"nicht lesbar": derselbe Text wie in der Mod-Kompatibilitätsprüfung.</summary>
+    public static string NoteUnreadable => ParadoxModTool.ModCompat.ModCompatTexts.Unreadable;
+
+    /// <summary>
+    /// Anzeigename einer Dateiart aus <see cref="CompatchFileFilter.DefaultHiddenExtensions"/>. Die deutschen Namen sind zugleich die
+    /// Kennungen in <c>state.json</c> (<see cref="CompatchState.HiddenKinds"/>) und bleiben deshalb unübersetzt gespeichert.
+    /// </summary>
+    public static string FileKind(string kind) => kind switch
+    {
+        "Grafik" => T("compatch.fileKind.graphics", "Grafik"),
+        "Modelle" => T("compatch.fileKind.models", "Modelle"),
+        "Audio" => T("compatch.fileKind.audio", "Audio"),
+        "Schriften" => T("compatch.fileKind.fonts", "Schriften"),
+        "Metadaten" => T("compatch.fileKind.metadata", "Metadaten"),
+        "Gesperrt" => T("compatch.fileKind.locked", "Gesperrt"),
+        _ => kind,
+    };
+
+    public static string ModFolderMissing(string side, string folder) => F("compatch.error.modFolderMissing", "Der Ordner von Mod {0} fehlt: {1}", side, folder);
+
+    public static string PathOutsideTarget(string path) => F("compatch.error.pathOutsideTarget", "Pfad außerhalb des Zielordners: {0}", path);
+
     public static string Form(PatchForm form) => form switch
     {
-        PatchForm.Inject => T("compatch.form.inject", "INJECT: (nur Ergänzungen)"),
+        PatchForm.Inject => T("compatch.form.inject", "INJECT: (nur Änderungen und Ergänzungen)"),
         PatchForm.Replace => T("compatch.form.replace", "REPLACE: (ganzer Schlüssel)"),
         PatchForm.PlainKey => T("compatch.form.plain", "Ohne Präfix (eigene Datei)"),
         _ => T("compatch.form.wholeFile", "Ganze Datei"),
@@ -51,7 +84,7 @@ public static class CompatchTexts
 
     public static string Skip(SkipReason reason, string kind, int count) => reason switch
     {
-        SkipReason.HiddenKind => F("compatch.skip.hidden", "{0} Dateien der Art {1} ausgeblendet", count, kind),
+        SkipReason.HiddenKind => F("compatch.skip.hidden", "{0} Dateien der Art {1} ausgeblendet", count, FileKind(kind)),
         SkipReason.Locked => F("compatch.skip.locked", "{0} gesperrte Dateien nicht eingelesen", count),
         SkipReason.OwnPatch => F("compatch.skip.ownPatch", "{0} PMT-Patchdateien der Basis-Mod nicht eingelesen", count),
         _ => F("compatch.skip.metadata", "{0} Metadaten-Dateien übersprungen", count),
@@ -98,6 +131,8 @@ public static class CompatchTexts
 
     public static string MenuSkipLockedTip => T("compatch.menu.skipLocked.tip", "Voreinstellung für neue Läufe: gesperrte Dateien eigener Mods werden nicht verglichen");
 
+    public static string MenuResultRightTip => T("compatch.menu.resultRight.tip", "Vergleichsansichten zeigen A | B | Ergebnis: der neue Stand steht ganz rechts, mit einer Trennlinie davor, statt in der Mitte");
+
     public static string MenuDefaultView => T("compatch.menu.defaultView", "Kompatch-Merge: Standardansicht");
 
     public static string MenuDefaultViewTip => T("compatch.menu.defaultView.tip", "Ansicht, mit der das Merge-Fenster öffnet. Ein Wechsel im Fenster wird ebenfalls gemerkt.");
@@ -129,6 +164,15 @@ public static class CompatchTexts
 
     public static string BLoadsAfterA => T("compatch.start.bAfterA", "B lädt nach A");
 
+    /// <summary>Hinweis im Startfenster, wenn eine Mod mit replace_path Vanilla-Ordner ausblendet.</summary>
+    public static string HiddenVanilla(string modName, int count) => F("compatch.hiddenVanilla", "{0} blendet {1} Vanilla-Ordner aus", modName, count);
+
+    /// <summary>Tooltip zu <see cref="HiddenVanilla"/>; darunter folgt die Liste der Ordner.</summary>
+    public static string HiddenVanillaTip => T("compatch.hiddenVanilla.tip", "Diese Vanilla-Ordner lädt das Spiel nicht (replace_path). PMT vergleicht dort ohne Vanilla:");
+
+    /// <summary>Hinweis im Startfenster (Crusader Kings III), wenn die später ladende Mod mit replace_path Vanilla und die Dateien der anderen Mod ausblendet.</summary>
+    public static string HiddenVanillaAndMod(string modName, int count, string otherName) => F("compatch.hiddenVanillaAndMod", "{0} blendet {1} Ordner aus (Vanilla und {2})", modName, count, otherName);
+
     public static string TargetHeader => T("compatch.start.target", "Ziel");
 
     public static string TargetNew => T("compatch.start.targetNew", "Neuer Kompatch");
@@ -158,6 +202,8 @@ public static class CompatchTexts
     public static string FilterHeader => T("compatch.start.filter", "Dateiarten ausblenden");
 
     public static string RememberDefault => T("compatch.start.remember", "Als Voreinstellung merken");
+
+    public static string RememberDefaultTip => T("compatch.start.remember.tip", "Speichert Dateiarten, Schreibmodus, gesperrte Dateien und die Hauptmod-Optionen als Standard für neue Arbeitsstände (Einstellungen, Seite Komp-Patch)");
 
     public static string SkipLocked => T("compatch.start.skipLocked", "Gesperrte Dateien nicht einlesen");
 
@@ -189,6 +235,26 @@ public static class CompatchTexts
 
     public static string AskMakeCompatch(string name) => F("compatch.ask.makeCompatch", "\"{0}\" als Kompatch für Mod A und Mod B festlegen?", name);
 
+    public static string ResumeHeader => T("compatch.start.resumeHeader", "Arbeitsstand fortsetzen");
+
+    public static string ResumeNone => T("compatch.start.resumeNone", "Noch kein gespeicherter Arbeitsstand für dieses Spiel.");
+
+    public static string ResumeTip => T("compatch.start.resumeTip", "Gespeicherte Arbeitsstände (Entscheidungen, übernommene Blöcke, Filter), der zuletzt gespeicherte oben. Doppelklick setzt fort.");
+
+    public static string Resume => T("compatch.start.resume", "Fortsetzen");
+
+    public static string ResumeEntry(string modA, string modB, string target, string saved) => F("compatch.start.resumeEntry", "{0} + {1} → {2}   (gespeichert {3})", modA, modB, target, saved);
+
+    public static string ResumeMissing(string folder) => F("compatch.start.resumeMissing", "Ordner nicht gefunden: {0}\n\nWähle die Mods unten neu und starte, um diesen Arbeitsstand weiterzuführen.", folder);
+
+    public static string ResumeDelete => T("compatch.start.resumeDelete", "Arbeitsstand löschen");
+
+    public static string ResumeDeleteAsk(string entry) => F("compatch.start.resumeDeleteAsk", "Arbeitsstand löschen?\n\n{0}\n\nEntscheidungen, übernommene Blöcke und Filter gehen verloren; die Datei kommt in den Papierkorb. Die Patch-Dateien in der Mod bleiben unverändert.", entry);
+
+    public static string ResumeDeleteFailed(string error) => F("compatch.start.resumeDeleteFailed", "Der Arbeitsstand konnte nicht gelöscht werden: {0}", error);
+
+    public static string NewStartHeader => T("compatch.start.newHeader", "Neu starten");
+
     public static string AskReplaceState => T("compatch.ask.replaceState", "Der gespeicherte Arbeitsstand dieses Ziels gehört zu einem anderen Mod-Paar. Neu beginnen?");
 
     public static string NoDependency(string names) => F("compatch.new.noDependency", "Ohne Abhängigkeitseintrag (keine id in den Metadaten): {0}", names);
@@ -206,19 +272,89 @@ public static class CompatchTexts
 
     public static string FilterOrigin => T("compatch.window.filterOrigin", "Herkunft");
 
-    public static string FilterFolder => T("compatch.window.filterFolder", "Ordner");
-
     public static string FilterUncertain => T("compatch.window.filterUncertain", "Nur unsichere");
 
-    public static string Search => T("compatch.window.search", "Suche");
+    public static string FilterUncertainTip => T("compatch.window.filterUncertain.tip", "Zeigt nur Stellen, bei denen PMT den Vorschlag nicht sicher bestimmen konnte");
+
+    public static string FilterHideFilled => T("compatch.window.hideFilled", "Fehlende Blöcke ausblenden");
+
+    public static string FilterHideFilledTip => T("compatch.window.hideFilled.tip", "Blendet die Stellen aus, die \"Fehlende Blöcke der Hauptmod übernehmen\" hinzufügt. Sie werden trotzdem übernommen.");
+
+    public static string FilterHideDecided => T("compatch.window.hideDecided", "Erledigte ausblenden");
+
+    public static string FilterHideEqual => T("compatch.window.hideEqual", "Gleiche ausblenden");
+
+    public static string FilterHideEqualTip => T("compatch.window.hideEqual.tip", "Blendet Stellen aus, an denen A und B dasselbe haben (Herkunft \"A und B gleich\"). Nach einem fertigen Update sind das fast alle; geschrieben werden sie trotzdem richtig.");
+
+    public static string RemovedInBoth(string baseColumn) => F("compatch.detail.removedInBoth", "In A und B entfernt; der Text stand nur in \"{0}\" (Spalte dafür eingeblendet).", baseColumn);
+
+    public static string FilterHideDecidedTip => T("compatch.window.hideDecided.tip", "Blendet Stellen aus, sobald du sie entschieden oder mit \"Passt\" bestätigt hast; danach ist gleich der nächste Eintrag gewählt");
+
+    public static string DoneTip => T("compatch.tree.doneTip", "Erledigt: entschieden oder mit \"Passt\" bestätigt");
+
+    public static string FilterHideReplaced => T("compatch.window.hideReplaced", "Doppelte Dateien ausblenden");
+
+    public static string FilterHideReplacedTip => T("compatch.window.hideReplaced.tip", "Blendet Dateien aus, die in beiden Mods am selben Pfad liegen und nur automatisch ersetzt werden (keine Konflikte, nichts zu prüfen)");
+
+    public static string BlockHeader(string name, int count) => F("compatch.block.header", "{0} ({1} Stellen)", name, count);
+
+    public static string BlockSummary(int count, int open) => F("compatch.block.summary", "Block mit {0} Stellen, davon {1} offene Konflikte", count, open);
+
+    public static string BlockTake(string mod) => F("compatch.block.take", "{0} übernehmen (ganzer Block)", mod);
+
+    public static string BlockConfirm => T("compatch.block.confirm", "Passt (alle Stellen)");
+
+    public static string BlockReset => T("compatch.block.reset", "Zurücksetzen (alle Stellen)");
+
+    public static string OverwriteTitle => T("compatch.overwrite.title", "Entscheidungen überschreiben?");
+
+    public static string OverwriteQuestion(int overwritten, int total) => F("compatch.overwrite.question", "{0} von {1} Stellen sind schon anders entschieden (oder haben übernommene Zeilen). Sollen diese Entscheidungen überschrieben werden?\n\nStrg+Z macht die Sammelentscheidung danach wieder rückgängig.", overwritten, total);
+
+    public static string OverwriteAll => T("compatch.overwrite.all", "Alle überschreiben");
+
+    public static string OverwriteOnlyOpen => T("compatch.overwrite.onlyOpen", "Nur offene");
+
+    public static string NothingOpenToDecide => T("compatch.overwrite.nothingOpen", "Alle Stellen sind schon entschieden, nichts geändert.");
+
+    public static string ConfirmAllTitle => T("compatch.confirmAll.title", "Offene Konflikte als gelöst markieren?");
+
+    public static string ConfirmAllQuestion(int openConflicts, int total) => F("compatch.confirmAll.question", "{0} von {1} Stellen sind offene Konflikte. \"Alle als gelöst markieren\" übernimmt dort den Vorschlag (die Mod, die ohne Patch gewinnt), ohne dass du sie angesehen hast.\n\nStrg+Z macht es danach wieder rückgängig.", openConflicts, total);
+
+    public static string ConfirmAllEverything => T("compatch.confirmAll.everything", "Alle markieren");
+
+    public static string ConfirmAllWithoutConflicts => T("compatch.confirmAll.withoutConflicts", "Ohne offene Konflikte");
+
+    public static string ConfirmAllNothingLeft => T("compatch.confirmAll.nothingLeft", "Darunter sind nur offene Konflikte, nichts markiert.");
+
+    public static string BulkConfirm => T("compatch.bulk.confirm", "Alle als gelöst markieren (Vorschlag übernehmen)");
+
+    public static string BulkTake(string mod) => F("compatch.bulk.take", "Alle: {0} übernehmen", mod);
+
+    public static string BulkReset => T("compatch.bulk.reset", "Alle Stellen zurücksetzen");
+
+    public static string ResetTitle => T("compatch.reset.title", "Stellen zurücksetzen?");
+
+    public static string ResetQuestion(int count, string where) => F("compatch.reset.question", "{0} Stellen in \"{1}\" zurücksetzen? Eigene Entscheidungen und übernommene Zeilen fallen weg, jede Stelle zeigt wieder ihren Vorschlag.\n\nStrg+Z macht es danach wieder rückgängig.", count, where);
+
+    public static string NodeSummary(int count, int open) => F("compatch.node.summary", "{0} Stellen, davon {1} offene Konflikte", count, open);
+
+    public static string ForgottenFiles(int count, string files) => F("compatch.update.forgotten", "{0} Datei(en) seit dem letzten Schreiben verändert, ihre Entscheidungen wurden verworfen: {1}", count, files);
+
+    public static string SearchTip => T("compatch.window.search.tip", "Sucht im Dateipfad (z. B. common/buildings), in der Stelle und im Schlüssel");
+
+    public static string SettingsMenu => T("compatch.window.settingsMenu", "Einstellungen ▾");
+
+    public static string SettingsMenuTip => T("compatch.window.settingsMenu.tip", "Optionen dieses Arbeitsstands. Jeder Arbeitsstand merkt sich seine eigenen Werte");
+
+    public static string OpenSettingsWindow => T("compatch.window.openSettings", "Einstellungsfenster öffnen");
+
+    public static string OpenSettingsWindowTip => T("compatch.window.openSettings.tip", "Öffnet die Seite Komp-Patch im Einstellungsfenster. Dort stehen die Standardwerte für neue Arbeitsstände");
 
     public static string RecheckAll => T("compatch.window.recheck", "Alles neu prüfen");
 
     public static string SaveState => T("compatch.window.saveState", "Arbeitsstand speichern");
 
     public static string WritePatch => T("compatch.window.write", "Patch schreiben");
-
-    public static string CautiousToggle => T("compatch.window.cautious", "Vorsichtig");
 
     public static string Counters(int conflicts, int review, int automatic, int other, int seen, int total) => F("compatch.window.counters", "Konflikte {0} · Prüfen {1} · Automatisch {2} · Sonstige {3} · Gesehen {4}/{5}", conflicts, review, automatic, other, seen, total);
 
@@ -319,7 +455,23 @@ public static class CompatchTexts
     // Ansicht C.
     public static string OtherSide => T("compatch.cards.otherSide", "Andere Seite");
 
-    public static string CardJumpTip => T("compatch.cards.jumpTip", "Klick auf die Karte öffnet die Aktion in Ansicht A");
+    public static string CardJumpTip => T("compatch.cards.jumpTip", "Klick: in Ansicht A öffnen · Doppelklick oder Rechtsklick: Vergleich an dieser Stelle");
+
+    public static string CardUndoTip => T("compatch.cards.undoTip", "Automatische Übernahme rückgängig machen (andere Seite nehmen); bei einem Konflikt die Entscheidung zurücksetzen");
+
+    public static string CardOtherSideTip => T("compatch.cards.otherSideTip", "Die jeweils andere Mod übernehmen");
+
+    public static string CardConfirmTip => T("compatch.cards.confirmTip", "Die angezeigte Entscheidung bestätigen");
+
+    public static string CardEditTip => T("compatch.cards.editTip", "In Ansicht A öffnen und das Ergebnis von Hand bearbeiten");
+
+    public static string CardCompareTip => T("compatch.cards.compareTip", "Vergleichsfenster mit dem ganzen Block öffnen, gleich an dieser Stelle");
+
+    public static string CardSeenTip => T("compatch.cards.seenTip", "Als gesehen markieren (zählt für den Fortschritt oben)");
+
+    public static string CardBlockTakeTip => T("compatch.cards.blockTakeTip", "Diese Mod für alle Stellen des Blocks übernehmen");
+
+    public static string CardBlockConfirmTip => T("compatch.cards.blockConfirmTip", "Die angezeigte Entscheidung für alle Stellen des Blocks bestätigen");
 
     public static string MoreLines(int count) => F("compatch.cards.moreLines", "+{0} Zeilen", count);
 
@@ -328,6 +480,46 @@ public static class CompatchTexts
     public static string NoActions => T("compatch.cards.none", "Keine Aktionen für diesen Filter.");
 
     public static string Compare => T("compatch.compare.button", "Vergleich");
+
+    public static string PreviousDifference => T("compatch.compare.previous", "Vorige Abweichung");
+
+    public static string PreviousDifferenceTip => T("compatch.compare.previous.tip", "Zur vorigen Abweichung zwischen den Mods springen (Umschalt+F7)");
+
+    public static string NextDifference => T("compatch.compare.next", "Nächste Abweichung");
+
+    public static string NextDifferenceTip => T("compatch.compare.next.tip", "Zur nächsten Abweichung zwischen den Mods springen (F7)");
+
+    public static string NoFurtherDifference => T("compatch.compare.noFurther", "Keine weitere Abweichung in dieser Richtung.");
+
+    public static string DifferenceCount(int count) => F("compatch.compare.count", "{0} Abweichungen in diesem Block", count);
+
+    public static string DifferencePosition(int index, int count) => F("compatch.compare.position", "Abweichung {0} von {1}", index, count);
+
+    public static string TakeRows(int count, string source) => F("compatch.compare.takeRows", "Markierte Zeilen ({0}) aus {1} übernehmen", count, source);
+
+    public static string TakeRowsTip => T("compatch.compare.takeRows.tip", "Genau die markierten Zeilen ersetzen die Zeilen des Ergebnisses; die Stelle bzw. der Block gilt danach als von Hand bearbeitet. Strg+Z nimmt es zurück. Ausgeblendete Kommentarzeilen fehlen im Übernommenen.");
+
+    public static string TakeRowsFromResult => T("compatch.compare.takeRows.result", "In der Ergebnis-Spalte gibt es nichts zu übernehmen");
+
+    public static string NothingMarked => T("compatch.compare.nothingMarked", "Erst Zeilen in Spalte A, B oder Vanilla markieren (mit gedrückter linker Maustaste), dann U drücken.");
+
+    public static string TakeDone =>T("compatch.compare.takeDone", "Übernommen. Strg+Z macht es rückgängig.");
+
+    public static string PreviewTitle => T("compatch.detail.previewTitle", "Vorschau");
+
+    public static string PreviewTitleTip => T("compatch.detail.previewTip", "Hier lässt sich nichts tippen. Zeilen einer Spalte mit gedrückter linker Maustaste markieren, dann U oder Rechtsklick: übernimmt genau diese Zeilen (Strg+Z macht es rückgängig). Sonst ändern über die Knöpfe oben, mit \"Bearbeiten\" oder im Vergleichsfenster (Doppelklick auf die Stelle im Baum).");
+
+    public static string TakeUnchanged => T("compatch.compare.takeUnchanged", "Nichts geändert: Mit den markierten Zeilen ist das Ergebnis schon so. Kommentare, Leerzeilen und Einrückung zählen beim Übernehmen nicht.");
+
+    public static string TakeFailed(string error) => F("compatch.compare.takeFailed", "Nicht übernommen, der Block wäre so nicht lesbar: {0}", error);
+
+    public static string TakeUndone => T("compatch.compare.takeUndone", "Letzte Änderung rückgängig gemacht.");
+
+    public static string NothingToUndo => T("compatch.compare.nothingToUndo", "Nichts rückgängig zu machen.");
+
+    public static string BlockTextNote => T("compatch.block.textNote", "Block von Hand zusammengestellt");
+
+    public static string OverviewTip => T("compatch.compare.overview.tip", "Wo im Block die Mods voneinander abweichen. Klick springt zur Stelle.");
 
     public static string CompareTitle(string key, string file) => F("compatch.compare.title", "Vergleich: {0} ({1})", key, file);
 

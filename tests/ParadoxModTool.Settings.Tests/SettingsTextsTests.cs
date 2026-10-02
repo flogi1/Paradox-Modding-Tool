@@ -27,6 +27,15 @@ public sealed class SettingsTextsTests
     }
 
     [Fact]
+    public void ErrorLogSettingsTextsHaveGermanFallbacks()
+    {
+        Assert.Equal("Fehlerprotokoll", SettingsTexts.IconLabel("ErrorLog"));
+        Assert.Equal("Fehlerprotokoll als eigenes Fenster", SettingsTexts.ErrorLogStandalone);
+        Assert.Equal("Spielstand-Explorer als eigenes Fenster", SettingsTexts.SaveExplorerStandalone);
+        Assert.Equal("Spielstand-Explorer", SettingsTexts.CategoryLabel(SettingsCategory.SaveExplorer));
+    }
+
+    [Fact]
     public void ThemeCopyPromptNamesTheTheme()
     {
         Assert.Contains("Dunkel", SettingsTexts.ThemeReadOnlyCopyPrompt("Dunkel"));

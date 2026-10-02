@@ -17,7 +17,19 @@ public static class ScriptHintSettings
     /// <summary>Vorschlagsliste beim Tippen (ab 3 Zeichen) und mit Strg+Leertaste. Standard: an.</summary>
     public static bool AutoCompleteEnabled { get; private set; } = true;
 
+    /// <summary>Custom Localizations (z. B. <c>GetName</c>) in der Vorschlagsliste. Standard: aus; der Hover-Tipp kennt sie unabhängig davon.</summary>
+    public static bool CompleteCustomLocalizations { get; private set; }
+
     public static event EventHandler? Changed;
+
+    public static void SetCompleteCustomLocalizations(bool enabled)
+    {
+        if (CompleteCustomLocalizations != enabled)
+        {
+            CompleteCustomLocalizations = enabled;
+            Changed?.Invoke(null, EventArgs.Empty);
+        }
+    }
 
     public static void SetHoverEnabled(bool enabled)
     {

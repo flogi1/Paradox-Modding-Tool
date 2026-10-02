@@ -135,4 +135,36 @@ public class ScriptHintTests
     {
         Assert.Equal(expected, ScriptWords.IsCodeContext(before));
     }
+
+    private static ScriptHintIndex TemplateIndex()
+    {
+        var db = new ScriptDocDatabase();
+        db.ApplyImport(
+            new[]
+            {
+                E(ScriptDocKind.Modifier, "$CULTURE$_opinion", "Culture opinion", "character"),
+                E(ScriptDocKind.Modifier, "dynasty_opinion", "Dynasty opinion", "character"),
+                E(ScriptDocKind.Modifier, "stationed_$MEN_AT_ARMS_TYPE$_pursuit_add", string.Empty, "province"),
+            },
+            Enum.GetValues<ScriptDocKind>().ToList(),
+            T0,
+            new Dictionary<string, long>());
+        return new ScriptHintIndex(db);
+    }
+
+    [Fact]
+    public void Template_matches_filled_word() =>
+        Assert.Equal("$CULTURE$_opinion", Assert.Single(TemplateIndex().Lookup("french_opinion")).Name);
+
+    [Fact]
+    public void Exact_entry_wins_over_template() =>
+        Assert.Equal("dynasty_opinion", Assert.Single(TemplateIndex().Lookup("dynasty_opinion")).Name);
+
+    [Fact]
+    public void Placeholder_needs_at_least_one_char() =>
+        Assert.Empty(TemplateIndex().Lookup("_opinion"));
+
+    [Fact]
+    public void Template_in_the_middle() =>
+        Assert.Equal("stationed_$MEN_AT_ARMS_TYPE$_pursuit_add", Assert.Single(TemplateIndex().Lookup("stationed_light_footmen_pursuit_add")).Name);
 }

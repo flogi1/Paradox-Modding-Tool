@@ -97,6 +97,9 @@ public sealed class BugReport
 
     public List<BugLink> Links { get; set; } = new();
 
+    /// <summary>Anhänge (Screenshots, Dateien) der ersten Nachricht bzw. des Issue-Texts; gehören dem Dienst.</summary>
+    public List<BugAttachment> Attachments { get; set; } = new();
+
     /// <summary>Schon angesehen; lokale Bugs sind immer gesehen.</summary>
     public bool Seen { get; set; } = true;
 

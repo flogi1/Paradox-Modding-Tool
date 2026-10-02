@@ -124,6 +124,62 @@ public class OverrideRulesTests : TempDirTests
     }
 
     [Fact]
+    public void Ck3_profile_ships_the_wiki_table()
+    {
+        var profile = GameProfileLoader.LoadFromFile(RepoFile("profiles/ck3.json"));
+        Assert.Equal(ModMetadata.ClassicSiblingMetadataFile, profile.MetadataFile);
+        Assert.Equal("logs", profile.ScriptDocsFolder);
+        Assert.Empty(profile.KeyOperators);
+        Assert.Equal("character_event", profile.DefaultEventType);
+        Assert.True(profile.ReplacePathHidesEarlierMods);
+
+        var rules = OverrideRules.FromProfile(profile);
+        void Check(string path, OverrideBehavior behavior, bool certain)
+        {
+            var match = rules.Match(path);
+            Assert.True(match.Behavior == behavior, $"{path}: {match.Behavior}");
+            Assert.True(match.Certain == certain, $"{path}: certain {match.Certain}");
+        }
+
+        Check("common/traits/00_traits.txt", OverrideBehavior.PerKey, true);
+        Check("common/defines/x.txt", OverrideBehavior.PartialKeys, true);
+        Check("common/on_action/x.txt", OverrideBehavior.AppendOnly, false);
+        Check("common/religion/religion_types/x.txt", OverrideBehavior.WholeFile, true);
+        Check("common/landed_titles/00_landed_titles.txt", OverrideBehavior.PerKey, false);
+        Check("events/x.txt", OverrideBehavior.FirstWins, false);
+        Check("gui/x.gui", OverrideBehavior.FirstWins, true);
+        Check("localization/english/x_l_english.yml", OverrideBehavior.LocalizationKeys, true);
+        Check("history/characters/x.txt", OverrideBehavior.PerKey, false);
+        Check("gfx/x.dds", OverrideBehavior.WholeFile, false);
+        Check("map_data/x.png", OverrideBehavior.WholeFile, false);
+    }
+
+    [Fact]
+    public void Eu5_profile_uses_docs_folder_and_replace_path_hides_earlier_mods_below_the_roots()
+    {
+        var profile = GameProfileLoader.LoadFromFile(RepoFile("profiles/eu5.json"));
+        Assert.Equal("docs", profile.ScriptDocsFolder);
+        Assert.True(profile.ReplacePathHidesEarlierMods);
+        Assert.Equal(new[] { "in_game", "main_menu", "loading_screen" }, profile.ReplacePathRoots);
+    }
+
+    [Fact]
+    public void Eu4_profile_replace_path_only_hides_vanilla()
+    {
+        var profile = GameProfileLoader.LoadFromFile(RepoFile("profiles/eu4.json"));
+        Assert.False(profile.ReplacePathHidesEarlierMods);
+        Assert.Empty(profile.ReplacePathRoots);
+    }
+
+    [Fact]
+    public void Only_the_eu4_profile_names_interface_as_gui_crash_root()
+    {
+        Assert.Equal(new[] { "interface" }, GameProfileLoader.LoadFromFile(RepoFile("profiles/eu4.json")).ReplacePathGuiCrashRoots);
+        Assert.Empty(GameProfileLoader.LoadFromFile(RepoFile("profiles/eu5.json")).ReplacePathGuiCrashRoots);
+        Assert.Empty(GameProfileLoader.LoadFromFile(RepoFile("profiles/ck3.json")).ReplacePathGuiCrashRoots);
+    }
+
+    [Fact]
     public void Profile_without_script_docs_source_defaults_to_log()
     {
         var profile = new GameProfile { Id = "x" };

@@ -187,7 +187,7 @@ public static class LocalizationBuilder
             }
             else
             {
-                Add(pattern, false, pointKeys, "Feld " + tokens[i - 2].Text);
+                Add(pattern, false, pointKeys, TemplatesTexts.OriginField(tokens[i - 2].Text));
             }
         }
 
@@ -209,13 +209,13 @@ public static class LocalizationBuilder
         var parts = new List<string>();
         if (pair.Prefix.Length > 0)
         {
-            parts.Add("Präfix " + pair.Prefix);
+            parts.Add(TemplatesTexts.OriginPrefix(pair.Prefix));
         }
 
-        parts.Add("Objektname");
+        parts.Add(TemplatesTexts.OriginObjectName);
         if (pair.Suffix.Length > 0)
         {
-            parts.Add("Endung " + pair.Suffix);
+            parts.Add(TemplatesTexts.OriginSuffix(pair.Suffix));
         }
 
         return string.Join(" · ", parts);

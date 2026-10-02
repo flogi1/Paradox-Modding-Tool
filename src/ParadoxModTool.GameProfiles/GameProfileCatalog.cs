@@ -13,7 +13,7 @@ public static class GameProfileCatalog
 {
     private static readonly Regex IdPattern = new("^[A-Za-z0-9_-]{1,40}$", RegexOptions.Compiled);
 
-    /// <summary>Alle brauchbaren Profile, nach Anzeigename sortiert. Bei doppelter Kennung gilt die alphabetisch erste Datei.</summary>
+    /// <summary>Alle brauchbaren Profile, nach Erscheinungsdatum sortiert (ohne Datum zuletzt, danach nach Anzeigename). Bei doppelter Kennung gilt die alphabetisch erste Datei.</summary>
     public static IReadOnlyList<GameProfileEntry> Discover(string directory)
     {
         var result = new List<GameProfileEntry>();
@@ -38,6 +38,9 @@ public static class GameProfileCatalog
             }
         }
 
-        return result.OrderBy(e => e.Profile.DisplayName, StringComparer.CurrentCultureIgnoreCase).ToList();
+        return result
+            .OrderBy(e => e.Profile.ReleaseDate ?? DateOnly.MaxValue)
+            .ThenBy(e => e.Profile.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
     }
 }

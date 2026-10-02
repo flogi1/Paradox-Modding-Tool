@@ -28,6 +28,13 @@ namespace ParadoxModTool.LaunchControl;
 public static class PlaysetStore
 {
     /// <summary>
+    /// <see langword="true"/> für launcher-v2.sqlite (Paradox-Launcher v2, z. B. EU IV und CK3) statt playsets.json. Diese Datenbank
+    /// wird nur gelesen, siehe <see cref="LauncherDatabase"/>.
+    /// </summary>
+    public static bool IsLauncherDatabase(string? path) =>
+        path is not null && path.EndsWith(".sqlite", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Liest alle Playsets aus <paramref name="playsetsFilePath"/> für die Anzeige in der
     /// Werkzeugleiste. Liefert eine leere Liste (statt einer Ausnahme), wenn die Datei fehlt, kein
     /// Pfad eingestellt ist oder der Inhalt nicht dem erwarteten JSON-Format entspricht - Anzeige/
@@ -38,6 +45,11 @@ public static class PlaysetStore
         if (string.IsNullOrWhiteSpace(playsetsFilePath) || !File.Exists(playsetsFilePath))
         {
             return Array.Empty<PlaysetInfo>();
+        }
+
+        if (IsLauncherDatabase(playsetsFilePath))
+        {
+            return LauncherDatabase.ListPlaysets(playsetsFilePath);
         }
 
         try
@@ -106,6 +118,11 @@ public static class PlaysetStore
             return Array.Empty<PlaysetMod>();
         }
 
+        if (IsLauncherDatabase(playsetsFilePath))
+        {
+            return LauncherDatabase.ListPlaysetMods(playsetsFilePath, playsetName);
+        }
+
         try
         {
             var root = JsonNode.Parse(File.ReadAllText(playsetsFilePath));
@@ -162,7 +179,12 @@ public static class PlaysetStore
     {
         if (string.IsNullOrWhiteSpace(playsetsFilePath) || !File.Exists(playsetsFilePath))
         {
-            return LaunchResult.Failure($"Playset-Datei nicht gefunden: \"{playsetsFilePath}\".");
+            return LaunchResult.Failure(PlaysetTexts.FileNotFound(playsetsFilePath ?? string.Empty));
+        }
+
+        if (IsLauncherDatabase(playsetsFilePath))
+        {
+            return LaunchResult.Failure(PlaysetTexts.LauncherDatabaseReadOnly);
         }
 
         try
@@ -171,7 +193,7 @@ public static class PlaysetStore
             var root = JsonNode.Parse(originalText);
             if (root?["playsets"] is not JsonArray playsetsArray)
             {
-                return LaunchResult.Failure("Playset-Datei hat nicht das erwartete Format (kein \"playsets\"-Array gefunden).");
+                return LaunchResult.Failure(PlaysetTexts.UnexpectedFormat);
             }
 
             JsonObject? target = null;
@@ -187,7 +209,7 @@ public static class PlaysetStore
 
             if (target is null)
             {
-                return LaunchResult.Failure($"Playset \"{playsetName}\" wurde in der Playset-Datei nicht gefunden.");
+                return LaunchResult.Failure(PlaysetTexts.PlaysetNotFound(playsetName));
             }
 
             foreach (var entry in playsetsArray)
@@ -207,7 +229,7 @@ public static class PlaysetStore
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            return LaunchResult.Failure($"Playset-Datei konnte nicht aktualisiert werden: {ex.Message}");
+            return LaunchResult.Failure(PlaysetTexts.UpdateFailed(ex.Message));
         }
     }
 }

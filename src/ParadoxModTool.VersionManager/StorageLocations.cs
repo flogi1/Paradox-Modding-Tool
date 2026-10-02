@@ -23,6 +23,11 @@ public static class StorageLocations
     /// <summary>Ordnername der Snapshots im Mod-Ordner (Rückfall, bewusst identisch zur früheren Fassung).</summary>
     public const string InModSnapshotsFolderName = "snapshots";
 
+    public const string PatchRecipesFolderSuffix = " Patch Recipes";
+
+    /// <summary>Ordnername der Patch-Rezepte im Mod-Ordner (identisch zu PatchRecipeStore.FolderName).</summary>
+    public const string InModPatchRecipesFolderName = ".pmt-patches";
+
     public static string GetDefaultParentFolder() =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Modding Tool");
 
@@ -37,6 +42,12 @@ public static class StorageLocations
         settings.InsideModFolder
             ? Path.Combine(modRoot, InModSnapshotsFolderName)
             : Path.Combine(EffectiveParent(settings), GetModName(modRoot) + SnapshotsFolderSuffix);
+
+    /// <summary>Ordner für die Patch-Rezepte dieses Mods: "[Modname] Patch Recipes" (im Mod-Ordner der frühere Ort ".pmt-patches").</summary>
+    public static string ResolvePatchRecipesDirectory(string modRoot, StorageSettings settings) =>
+        settings.InsideModFolder
+            ? Path.Combine(modRoot, InModPatchRecipesFolderName)
+            : Path.Combine(EffectiveParent(settings), GetModName(modRoot) + PatchRecipesFolderSuffix);
 
     public static string GetModName(string modRoot)
     {

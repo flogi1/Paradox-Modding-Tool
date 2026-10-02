@@ -59,6 +59,41 @@ public class EditorArgumentsTests
     }
 
     [Fact]
+    public void CommandsRoundTrip()
+    {
+        foreach (var request in new[]
+        {
+            EditorRequest.ForMod(HandOffKind.OpenMod, "m1"),
+            EditorRequest.ForMod(HandOffKind.OpenReleases, "m1"),
+            EditorRequest.ForMod(HandOffKind.OpenBug, "m1", "b7"),
+            EditorRequest.ForMod(HandOffKind.OpenBug, "m1"),
+        })
+        {
+            Assert.Equal(request, EditorHandOffMessage.Decode(EditorHandOffMessage.Encode(request)));
+        }
+    }
+
+    [Fact]
+    public void OldFormatIsOpenFile()
+    {
+        var request = EditorHandOffMessage.Decode("{\"Path\":\"C:\\\\a.gui\",\"Line\":3}");
+
+        Assert.NotNull(request);
+        Assert.Equal(HandOffKind.OpenFile, request!.Kind);
+        Assert.Equal(@"C:\a.gui", request.Path);
+        Assert.Equal(3, request.Line);
+        Assert.DoesNotContain("Kind", EditorHandOffMessage.Encode(new EditorRequest(@"C:\a.gui", 3)));
+    }
+
+    [Fact]
+    public void CommandsNeedTheirIds()
+    {
+        Assert.Null(EditorHandOffMessage.Decode("{\"Kind\":\"OpenMod\"}"));
+        Assert.Null(EditorHandOffMessage.Decode("{\"Kind\":\"OpenBug\",\"BugId\":\"b\"}"));
+        Assert.Null(EditorHandOffMessage.Decode("{\"Kind\":\"Explode\",\"ModId\":\"m\"}"));
+    }
+
+    [Fact]
     public void BrokenMessagesGiveNothing()
     {
         Assert.Null(EditorHandOffMessage.Decode(string.Empty));

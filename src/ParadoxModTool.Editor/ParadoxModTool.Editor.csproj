@@ -16,9 +16,15 @@
   <ItemGroup>
     <ProjectReference Include="..\ParadoxModTool.Categories\ParadoxModTool.Categories.csproj" />
     <ProjectReference Include="..\ParadoxModTool.ScriptDocs\ParadoxModTool.ScriptDocs.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Modifiers\ParadoxModTool.Modifiers.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Scopes\ParadoxModTool.Scopes.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GuiDesign\ParadoxModTool.GuiDesign.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParadoxModTool.Editor.Tests" />
   </ItemGroup>
 
 </Project>

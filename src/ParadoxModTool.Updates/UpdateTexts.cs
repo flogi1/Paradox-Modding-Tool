@@ -102,7 +102,7 @@ public static class UpdateTexts
 
     public static string KeepWaiting(int count) => F("update.apply.keepWaiting", "Es sind noch {0} PMT-Fenster offen. Das Update wartet, bis alle geschlossen sind.\n\nWeiter warten?", count);
 
-    public static string RollbackFailed(string backupFolder, string logPath) => F("update.apply.rollbackFailed", "Die alte Version konnte nicht wiederhergestellt werden.\n\nSie liegt vollständig im Ordner {0}. Kopiere ihren Inhalt von Hand zurück in den Programmordner.\n\nProtokoll: {1}", backupFolder, logPath);
+    public static string RollbackFailed(string backupFolder, string logPath) => F("update.apply.rollbackFailed", "Die alte Version konnte nicht vollständig wiederhergestellt werden.\n\nWas noch fehlt, liegt im Ordner {0} (falls vorhanden). Verschiebe dessen Inhalt von Hand in den Programmordner und ersetze vorhandene Dateien.\n\nProtokoll: {1}", backupFolder, logPath);
 
     public static string InvalidArguments => T("update.apply.invalidArguments", "Ungültiger Aufruf des Update-Modus.");
 
@@ -123,6 +123,23 @@ public static class UpdateTexts
     public static string ErrorTitle => T("update.browser.error.title", "Fehler");
 
     public static string BrowserFailed(string error) => F("update.browser.failed", "Der Browser konnte nicht geöffnet werden: {0}", error);
+
+    public static string CheckHttpStatus(int status) => F("update.check.httpStatus", "GitHub antwortete mit Status {0}.", status);
+
+    public static string CheckUnreadable => T("update.check.unreadable", "Die Antwort von GitHub konnte nicht gelesen werden.");
+
+    // Vorlage für einen neuen GitHub-Fehlerbericht (Hilfe > Fehler melden), in der Sprache der Oberfläche.
+    public static string IssueWhatHappened => T("update.issue.whatHappened", "Was ist passiert?");
+
+    public static string IssueSteps => T("update.issue.steps", "Schritte zum Nachstellen");
+
+    public static string IssueExpectedActual => T("update.issue.expectedActual", "Erwartet / Tatsächlich");
+
+    public static string IssueEnvironment => T("update.issue.environment", "Umgebung");
+
+    public static string IssueOs => T("update.issue.os", "Betriebssystem");
+
+    public static string IssueRuntime => T("update.issue.runtime", "Laufzeit");
 
     private static string T(string key, string fallback) => UiText.Get(key, fallback);
 

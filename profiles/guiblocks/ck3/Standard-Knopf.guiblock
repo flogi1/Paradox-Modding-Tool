@@ -1,0 +1,15 @@
+# block: Standard-Knopf
+# group: Bedienelemente
+# description: Knopf mit Text und Tooltip; die Aktion läuft über ein scripted_gui in common/scripted_guis mit dem eigenen Charakter als root. Vorbild: gui/debug/window_component_library.gui, gui/activity_window_widgets/funeral_deceased_selection_button.gui
+# param: name | Name | my_button
+# param: text | Text (Lokalisierungsschlüssel) | MY_BUTTON
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_BUTTON_TT
+# param: scripted_gui | scripted_gui | my_scripted_gui
+# requires: button_standard
+
+button_standard = {
+	name = "$name$"
+	text = "$text$"
+	tooltip = "$tooltip$"
+	onclick = "[GetScriptedGui('$scripted_gui$').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+}

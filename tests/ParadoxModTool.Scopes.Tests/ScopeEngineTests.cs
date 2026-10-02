@@ -234,6 +234,49 @@ public class ScopeEngineTests
         Assert.Contains("ohne type", At("mod.1 = { immediate = { | } }", @"C:\mods\m\in_game\events\x.txt").UnknownReason);
     }
 
+    private static ScopeEngine EngineWithDefaultEventType()
+    {
+        var rules = TestData.Rules();
+        rules.DefaultEventType = "country_event";
+        return new ScopeEngine(TestData.Db(), rules);
+    }
+
+    [Fact]
+    public void Events_without_type_use_the_default_event_type()
+    {
+        var context = At("mod.1 = { immediate = { | } }", @"C:\mods\m\events\x.txt", EngineWithDefaultEventType());
+
+        Assert.Equal("country", context.CurrentScope);
+        Assert.Equal("events/country_event/immediate", context.FieldPath);
+    }
+
+    [Fact]
+    public void Scripted_definition_in_an_event_file_gets_no_default_type()
+    {
+        var context = At("scripted_trigger my_check = { immediate = { | } }", @"C:\mods\m\events\x.txt", EngineWithDefaultEventType());
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("ohne type", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Event_scope_field_sets_the_root_scope()
+    {
+        var context = At("mod.1 = { type = country_event scope = location immediate = { | } }", @"C:\mods\m\events\x.txt");
+
+        Assert.Equal("location", context.CurrentScope);
+        Assert.True(context.Confident);
+    }
+
+    [Fact]
+    public void Event_scope_none_leaves_the_scope_unknown()
+    {
+        var context = At("mod.1 = { type = country_event scope = none immediate = { | } }", @"C:\mods\m\events\x.txt");
+
+        Assert.Null(context.CurrentScope);
+        Assert.False(context.Confident);
+    }
+
     [Fact]
     public void AnIteratorMakesTheScopeSureEvenWhenTheFieldHasNoRule()
     {

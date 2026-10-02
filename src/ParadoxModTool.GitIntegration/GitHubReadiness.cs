@@ -28,36 +28,36 @@ public static class GitHubReadiness
 
         if (!input.GhFound)
         {
-            hints.Add(new PublishHint("gh (GitHub CLI) ist nicht eingerichtet.", true));
+            hints.Add(new PublishHint(GitTexts.CheckGhMissing, true));
         }
         else if (!input.LoggedIn)
         {
-            hints.Add(new PublishHint("Bei GitHub ist keine Anmeldung aktiv.", true));
+            hints.Add(new PublishHint(GitTexts.CheckNotLoggedIn, true));
         }
 
         if (!input.VersionValid)
         {
-            hints.Add(new PublishHint("metadata.json enthält keine gültige Version.", true));
+            hints.Add(new PublishHint(GitTexts.CheckVersionInvalid, true));
         }
 
         if (input.SelectedRepoCount == 0)
         {
-            hints.Add(new PublishHint("Es ist kein Repository angehakt.", true));
+            hints.Add(new PublishHint(GitTexts.CheckNoRepo, true));
         }
 
         if (string.IsNullOrWhiteSpace(input.Title))
         {
-            hints.Add(new PublishHint("Der Titel des Releases fehlt.", true));
+            hints.Add(new PublishHint(GitTexts.CheckTitleMissing, true));
         }
 
         if (ReleaseNotesFormatter.IsTooLong(input.Notes))
         {
-            hints.Add(new PublishHint($"Die Release-Notes sind zu lang ({input.Notes.Length:N0} von {ReleaseNotesFormatter.MaxLength:N0} Zeichen).", true));
+            hints.Add(new PublishHint(GitTexts.CheckNotesTooLong(input.Notes.Length, ReleaseNotesFormatter.MaxLength), true));
         }
 
         if (input.ChangelogExists && !input.ChangelogHasVersion)
         {
-            hints.Add(new PublishHint("Im Changelog gibt es keinen Abschnitt für diese Version; die Release-Notes stammen nur aus deinem Text.", false));
+            hints.Add(new PublishHint(GitTexts.CheckNoChangelogSection, false));
         }
 
         foreach (var check in input.Checks)
@@ -70,14 +70,14 @@ public static class GitHubReadiness
 
             if (check.CanWrite == false)
             {
-                hints.Add(new PublishHint($"Du hast kein Schreibrecht in {check.Repo}.", true));
+                hints.Add(new PublishHint(GitTexts.NoWriteAccess(check.Repo), true));
             }
 
             if (check.TagExists == true)
             {
                 hints.Add(input.UpdateExisting
-                    ? new PublishHint($"Das vorhandene Release {check.Tag} in {check.Repo} wird aktualisiert (Notes und ZIP-Dateien werden ersetzt).", false)
-                    : new PublishHint($"Der Tag {check.Tag} existiert schon in {check.Repo}. Schalte \"Vorhandenes Release aktualisieren\" ein oder ändere das Tag-Format.", true));
+                    ? new PublishHint(GitTexts.CheckWillUpdate(check.Tag, check.Repo), false)
+                    : new PublishHint(GitTexts.CheckTagExists(check.Tag, check.Repo), true));
             }
         }
 

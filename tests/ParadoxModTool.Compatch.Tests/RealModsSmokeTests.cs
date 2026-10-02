@@ -66,6 +66,36 @@ public class RealModsSmokeTests
         Assert.Equal(before, Stamp(a) + Stamp(b));
     }
 
+    /// <summary>
+    /// EU IV: Läuft nur mit <c>PMT_COMPATCH_EU4_A</c>/<c>PMT_COMPATCH_EU4_B</c>. Kein Schlüssel darf ein gemeinsamer Blockname sein
+    /// (<c>country_event</c>, <c>country_decisions</c> …); sonst stünden verschieden benannte Dateien fälschlich in Konflikt.
+    /// </summary>
+    [Fact]
+    public void Real_eu4_pair_has_no_keys_named_after_shared_blocks()
+    {
+        var a = Environment.GetEnvironmentVariable("PMT_COMPATCH_EU4_A");
+        var b = Environment.GetEnvironmentVariable("PMT_COMPATCH_EU4_B");
+        if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b) || !Directory.Exists(a) || !Directory.Exists(b) || !Directory.Exists(Eu4Game))
+        {
+            return;
+        }
+
+        var profile = GameProfileLoader.LoadFromFile(CompatchTestBase.RepoFile("profiles/eu4.json"));
+        var input = new CompatchInput { VanillaFolder = Eu4Game, ModAFolder = a, ModBFolder = b, Rules = OverrideRules.FromProfile(profile) };
+        var resolved = EffectiveEntryResolver.Resolve(input);
+        var keys = resolved.Addresses.Keys.Where(k => k.Kind == AddressKind.Key).ToList();
+        _output.WriteLine($"Schlüssel-Adressen: {keys.Count}");
+        foreach (var group in keys.GroupBy(k => k.Scope).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            _output.WriteLine($"  {group.Key}: {group.Count()} ({string.Join(", ", group.Take(5).Select(k => k.Key))})");
+        }
+
+        var shared = new[] { "country_event", "province_event", "country_decisions", "guiTypes", "spriteTypes", "objectTypes", "defined_text", "custom_button", "custom_icon", "custom_text_box", "custom_window", "custom_shield" };
+        Assert.DoesNotContain(keys, k => shared.Contains(k.Key));
+    }
+
+    private const string Eu4Game = @"D:\SteamLibrary\steamapps\common\Europa Universalis IV";
+
     private static string Stamp(string folder) => string.Join("|", Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories)
         .OrderBy(f => f, StringComparer.Ordinal)
         .Select(f => f + ":" + File.GetLastWriteTimeUtc(f).Ticks));

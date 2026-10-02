@@ -59,7 +59,7 @@ public sealed class CategoryFilterBar : WrapPanel
             .ToList();
         if (categories.Count > 0)
         {
-            var label = new TextBlock { Text = "Kategorie:", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
+            var label = new TextBlock { Text = MiscWindowTexts.CategoryFilterLabel, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
             label.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
             Children.Add(label);
         }
@@ -82,7 +82,7 @@ public sealed class CategoryFilterBar : WrapPanel
                 Content = content,
                 IsChecked = !_unchecked.Contains(category.Id),
                 Margin = new Thickness(0, 0, 8, 0),
-                ToolTip = $"'{category.Name}' ein-/ausblenden",
+                ToolTip = MiscWindowTexts.CategoryFilterToggleTip(category.Name),
             };
             var id = category.Id;
             checkBox.Click += (_, _) =>
@@ -99,7 +99,7 @@ public sealed class CategoryFilterBar : WrapPanel
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
             };
             var menu = new ContextMenu();
-            var hide = new MenuItem { Header = "Aus Leiste ausblenden" };
+            var hide = new MenuItem { Header = MiscWindowTexts.CategoryFilterHideFromBar };
             var key = FilterEntryKeys.ForCategory(category.Id);
             hide.Click += (_, _) => FilterBarSettings.SetShown(key, false);
             menu.Items.Add(hide);
@@ -107,7 +107,7 @@ public sealed class CategoryFilterBar : WrapPanel
             Children.Add(checkBox);
         }
 
-        var filterButton = new Button { Content = "Filter ▾", Padding = new Thickness(6, 0, 6, 0), Margin = new Thickness(6, 0, 0, 0) };
+        var filterButton = new Button { Content = MiscWindowTexts.CategoryFilterButton, Padding = new Thickness(6, 0, 6, 0), Margin = new Thickness(6, 0, 0, 0) };
         filterButton.Click += (_, _) => ShowFilterMenu(filterButton);
         Children.Add(filterButton);
     }

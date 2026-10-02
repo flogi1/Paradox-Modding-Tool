@@ -1,0 +1,24 @@
+# block: Überschrift und Text
+# group: Anzeige
+# description: Überschrift in Flavor-Schrift und darunter ein mehrzeiliger Text, der bis zur angegebenen Breite umbricht. Vorbild: in_game/gui/ui_library.gui, loading_screen/gui/preload/fonts.gui
+# param: title | Überschrift (Lokalisierungsschlüssel) | MY_TITLE
+# param: text | Text (Lokalisierungsschlüssel) | MY_TEXT
+# param: width | Breite | 400
+# requires: text_single, text_multi, Font_Size_Big, Font_Type_Flavor
+
+vbox = {
+	spacing = 5
+
+	text_single = {
+		text = "$title$"
+		default_format = "#high"
+		using = Font_Size_Big
+		using = Font_Type_Flavor
+	}
+
+	text_multi = {
+		text = "$text$"
+		maximumsize = { $width$ -1 }
+		autoresize = yes
+	}
+}

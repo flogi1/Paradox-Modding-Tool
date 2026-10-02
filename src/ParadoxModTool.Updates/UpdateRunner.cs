@@ -102,6 +102,14 @@ public sealed class UpdateRunner(
             return ApplyOutcome.Cancelled;
         }
 
+        // Letzte Gelegenheit für "Abbrechen": ab dem Tausch sperrt das Fenster den Knopf, der Rest läuft ohne Unterbrechung durch.
+        if (cancellationToken.IsCancellationRequested)
+        {
+            log.Write("Abgebrochen vor dem Tausch.");
+            StartOld(UpdateStartArguments.ForCancelled(arguments.GameId, arguments.ToVersion));
+            return ApplyOutcome.Cancelled;
+        }
+
         ui.Status(UpdateRunnerPhase.Swapping, 0);
         switch (await SwapAsync())
         {

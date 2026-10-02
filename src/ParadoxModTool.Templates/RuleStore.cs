@@ -44,7 +44,7 @@ public sealed class RuleStore
         var path = FileFor(layer);
         if (string.IsNullOrEmpty(path))
         {
-            throw new InvalidOperationException($"Für die Ebene {RuleLayerNames.Of(layer)} gibt es keine Regeldatei.");
+            throw new InvalidOperationException(TemplatesTexts.NoRuleFile(RuleLayerNames.Of(layer)));
         }
 
         SharedFile.Locked(path, () =>
@@ -94,7 +94,7 @@ public sealed class RuleStore
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            var message = $"Die Regeldatei \"{path}\" war nicht lesbar; eine Kopie liegt als .bad daneben, die Ebene ist leer.";
+            var message = TemplatesTexts.RuleFileUnreadable(path);
             if (!_warnings.Contains(message))
             {
                 _warnings.Add(message);

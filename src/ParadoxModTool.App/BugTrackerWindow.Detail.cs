@@ -20,6 +20,11 @@ internal sealed partial class BugTrackerWindow
     private readonly Controls.Button _deleteButton = new() { Padding = new Thickness(8, 2, 8, 2) };
     private readonly Controls.ListBox _linkList = new() { Height = 140 };
     private readonly Controls.TextBlock _noLinksText = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 2) };
+    private readonly Controls.Button _discussionButton = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
+    private readonly Controls.StackPanel _discussionList = new();
+    private readonly Controls.ScrollViewer _discussionScroll = new() { VerticalScrollBarVisibility = Controls.ScrollBarVisibility.Auto, Height = 220, Margin = new Thickness(0, 6, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly Controls.StackPanel _attachmentsHost = new() { Visibility = Visibility.Collapsed };
+    private readonly Controls.ContentControl _attachmentsContent = new();
     private BugReport? _shown;
 
     private Controls.Grid BuildDetail()
@@ -37,6 +42,9 @@ internal sealed partial class BugTrackerWindow
         _browserButton.Content = BugTexts.WindowOpenInBrowser;
         _browserButton.Click += (_, _) => OpenInBrowser();
         actions.Children.Add(_browserButton);
+        _discussionButton.Content = BugTexts.WindowLoadDiscussion;
+        _discussionButton.Click += async (_, _) => await LoadDiscussionAsync();
+        actions.Children.Add(_discussionButton);
         _saveButton.Content = BugTexts.Save;
         _saveButton.Click += (_, _) => SaveLocal();
         actions.Children.Add(_saveButton);
@@ -74,6 +82,13 @@ internal sealed partial class BugTrackerWindow
         Controls.DockPanel.SetDock(links, Controls.Dock.Bottom);
         _detailPanel.Children.Add(links);
 
+        _discussionScroll.Content = _discussionList;
+        Controls.DockPanel.SetDock(_discussionScroll, Controls.Dock.Bottom);
+        _detailPanel.Children.Add(_discussionScroll);
+        _attachmentsHost.Children.Add(new Controls.TextBlock { Text = BugTexts.WindowAttachments, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 6, 0, 2) });
+        _attachmentsHost.Children.Add(_attachmentsContent);
+        Controls.DockPanel.SetDock(_attachmentsHost, Controls.Dock.Bottom);
+        _detailPanel.Children.Add(_attachmentsHost);
         _detailPanel.Children.Add(_bodyBox);
         host.Children.Add(_detailPanel);
         return host;
@@ -109,6 +124,11 @@ internal sealed partial class BugTrackerWindow
         _browserButton.Visibility = report.Url.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         _saveButton.Visibility = local ? Visibility.Visible : Visibility.Collapsed;
         _deleteButton.Visibility = local ? Visibility.Visible : Visibility.Collapsed;
+        _discussionButton.Visibility = local ? Visibility.Collapsed : Visibility.Visible;
+        _discussionScroll.Visibility = Visibility.Collapsed;
+        _discussionList.Children.Clear();
+        _attachmentsContent.Content = AttachmentPreview.Create(report.Attachments, this);
+        _attachmentsHost.Visibility = report.Attachments.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         _statusButtons.Children.Clear();
         if (report.IsOpen)
@@ -199,5 +219,71 @@ internal sealed partial class BugTrackerWindow
         {
             _host.ChangeBugs(data => BugEditing.RemoveLink(data, report.Id, link));
         }
+    }
+
+    private async Task LoadDiscussionAsync()
+    {
+        if (_shown is not { } report)
+        {
+            return;
+        }
+
+        _discussionButton.IsEnabled = false;
+        _discussionList.Children.Clear();
+        try
+        {
+            var comments = await _host.LoadDiscussionAsync(report);
+            if (_shown?.Id != report.Id)
+            {
+                return;
+            }
+
+            if (comments.Count == 0)
+            {
+                _discussionList.Children.Add(new Controls.TextBlock { Text = BugTexts.WindowNoDiscussion });
+            }
+
+            foreach (var comment in comments)
+            {
+                _discussionList.Children.Add(CommentBlock(comment));
+            }
+        }
+        catch (ParadoxModTool.BugTracking.BugSourceException ex)
+        {
+            _discussionList.Children.Add(new Controls.TextBlock { Text = ex.Message, TextWrapping = TextWrapping.Wrap });
+        }
+        finally
+        {
+            _discussionButton.IsEnabled = true;
+        }
+
+        _discussionScroll.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Eine Antwort: Autor und Zeit, Text (auswählbar), Anhänge als Vorschau.</summary>
+    private FrameworkElement CommentBlock(BugComment comment)
+    {
+        var block = new Controls.StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+        var header = new Controls.TextBlock { Text = $"{comment.Author} · {comment.CreatedUtc.ToLocalTime():g}", FontSize = 11 };
+        header.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+        block.Children.Add(header);
+        if (comment.Body.Length > 0)
+        {
+            block.Children.Add(new Controls.TextBox
+            {
+                Text = comment.Body,
+                IsReadOnly = true,
+                TextWrapping = TextWrapping.Wrap,
+                BorderThickness = new Thickness(0),
+                Background = System.Windows.Media.Brushes.Transparent,
+            });
+        }
+
+        if (AttachmentPreview.Create(comment.Attachments, this) is { } attachments)
+        {
+            block.Children.Add(attachments);
+        }
+
+        return block;
     }
 }

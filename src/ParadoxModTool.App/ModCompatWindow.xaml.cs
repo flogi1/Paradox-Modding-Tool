@@ -26,13 +26,13 @@ internal sealed class MemberRow
 
     public bool Missing => !Directory.Exists(Member.Folder);
 
-    public string NameText => Missing ? Member.Name + " (fehlt)" : Member.Name;
+    public string NameText => Missing ? ModCompatWindowTexts.Missing(Member.Name) : Member.Name;
 
     public string OriginText => Member.Origin switch
     {
-        CompatOrigin.Register => "Eigene Mod",
+        CompatOrigin.Register => ModCompatWindowTexts.OwnMod,
         CompatOrigin.Workshop => "Workshop",
-        _ => "Ordner",
+        _ => ParadoxModTool.Compatch.CompatchTexts.FromFolder,
     };
 
     public bool Enabled
@@ -115,7 +115,7 @@ public partial class ModCompatWindow : Window
 
     private void EditDescription_Click(object sender, RoutedEventArgs e)
     {
-        var description = TextPromptWindow.Ask(this, "Beschreibung ändern", "Beschreibung des Sets:", _set.Description);
+        var description = TextPromptWindow.Ask(this, ModCompatWindowTexts.EditDescription, ModCompatWindowTexts.DescriptionPrompt, _set.Description);
         if (description is null)
         {
             return;
@@ -169,7 +169,7 @@ public partial class ModCompatWindow : Window
 
     private void NewSet_Click(object sender, RoutedEventArgs e)
     {
-        var name = TextPromptWindow.Ask(this, "Neues Set", "Name des Sets:", string.Empty)?.Trim();
+        var name = TextPromptWindow.Ask(this, ModCompatWindowTexts.NewSetTitle, ModCompatWindowTexts.SetNamePrompt, string.Empty)?.Trim();
         if (string.IsNullOrEmpty(name))
         {
             return;
@@ -177,7 +177,7 @@ public partial class ModCompatWindow : Window
 
         if (_store.List().Contains(name, StringComparer.CurrentCultureIgnoreCase))
         {
-            MessageBox.Show(this, $"Ein Set \"{name}\" gibt es schon.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.SetExists(name), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -188,7 +188,7 @@ public partial class ModCompatWindow : Window
 
     private void RenameSet_Click(object sender, RoutedEventArgs e)
     {
-        var name = TextPromptWindow.Ask(this, "Set umbenennen", "Neuer Name:", _set.Name)?.Trim();
+        var name = TextPromptWindow.Ask(this, ModCompatWindowTexts.RenameSetTitle, ModsTexts.NewNamePrompt, _set.Name)?.Trim();
         if (string.IsNullOrEmpty(name) || string.Equals(name, _set.Name, StringComparison.Ordinal))
         {
             return;
@@ -196,7 +196,7 @@ public partial class ModCompatWindow : Window
 
         if (_store.List().Contains(name, StringComparer.CurrentCultureIgnoreCase))
         {
-            MessageBox.Show(this, $"Ein Set \"{name}\" gibt es schon.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.SetExists(name), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -209,7 +209,7 @@ public partial class ModCompatWindow : Window
 
     private void DeleteSet_Click(object sender, RoutedEventArgs e)
     {
-        if (MessageBox.Show(this, $"Das Set \"{_set.Name}\" löschen? Die Mods selbst bleiben unberührt.", "Mod-Kompatibilität", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+        if (MessageBox.Show(this, ModCompatWindowTexts.DeleteSetConfirm(_set.Name), ModCompatWindowTexts.Title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -279,13 +279,13 @@ public partial class ModCompatWindow : Window
     {
         if (BranchTransfer.WorkingFolder(mod) is not { } folder)
         {
-            MessageBox.Show(this, $"Der Ordner der Mod \"{mod.Name}\" wurde nicht gefunden.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ModCompatWindowTexts.ModFolderNotFound(mod.Name), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (!_set.Add(CompatMembers.FromFolder(folder, CompatOrigin.Register, mod.Id, _host.MetadataFile)))
         {
-            MessageBox.Show(this, $"\"{mod.Name}\" ist schon im Set \"{_set.Name}\".", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.AlreadyInSet(mod.Name, _set.Name), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -293,7 +293,7 @@ public partial class ModCompatWindow : Window
         RefreshMembers();
     }
 
-    private const string AddNewModLabel = "+ Neue Mod hinzufügen (Ordner wählen)";
+    private static string AddNewModLabel => ModCompatWindowTexts.AddNewModLabel;
 
     private void AddFromRegister_Click(object sender, RoutedEventArgs e)
     {
@@ -306,7 +306,7 @@ public partial class ModCompatWindow : Window
         labels.Add(AddNewModLabel);
         var newModIndex = labels.Count - 1;
 
-        if (PickListDialog.Ask(this, "Aus Register", "Welche Mods sollen ins Set? Noch nicht verwaltete Mods können über \"" + AddNewModLabel + "\" direkt angelegt werden.", labels, multi: true) is not { } picked)
+        if (PickListDialog.Ask(this, ParadoxModTool.Compatch.CompatchTexts.FromRegister, ModCompatWindowTexts.FromRegisterPrompt(AddNewModLabel), labels, multi: true) is not { } picked)
         {
             return;
         }
@@ -322,12 +322,12 @@ public partial class ModCompatWindow : Window
     /// <summary>Legt eine noch nicht verwaltete Mod im Register an (wie <see cref="ModsWindow.AddMod_Click"/>) und fügt sie sofort dem Set hinzu.</summary>
     private void AddNewRegisteredMod()
     {
-        if (PickFolder("Mod-Ordner wählen") is not { } folder)
+        if (PickFolder(ModsTexts.PickModFolder) is not { } folder)
         {
             return;
         }
 
-        var name = TextPromptWindow.Ask(this, "Mod hinzufügen", "Name der Mod:", ModRegistry.SuggestName(folder, _host.MetadataFile));
+        var name = TextPromptWindow.Ask(this, ModsTexts.AddModTitle, ModsTexts.ModNamePrompt, ModRegistry.SuggestName(folder, _host.MetadataFile));
         if (string.IsNullOrWhiteSpace(name))
         {
             return;
@@ -339,7 +339,7 @@ public partial class ModCompatWindow : Window
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {
-            MessageBox.Show(this, ex.Message, "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, ex.Message, ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -347,19 +347,19 @@ public partial class ModCompatWindow : Window
     {
         if (_host.SteamAppId is not { } appId || SteamFolders.Find() is not { } steam)
         {
-            MessageBox.Show(this, "Der Steam-Ordner wurde nicht gefunden.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.SteamNotFound, ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var folders = CompatMembers.FindWorkshopFolders(appId, SteamFolders.LibraryFolders(steam)).Where(f => !_set.Contains(f)).ToList();
         if (folders.Count == 0)
         {
-            MessageBox.Show(this, "Es wurden keine (weiteren) installierten Workshop-Mods für dieses Spiel gefunden.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.NoWorkshopMods, ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var labels = folders.Select(f => $"{CompatMembers.FromFolder(f, CompatOrigin.Workshop, null, _host.MetadataFile).Name}  [{System.IO.Path.GetFileName(f)}]").ToList();
-        if (PickListDialog.Ask(this, "Aus Workshop", "Welche Workshop-Mods sollen ins Set? Sie werden nur gelesen.", labels, multi: true) is not { } picked)
+        if (PickListDialog.Ask(this, ParadoxModTool.Compatch.CompatchTexts.FromWorkshop, ModCompatWindowTexts.FromWorkshopPrompt, labels, multi: true) is not { } picked)
         {
             return;
         }
@@ -370,19 +370,20 @@ public partial class ModCompatWindow : Window
     private static string? PickFolder(string description)
     {
         using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = description, UseDescriptionForTitle = true };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("modcompat.folder");
         return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
     }
 
     private void AddFolder_Click(object sender, RoutedEventArgs e)
     {
-        if (PickFolder("Mod-Ordner wählen") is not { } folder)
+        if (PickFolder(ModsTexts.PickModFolder) is not { } folder)
         {
             return;
         }
 
         if (AddFolders(new[] { folder }, CompatOrigin.Folder) == 0)
         {
-            MessageBox.Show(this, "Dieser Ordner ist schon im Set.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.FolderAlreadyInSet, ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 
@@ -392,11 +393,11 @@ public partial class ModCompatWindow : Window
         var playsets = PlaysetStore.ListPlaysets(file);
         if (playsets.Count == 0)
         {
-            MessageBox.Show(this, "Es wurden keine Playsets gefunden. Stelle im Menü die Playset-Datei ein.", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ModCompatWindowTexts.NoPlaysets, ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        if (PickListDialog.Ask(this, "Playset importieren", "Welches Playset soll als Kopie ins Set? Es werden nur aktivierte Mods in ihrer Ladereihenfolge übernommen.", playsets.Select(p => p.DisplayText).ToList(), multi: false) is not [var index])
+        if (PickListDialog.Ask(this, ModCompatWindowTexts.ImportPlayset, ModCompatWindowTexts.ImportPlaysetPrompt, playsets.Select(p => p.DisplayText).ToList(), multi: false) is not [var index])
         {
             return;
         }
@@ -410,6 +411,6 @@ public partial class ModCompatWindow : Window
             added += AddFolders(new[] { folder }, origin);
         }
 
-        MessageBox.Show(this, $"{added} von {mods.Count} aktivierten Mods wurden übernommen (vorhandene und fehlende Ordner ausgelassen).", "Mod-Kompatibilität", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(this, ModCompatWindowTexts.PlaysetImported(added, mods.Count), ModCompatWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

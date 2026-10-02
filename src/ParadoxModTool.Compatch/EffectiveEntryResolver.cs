@@ -30,7 +30,7 @@ public static class EffectiveEntryResolver
             foreach (var (path, file) in replacing)
             {
                 var full = Path.Combine(input.VanillaFolder, path.Replace('/', Path.DirectorySeparatorChar));
-                if (other.ContainsKey(path) || !file.IsScript || file.Error is not null || !File.Exists(full))
+                if (other.ContainsKey(path) || !file.IsScript || file.Error is not null || !File.Exists(full) || ReplacePaths.Hides(input.HiddenVanillaFolders, path, input.ReplacePathRoots))
                 {
                     continue;
                 }
@@ -51,7 +51,7 @@ public static class EffectiveEntryResolver
             {
                 var address = EntryAddress.ForWholeFile(path);
                 relevant.Add(address);
-                notes[address] = fa.Error is not null || fb.Error is not null ? "nicht lesbar" : "keine Skriptdatei";
+                notes[address] = fa.Error is not null || fb.Error is not null ? CompatchTexts.NoteUnreadable : CompatchTexts.NoteNotScript;
                 continue;
             }
 
@@ -133,7 +133,7 @@ public static class EffectiveEntryResolver
         }
         catch (DirectoryNotFoundException)
         {
-            throw new CompatchInputException($"Der Ordner von Mod {side} fehlt: {folder}");
+            throw new CompatchInputException(CompatchTexts.ModFolderMissing(side.ToString(), folder));
         }
 
         var files = new Files(StringComparer.OrdinalIgnoreCase);
@@ -147,6 +147,12 @@ public static class EffectiveEntryResolver
             if (done % ProgressStep == 0 || done == paths.Count)
             {
                 progress?.Report(new CompatProgress(text, done, paths.Count));
+            }
+
+            // Mit replace_path der später ladenden anderen Mod ausgeblendet: Das Spiel lädt die Datei nicht.
+            if (ReplacePaths.Hides(side == MergeSide.A ? input.HiddenFoldersOfA : input.HiddenFoldersOfB, relative, input.ReplacePathRoots))
+            {
+                continue;
             }
 
             if (input.ExcludeOwnPatchFilesOf == side && OwnPatchFiles.IsOwn(relative))
@@ -181,6 +187,12 @@ public static class EffectiveEntryResolver
 
         void Add(string relative, string full, RuleMatch rule)
         {
+            // Mit replace_path ausgeblendete Vanilla-Dateien lädt das Spiel nicht.
+            if (ReplacePaths.Hides(input.HiddenVanillaFolders, relative, input.ReplacePathRoots))
+            {
+                return;
+            }
+
             var parts = KeyPartReader.Read(MergeSide.Vanilla, relative, full, rule, input.KeyOperators, input.Cache);
             if (parts.Error is not null)
             {

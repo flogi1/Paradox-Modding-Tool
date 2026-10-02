@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using ParadoxModTool.Updates;
 
-// Entwicklerwerkzeug für PMT-Releases (siehe release.ps1). Texte bewusst nur deutsch.
+// Entwicklerwerkzeug für PMT-Releases: keygen und Notfall-Befehle; Releases laufen über tools/ParadoxModTool.Release. Texte bewusst nur deutsch.
 var defaultKey = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ParadoxModTool-Release", "release-key.p8");
 
 if (args.Length == 0)
@@ -127,13 +127,10 @@ static int Feed(Dictionary<string, string> options)
     return 0;
 }
 
+// Nur von der Tastatur: eine Umgebungsvariable (früher PMT_RELEASE_KEY_PASSWORD) wäre für andere Prozesse lesbar und hebelte bei keygen die
+// Wiederholung aus. Das Release-Werkzeug signiert selbst und fragt im Fenster.
 static string ReadPassword(string prompt)
 {
-    if (Environment.GetEnvironmentVariable("PMT_RELEASE_KEY_PASSWORD") is { Length: > 0 } fromEnvironment)
-    {
-        return fromEnvironment;
-    }
-
     Console.Write(prompt);
     var text = new StringBuilder();
     while (true)

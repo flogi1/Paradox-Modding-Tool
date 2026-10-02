@@ -60,7 +60,11 @@ public class GuiRulesVanillaTests
             }
         }
 
-        Assert.Equal(rules.StructuredBlocks.OrderBy(s => s), seen.OrderBy(s => s));
+        // Jeder strukturierte Block aus Vanilla steht im Profil. Umgekehrt dürfen nur die Namen fehlen, die Vanilla 1.4 (Open Beta) nicht mehr
+        // benutzt; sie bleiben im Profil, weil Mods für 1.3 sie noch verwenden.
+        string[] goneInBeta14 = { "left_action", "left_click_and_hold_action", "right_click_and_hold_action" };
+        Assert.Empty(seen.Except(rules.StructuredBlocks));
+        Assert.Empty(rules.StructuredBlocks.Except(seen).Except(goneInBeta14));
     }
 
     [Fact]

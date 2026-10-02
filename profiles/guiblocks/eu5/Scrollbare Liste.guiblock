@@ -1,0 +1,29 @@
+# block: Scrollbare Liste
+# group: Fenster
+# description: Scrollbereich mit festen Einträgen, je Eintrag eine Textzeile; scrollbox_content darf nur ein Kind haben. Für Listen aus Spieldaten scroll_list mit datamodel nehmen. Vorbild: in_game/gui/encyclopedia_lateralview.gui, main_menu/gui/shared/main_menu_lists.gui
+# param: name | Name | my_list
+# param: width | Breite | 400
+# param: height | Höhe | 300
+# repeat: items | Einträge | 5
+# param: items.text | Text (Lokalisierungsschlüssel) | ITEM_$index$
+# requires: scrollbox, text_single
+
+scrollbox = {
+	name = "$name$"
+	size = { $width$ $height$ }
+
+	blockoverride "scrollbox_content" {
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 5
+
+			$repeat items$
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				text = "$items.text$"
+			}
+
+			$end items$
+		}
+	}
+}

@@ -45,10 +45,11 @@ public static class EditorHandOffPipe
     }
 
     /// <summary>
-    /// Nimmt Anfragen an, bis <paramref name="cancellation"/> endet. Eine abgebrochene Verbindung beendet den Dienst nicht. <paramref name="received"/>
+    /// Nimmt Anfragen an, bis <paramref name="cancellation"/> endet. Eine abgebrochene Verbindung beendet den Dienst nicht; eine, die nach
+    /// <paramref name="readTimeout"/> (Standard 5 s) nicht fertig ist, wird verworfen, damit ein hängender Client spätere Anfragen nicht blockiert. <paramref name="received"/>
     /// läuft auf dem Thread des Dienstes; die Oberfläche muss selbst auf ihren Thread wechseln.
     /// </summary>
-    public static async Task ServeAsync(string gameId, Action<EditorRequest> received, CancellationToken cancellation)
+    public static async Task ServeAsync(string gameId, Action<EditorRequest> received, CancellationToken cancellation, TimeSpan? readTimeout = null)
     {
         while (!cancellation.IsCancellationRequested)
         {
@@ -58,15 +59,21 @@ public static class EditorHandOffPipe
                     PipeName(gameId), PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
                 await server.WaitForConnectionAsync(cancellation).ConfigureAwait(false);
                 using var reader = new StreamReader(server, Encoding.UTF8);
-                var text = await reader.ReadToEndAsync(cancellation).ConfigureAwait(false);
+                using var read = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+                read.CancelAfter(readTimeout ?? TimeSpan.FromSeconds(5));
+                var text = await reader.ReadToEndAsync(read.Token).ConfigureAwait(false);
                 if (EditorHandOffMessage.Decode(text) is { } request)
                 {
                     received(request);
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
             {
                 return;
+            }
+            catch (OperationCanceledException)
+            {
+                // Zeitlimit beim Lesen: Verbindung verwerfen, weiter lauschen.
             }
             catch (UnauthorizedAccessException)
             {

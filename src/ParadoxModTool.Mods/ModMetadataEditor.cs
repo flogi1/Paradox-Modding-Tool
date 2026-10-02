@@ -21,13 +21,13 @@ public static class ModMetadataEditor
         try
         {
             using var document = JsonDocument.Parse(text, DocumentOptions);
-            return document.RootElement.ValueKind == JsonValueKind.Object ? null : "Die Datei muss ein JSON-Objekt sein.";
+            return document.RootElement.ValueKind == JsonValueKind.Object ? null : ModsTexts.MetadataNotObject;
         }
         catch (JsonException ex)
         {
             return ex.LineNumber is long line && ex.BytePositionInLine is long column
-                ? $"Kein gültiges JSON (Zeile {line + 1}, Spalte {column + 1})."
-                : "Kein gültiges JSON.";
+                ? ModsTexts.MetadataInvalidJsonAt(line + 1, column + 1)
+                : ModsTexts.MetadataInvalidJson;
         }
     }
 
@@ -52,7 +52,7 @@ public static class ModMetadataEditor
     {
         if (string.IsNullOrWhiteSpace(version))
         {
-            throw new ArgumentException("Die Version darf nicht leer sein.", nameof(version));
+            throw new ArgumentException(ModsTexts.MetadataEmptyVersion, nameof(version));
         }
 
         var bytes = Encoding.UTF8.GetBytes(text);
@@ -148,7 +148,7 @@ public static class ModMetadataEditor
                                     found = true;
                                     break;
                                 default:
-                                    throw new InvalidOperationException("Das Feld version hat weder Text noch eine Zahl als Wert.");
+                                    throw new InvalidOperationException(ModsTexts.MetadataVersionType);
                             }
                         }
 
@@ -158,12 +158,12 @@ public static class ModMetadataEditor
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException("Die Datei ist kein gültiges JSON.", ex);
+            throw new InvalidOperationException(ModsTexts.MetadataFileInvalidJson, ex);
         }
 
         if (open < 0)
         {
-            throw new InvalidOperationException("Die Datei ist kein JSON-Objekt.");
+            throw new InvalidOperationException(ModsTexts.MetadataFileNotObject);
         }
 
         return new Scan(open, close, firstProperty, found, valueStart, valueLength, valueText);

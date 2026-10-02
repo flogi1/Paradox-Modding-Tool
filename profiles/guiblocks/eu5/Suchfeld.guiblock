@@ -1,0 +1,12 @@
+# block: Suchfeld
+# group: Bedienelemente
+# description: Eingabefeld mit dem Platzhaltertext "Suchen"; den eingegebenen Text werten in Vanilla nur Funktionen des Spiels aus (ontextedited), nicht GetVariableSystem. Vorbild: in_game/gui/ai_settings_menu.gui, main_menu/gui/editbox.gui
+# param: name | Name | my_search
+# param: width | Breite | 250
+# requires: editbox_single
+
+editbox_single = {
+	name = "$name$"
+	size = { $width$ 30 }
+	# ontextedited = "[...]"
+}

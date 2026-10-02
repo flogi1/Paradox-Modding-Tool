@@ -72,8 +72,7 @@ public sealed class PointRow : INotifyPropertyChanged
 
     public Visibility ResetVisibility => Shape?.HasCustomRule == true ? Visibility.Visible : Visibility.Collapsed;
 
-    public string ShapeToolTip => "Die Zahlen in diesem Namen (Form " + Point.Shape + "; # steht für eine Zahl). Angehakte Zahlen zählen hoch, die anderen bleiben gleich. "
-        + "Die Auswahl gilt für alle Bezeichner dieser Form und ersetzt dafür die allgemeine Regel \"Mehrere Zahlen\". Die fett gezeigte Zahl ist die dieser Zeile.";
+    public string ShapeToolTip => TemplateWindowTexts.ShapeTip(Point.Shape);
 
     /// <summary>Ein Kästchen je Zahl im Namen, in der Reihenfolge von links.</summary>
     public IReadOnlyList<ShapeNumberItem> ShapeNumbers
@@ -126,7 +125,7 @@ public sealed class PointRow : INotifyPropertyChanged
         {
             if (!Point.Enabled)
             {
-                return "bleibt unverändert";
+                return TemplateWindowTexts.StaysUnchanged;
             }
 
             const int shown = 4;
@@ -137,16 +136,16 @@ public sealed class PointRow : INotifyPropertyChanged
             if (Point.RepeatGroup >= 0)
             {
                 var repeats = _context.RepeatCount(Point.RepeatGroup);
-                var text = "Wdh.: " + List(j => Point.Format(0, j), repeats);
+                var text = TemplateWindowTexts.RepeatValues(List(j => Point.Format(0, j), repeats));
                 if (Point.Step != 0)
                 {
-                    text += " · 2. Durchlauf: " + List(j => Point.Format(1, j), repeats);
+                    text += TemplateWindowTexts.SecondPassValues(List(j => Point.Format(1, j), repeats));
                 }
 
                 return text;
             }
 
-            return "wird " + List(i => Point.Format(i, 0), instances);
+            return TemplateWindowTexts.Becomes(List(i => Point.Format(i, 0), instances));
         }
     }
 
@@ -158,10 +157,10 @@ public sealed class PointRow : INotifyPropertyChanged
             var reason = BaseReason();
             if (_context.DefaultEnabled(Point) is { } byDefault && byDefault != Point.Enabled)
             {
-                reason = (Point.Enabled ? "von dir eingeschaltet" : "von dir ausgeschaltet") + " (sonst: " + (byDefault ? "zählt" : "aus") + ")";
+                reason = TemplateWindowTexts.Otherwise(Point.Enabled ? TemplateWindowTexts.TurnedOnByYou : TemplateWindowTexts.TurnedOffByYou, byDefault ? TemplateWindowTexts.Counts : TemplateWindowTexts.Off);
             }
 
-            return reason + (Point.RepeatGroup >= 0 ? " · in Wiederholung" : string.Empty);
+            return reason + (Point.RepeatGroup >= 0 ? TemplateWindowTexts.InRepetition : string.Empty);
         }
     }
 
@@ -171,50 +170,50 @@ public sealed class PointRow : INotifyPropertyChanged
         {
             if (Point.LearnedFromExamples)
             {
-                return "zählt: in den Beispielen erkannt";
+                return TemplateWindowTexts.CountsLearned;
             }
 
             if (Point.HasCustomRule)
             {
-                return "zählt: bei der eigenen Auswahl für diese Form angehakt";
+                return TemplateWindowTexts.CountsCustom;
             }
 
             if (Point.CountedByRule.Length > 0)
             {
-                return "zählt: " + Point.CountedByRule;
+                return TemplateWindowTexts.CountsByRule(Point.CountedByRule);
             }
 
             if (Point.RunCount >= 2)
             {
-                return "zählt: allgemeine Regel „" + _context.MultiRuleText() + "“";
+                return TemplateWindowTexts.CountsGeneralRule(_context.MultiRuleText());
             }
 
-            return Point.Kind == PointKind.Text ? "zählt: Zahl im Text" : "zählt: Zahl im Bezeichner";
+            return Point.Kind == PointKind.Text ? TemplateWindowTexts.CountsInText : TemplateWindowTexts.CountsInName;
         }
 
         if (Point.Irregular)
         {
-            return "aus: in den Beispielen unregelmäßig";
+            return TemplateWindowTexts.OffIrregular;
         }
 
         if (Point.IgnoredReason.Length > 0)
         {
-            return "aus: " + Point.IgnoredReason;
+            return TemplateWindowTexts.OffReason(Point.IgnoredReason);
         }
 
         if (Point.RuleDisabled)
         {
             return Point.HasCustomRule
-                ? "aus: bei der eigenen Auswahl für diese Form nicht angehakt"
-                : "aus: weitere Zahl oder Namenszahl, allgemeine Regel „" + _context.MultiRuleText() + "“";
+                ? TemplateWindowTexts.OffCustom
+                : TemplateWindowTexts.OffGeneralRule(_context.MultiRuleText());
         }
 
         if (Point.ConstantInExamples)
         {
-            return "aus: in den Beispielen immer gleich";
+            return TemplateWindowTexts.OffConstant;
         }
 
-        return Point.Kind == PointKind.Number ? "aus: einzelne Zahl (standardmäßig aus)" : "aus";
+        return Point.Kind == PointKind.Number ? TemplateWindowTexts.OffSingleNumber : TemplateWindowTexts.Off;
     }
 
     public string StartText
@@ -436,7 +435,7 @@ public sealed class ModChoice
 
     public bool Detected { get; }
 
-    public override string ToString() => Mod is null ? "keine Mod" : Detected ? Mod.Name + " (erkannt)" : Mod.Name;
+    public override string ToString() => Mod is null ? TemplateWindowTexts.NoMod : Detected ? TemplateWindowTexts.ModDetected(Mod.Name) : Mod.Name;
 }
 
 /// <summary>Eintrag der Vorlagenliste: Name und Ebene.</summary>

@@ -13,7 +13,7 @@ public static class ChangelogEditor
     public static string SetText(string fileText, string version, string newText)
     {
         var entry = Find(ChangelogParser.Parse(fileText), version)
-            ?? throw new InvalidOperationException($"Der Changelog enthält keine Version {version}.");
+            ?? throw new InvalidOperationException(ModsTexts.ChangelogNoVersion(version));
         if (newText.Replace("\r\n", "\n") == entry.Text)
         {
             return fileText;
@@ -69,13 +69,13 @@ public static class ChangelogEditor
     {
         if (!VersionNumber.TryParse(version, out var number))
         {
-            throw new InvalidOperationException($"\"{version}\" ist keine Versionsnummer.");
+            throw new InvalidOperationException(ModsTexts.NotAVersion(version));
         }
 
         var entries = ChangelogParser.Parse(fileText);
         if (Find(entries, version) is not null)
         {
-            throw new InvalidOperationException($"Der Changelog enthält die Version {number.Text} schon.");
+            throw new InvalidOperationException(ModsTexts.ChangelogVersionExists(number.Text));
         }
 
         var block = new List<string>

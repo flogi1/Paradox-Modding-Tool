@@ -1,0 +1,82 @@
+<Window x:Class="ParadoxModTool.App.PatchRecipesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        Title="{x:Static local:PatchRecipeTexts.Title}" Height="780" Width="1250"
+        Closing="Window_Closing">
+    <!-- Patch-Rezepte (Spec 2026-09-30-patch-recipes, Mockup "Entwurf 1"): Rezeptauswahl oben, drei Reiter. -->
+    <DockPanel Margin="6">
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="{x:Static local:PatchRecipeTexts.ModLabel}" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" x:Name="ModNameText" FontWeight="SemiBold" Margin="4,0,6,0" VerticalAlignment="Center" MaxWidth="320" TextTrimming="CharacterEllipsis" />
+            <Button Grid.Column="2" x:Name="ChooseModButton" Click="ChooseMod_Click" Padding="8,2" Margin="0,0,14,0">
+                <TextBlock Text="{x:Static local:PatchRecipeTexts.ChooseMod}" />
+            </Button>
+            <TextBlock Grid.Column="3" Text="{x:Static local:PatchRecipeTexts.RecipeLabel}" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <ComboBox Grid.Column="4" x:Name="RecipeBox" DisplayMemberPath="Name" MinWidth="280" SelectionChanged="RecipeBox_SelectionChanged" />
+            <Button Grid.Column="5" x:Name="NewRecipeButton" Click="NewRecipe_Click" Padding="8,2" Margin="6,0,0,0">
+                <TextBlock Text="{x:Static local:PatchRecipeTexts.NewRecipe}" />
+            </Button>
+            <Button Grid.Column="6" x:Name="RenameRecipeButton" Click="RenameRecipe_Click" Padding="8,2" Margin="4,0,0,0">
+                <TextBlock Text="{x:Static local:PatchRecipeTexts.Rename}" />
+            </Button>
+            <Button Grid.Column="7" x:Name="DeleteRecipeButton" Click="DeleteRecipe_Click" Padding="8,2" Margin="4,0,0,0">
+                <TextBlock Text="{x:Static local:PatchRecipeTexts.Delete}" />
+            </Button>
+            <TextBlock Grid.Column="9" x:Name="GameVersionText" VerticalAlignment="Center" Foreground="{DynamicResource Theme.TextMuted}" />
+            <Button Grid.Column="10" x:Name="GuideButton" Click="Guide_Click" Padding="8,2" Margin="10,0,0,0" ToolTip="{x:Static local:PatchRecipeTexts.GuideTip}">
+                <TextBlock Text="{x:Static local:PatchRecipeTexts.Guide}" />
+            </Button>
+        </Grid>
+        <TextBlock DockPanel.Dock="Bottom" x:Name="StatusText" Margin="2,6,2,0" TextTrimming="CharacterEllipsis" />
+        <TabControl x:Name="Tabs">
+            <TabItem x:Name="TableTab">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static local:PatchRecipeTexts.TabTable}" />
+                        <Border x:Name="TableBadge" Visibility="Collapsed" Background="{DynamicResource Theme.Danger}" CornerRadius="7" Padding="5,0" Margin="5,0,0,0">
+                            <TextBlock x:Name="TableBadgeText" Foreground="{DynamicResource Theme.AccentText}" FontSize="11" />
+                        </Border>
+                    </StackPanel>
+                </TabItem.Header>
+                <DockPanel x:Name="TableRoot" Margin="6" />
+            </TabItem>
+            <TabItem x:Name="RulesTab">
+                <TabItem.Header>
+                    <TextBlock Text="{x:Static local:PatchRecipeTexts.TabRules}" />
+                </TabItem.Header>
+                <DockPanel x:Name="RulesRoot" Margin="6" />
+            </TabItem>
+            <TabItem x:Name="WatchTab">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static local:PatchRecipeTexts.TabWatch}" />
+                        <Border x:Name="WatchBadge" Visibility="Collapsed" Background="{DynamicResource Theme.Warning}" CornerRadius="7" Padding="5,0" Margin="5,0,0,0">
+                            <TextBlock x:Name="WatchBadgeText" Foreground="{DynamicResource Theme.AccentText}" FontSize="11" />
+                        </Border>
+                    </StackPanel>
+                </TabItem.Header>
+                <DockPanel x:Name="WatchRoot" Margin="6" />
+            </TabItem>
+            <TabItem x:Name="PreviewTab">
+                <TabItem.Header>
+                    <TextBlock Text="{x:Static local:PatchRecipeTexts.TabPreview}" />
+                </TabItem.Header>
+                <DockPanel x:Name="PreviewRoot" Margin="6" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

@@ -31,6 +31,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
         AutoCategory = FileCategoryClassifier.Classify(filePath);
         Origin = FileOriginTracker.Classify(filePath);
         RefreshLock();
+        RefreshErrorMark();
 
         // Änderungsstatus (Nutzer-Feedback: Warnung bei ungespeicherten Änderungen): AvalonEdits
         // Undo-Stack weiß selbst, ob der aktuelle Stand dem zuletzt als "Original" markierten
@@ -129,7 +130,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
     }
 
     /// <summary>Anzeigename für den Tab: Dateiname, oder "Unbenannt" für ein neues, ungespeichertes Dokument.</summary>
-    public string DisplayName => FilePath is null ? "Unbenannt" : Path.GetFileName(FilePath);
+    public string DisplayName => FilePath is null ? EditorTexts.Untitled : Path.GetFileName(FilePath);
 
     /// <summary>
     /// Ob zu dieser Datei aktuell eine Notiz existiert (Nutzer-Feedback Runde 5: "kleines Icon
@@ -148,7 +149,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
     public bool HasBookmark { get; private set; }
 
     /// <summary>Tooltip des Lesezeichen-Icons im Tab: Zeilen und Kommentare der Lesezeichen dieser Datei.</summary>
-    public string BookmarkTooltip { get; private set; } = "In dieser Datei gibt es Lesezeichen - anklicken zum Anzeigen";
+    public string BookmarkTooltip { get; private set; } = EditorTexts.BookmarkTip;
 
     public void SetHasBookmark(bool hasBookmark, string? tooltip = null)
     {
@@ -175,7 +176,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
     public bool HasBug { get; private set; }
 
     /// <summary>Tooltip des Bug-Symbols im Tab: Titel der offenen Bugs dieser Datei.</summary>
-    public string BugTooltip { get; private set; } = "In dieser Datei gibt es offene Bugs";
+    public string BugTooltip { get; private set; } = EditorTexts.BugTip;
 
     public void SetHasBug(bool hasBug, string? tooltip = null)
     {
@@ -204,8 +205,8 @@ public sealed class OpenDocument : INotifyPropertyChanged
     /// <summary>Tooltip der Herkunfts-Symbole im Tab.</summary>
     public string OriginTooltip => Origin switch
     {
-        FileOrigin.Vanilla => "Vanilla-Datei (Spielordner)",
-        FileOrigin.Mod => "Mod-Datei",
+        FileOrigin.Vanilla => EditorTexts.OriginVanillaTip,
+        FileOrigin.Mod => EditorTexts.OriginModTip,
         _ => string.Empty,
     };
 
@@ -282,6 +283,32 @@ public sealed class OpenDocument : INotifyPropertyChanged
         OnPropertyChanged(nameof(LockIconVisible));
     }
 
+    /// <summary>Meldungen aus dem Fehlerprotokoll zu dieser Datei (siehe <see cref="TabErrorProvider"/>); <see langword="null"/> = keine.</summary>
+    public TabErrorMark? ErrorMark { get; private set; }
+
+    /// <summary>Text des Fehler-Symbols im Tab, z.B. "⚠3".</summary>
+    public string ErrorBadge => ErrorMark is { } mark ? "⚠" + mark.Count.ToString(System.Globalization.CultureInfo.CurrentCulture) : string.Empty;
+
+    public string? ErrorTooltip => ErrorMark?.Tooltip;
+
+    public bool ErrorIconVisible => ErrorMark is not null && TabIconSettings.IsVisible(TabIconKind.ErrorLog);
+
+    /// <summary>Fragt die Fehlermarkierung neu ab (nach jedem neu geladenen oder geänderten Lauf, siehe <see cref="TabErrorProvider"/>).</summary>
+    public void RefreshErrorMark()
+    {
+        var mark = FilePath is { } path ? TabErrorProvider.Provider?.Invoke(path) : null;
+        if (mark == ErrorMark)
+        {
+            return;
+        }
+
+        ErrorMark = mark;
+        OnPropertyChanged(nameof(ErrorMark));
+        OnPropertyChanged(nameof(ErrorBadge));
+        OnPropertyChanged(nameof(ErrorTooltip));
+        OnPropertyChanged(nameof(ErrorIconVisible));
+    }
+
     /// <summary>Löst die Aktualisierung aller Symbol-Sichtbarkeiten aus, nachdem sich <see cref="TabIconSettings"/> geändert hat.</summary>
     public void NotifyIconSettingsChanged()
     {
@@ -291,6 +318,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
         OnPropertyChanged(nameof(VanillaIconVisible));
         OnPropertyChanged(nameof(ModIconVisible));
         OnPropertyChanged(nameof(LockIconVisible));
+        OnPropertyChanged(nameof(ErrorIconVisible));
     }
 
     public static OpenDocument NewEmpty(IHighlightingDefinition? highlighting) =>
@@ -346,6 +374,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
         RaiseCategoryChanged();
         RaiseOriginChanged();
         RefreshLock();
+        RefreshErrorMark();
     }
 
     /// <summary>

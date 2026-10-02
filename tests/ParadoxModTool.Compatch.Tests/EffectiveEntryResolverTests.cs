@@ -28,6 +28,56 @@ public class EffectiveEntryResolverTests : CompatchTestBase
         Assert.Contains("b = 1", Text(info.NoPatch.Entries));
     }
 
+    // Gemessen 2026-10-02 in Europa Universalis V: INJECT:build_gravel_road = { gold = 999 } über Vanilla gold = 10 ergibt 999.
+    [Fact]
+    public void Inject_overwrites_an_existing_subkey_in_place()
+    {
+        PutVanilla(Buildings + "00_farm.txt", "farm = { cost = 1 size = 2 }\n");
+        PutA(Buildings + "a.txt", "INJECT:farm = { cost = 5 extra = 3 }\n");
+        PutB(Buildings + "b.txt", "INJECT:farm = { other = 4 }\n");
+
+        var info = Resolve().Addresses[Farm];
+        var text = Text(info.NoPatch.Entries);
+
+        Assert.Contains("cost = 5", text);
+        Assert.DoesNotContain("cost = 1", text);
+        Assert.True(text.IndexOf("cost = 5", StringComparison.Ordinal) < text.IndexOf("size = 2", StringComparison.Ordinal));
+        Assert.True(text.IndexOf("size = 2", StringComparison.Ordinal) < text.IndexOf("extra = 3", StringComparison.Ordinal));
+        Assert.False(info.NoPatch.Uncertain);
+    }
+
+    [Fact]
+    public void Later_inject_of_the_same_subkey_wins()
+    {
+        PutVanilla(Buildings + "00_farm.txt", "farm = { cost = 1 }\n");
+        PutA(Buildings + "a.txt", "INJECT:farm = { cost = 5 }\n");
+        PutB(Buildings + "b.txt", "INJECT:farm = { cost = 7 }\n");
+
+        var info = Resolve().Addresses[Farm];
+        var text = Text(info.NoPatch.Entries);
+
+        Assert.Contains("cost = 7", text);
+        Assert.DoesNotContain("cost = 5", text);
+        Assert.DoesNotContain("cost = 1", text);
+        Assert.False(info.NoPatch.Uncertain);
+    }
+
+    [Fact]
+    public void Inject_over_a_block_subkey_replaces_it_but_stays_uncertain()
+    {
+        PutVanilla(Buildings + "00_farm.txt", "farm = { modifier = { a = 1 } cost = 1 }\n");
+        PutA(Buildings + "a.txt", "INJECT:farm = { modifier = { b = 1 } }\n");
+        PutB(Buildings + "b.txt", "INJECT:farm = { other = 4 }\n");
+
+        var info = Resolve().Addresses[Farm];
+        var text = Text(info.NoPatch.Entries);
+
+        Assert.Contains("b = 1", text);
+        Assert.DoesNotContain("a = 1", text);
+        Assert.Contains("cost = 1", text);
+        Assert.True(info.NoPatch.Uncertain);
+    }
+
     [Fact]
     public void Two_replaces_are_ordered_by_file_name_then_rank()
     {

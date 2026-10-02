@@ -21,6 +21,6 @@ public sealed class PlaysetInfo
     /// <summary>Anzeige-Text für die Playset-Auswahl in der Werkzeugleiste, inkl. "aktiv"-Markierung und Mod-Anzahl.</summary>
     public string DisplayText =>
         IsActive
-            ? $"{Name} ({EnabledModCount}/{ModCount} Mods, aktiv)"
-            : $"{Name} ({EnabledModCount}/{ModCount} Mods)";
+            ? PlaysetTexts.DisplayActive(Name, EnabledModCount, ModCount)
+            : PlaysetTexts.Display(Name, EnabledModCount, ModCount);
 }

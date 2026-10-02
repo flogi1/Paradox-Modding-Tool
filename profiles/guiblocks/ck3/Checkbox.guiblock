@@ -1,0 +1,18 @@
+# block: Checkbox
+# group: Bedienelemente
+# description: Umschalter mit Beschriftung; der Zustand liegt in einer Variablen (GetVariableSystem.Toggle), abfragen mit GetVariableSystem.Exists. Vorbild: gui/debug/window_component_library.gui, gui/shared/buttons.gui
+# param: var | Variable | my_option
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_OPTION
+# requires: button_checkbox_label
+
+button_checkbox_label = {
+	onclick = "[GetVariableSystem.Toggle( '$var$' )]"
+
+	blockoverride "checkbox" {
+		checked = "[GetVariableSystem.Exists( '$var$' )]"
+	}
+
+	blockoverride "text" {
+		text = "$text$"
+	}
+}

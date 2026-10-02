@@ -21,4 +21,10 @@
     <ProjectReference Include="..\..\src\ParadoxModTool.VanillaDiff\ParadoxModTool.VanillaDiff.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\profiles\eu4.json" Link="profiles\eu4.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

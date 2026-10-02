@@ -1,4 +1,5 @@
 using System.Text;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Mods;
 
 namespace ParadoxModTool.GitIntegration;
@@ -69,13 +70,13 @@ public sealed class GitHubPublisher
             IReadOnlyList<PackagedZip> zips;
             try
             {
-                progress?.Report("ZIP-Dateien werden erstellt …");
+                progress?.Report(GitTexts.ZipsBuilding);
                 zips = ZipPackager.Build(request.ModFolder, request.ModName, request.Version, zipTag, request.Variants, Path.Combine(work, "zips"));
                 Directory.CreateDirectory(work);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                return new GitHubPublishResult(Array.Empty<GitHubRepoResult>(), "Die ZIP-Dateien konnten nicht erstellt werden: " + ex.Message);
+                return new GitHubPublishResult(Array.Empty<GitHubRepoResult>(), GitTexts.ZipsFailed(ex.Message));
             }
 
             var notesFile = Path.Combine(work, "notes.md");
@@ -86,7 +87,7 @@ public sealed class GitHubPublisher
             foreach (var (entry, tag) in targets)
             {
                 results.Add(cancellation.IsCancellationRequested
-                    ? new GitHubRepoResult(entry.Repo, tag, GitHubRepoOutcome.Cancelled, null, "Abgebrochen.")
+                    ? new GitHubRepoResult(entry.Repo, tag, GitHubRepoOutcome.Cancelled, null, CommonTexts.Cancelled)
                     : await PublishOneAsync(request, entry.Repo, tag, notesFile, files, progress, cancellation));
             }
 
@@ -123,14 +124,14 @@ public sealed class GitHubPublisher
         {
             if (!GitHubNames.IsValidTag(tag))
             {
-                return Result(GitHubRepoOutcome.Failed, null, $"Der Tag „{tag}“ ist ungültig. Prüfe das Tag-Format.");
+                return Result(GitHubRepoOutcome.Failed, null, GitTexts.TagInvalid(tag));
             }
 
-            progress?.Report($"[{repo}] Repository wird geprüft …");
+            progress?.Report(GitTexts.CheckingRepo(repo));
             var info = await _gh.GetRepoAsync(repo, cancellation);
             if (!info.CanWrite)
             {
-                return Result(GitHubRepoOutcome.Failed, null, $"Du hast kein Schreibrecht in {repo}.");
+                return Result(GitHubRepoOutcome.Failed, null, GitTexts.NoWriteAccess(repo));
             }
 
             if (info.IsEmpty)
@@ -141,7 +142,7 @@ public sealed class GitHubPublisher
             var existing = await _gh.FindReleaseAsync(repo, tag, cancellation);
             if (existing is not null && !request.UpdateExisting)
             {
-                return Result(GitHubRepoOutcome.Skipped, existing.Url, $"Der Tag {tag} hat in {repo} schon ein Release. Schalte \"Vorhandenes Release aktualisieren\" ein oder ändere das Tag-Format.");
+                return Result(GitHubRepoOutcome.Skipped, existing.Url, GitTexts.ReleaseExists(tag, repo));
             }
 
             var target = request.TagHead && request.Git is { HeadPushed: true } git && string.Equals(git.OriginRepo, repo, StringComparison.OrdinalIgnoreCase)
@@ -150,19 +151,19 @@ public sealed class GitHubPublisher
             var spec = new GhReleaseSpec(repo, tag, request.Title, notesFile, target, request.Draft, request.Prerelease);
             if (existing is null)
             {
-                progress?.Report($"[{repo}] Release {tag} wird angelegt …");
+                progress?.Report(GitTexts.CreatingRelease(repo, tag));
                 var url = await _gh.CreateReleaseAsync(spec, files, progress, cancellation);
-                return Result(GitHubRepoOutcome.Created, url, $"Das Release {tag} wurde in {repo} angelegt.");
+                return Result(GitHubRepoOutcome.Created, url, GitTexts.ReleaseCreated(tag, repo));
             }
 
-            progress?.Report($"[{repo}] Release {tag} wird aktualisiert …");
+            progress?.Report(GitTexts.UpdatingRelease(repo, tag));
             await _gh.EditReleaseAsync(spec, cancellation);
             if (files.Count > 0)
             {
                 await _gh.UploadAsync(repo, tag, files, progress, cancellation);
             }
 
-            return Result(GitHubRepoOutcome.Updated, existing.Url, $"Das Release {tag} in {repo} wurde aktualisiert.");
+            return Result(GitHubRepoOutcome.Updated, existing.Url, GitTexts.ReleaseUpdated(tag, repo));
         }
         catch (GhException ex)
         {
@@ -170,7 +171,7 @@ public sealed class GitHubPublisher
         }
         catch (OperationCanceledException)
         {
-            return Result(GitHubRepoOutcome.Cancelled, null, "Abgebrochen. Ein Release kann in diesem Repo schon angelegt sein; unter \"Aufräumen\" lässt es sich löschen.");
+            return Result(GitHubRepoOutcome.Cancelled, null, GitTexts.PublishCancelled);
         }
     }
 }

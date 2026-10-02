@@ -34,7 +34,7 @@ public static class SteamUploadHelper
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
-            Write(SteamUploadProtocol.ResultLine(new WorkshopBackendResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), "Die Anfrage an den Steam-Hilfsprozess war nicht lesbar: " + ex.Message)));
+            Write(SteamUploadProtocol.ResultLine(new WorkshopBackendResult(WorkshopPublishOutcome.Failed, null, Array.Empty<string>(), SteamTexts.HelperRequestUnreadable(ex.Message))));
             return 2;
         }
 

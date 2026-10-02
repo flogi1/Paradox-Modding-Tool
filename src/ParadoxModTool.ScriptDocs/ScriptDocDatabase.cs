@@ -12,6 +12,9 @@ public sealed class ImportRecord
 
     /// <summary>Letzte Schreibzeit (UTC-Ticks) jeder gelesenen Log-Datei, Schlüssel ist der Dateiname.</summary>
     public Dictionary<string, long> SourceWriteTicks { get; set; } = new();
+
+    /// <summary>Mit welchem Einleseformat (<see cref="ScriptDocDatabase.CurrentFormatVersion"/>) dieser Import lief; ältere Datenbanken haben 0.</summary>
+    public int FormatVersion { get; set; }
 }
 
 /// <summary>
@@ -21,6 +24,12 @@ public sealed class ImportRecord
 /// </summary>
 public sealed class ScriptDocDatabase
 {
+    /// <summary>
+    /// Stand des Einleseformats, gespeichert je Import (<see cref="ImportRecord.FormatVersion"/>). 1: Event-Targets tragen <c>Plain Inputs</c>/<c>Data Inputs</c>
+    /// (siehe <see cref="ScriptDocImporter.MergeDuplicates"/>); Event-Targets aus einem älteren Import werden darum einmal neu eingelesen.
+    /// </summary>
+    public const int CurrentFormatVersion = 1;
+
     public List<ImportRecord> Imports { get; set; } = new();
 
     public List<ScriptDocEntry> Entries { get; set; } = new();
@@ -61,6 +70,7 @@ public sealed class ScriptDocDatabase
             ImportedUtc = nowUtc,
             Kinds = kinds.ToList(),
             SourceWriteTicks = new Dictionary<string, long>(sourceWriteTicks),
+            FormatVersion = CurrentFormatVersion,
         };
 
         var index = new Dictionary<(ScriptDocKind, string), ScriptDocEntry>();
@@ -98,6 +108,13 @@ public sealed class ScriptDocDatabase
     /// </summary>
     public bool NeedsImport(IReadOnlyDictionary<ScriptDocKind, long> currentWriteTicks)
     {
+        if (currentWriteTicks.ContainsKey(ScriptDocKind.EventTarget)
+            && Imports.Where(i => i.Kinds.Contains(ScriptDocKind.EventTarget)).MaxBy(i => i.Id) is { } eventTargets
+            && eventTargets.FormatVersion < CurrentFormatVersion)
+        {
+            return true;
+        }
+
         foreach (var (kind, ticks) in currentWriteTicks)
         {
             var lastImport = Imports.Where(i => i.Kinds.Contains(kind)).OrderByDescending(i => i.Id).FirstOrDefault();

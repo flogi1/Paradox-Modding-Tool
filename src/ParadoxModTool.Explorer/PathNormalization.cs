@@ -49,6 +49,23 @@ public static class PathNormalization
         }
     }
 
+    /// <summary>
+    /// Der Pfad mit einheitlichen Backslashes (<see cref="Path.GetFullPath(string)"/>). Ein gemischter Pfad wie <c>…\Crusader Kings III/mod\Name</c> (Profilvorlage
+    /// mit Schrägstrichen plus Backslash-Anhang) erreicht den Windows-Explorer so nicht: <c>explorer.exe</c> öffnet dann stillschweigend "Dokumente". Ein ungültiger
+    /// Pfad bleibt unverändert.
+    /// </summary>
+    public static string ToWindowsPath(string path)
+    {
+        try
+        {
+            return path.Length == 0 ? path : Path.GetFullPath(path);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return path;
+        }
+    }
+
     /// <summary>Liegt <paramref name="path"/> im Ordner <paramref name="root"/> oder ist selbst dieser Ordner?</summary>
     public static bool IsSameOrUnder(string root, string path)
     {

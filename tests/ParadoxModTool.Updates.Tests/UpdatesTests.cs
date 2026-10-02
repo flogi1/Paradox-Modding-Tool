@@ -118,6 +118,7 @@ public class UpdateCheckerTests
     {
         var serverError = await new UpdateChecker(new HttpClient(new FakeHandler(HttpStatusCode.InternalServerError, "")), "o/r").CheckAsync(new AppVersion(0, 1, 0));
         Assert.Equal(UpdateCheckStatus.Failed, serverError.Status);
+        Assert.Equal(UpdateTexts.CheckHttpStatus(500), serverError.Error);
 
         var offline = await new UpdateChecker(new HttpClient(new ThrowingHandler()), "o/r").CheckAsync(new AppVersion(0, 1, 0));
         Assert.Equal(UpdateCheckStatus.Failed, offline.Status);
@@ -129,6 +130,7 @@ public class UpdateCheckerTests
     {
         var result = await new UpdateChecker(new HttpClient(new FakeHandler(HttpStatusCode.OK, "<html>")), "o/r").CheckAsync(new AppVersion(0, 1, 0));
         Assert.Equal(UpdateCheckStatus.Failed, result.Status);
+        Assert.Equal(UpdateTexts.CheckUnreadable, result.Error);
     }
 }
 
@@ -157,6 +159,13 @@ public class IssueReportTests
         var body = Uri.UnescapeDataString(url[(url.IndexOf("body=", StringComparison.Ordinal) + 5)..]);
         Assert.Contains("Paradox Modding Tool: 0.1.0", body);
         Assert.Contains("Betriebssystem: Windows 11", body);
+
+        // Überschriften in der Sprache der Oberfläche (Texte aus UpdateTexts).
+        Assert.Contains("## " + UpdateTexts.IssueWhatHappened, body);
+        Assert.Contains("## " + UpdateTexts.IssueSteps, body);
+        Assert.Contains("## " + UpdateTexts.IssueExpectedActual, body);
+        Assert.Contains("## " + UpdateTexts.IssueEnvironment, body);
+        Assert.Contains($"- {UpdateTexts.IssueRuntime}: .NET 8", body);
     }
 
     [Theory]

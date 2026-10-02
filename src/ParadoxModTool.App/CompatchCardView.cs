@@ -6,8 +6,8 @@ using MergeAction = ParadoxModTool.Compatch.MergeAction;
 
 namespace ParadoxModTool.App;
 
-/// <summary>Ein Eintrag der Kartenliste (Ansicht C).</summary>
-public sealed record CompatchCardItem(MergeAction Action, CompatchWindow Window);
+/// <summary>Eine Karte der Liste (Ansicht C); mit <paramref name="Block"/> eine Blockkarte für alle Stellen einer Adresse.</summary>
+public sealed record CompatchCardItem(MergeAction Action, CompatchWindow Window, IReadOnlyList<MergeAction>? Block = null);
 
 /// <summary>
 /// Eine Review-Karte: Kopf, Mini-Diff A | Ergebnis | B, Knöpfe ↶, Andere Seite, Passt, Bearbeiten und Häkchen "Gesehen".
@@ -28,7 +28,6 @@ public sealed class CompatchCardView : Controls.Border
         BorderThickness = new Thickness(4, 1, 1, 1);
         CornerRadius = new CornerRadius(3);
         Cursor = System.Windows.Input.Cursors.Hand;
-        ToolTip = CompatchTexts.CardJumpTip;
         SetResourceReference(BackgroundProperty, "Theme.PanelBackground");
         DataContextChanged += (_, _) =>
         {
@@ -43,6 +42,7 @@ public sealed class CompatchCardView : Controls.Border
         Loaded += (_, _) => _window?.RegisterCard(this, true);
         Unloaded += (_, _) => _window?.RegisterCard(this, false);
         MouseLeftButtonDown += OnCardClick;
+        MouseRightButtonUp += OnCardRightClick;
         // Die Karte merkt sich die geklickte Aktion: der Container kann bis zum Tick schon eine andere Karte zeigen (Recycling beim Scrollen).
         _clickTimer.Tick += (_, _) =>
         {
@@ -67,12 +67,21 @@ public sealed class CompatchCardView : Controls.Border
             return;
         }
 
+        if (item.Block is { Count: >= 2 } block)
+        {
+            RebuildBlock(item, block, session, info);
+            return;
+        }
+
         var action = item.Action;
         var decision = session.EffectiveDecision(action);
         var open = CompatchWindow.IsOpenConflict(session, action);
         BorderBrush = ThemeManager.GetBrush(CompatchWindow.StageToken(session, action));
 
-        var panel = new Controls.StackPanel();
+        var outer = new Controls.StackPanel();
+        // Der Karten-Tooltip gilt nur für Kopf und Zeilen; die Knöpfe darunter haben eigene (sonst erbten sie ihn).
+        var panel = new Controls.StackPanel { ToolTip = CompatchTexts.CardJumpTip, Background = System.Windows.Media.Brushes.Transparent };
+        outer.Children.Add(panel);
         panel.Children.Add(new Controls.TextBlock { Text = action.DisplayPath, FontWeight = FontWeights.Bold, TextWrapping = TextWrapping.Wrap });
         var fileMod = CompatchMerger.FileSideOf(info) switch { MergeSide.A => item.Window.ModAName, MergeSide.B => item.Window.ModBName, _ => CompatchTexts.ColumnVanilla };
         var file = new Controls.TextBlock { Text = TreePath.FileOf(action), TextWrapping = TextWrapping.Wrap, ToolTip = CompatchTexts.CardFileTip(fileMod), FontFamily = CompatchWindow.Mono };
@@ -99,45 +108,95 @@ public sealed class CompatchCardView : Controls.Border
         }
 
         var buttons = new Controls.WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
-        buttons.Children.Add(Button(CompatchTexts.UndoLabel, () => item.Window.ChangeAction(action, (s, a) => s.Undo(a.Id))));
-        buttons.Children.Add(Button(CompatchTexts.OtherSide, () => item.Window.ChangeAction(action, (s, a) => s.TakeOtherSide(a.Id))));
-        buttons.Children.Add(Button(CompatchTexts.Confirm, () => item.Window.ChangeAction(action, (s, a) => s.Confirm(a.Id))));
-        var edit = Button(CompatchTexts.Edit, () => item.Window.OpenInList(action.Id, edit: true));
+        buttons.Children.Add(Button(CompatchTexts.UndoLabel, CompatchTexts.CardUndoTip, () => item.Window.ChangeAction(action, (s, a) => s.Undo(a.Id))));
+        buttons.Children.Add(Button(CompatchTexts.OtherSide, CompatchTexts.CardOtherSideTip, () => item.Window.ChangeAction(action, (s, a) => s.TakeOtherSide(a.Id))));
+        buttons.Children.Add(Button(CompatchTexts.Confirm, CompatchTexts.CardConfirmTip, () => item.Window.ChangeAction(action, (s, a) => s.Confirm(a.Id))));
+        var edit = Button(CompatchTexts.Edit, CompatchTexts.CardEditTip, () => item.Window.OpenInList(action.Id, edit: true));
         edit.IsEnabled = action.Address.Kind != AddressKind.WholeFile;
         buttons.Children.Add(edit);
-        buttons.Children.Add(Button(CompatchTexts.Compare, () => item.Window.OpenCompare(action)));
+        buttons.Children.Add(Button(CompatchTexts.Compare, CompatchTexts.CardCompareTip, () => item.Window.OpenCompare(action)));
         if (session.EqualPending(action.Id).Count is var equal and > 0)
         {
-            var toEqual = Button(CompatchTexts.ApplyToEqual(equal), () => item.Window.ChangeAction(action, (s, a) => s.ApplyToEqual(a.Id)));
-            toEqual.ToolTip = CompatchTexts.ApplyToEqualTip;
-            buttons.Children.Add(toEqual);
+            buttons.Children.Add(Button(CompatchTexts.ApplyToEqual(equal), CompatchTexts.ApplyToEqualTip, () => item.Window.ChangeAction(action, (s, a) => s.ApplyToEqual(a.Id))));
         }
 
-        var seen = new Controls.CheckBox { Content = CompatchTexts.Seen, IsChecked = session.IsSeen(action.Id), Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+        var seen = SeenBox(session.IsSeen(action.Id));
         seen.Click += (_, _) => item.Window.SetActionSeen(action, seen.IsChecked == true);
         buttons.Children.Add(seen);
-        panel.Children.Add(buttons);
-        Child = panel;
+        outer.Children.Add(buttons);
+        Child = outer;
     }
+
+    /// <summary>
+    /// Blockkarte (Nutzerwunsch "ein Eintrag je Block"): Schlüssel, Datei, Zählung, bis zu <see cref="MaxMiniRows"/> abweichende Zeilen des ganzen
+    /// Blocks und Knöpfe für alle Stellen des Blocks.
+    /// </summary>
+    private void RebuildBlock(CompatchCardItem item, IReadOnlyList<MergeAction> block, CompatchSession session, AddressInfo info)
+    {
+        var open = block.Count(a => CompatchWindow.IsOpenConflict(session, a));
+        var pending = block.Any(a => a.Stage is MergeStage.Conflict or MergeStage.Review or MergeStage.Outdated && !session.IsExplicit(a.Id));
+        BorderBrush = ThemeManager.GetBrush(open > 0 ? "CompatchConflict" : pending ? "CompatchReview" : "CompatchVanilla");
+
+        var outer = new Controls.StackPanel();
+        var panel = new Controls.StackPanel { ToolTip = CompatchTexts.CardJumpTip, Background = System.Windows.Media.Brushes.Transparent };
+        outer.Children.Add(panel);
+        panel.Children.Add(new Controls.TextBlock { Text = CompatchTexts.BlockHeader(item.Action.Address.Key, block.Count), FontWeight = FontWeights.Bold, TextWrapping = TextWrapping.Wrap });
+        var file = new Controls.TextBlock { Text = TreePath.FileOf(item.Action), TextWrapping = TextWrapping.Wrap, FontFamily = CompatchWindow.Mono };
+        file.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+        panel.Children.Add(file);
+        var summary = new Controls.TextBlock { Text = CompatchTexts.BlockSummary(block.Count, open), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 4) };
+        summary.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+        panel.Children.Add(summary);
+
+        panel.Children.Add(Titles(item.Window.ModAName, item.Window.ModBName));
+        session.Run.Applied.Desired.TryGetValue(item.Action.Address, out var desired);
+        var differing = EntryAligner.Align(info.A.Entries, desired?.Entries ?? info.NoPatch.Entries, info.B.Entries, null, item.Window.HideComments)
+            .Where(CompareNavigation.IsDifference)
+            .ToList();
+        foreach (var row in differing.Take(MaxMiniRows))
+        {
+            panel.Children.Add(CompatchWindow.RowGrid(row, showVanilla: false, open > 0));
+        }
+
+        if (differing.Count > MaxMiniRows)
+        {
+            var more = new Controls.TextBlock { Text = CompatchTexts.MoreLines(differing.Count - MaxMiniRows), Margin = new Thickness(4, 2, 0, 0) };
+            more.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+            panel.Children.Add(more);
+        }
+
+        var buttons = new Controls.WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+        buttons.Children.Add(Button(CompatchTexts.BlockTake(item.Window.ModAName), CompatchTexts.CardBlockTakeTip, () => item.Window.DecideAll(block, _ => new MergeDecision(DecisionKind.TakeA))));
+        buttons.Children.Add(Button(CompatchTexts.BlockTake(item.Window.ModBName), CompatchTexts.CardBlockTakeTip, () => item.Window.DecideAll(block, _ => new MergeDecision(DecisionKind.TakeB))));
+        buttons.Children.Add(Button(CompatchTexts.BlockConfirm, CompatchTexts.CardBlockConfirmTip, () => item.Window.DecideAll(block, null)));
+        buttons.Children.Add(Button(CompatchTexts.Compare, CompatchTexts.CardCompareTip, () => item.Window.OpenCompare(block[0])));
+        var seen = SeenBox(block.All(a => session.IsSeen(a.Id)));
+        seen.Click += (_, _) => item.Window.SetSeenAll(block, seen.IsChecked == true);
+        buttons.Children.Add(seen);
+        outer.Children.Add(buttons);
+        Child = outer;
+    }
+
+    private static Controls.CheckBox SeenBox(bool isChecked) => new()
+    {
+        Content = new Controls.TextBlock { Text = CompatchTexts.Seen },
+        ToolTip = CompatchTexts.CardSeenTip,
+        IsChecked = isChecked,
+        Margin = new Thickness(6, 0, 0, 0),
+        VerticalAlignment = System.Windows.VerticalAlignment.Center,
+    };
 
     private static Controls.Grid Titles(string modA, string modB)
     {
         var grid = new Controls.Grid { Margin = new Thickness(0, 0, 0, 2) };
-        var titles = new[] { CompatchTexts.ColumnA(modA), CompatchTexts.ColumnResult, CompatchTexts.ColumnB(modB) };
-        for (var i = 0; i < titles.Length; i++)
-        {
-            grid.ColumnDefinitions.Add(new Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            var title = new Controls.TextBlock { Text = titles[i], FontWeight = FontWeights.SemiBold, Margin = new Thickness(4, 0, 4, 0), TextTrimming = TextTrimming.CharacterEllipsis };
-            Controls.Grid.SetColumn(title, i);
-            grid.Children.Add(title);
-        }
-
+        CompatchWindow.AddColumnTitles(grid, modA, modB, null, FontWeights.SemiBold);
         return grid;
     }
 
-    private static Controls.Button Button(string text, Action click)
+    private static Controls.Button Button(string text, string tip, Action click)
     {
-        var button = new Controls.Button { Content = text, Padding = new Thickness(8, 1, 8, 1), Margin = new Thickness(0, 0, 6, 0), Cursor = System.Windows.Input.Cursors.Arrow };
+        var button = new Controls.Button { Content = new Controls.TextBlock { Text = text }, ToolTip = tip, Padding = new Thickness(8, 1, 8, 1), Margin = new Thickness(0, 0, 6, 0), Cursor = System.Windows.Input.Cursors.Arrow };
+        Controls.ToolTipService.SetShowOnDisabled(button, true);
         button.Click += (_, _) => click();
         return button;
     }
@@ -165,8 +224,28 @@ public sealed class CompatchCardView : Controls.Border
         }
         else
         {
-            _pendingJump = item.Action.Id;
+            // Blockkarte: zum Blockknoten im Baum (seine Id ist die Adress-Id).
+            _pendingJump = item.Block is { Count: >= 2 } ? item.Action.Address.Id : item.Action.Id;
             _clickTimer.Start();
+        }
+    }
+
+    /// <summary>Rechtsklick auf die Karte (nicht auf einen Knopf) öffnet den Vergleich an der Stelle (Nutzerwunsch).</summary>
+    private void OnCardRightClick(object sender, MouseButtonEventArgs e)
+    {
+        for (var node = e.OriginalSource as DependencyObject; node is not null && node != this; node = Parent(node))
+        {
+            if (node is System.Windows.Controls.Primitives.ButtonBase)
+            {
+                return;
+            }
+        }
+
+        if (DataContext is CompatchCardItem item)
+        {
+            CancelJump();
+            item.Window.OpenCompare(item.Action);
+            e.Handled = true;
         }
     }
 

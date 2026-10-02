@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Mods;
 using MessageBox = System.Windows.MessageBox;
 
@@ -14,7 +15,7 @@ public sealed record BranchHooks(Func<string, bool> IsModifiedInEditor, Action<s
 /// <summary>Führt Übertragungen zwischen Mods eines Projekts mit Rückfragen und Fehlermeldungen aus (Logik in <see cref="BranchTransfer"/>).</summary>
 public static class BranchActions
 {
-    private const string Caption = "Projekt";
+    private static string Caption => MainTexts.ProjectCaption;
 
     /// <summary>Überträgt die Dateien (relativ zum Mod-Ordner der Quelle). Gibt einen kurzen Ergebnistext für die Statusleiste zurück; Rückfragen und Fehler zeigt die Methode selbst.</summary>
     public static string Transfer(Window owner, ModRegistry registry, ModInfo from, ModInfo to, IReadOnlyList<string> relativePaths, TransferMode mode, BranchHooks hooks)
@@ -30,14 +31,14 @@ public static class BranchActions
         var toFolder = BranchTransfer.WorkingFolder(to);
         if (fromFolder is null || toFolder is null)
         {
-            MessageBox.Show(owner, $"Der Ordner der Mod \"{(fromFolder is null ? from.Name : to.Name)}\" wurde nicht gefunden.", Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(owner, MainTexts.ModFolderMissing(fromFolder is null ? from.Name : to.Name), Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
             return string.Empty;
         }
 
         var files = relativePaths.Where(p => File.Exists(Path.Combine(fromFolder, p.Replace('/', Path.DirectorySeparatorChar)))).ToList();
         if (files.Count == 0)
         {
-            return "Keine Dateien zum Übertragen.";
+            return MainTexts.TransferNoFiles;
         }
 
         var blocked = files
@@ -46,7 +47,7 @@ public static class BranchActions
             .ToList();
         if (blocked.Count > 0)
         {
-            MessageBox.Show(owner, "Diese Dateien haben ungespeicherte Änderungen im Editor. Speichere oder verwirf sie zuerst:\n\n" + string.Join("\n", blocked.Take(10)) + (blocked.Count > 10 ? "\n…" : string.Empty), Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(owner, MainTexts.TransferUnsaved(string.Join("\n", blocked.Take(10)) + (blocked.Count > 10 ? "\n…" : string.Empty)), Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
             return string.Empty;
         }
 
@@ -54,20 +55,20 @@ public static class BranchActions
         var overwrite = false;
         if (existing.Count == 1)
         {
-            var answer = MessageBox.Show(owner, $"Die Datei\n{existing[0]}\nexistiert schon in \"{to.Name}\".\n\nÜberschreiben? Die alte Datei wird vorher gesichert.", Caption, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var answer = MessageBox.Show(owner, MainTexts.TransferExistsOne(existing[0], to.Name), Caption, MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (answer != MessageBoxResult.Yes)
             {
-                return "Abgebrochen.";
+                return CommonTexts.Cancelled;
             }
 
             overwrite = true;
         }
         else if (existing.Count > 1)
         {
-            var answer = MessageBox.Show(owner, $"{existing.Count} Dateien existieren schon in \"{to.Name}\".\n\nJa: alle überschreiben (die alten Dateien werden vorher gesichert)\nNein: vorhandene überspringen\nAbbrechen: nichts übertragen", Caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            var answer = MessageBox.Show(owner, MainTexts.TransferExistsMany(existing.Count, to.Name), Caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
             if (answer == MessageBoxResult.Cancel)
             {
-                return "Abgebrochen.";
+                return CommonTexts.Cancelled;
             }
 
             overwrite = answer == MessageBoxResult.Yes;
@@ -104,20 +105,19 @@ public static class BranchActions
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            MessageBox.Show(owner, "Die Übertragung wurde abgebrochen:\n" + ex.Message, Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
-            return $"{done} Datei(en) übertragen, dann Fehler.";
+            MessageBox.Show(owner, MainTexts.TransferFailed(ex.Message), Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return MainTexts.TransferPartial(done);
         }
 
-        var verb = mode == TransferMode.Move ? "verschoben" : "kopiert";
-        var text = $"{done} Datei(en) nach {to.Name} {verb}";
+        var text = mode == TransferMode.Move ? MainTexts.TransferMoved(done, to.Name) : MainTexts.TransferCopied(done, to.Name);
         if (skipped > 0)
         {
-            text += $", {skipped} übersprungen";
+            text += MainTexts.TransferSkipped(skipped);
         }
 
         if (locked > 0)
         {
-            text += $", {locked} gesperrt";
+            text += MainTexts.TransferLocked(locked);
         }
 
         return text + ".";

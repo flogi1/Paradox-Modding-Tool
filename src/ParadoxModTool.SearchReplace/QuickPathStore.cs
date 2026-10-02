@@ -4,50 +4,52 @@ using ParadoxModTool.Storage;
 
 namespace ParadoxModTool.SearchReplace;
 
-/// <summary>
-/// EIN frei konfigurierbarer Schnellzugriff-Button im "Ordner (Dateien)"-Modus von
-/// SearchReplaceWindow (Nutzer-Feedback: "Darüber hinaus sollte es 4 weitere Buttons geben, wo
-/// man den Pfad frei konfigurieren kann, den man speichern will."). <see cref="Path"/> ist
-/// <see langword="null"/>, solange der Nutzer für diesen Button noch keinen Pfad festgelegt hat -
-/// der Button zeigt dann seinen (ggf. noch unveränderten Standard-)Namen, ist aber deaktiviert,
-/// bis über den kleinen "✎"-Button ein Pfad zugewiesen wurde.
-/// </summary>
+/// <summary>Ein eigener Schnellzugriff-Knopf (Suchen in Dateien, Compare-Reiter): Name, Ordner und die Spiele, in denen er erscheint.</summary>
 public sealed class QuickPathButtonState
 {
     public string Label { get; set; } = string.Empty;
     public string? Path { get; set; }
+
+    /// <summary>
+    /// Kennungen der Spiele (Spielprofile), in denen der Knopf angezeigt wird. Leer = in allen Spielen, auch in später hinzukommenden;
+    /// so laden auch Dateien aus der Zeit vor dieser Einstellung unverändert.
+    /// </summary>
+    public List<string> Games { get; set; } = new();
+
+    /// <summary>Ob der Knopf im Spiel <paramref name="gameId"/> angezeigt wird; ohne bekanntes Spiel (<see langword="null"/>) immer.</summary>
+    public bool AppliesTo(string? gameId) => Games.Count == 0 || gameId is null || Games.Contains(gameId, StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>
-/// Gesamteinstellungen für die Schnellzugriff-Buttons (Nutzer-Feedback: "es sollten für das Spiel
-/// 4 Default Buttons angezeigt werden ... Darüber hinaus sollte es 4 weitere Buttons geben ...
-/// Man sollte auch die Möglichkeit haben die Buttons auszublenden."). Die 4 FESTEN,
-/// spielprofil-abhängigen Buttons (Mod-Ordner/in_game/main_menu/loading_screen) werden NICHT hier
-/// gespeichert - die kommen direkt aus dem aktiven GameProfile (siehe SearchReplaceWindow.
-/// BuildFixedQuickPathButtons) und brauchen daher keine eigene Persistenz.
+/// Einstellungen der Schnellzugriff-Knöpfe: Sichtbarkeit und die eigenen Knöpfe, beliebig viele (Nutzerwunsch 2026-09-30; vorher
+/// genau 4 Plätze "Frei 1–4"). Die festen, spielprofil-abhängigen Knöpfe (Mod-Ordner, in_game, main_menu, loading_screen) kommen
+/// aus dem aktiven Spielprofil und werden hier nicht gespeichert.
 /// </summary>
 public sealed class QuickPathSettings
 {
     public bool Visible { get; set; } = true;
 
-    public List<QuickPathButtonState> CustomButtons { get; set; } = CreateDefaultCustomButtons();
+    public List<QuickPathButtonState> CustomButtons { get; set; } = new();
 
-    public static List<QuickPathButtonState> CreateDefaultCustomButtons() => new()
+    /// <summary>Verschiebt einen eigenen Knopf um <paramref name="delta"/> Plätze; an den Enden bleibt er stehen.</summary>
+    public void Move(int index, int delta)
     {
-        new QuickPathButtonState { Label = "Frei 1" },
-        new QuickPathButtonState { Label = "Frei 2" },
-        new QuickPathButtonState { Label = "Frei 3" },
-        new QuickPathButtonState { Label = "Frei 4" },
-    };
+        var target = index + delta;
+        if (index < 0 || index >= CustomButtons.Count || target < 0 || target >= CustomButtons.Count)
+        {
+            return;
+        }
+
+        var button = CustomButtons[index];
+        CustomButtons.RemoveAt(index);
+        CustomButtons.Insert(target, button);
+    }
 }
 
 /// <summary>
-/// Speichert/lädt <see cref="QuickPathSettings"/> als JSON-Datei außerhalb des Mod-Ordners unter
-/// %APPDATA% - nach demselben Muster wie <see cref="SearchFavoritesStore"/>: eine fehlende oder
-/// beschädigte Datei liefert bewusst STANDARDEINSTELLUNGEN (4 leere, umbenennbare Buttons,
-/// sichtbar) statt eines Fehlers zurück. Eine geladene, aber unvollständige Liste (z. B. aus einer
-/// von Hand bearbeiteten Datei mit weniger als 4 Einträgen) wird defensiv auf genau 4 Einträge
-/// aufgefüllt, damit die Anzeige (4 feste UI-Plätze) nie durch eine zu kurze Liste durcheinandergerät.
+/// Speichert/lädt <see cref="QuickPathSettings"/> als JSON unter %APPDATA% (wie <see cref="SearchFavoritesStore"/>): eine fehlende
+/// oder beschädigte Datei liefert Standardeinstellungen statt eines Fehlers. Beim Laden fallen Knöpfe ohne Ordner weg; das sind die
+/// leeren Plätze "Frei 1–4" aus der Zeit mit fester Anzahl, neue Knöpfe entstehen über "+" immer mit Ordner.
 /// </summary>
 public static class QuickPathStore
 {
@@ -73,7 +75,14 @@ public static class QuickPathStore
         {
             var json = File.ReadAllText(path);
             var settings = JsonSerializer.Deserialize<QuickPathSettings>(json, Options) ?? new QuickPathSettings();
-            NormalizeCustomButtonCount(settings);
+            settings.CustomButtons = (settings.CustomButtons ?? new List<QuickPathButtonState>())
+                .Where(b => b is not null && !string.IsNullOrWhiteSpace(b.Path))
+                .ToList();
+            foreach (var button in settings.CustomButtons)
+            {
+                button.Games = (button.Games ?? new List<string>()).Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            }
+
             return settings;
         }
         catch (JsonException)
@@ -83,20 +92,6 @@ public static class QuickPathStore
         catch (IOException)
         {
             return new QuickPathSettings();
-        }
-    }
-
-    private static void NormalizeCustomButtonCount(QuickPathSettings settings)
-    {
-        var defaults = QuickPathSettings.CreateDefaultCustomButtons();
-        while (settings.CustomButtons.Count < 4)
-        {
-            settings.CustomButtons.Add(defaults[settings.CustomButtons.Count]);
-        }
-
-        if (settings.CustomButtons.Count > 4)
-        {
-            settings.CustomButtons = settings.CustomButtons.Take(4).ToList();
         }
     }
 

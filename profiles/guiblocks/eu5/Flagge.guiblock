@@ -1,0 +1,9 @@
+# block: Flagge
+# group: Anzeige
+# description: Flagge eines Landes (72×48), Klick öffnet die Diplomatie, Tooltip zeigt den Namen. Andere Größen: country_flag_small, country_flag_big; Wappen einer Dynastie: dynasty_shield_mid mit datacontext [Character.GetDynasty]. Vorbild: in_game/gui/arts_overview.gui, in_game/gui/shared/coat_of_arms.gui
+# param: country | Land (Datenkontext) | Player
+# requires: country_flag_mid
+
+country_flag_mid = {
+	datacontext = "[$country$]"
+}

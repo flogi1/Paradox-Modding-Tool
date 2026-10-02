@@ -64,6 +64,34 @@ public static class GuiSettings
     /// </summary>
     public static Func<System.Windows.Media.Color, System.Windows.Media.Color?>? ColorPicker { get; set; }
 
+    /// <summary>
+    /// GUI-Daten-Helfer für das Eigenschaftenfeld: bekommt das gewählte Element (für den Datenkontext) und liefert den gebauten Ausdruck oder null
+    /// (abgebrochen). Das Hauptfenster setzt ihn, weil es die Datentypen lädt. Null = kein Knopf "Daten-Helfer".
+    /// </summary>
+    public static Func<GuiDesign.Syntax.GuiNode, string?>? DataHelper { get; set; }
+
+    /// <summary>
+    /// Bedingungs-Helfer für <c>visible</c>, <c>enabled</c>, <c>down</c> und <c>checked</c>: bekommt Element und aktuellen Feldwert und liefert das Ergebnis
+    /// oder null (abgebrochen). Null = diese Felder nutzen den Daten-Helfer wie andere.
+    /// </summary>
+    public static Func<GuiDesign.Syntax.GuiNode, string, GuiHelperResult?>? ConditionHelper { get; set; }
+
+    /// <summary>
+    /// Bausteine des aktiven Spiels für die Palette (alle Ebenen, wirksame Einträge). Das Hauptfenster setzt ihn, weil es aktive Mod und Spiel kennt;
+    /// aufgerufen wird er auf dem UI-Thread. Null = keine Bausteingruppe.
+    /// </summary>
+    public static Func<IReadOnlyList<GuiDesign.Blocks.GuiBlock>>? BlockSource { get; set; }
+
+    /// <summary>
+    /// Fenster "Bausteine" für einen Palette-Eintrag: bekommt den Namen, liefert den erzeugten Code oder null (abgebrochen). Das Hauptfenster setzt ihn.
+    /// </summary>
+    public static Func<string, string?>? BlockPicker { get; set; }
+
+    /// <summary>Eigene Bausteine wurden gespeichert, gelöscht oder kopiert: die Palette liest ihre Bausteingruppe neu.</summary>
+    public static event EventHandler? BlocksChanged;
+
+    public static void NotifyBlocksChanged() => BlocksChanged?.Invoke(null, EventArgs.Empty);
+
     public static event EventHandler? Changed;
 
     /// <summary>

@@ -13,6 +13,7 @@ public enum TabIconKind
     Vanilla,
     Mod,
     Lock,
+    ErrorLog,
 }
 
 /// <summary>
@@ -22,6 +23,18 @@ public enum TabIconKind
 public static class TabLockProvider
 {
     public static Func<string, string?>? Provider { get; set; }
+}
+
+/// <summary>Fehlermarkierung eines Tabs: Anzahl der Meldungen und Tooltip (Fehlerprotokoll Plan 2b).</summary>
+public sealed record TabErrorMark(int Count, string Tooltip);
+
+/// <summary>
+/// Liefert zu einem Dateipfad die Fehlermarkierung aus dem Fehlerprotokoll oder <see langword="null"/>. Das Hauptfenster setzt den
+/// <see cref="Provider"/>; der Editor kennt das Fehlerprotokoll nicht.
+/// </summary>
+public static class TabErrorProvider
+{
+    public static Func<string, TabErrorMark?>? Provider { get; set; }
 }
 
 /// <summary>

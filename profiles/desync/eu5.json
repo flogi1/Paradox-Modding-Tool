@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "source": "measured on three EU V 1.0.3/1.0.4 OOS pairs, 2026-10-01. Tuned 2026-10-01 on the pairs 11c0de175691b2bb / 2e5541e097da87ce / 9591f7274fdf952e (numbers are cause units per pair before the change): nodeDepth 4 -> 5 because disease_outbreak_manager/data/[i]/locations (up to 1.6 MB) and data/[i]/sub_units (up to 379 KB) stayed TooLarge (2 / 0 / 6), costs about 160k more block nodes per side (index 83 -> 108 MB per side); with both sides indexed one after the other the peak working set of a whole run is 364-378 MB; anonymousIds disease_outbreak_manager/**/locations = location so one added location does not shift all later entries (93k list entries named by their location id). Consequence patterns (cause units 254 / 3458 / 2144 before, 45 / 87 / 391 after; the known causes countries/database/1384 government/parliament/parliament_issue_support (11c0), construction_manager none vs block and subunit_manager slot reuse (9591) stay causes): population/database/*/price (0 / 2064 / 78) pop prices follow the market every tick; population/database/*/all_levies/** (0 / 0 / 565) levy figures are recounted from the subunits; trade_manager/database/** (57 / 180 / 20) and trade_path_manager/database/** (19 / 94 / 4) trades and their paths, including slot reuse, are rebuilt from market prices; estate_manager/database/*/trade|gold|last|last_expense|last_month_income_*|tax (0 / 313 / 0 for trade, then 71, 27, 13, 44, 17 in 2e55) monthly estate income sums; locations/locations/*/counters/**|possible_tax|tax|estate_tax/**|value_flow|local_proximity_propagation|market_attraction (0 / 189 / 1 for counters, up to 69 / 15 for the others) location economy aggregates; building_manager/database/*/last_months_profit|upkeep|*_maintenance (1 / 163 / 4, 0 / 69 / 0, 8 / 7 / 60) building balance sheets; countries/database/*/economy/**|score/**|monthly_trade_*|estimated_monthly_income*|balance_history_2/** (9 / 144 / 12 for economy, 85 / 57 / 0 for score) country sums, rankings and history; rebel_manager/database/*/last_investment (1 / 22 / 1) and market_manager/database/*/food_supply|trade (0 / 9 / 0) monthly sums; disease_outbreak_manager/**/resistance (2 / 0 / 60) random rolls per entry; disease_outbreak_manager/**/sub_units/** (0 / 0 / 509) per-subunit disease state follows the subunit_manager; military_objective/** (27 / 7 / 518), strategic_military_objective/** (0 / 0 / 8) and diplomatic_objective/** (3 / 0 / 18) are AI planning state like ai_memory. The whole-unit patterns (trade_manager/database/**, trade_path_manager/database/**, the three objective managers and disease_outbreak_manager/**/sub_units/**) also demote one-sided and slot-reused objects, e.g. 67 military_objective SlotReused and 447 one-sided disease sub_unit entries in 9591; field-level forms (military_objective/database/*/*/**, .../sub_units/*/*/**) left 965 cause units in 9591",
+  "idSlotBits": 24,
+  "idSlotBitsOverride": {},
+  "checksums": {
+    "RANDOM_COUNT": {
+      "name": { "de": "Zufallszähler", "en": "Random count" },
+      "explain": {
+        "de": "Der Zufallsgenerator wurde auf den Rechnern unterschiedlich oft aufgerufen. Gleiche random_count-Werte im Spielstand heißen nicht, dass der Zufall gleich lief: der Spielstand wird später geschrieben als die Prüfsumme.",
+        "en": "The random generator was called a different number of times on the machines. Equal random_count values in the save do not mean the randomness ran the same: the save is written later than the checksum."
+      },
+      "causes": [
+        {
+          "de": "Zufall in Skript, das nur auf einem Rechner ausgewertet wird (GUI, is_shown, lokale Effekte)",
+          "en": "Randomness in script that is evaluated on one machine only (GUI, is_shown, local effects)"
+        },
+        { "de": "Unterschiedliche Mod-Dateien", "en": "Different mod files" },
+        { "de": "Unterschiedliche Spielversionen", "en": "Different game versions" }
+      ]
+    }
+  },
+  "objects": [ "*/database/{id}", "locations/locations/{id}" ],
+  "anonymousIds": {
+    "disease_outbreak_manager/**/sub_units": "sub_unit",
+    "disease_outbreak_manager/**/locations": "location"
+  },
+  "sizeCapBytes": 262144,
+  "nodeDepth": 5,
+  "noise": [ "metadata/**", "**/*_cache", "**/*_cache/**", "played_country/**" ],
+  "consequence": [
+    "market_manager/**/goods/**", "market_manager/**/impacts/**",
+    "trade_path_manager/**/counters/**", "**/ai_memory/**", "**/priority",
+    "population/database/*/price", "population/database/*/all_levies/**",
+    "trade_manager/database/**", "trade_path_manager/database/**",
+    "estate_manager/database/*/trade", "estate_manager/database/*/gold", "estate_manager/database/*/last",
+    "estate_manager/database/*/last_expense", "estate_manager/database/*/last_month_income_*", "estate_manager/database/*/tax",
+    "locations/locations/*/counters/**", "locations/locations/*/possible_tax", "locations/locations/*/tax",
+    "locations/locations/*/estate_tax/**", "locations/locations/*/value_flow",
+    "locations/locations/*/local_proximity_propagation", "locations/locations/*/market_attraction",
+    "building_manager/database/*/last_months_profit", "building_manager/database/*/upkeep", "building_manager/database/*/*_maintenance",
+    "countries/database/*/economy/**", "countries/database/*/score/**", "countries/database/*/monthly_trade_*",
+    "countries/database/*/estimated_monthly_income*", "countries/database/*/balance_history_2/**",
+    "rebel_manager/database/*/last_investment", "market_manager/database/*/food_supply", "market_manager/database/*/trade",
+    "disease_outbreak_manager/**/resistance", "disease_outbreak_manager/**/sub_units/**",
+    "military_objective/**", "strategic_military_objective/**", "diplomatic_objective/**"
+  ],
+  "floatDrift": 0.001,
+  "names": {
+    "countries/database/{id}": { "tagList": "countries/tags" },
+    "locations/locations/{id}": { "keyList": "metadata/compatibility/locations", "keyListBase": 1 }
+  },
+  "labelFields": [ "name", "country_name", "subunit_name_2", "type" ],
+  "paradoxForm": {
+    "fields": [
+      { "label": "I have verified my game files (on Steam)", "kind": "hint", "source": "verifiedFiles" },
+      { "label": "I have disabled all mods", "kind": "option", "source": "modsDisabled" },
+      { "label": "Summary", "kind": "text", "source": "summary" },
+      { "label": "Description", "kind": "multiline", "source": "description" },
+      { "label": "Issue Type", "kind": "hint", "source": "issueType" },
+      { "label": "Steps to reproduce", "kind": "multiline", "source": "steps" },
+      { "label": "Game Version", "kind": "option", "source": "gameVersion" },
+      { "label": "Bug Type", "kind": "option", "source": "fixed", "value": "Out of Sync" },
+      { "label": "Attachments", "kind": "attachments", "source": "dumps" },
+      { "label": "Screenshot", "kind": "hint", "source": "screenshot" }
+    ]
+  },
+  "advice": [
+    { "when": { "warning": "DifferentGameCommit" }, "text": "All players must run the same game build: {detail}." },
+    { "when": { "warning": "DifferentDlcs" }, "text": "Make sure all players have the same DLCs enabled. Differing: {detail}." },
+    { "when": { "warning": "DifferentMods" }, "text": "Make sure all players use the same mods and mod versions. Differing: {detail}." },
+    { "when": { "checksum": "RANDOM_COUNT" }, "text": "The random generator was called a different number of times on the machines. Look for random effects or triggers (random, random_list, weights) in script that runs on one machine only: GUI, is_shown/is_valid of interface elements, player-specific checks." },
+    { "when": { "leadInMod": true }, "text": "Check these script locations first: {leads}." }
+  ],
+  "safety": {
+    "rootFolders": ["in_game", "main_menu", "loading_screen"],
+    "localFolders": ["gfx", "gui", "gui_animations", "fonts", "music", "sound"],
+    "localBlocks": [
+      { "folder": "common/scripted_guis", "keys": ["is_shown", "is_valid"] },
+      { "folder": "common/customizable_localization", "keys": ["*"] }
+    ],
+    "rules": [
+      {
+        "id": "local_dlc",
+        "kind": "scriptKey",
+        "match": "has_local_dlc",
+        "synced": "risk",
+        "local": "allowed",
+        "explain": {
+          "de": "has_local_dlc prüft die DLCs des eigenen Rechners. In synchronem Skript (Effekte, Events, on_actions, Effekte von Scripted GUIs) nehmen Rechner mit unterschiedlichen DLCs verschiedene Zweige und laufen auseinander (Out of Sync). Verwende has_dlc (die DLCs des Hosts) für das Spielgeschehen; has_local_dlc ist nur für Grafik und Oberfläche gedacht.",
+          "en": "has_local_dlc checks the DLCs of the local machine. In synced script (effects, events, on_actions, scripted GUI effects) machines with different DLCs take different branches and go out of sync. Use has_dlc (the host's DLCs) for gameplay; keep has_local_dlc for graphics and interface.",
+          "es": "has_local_dlc comprueba los DLC del equipo local. En script sincronizado (efectos, eventos, on_actions, efectos de GUI con script) los equipos con DLC distintos toman ramas distintas y se desincronizan. Usa has_dlc (los DLC del anfitrión) para la jugabilidad; reserva has_local_dlc para gráficos e interfaz.",
+          "fr": "has_local_dlc vérifie les DLC de la machine locale. Dans un script synchronisé (effets, événements, on_actions, effets des GUI scriptées), des machines avec des DLC différents prennent des branches différentes et se désynchronisent. Utilisez has_dlc (les DLC de l'hôte) pour le gameplay ; réservez has_local_dlc aux graphismes et à l'interface.",
+          "pl": "has_local_dlc sprawdza dodatki DLC lokalnego komputera. W skrypcie synchronizowanym (efekty, zdarzenia, on_actions, efekty skryptowanych GUI) komputery z różnymi DLC wybierają różne gałęzie i tracą synchronizację. Używaj has_dlc (DLC hosta) do rozgrywki; has_local_dlc zostaw dla grafiki i interfejsu.",
+          "pt-br": "has_local_dlc verifica as DLCs da máquina local. Em script sincronizado (efeitos, eventos, on_actions, efeitos de GUIs com script) máquinas com DLCs diferentes seguem ramos diferentes e saem de sincronia. Use has_dlc (as DLCs do anfitrião) para a jogabilidade; mantenha has_local_dlc para gráficos e interface.",
+          "ru": "has_local_dlc проверяет DLC локального компьютера. В синхронизируемом скрипте (эффекты, события, on_actions, эффекты скриптовых GUI) компьютеры с разными DLC идут по разным ветвям и рассинхронизируются. Для игрового процесса используйте has_dlc (DLC хоста); has_local_dlc оставьте для графики и интерфейса.",
+          "zh-hans": "has_local_dlc 检查本机的 DLC。在同步脚本(效果、事件、on_actions、脚本化 GUI 的效果)中,DLC 不同的机器会进入不同的分支并导致不同步。游戏玩法请使用 has_dlc(主机的 DLC);has_local_dlc 仅用于图形和界面。"
+        }
+      },
+      {
+        "id": "console_ui",
+        "kind": "consoleCommand",
+        "match": ["gui.", "draw.", "mesh.", "camera.", "environment.", "portraitenv.", "fogofwar.", "border.", "gradientborders.", "cities.", "mapobjects.", "3dstats", "reload", "tweak", "switchlanguage", "explorer", "inspect_player_country", "debug_mode", "*editor", "unit_viewer"],
+        "synced": "allowed",
+        "local": "allowed",
+        "explain": {
+          "de": "Konsolenbefehl für Oberfläche, Grafik oder Fehlersuche. Er ändert den Spielzustand nicht.",
+          "en": "Interface, graphics or debug console command. It does not change the game state.",
+          "es": "Comando de consola de interfaz, gráficos o depuración. No cambia el estado del juego.",
+          "fr": "Commande de console pour l'interface, les graphismes ou le débogage. Elle ne modifie pas l'état du jeu.",
+          "pl": "Polecenie konsoli dotyczące interfejsu, grafiki lub debugowania. Nie zmienia stanu gry.",
+          "pt-br": "Comando de console de interface, gráficos ou depuração. Ele não altera o estado do jogo.",
+          "ru": "Команда консоли для интерфейса, графики или отладки. Она не меняет состояние игры.",
+          "zh-hans": "用于界面、图形或调试的控制台命令。它不会改变游戏状态。"
+        }
+      },
+      {
+        "id": "console_dynamic",
+        "kind": "consoleDynamic",
+        "synced": "check",
+        "local": "check",
+        "explain": {
+          "de": "Der Konsolenbefehl wird erst zur Laufzeit zusammengesetzt, PMT kann daher nicht erkennen, was er tut. Prüfe, ob er den Spielzustand ändern kann.",
+          "en": "The console command is built at run time, so PMT cannot tell what it does. Check whether it can change the game state.",
+          "es": "El comando de consola se construye en tiempo de ejecución, por lo que PMT no puede saber qué hace. Comprueba si puede cambiar el estado del juego.",
+          "fr": "La commande de console est construite à l'exécution, PMT ne peut donc pas savoir ce qu'elle fait. Vérifiez si elle peut modifier l'état du jeu.",
+          "pl": "Polecenie konsoli jest składane dopiero w trakcie działania, więc PMT nie może stwierdzić, co robi. Sprawdź, czy może zmienić stan gry.",
+          "pt-br": "O comando de console é montado em tempo de execução, então o PMT não consegue saber o que ele faz. Verifique se ele pode alterar o estado do jogo.",
+          "ru": "Команда консоли формируется во время работы, поэтому PMT не может определить, что она делает. Проверьте, может ли она изменить состояние игры.",
+          "zh-hans": "该控制台命令是在运行时拼接而成的,PMT 无法判断它的作用。请检查它是否可能改变游戏状态。"
+        }
+      },
+      {
+        "id": "console_other",
+        "kind": "consoleCommand",
+        "match": ["*"],
+        "synced": "check",
+        "local": "check",
+        "explain": {
+          "de": "Konsolenbefehl, von dem nicht bekannt ist, dass er nur die Oberfläche betrifft. Prüfe, ob er im Mehrspielerbetrieb (MP) den Spielzustand ändert, und markiere ihn als unbedenklich oder riskant.",
+          "en": "Console command that is not known to be interface only. Check whether it changes the game state in multiplayer, and mark it as harmless or risky.",
+          "es": "Comando de consola que no se sabe que afecte solo a la interfaz. Comprueba si cambia el estado del juego en multijugador (MP) y márcalo como inofensivo o arriesgado.",
+          "fr": "Commande de console dont on ne sait pas qu'elle ne concerne que l'interface. Vérifiez si elle modifie l'état du jeu en multijoueur (MP) et marquez-la comme inoffensive ou risquée.",
+          "pl": "Polecenie konsoli, o którym nie wiadomo, czy dotyczy tylko interfejsu. Sprawdź, czy zmienia stan gry w trybie wieloosobowym (MP), i oznacz je jako nieszkodliwe lub ryzykowne.",
+          "pt-br": "Comando de console que não se sabe ser apenas de interface. Verifique se ele altera o estado do jogo no multijogador (MP) e marque-o como inofensivo ou arriscado.",
+          "ru": "Команда консоли, про которую неизвестно, что она относится только к интерфейсу. Проверьте, меняет ли она состояние игры в мультиплеере (MP), и отметьте её как безвредную или рискованную.",
+          "zh-hans": "未知是否仅影响界面的控制台命令。请检查它在多人游戏(MP)中是否会改变游戏状态,并将其标记为无害或有风险。"
+        }
+      }
+    ],
+    "stopTerms": ["value", "date", "type", "name", "seed", "id", "flag", "list", "data", "scope", "target"],
+    "areaMap": {}
+  }
+}

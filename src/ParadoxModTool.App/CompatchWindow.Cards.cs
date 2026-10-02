@@ -13,7 +13,7 @@ public sealed partial class CompatchWindow
     private readonly Controls.TextBlock _seenText = new() { VerticalAlignment = System.Windows.VerticalAlignment.Center };
     private readonly Controls.TextBlock _cardsEmpty = new() { Text = CompatchTexts.NoActions, Margin = new Thickness(4, 8, 0, 0), Visibility = Visibility.Collapsed };
     private readonly HashSet<CompatchCardView> _liveCards = new();
-    private readonly Controls.CheckBox _showFolders = new() { Content = CompatchTexts.ShowFolders, Margin = new Thickness(24, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+    private readonly Controls.CheckBox _showFolders = new() { Content = new Controls.TextBlock { Text = CompatchTexts.ShowFolders }, Margin = new Thickness(24, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
     private readonly Controls.TreeView _cardTree = new() { Width = 260, Margin = new Thickness(0, 0, 6, 0) };
     private string? _cardFilter;
     private bool _cardTreeSyncing;
@@ -32,8 +32,8 @@ public sealed partial class CompatchWindow
             return;
         }
 
-        change(_session, action);
-        AfterChange();
+        // "Für alle gleichen übernehmen" ändert auch andere Blöcke; die werden mitgesichert.
+        Change(_session.EqualTo(action.Id).Select(a => a.Address).Append(action.Address), session => change(session, action));
     }
 
     internal void SetActionSeen(MergeAction action, bool seen)
@@ -77,6 +77,7 @@ public sealed partial class CompatchWindow
         _showFolders.Click += (_, _) =>
         {
             _cardTree.Visibility = _showFolders.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            PlaceSearch();
             _host.RememberCardsFolderPane(_showFolders.IsChecked == true);
             if (_showFolders.IsChecked != true && _cardFilter is not null)
             {
@@ -106,8 +107,15 @@ public sealed partial class CompatchWindow
         Controls.VirtualizingPanel.SetIsVirtualizing(_cardList, true);
         Controls.VirtualizingPanel.SetVirtualizationMode(_cardList, Controls.VirtualizationMode.Recycling);
         Controls.VirtualizingPanel.SetScrollUnit(_cardList, Controls.ScrollUnit.Pixel);
-        Controls.DockPanel.SetDock(_cardTree, Controls.Dock.Left);
-        panel.Children.Add(_cardTree);
+        // Suchfeld über dem Ordnerbaum; ist der Ordnerbereich aus, über den Karten (PlaceSearch).
+        var side = new Controls.DockPanel();
+        Controls.DockPanel.SetDock(_searchSlotCardTree, Controls.Dock.Top);
+        side.Children.Add(_searchSlotCardTree);
+        side.Children.Add(_cardTree);
+        Controls.DockPanel.SetDock(side, Controls.Dock.Left);
+        panel.Children.Add(side);
+        Controls.DockPanel.SetDock(_searchSlotCards, Controls.Dock.Top);
+        panel.Children.Add(_searchSlotCards);
         panel.Children.Add(_cardList);
         _cardsHost.Child = panel;
     }
@@ -128,7 +136,7 @@ public sealed partial class CompatchWindow
             _liveCards.Clear();
             var all = FilteredActions();
             FillCardTree(all);
-            var items = all.Where(InCardFilter).Select(a => new CompatchCardItem(a, this)).ToList();
+            var items = CardItems(all.Where(InCardFilter).ToList());
             _cardList.ItemsSource = items;
             _cardsEmpty.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -141,6 +149,49 @@ public sealed partial class CompatchWindow
         }
 
         RefreshSeenBar();
+    }
+
+    /// <summary>
+    /// Eine Karte je Stelle, aber eine Blockkarte für alle Stellen einer Adresse, sobald es mindestens zwei sind (wie der Baum, <see cref="ActionTree"/>).
+    /// Die Blockkarte steht an der Stelle der ersten.
+    /// </summary>
+    private List<CompatchCardItem> CardItems(IReadOnlyList<MergeAction> actions)
+    {
+        var blocks = actions.Where(a => a.Address.Kind != AddressKind.WholeFile)
+            .GroupBy(a => a.Address)
+            .Where(g => g.Count() >= 2)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<MergeAction>)g.ToList());
+        var items = new List<CompatchCardItem>();
+        var done = new HashSet<EntryAddress>();
+        foreach (var action in actions)
+        {
+            if (!blocks.TryGetValue(action.Address, out var block))
+            {
+                items.Add(new CompatchCardItem(action, this));
+            }
+            else if (done.Add(action.Address))
+            {
+                items.Add(new CompatchCardItem(action, this, block));
+            }
+        }
+
+        return items;
+    }
+
+    /// <summary>"Gesehen" für alle Stellen einer Blockkarte.</summary>
+    internal void SetSeenAll(IReadOnlyList<MergeAction> actions, bool seen)
+    {
+        if (_session is null)
+        {
+            return;
+        }
+
+        foreach (var action in actions)
+        {
+            _session.SetSeen(action.Id, seen);
+        }
+
+        AfterChange();
     }
 
     /// <summary>Plan 5, Ruling 10: Datei = gleicher Pfad, Ordner = Präfix; kein Filter = alle.</summary>
@@ -168,7 +219,8 @@ public sealed partial class CompatchWindow
             {
                 var active = string.Equals(node.Path, _cardFilter, StringComparison.OrdinalIgnoreCase);
                 var item = new Controls.TreeViewItem { Header = CompatchTreeBuilder.Header(node), Tag = node.Path, IsExpanded = true, FontWeight = active ? FontWeights.Bold : FontWeights.Normal };
-                foreach (var child in node.Children.Where(c => c.Kind != TreeNodeKind.Action))
+                // Nur Ordner und Dateien: Karten filtern nach Dateipfad, Blöcke und Stellen gehören nicht in diese Leiste.
+                foreach (var child in node.Children.Where(c => c.Kind is TreeNodeKind.Folder or TreeNodeKind.File))
                 {
                     item.Items.Add(Build(child));
                 }
@@ -176,7 +228,7 @@ public sealed partial class CompatchWindow
                 return item;
             }
 
-            foreach (var node in ActionTree.Build(actions, a => IsOpenConflict(session, a), _ => false))
+            foreach (var node in ActionTree.Build(actions, a => IsOpenConflict(session, a), _ => false, presorted: true))
             {
                 _cardTree.Items.Add(Build(node));
             }

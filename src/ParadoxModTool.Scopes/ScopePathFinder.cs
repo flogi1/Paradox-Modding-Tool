@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ParadoxModTool.Scopes;
@@ -13,6 +12,9 @@ public enum PathStepKind
 
     /// <summary>Ein globaler Verweis mit Schlüssel (<c>location:KEY</c>): von überall aus benutzbar, nur als erster Schritt.</summary>
     GlobalLink,
+
+    /// <summary>Ein Verweis mit Schlüssel aus einem bestimmten Scope (<c>holding:KEY</c>): an jeder Stelle einer Kette benutzbar.</summary>
+    DataLink,
 }
 
 /// <summary>Ein Schritt eines Weges zwischen zwei Scopes.</summary>
@@ -27,7 +29,7 @@ public sealed record PathStep(PathStepKind Kind, string Name, string To, bool An
     public string Text(string preferredForm) => Kind switch
     {
         PathStepKind.Iterator => $"{ResolveForm(preferredForm)}_{Name}",
-        PathStepKind.GlobalLink => $"{Name}:KEY",
+        PathStepKind.GlobalLink or PathStepKind.DataLink => $"{Name}:KEY",
         _ => Name,
     };
 
@@ -98,34 +100,13 @@ public sealed record ScopePath(string StartScope, string Goal, string StartPrefi
 
     /// <summary>Der Ausdruck einer reinen Kette (<c>owner.capital</c>); <see langword="null"/>, wenn der Weg Iteratoren enthält.</summary>
     public string? ChainText() => IsChain ? Headers("every")[0] : null;
-
-    /// <summary>
-    /// Der Weg als verschachtelte Blöcke zum Einfügen an der Cursorstelle (die Einrückung der ersten Zeile steht dort schon). Der Cursor gehört in die
-    /// leere Zeile im innersten Block; <paramref name="caretOffset"/> ist seine Position im Text.
-    /// </summary>
-    public string ToBlock(string preferredForm, string indent, string newline, out int caretOffset, string tab = "\t")
-    {
-        var headers = Headers(preferredForm);
-        var text = new StringBuilder();
-
-        for (var level = 0; level < headers.Count; level++)
-        {
-            text.Append(level == 0 ? string.Empty : indent + Repeat(tab, level)).Append(headers[level]).Append(" = {").Append(newline);
-        }
-
-        text.Append(indent).Append(Repeat(tab, headers.Count));
-        caretOffset = text.Length;
-
-        for (var level = headers.Count - 1; level >= 0; level--)
-        {
-            text.Append(newline).Append(indent).Append(Repeat(tab, level)).Append('}');
-        }
-
-        return text.ToString();
-    }
-
-    private static string Repeat(string tab, int count) => string.Concat(Enumerable.Repeat(tab, count));
 }
+
+/// <summary>Ergebnis einer Wegsuche.</summary>
+/// <param name="Paths">Die Wege nach Filter und Obergrenze, kürzeste zuerst.</param>
+/// <param name="Total">Anzahl der Wege nach dem Filter, vor der Obergrenze.</param>
+/// <param name="Truncated">Die Suche hat bei einer Länge die Obergrenze erreicht und längere Wege nicht mehr untersucht.</param>
+public sealed record ScopePathResult(IReadOnlyList<ScopePath> Paths, int Total, bool Truncated);
 
 /// <summary>
 /// Findet Wege zwischen Scopes: von einem Scope zum Ziel über Event-Targets (<c>capital</c>, <c>owner</c>) und Iteratoren (<c>every_neighbor_country</c>).
@@ -133,10 +114,18 @@ public sealed record ScopePath(string StartScope, string Goal, string StartPrefi
 /// </summary>
 public sealed partial class ScopePathFinder
 {
-    /// <summary>Obergrenze der untersuchten Wege, damit die Suche bei drei Schritten nicht ausufert.</summary>
-    private const int MaxCandidates = 20000;
+    /// <summary>So viele Suchergebnisse bleiben höchstens im Zwischenspeicher, danach wird er geleert.</summary>
+    private const int MaxCachedSearches = 16;
 
     private static readonly Regex IteratorName = MakeIteratorName();
+
+    private readonly Dictionary<(string Start, string Goal, int MaxSteps, bool GlobalLinks, string Prefix), (List<ScopePath> Paths, bool Truncated)> _searches = new();
+
+    /// <summary>
+    /// Obergrenze der Wege je Länge, damit die Suche bei vier Schritten nicht ausufert. Kürzere Längen sind immer vollständig, weil die Suche nach Länge
+    /// aufsteigend läuft und nach der ersten gekürzten Länge aufhört.
+    /// </summary>
+    internal int MaxCandidatesPerLength { get; init; } = 20000;
 
     private readonly Dictionary<string, List<PathStep>> _fromScope = new(StringComparer.Ordinal);
     private readonly List<PathStep> _fromAnyScope = new();
@@ -148,27 +137,37 @@ public sealed partial class ScopePathFinder
 
         foreach (var (name, target) in db.Targets)
         {
-            if (target.Outputs.Count != 1 || name is "root" or "prev" or "this" or "from" or "fromfrom")
+            // Ziele, die einen Wert liefern (modifier:KEY, estate_power), sind keine Schritte, sondern Werte am Kettenende.
+            if (target.Outputs.Count != 1 || target.Outputs.Contains("value") || target.Outputs.Contains("boolean")
+                || name is "root" or "prev" or "this" or "from" or "fromfrom")
             {
                 continue;
             }
 
             var to = target.Outputs.First();
             scopes.Add(to);
-            if (target.RequiresData)
+            if (target.PlainForm)
             {
-                _globalLinks.Add(new PathStep(PathStepKind.GlobalLink, name, to, AnyInput: true, EmptySet));
+                AddForm(target.PlainInputs, PathStepKind.Target, _fromAnyScope);
             }
-            else if (target.Inputs.Count == 0)
+
+            if (target.DataForm)
             {
-                _fromAnyScope.Add(new PathStep(PathStepKind.Target, name, to, AnyInput: true, EmptySet));
+                AddForm(target.DataInputs, PathStepKind.DataLink, _globalLinks);
             }
-            else
+
+            void AddForm(IReadOnlySet<string> inputs, PathStepKind kind, List<PathStep> withoutInputs)
             {
-                foreach (var input in target.Inputs)
+                if (inputs.Count == 0)
+                {
+                    withoutInputs.Add(new PathStep(kind == PathStepKind.DataLink ? PathStepKind.GlobalLink : kind, name, to, AnyInput: true, EmptySet));
+                    return;
+                }
+
+                foreach (var input in inputs)
                 {
                     scopes.Add(input);
-                    Add(input, new PathStep(PathStepKind.Target, name, to, AnyInput: false, EmptySet));
+                    Add(input, new PathStep(kind, name, to, AnyInput: false, EmptySet));
                 }
             }
         }
@@ -210,6 +209,83 @@ public sealed partial class ScopePathFinder
         }
 
         Scopes = scopes.ToList();
+
+        // Werte am Kettenende: Trigger, die einen Wert vergleichen (country_tax_base, opinion(ARG)), und Ziele mit Wert-Ausgabe (estate_power, modifier:KEY).
+        foreach (var (name, command) in db.Commands)
+        {
+            if (command.IsComparison)
+            {
+                AddValue(command.AnyScope ? EmptySet : command.Scopes, command.TakesArgument ? name + "(ARG)" : name);
+            }
+        }
+
+        foreach (var (name, target) in db.Targets)
+        {
+            if (!target.Outputs.Contains("value"))
+            {
+                continue;
+            }
+
+            if (target.PlainForm)
+            {
+                AddValue(target.PlainInputs, name);
+            }
+
+            if (target.DataForm)
+            {
+                AddValue(target.DataInputs, name + ":KEY");
+            }
+        }
+    }
+
+    private readonly Dictionary<string, HashSet<string>> _valuesByScope = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _valuesAnywhere = new(StringComparer.Ordinal) { "var:KEY" };
+
+    private void AddValue(IReadOnlySet<string> scopes, string text)
+    {
+        if (scopes.Count == 0)
+        {
+            _valuesAnywhere.Add(text);
+            return;
+        }
+
+        foreach (var scope in scopes)
+        {
+            if (!_valuesByScope.TryGetValue(scope, out var values))
+            {
+                _valuesByScope[scope] = values = new HashSet<string>(StringComparer.Ordinal);
+            }
+
+            values.Add(text);
+        }
+    }
+
+    /// <summary>
+    /// Was eine Kette im Scope <paramref name="scope"/> als Wert beenden kann, fertig geschrieben und sortiert: vergleichbare Trigger (<c>country_tax_base</c>,
+    /// mit Argument <c>opinion(ARG)</c>), Ziele mit Wert-Ausgabe (<c>estate_power</c>, <c>modifier:KEY</c>) und immer <c>var:KEY</c>.
+    /// </summary>
+    public IReadOnlyList<string> Values(string scope) =>
+        _valuesAnywhere
+            .Concat(_valuesByScope.TryGetValue(scope, out var values) ? values : Enumerable.Empty<string>())
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+    /// <summary>
+    /// Die Vorschläge für "Wert am Ende": zuerst die eingebauten Werte (<see cref="Values"/>), dann die Script-Values der Mod, dann die aus Vanilla; jede Gruppe
+    /// sortiert. Ein Name steht nur an seiner ersten Stelle (eine Mod, die einen Vanilla-Wert überschreibt, steht bei der Mod).
+    /// </summary>
+    public IReadOnlyList<string> ValueSuggestions(string scope, IReadOnlyList<string> modValues, IReadOnlyList<string> vanillaValues)
+    {
+        var builtIn = Values(scope);
+        var seen = new HashSet<string>(builtIn, StringComparer.Ordinal);
+        var result = new List<string>(builtIn);
+        foreach (var group in new[] { modValues, vanillaValues })
+        {
+            result.AddRange(group.Order(StringComparer.Ordinal).Where(seen.Add));
+        }
+
+        return result;
     }
 
     private sealed class Family
@@ -240,68 +316,127 @@ public sealed partial class ScopePathFinder
     /// </summary>
     /// <param name="startPrefix">Womit der Weg im Skript beginnt (<c>root</c>, <c>scope:actor</c>), wenn nicht im aktuellen Scope.</param>
     /// <param name="includeGlobalLinks">Auch globale Verweise mit Schlüssel (<c>location:KEY</c>) als erster Schritt anbieten.</param>
-    public IReadOnlyList<ScopePath> Find(string start, string goal, int maxSteps = 2, bool includeGlobalLinks = false, string startPrefix = "", int limit = 60)
+    public IReadOnlyList<ScopePath> Find(string start, string goal, int maxSteps = 2, bool includeGlobalLinks = false, string startPrefix = "", int limit = 60) =>
+        Search(start, goal, maxSteps, includeGlobalLinks, startPrefix, string.Empty, "every", limit).Paths;
+
+    /// <summary>
+    /// Wie <see cref="Find"/>, aber mit Filter vor der Obergrenze <paramref name="limit"/>: <paramref name="filter"/> (Teiltext, ohne Groß/Klein) wird gegen
+    /// <see cref="ScopePath.Describe"/> in der Form <paramref name="preferredForm"/> geprüft. Die Wege je Start, Ziel, Schrittzahl, Verweis-Einstellung und Präfix
+    /// werden zwischengespeichert, Filtern sucht also nicht neu.
+    /// </summary>
+    public ScopePathResult Search(string start, string goal, int maxSteps, bool includeGlobalLinks, string startPrefix, string filter, string preferredForm, int limit = 60)
     {
-        var results = new List<ScopePath>();
-        if (start == goal || maxSteps < 1)
+        var key = (start, goal, maxSteps, includeGlobalLinks, startPrefix);
+        if (!_searches.TryGetValue(key, out var all))
         {
-            return results;
-        }
-
-        var steps = new List<PathStep>();
-        var visited = new HashSet<string>(StringComparer.Ordinal) { start };
-        var usedSelfHop = false;
-
-        void Walk(string scope)
-        {
-            if (steps.Count >= maxSteps || results.Count >= MaxCandidates)
+            if (_searches.Count >= MaxCachedSearches)
             {
-                return;
+                _searches.Clear();
             }
 
-            foreach (var step in NextSteps(scope, first: steps.Count == 0, includeGlobalLinks))
-            {
-                // Kein Scope kommt zweimal vor; nur ein einziger Schritt im selben Scope ist erlaubt (every_neighbor_country, Länder eines Landes ...).
-                var selfHop = step.To == scope;
-                if (visited.Contains(step.To) && (!selfHop || usedSelfHop))
-                {
-                    continue;
-                }
-
-                steps.Add(step);
-                if (step.To == goal)
-                {
-                    results.Add(new ScopePath(start, goal, startPrefix, steps.ToArray()));
-                }
-                else
-                {
-                    var added = visited.Add(step.To);
-                    usedSelfHop |= selfHop;
-                    Walk(step.To);
-                    usedSelfHop &= !selfHop;
-                    if (added)
-                    {
-                        visited.Remove(step.To);
-                    }
-                }
-
-                steps.RemoveAt(steps.Count - 1);
-            }
+            _searches[key] = all = Collect(start, goal, maxSteps, includeGlobalLinks, startPrefix);
         }
 
-        Walk(start);
-
-        return results
-            .OrderBy(p => p.Steps.Count)
-            .ThenBy(p => p.Steps.Count(s => s.Kind == PathStepKind.Iterator))
-            .ThenBy(p => p.Steps.Count(s => s.Kind == PathStepKind.GlobalLink))
-            .ThenBy(p => p.Steps.Count(s => s.AnyInput))
-            .ThenBy(p => p.Describe("every"), StringComparer.Ordinal)
-            .Take(limit)
-            .ToList();
+        var matching = filter.Length == 0
+            ? all.Paths
+            : all.Paths.Where(p => p.Describe(preferredForm).Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+        return new ScopePathResult(matching.Take(limit).ToList(), matching.Count, all.Truncated);
     }
 
-    private IEnumerable<PathStep> NextSteps(string scope, bool first, bool includeGlobalLinks)
+    /// <summary>Sucht die Wege Länge für Länge; jede Länge wird für sich sortiert. Erreicht eine Länge die Obergrenze, endet die Suche dort (gekürzt).</summary>
+    private (List<ScopePath> Paths, bool Truncated) Collect(string start, string goal, int maxSteps, bool includeGlobalLinks, string startPrefix)
+    {
+        var all = new List<ScopePath>();
+        if (start == goal || maxSteps < 1)
+        {
+            return (all, false);
+        }
+
+        for (var length = 1; length <= maxSteps; length++)
+        {
+            var found = new List<ScopePath>();
+            var steps = new List<PathStep>();
+            var visited = new HashSet<string>(StringComparer.Ordinal) { start };
+            var usedSelfHop = false;
+
+            void Walk(string scope)
+            {
+                foreach (var step in Candidates(scope, first: steps.Count == 0, includeGlobalLinks))
+                {
+                    if (found.Count >= MaxCandidatesPerLength)
+                    {
+                        return;
+                    }
+
+                    // Kein Scope kommt zweimal vor; nur ein einziger Schritt im selben Scope ist erlaubt (every_neighbor_country, Länder eines Landes ...).
+                    var selfHop = step.To == scope;
+                    if (visited.Contains(step.To) && (!selfHop || usedSelfHop))
+                    {
+                        continue;
+                    }
+
+                    // Ein Weg endet, sobald er das Ziel erreicht: kürzere Treffer gehören zu ihrer eigenen Länge.
+                    var last = steps.Count + 1 == length;
+                    if (last != (step.To == goal))
+                    {
+                        continue;
+                    }
+
+                    steps.Add(step);
+                    if (last)
+                    {
+                        found.Add(new ScopePath(start, goal, startPrefix, steps.ToArray()));
+                    }
+                    else
+                    {
+                        var added = visited.Add(step.To);
+                        usedSelfHop |= selfHop;
+                        Walk(step.To);
+                        usedSelfHop &= !selfHop;
+                        if (added)
+                        {
+                            visited.Remove(step.To);
+                        }
+                    }
+
+                    steps.RemoveAt(steps.Count - 1);
+                }
+            }
+
+            Walk(start);
+            all.AddRange(found
+                .OrderBy(p => p.Steps.Count(s => s.Kind == PathStepKind.Iterator))
+                .ThenBy(p => p.Steps.Count(s => s.Kind is PathStepKind.GlobalLink or PathStepKind.DataLink))
+                .ThenBy(p => p.Steps.Count(s => s.AnyInput))
+                .ThenBy(p => p.Describe("every"), StringComparer.Ordinal));
+
+            if (found.Count >= MaxCandidatesPerLength)
+            {
+                return (all, true);
+            }
+        }
+
+        return (all, false);
+    }
+
+    /// <summary>
+    /// Die möglichen nächsten Glieder aus <paramref name="scope"/>, wie sie der Kettenbaukasten anbietet: feste Eingabe-Scopes vor allgemeinen, dann Event-Targets,
+    /// Verweise mit Schlüssel, Iteratoren, globale Verweise (nur als erstes Glied und auf Wunsch), dann nach Name.
+    /// </summary>
+    public IReadOnlyList<PathStep> NextSteps(string scope, bool first, bool includeGlobalLinks) =>
+        Candidates(scope, first, includeGlobalLinks)
+            .OrderBy(s => s.AnyInput)
+            .ThenBy(s => s.Kind switch
+            {
+                PathStepKind.Target => 0,
+                PathStepKind.DataLink => 1,
+                PathStepKind.Iterator => 2,
+                _ => 3,
+            })
+            .ThenBy(s => s.Name, StringComparer.Ordinal)
+            .ToList();
+
+    private IEnumerable<PathStep> Candidates(string scope, bool first, bool includeGlobalLinks)
     {
         if (_fromScope.TryGetValue(scope, out var specific))
         {

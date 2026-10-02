@@ -20,6 +20,8 @@ public sealed partial class CompatchWindow : Window
     private readonly DispatcherTimer _autosave = new() { Interval = TimeSpan.FromSeconds(2) };
     private readonly List<FileSystemWatcher> _watchers = new();
     private CompatchSession? _session;
+    private readonly CompatchInput? _updateInput;
+    private readonly Action? _afterUpdateWrite;
     private CancellationTokenSource? _cts;
     private Task? _runTask;
     private int _runId;
@@ -28,19 +30,39 @@ public sealed partial class CompatchWindow : Window
 
     private readonly Controls.ComboBox _stageFilter = new() { Width = 150, Margin = new Thickness(4, 0, 12, 0) };
     private readonly Controls.ComboBox _originFilter = new() { Width = 130, Margin = new Thickness(4, 0, 12, 0) };
-    private readonly Controls.TextBox _folderFilter = new() { Width = 140, Margin = new Thickness(4, 0, 12, 0) };
-    private readonly Controls.CheckBox _uncertainOnly = new() { Content = CompatchTexts.FilterUncertain, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
-    private readonly Controls.CheckBox _mainAsBase = new() { Content = CompatchTexts.MainAsBase, ToolTip = CompatchTexts.MainAsBaseTip, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
-    private readonly Controls.CheckBox _fillMissing = new() { Content = CompatchTexts.FillMissing, ToolTip = CompatchTexts.FillMissingTip, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
-    private readonly Controls.TextBox _search = new() { Width = 160, Margin = new Thickness(4, 0, 12, 0) };
-    private readonly Controls.Button _recheck = new() { Content = CompatchTexts.RecheckAll, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
-    private readonly Controls.Button _saveButton = new() { Content = CompatchTexts.SaveState, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0) };
-    private readonly Controls.Button _writeButton = new() { Content = CompatchTexts.WritePatch, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0), FontWeight = FontWeights.Bold };
-    private readonly Controls.CheckBox _cautious = new() { Content = CompatchTexts.CautiousToggle, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
-    private readonly Controls.Button _cancel = new() { Content = CompatchTexts.Cancel, Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 6, 0), IsEnabled = false };
-    private readonly Controls.ProgressBar _progress = new() { Width = 120, Height = 14, IsIndeterminate = false, Visibility = Visibility.Collapsed };
+    // Optionen des Arbeitsstands im Menü "Einstellungen ▾" (Nutzerwunsch 2026-09-30); nur "Erledigte ausblenden" bleibt in der Leiste.
+    private readonly Controls.MenuItem _uncertainOnly = new() { Header = CompatchTexts.FilterUncertain, ToolTip = CompatchTexts.FilterUncertainTip, IsCheckable = true, StaysOpenOnClick = true };
+    private readonly Controls.MenuItem _mainAsBase = new() { Header = CompatchTexts.MainAsBase, ToolTip = CompatchTexts.MainAsBaseTip, IsCheckable = true, StaysOpenOnClick = true };
+    private readonly Controls.MenuItem _fillMissing = new() { Header = CompatchTexts.FillMissing, ToolTip = CompatchTexts.FillMissingTip, IsCheckable = true, StaysOpenOnClick = true };
+    private readonly Controls.MenuItem _hideFilled = new() { Header = CompatchTexts.FilterHideFilled, ToolTip = CompatchTexts.FilterHideFilledTip, IsCheckable = true, StaysOpenOnClick = true };
+    private readonly Controls.MenuItem _hideReplaced = new() { Header = CompatchTexts.FilterHideReplaced, ToolTip = CompatchTexts.FilterHideReplacedTip, IsCheckable = true, StaysOpenOnClick = true };
+    private Controls.ContextMenu? _settingsMenu;
+    private readonly Controls.Button _settingsButton =new() { Content = CompatchTexts.SettingsMenu, ToolTip = CompatchTexts.SettingsMenuTip, Padding = new Thickness(8, 1, 8, 1), Margin = new Thickness(0, 0, 12, 0) };
+    private readonly Controls.CheckBox _hideEqual = new() { Content = new Controls.TextBlock { Text = CompatchTexts.FilterHideEqual }, ToolTip = CompatchTexts.FilterHideEqualTip, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+    private readonly Controls.CheckBox _hideDecided = new() { Content = new Controls.TextBlock { Text = CompatchTexts.FilterHideDecided }, ToolTip = CompatchTexts.FilterHideDecidedTip, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+    private IReadOnlyList<string> _lastOrder = Array.Empty<string>();
+    private IReadOnlyList<MergeAction> _lastVisible = Array.Empty<MergeAction>();
+    private HashSet<string> _blockAddresses = new(StringComparer.Ordinal);
+    private readonly Dictionary<Controls.TreeViewItem, ActionTreeNode> _pending = new();
+    private bool _treeDirty;
+    private CompatchRun? _sortedRun;
+    private IReadOnlyList<MergeAction> _sorted = Array.Empty<MergeAction>();
+    // Ein Suchfeld direkt über dem Baum der gerade gezeigten Ansicht (PlaceSearch); sucht in Dateipfad, Stelle und Schlüssel.
+    private readonly Controls.TextBox _search = new() { ToolTip = CompatchTexts.SearchTip };
+    private readonly Controls.DockPanel _searchBar = new() { Margin = new Thickness(0, 0, 6, 4) };
+    private readonly Controls.Border _searchSlotActions = new();
+    private readonly Controls.Border _searchSlotDocument = new();
+    private readonly Controls.Border _searchSlotCardTree = new();
+    private readonly Controls.Border _searchSlotCards = new();
+
+    // Hauptfunktionen als Kacheln (Nutzerwunsch 2026-09-30).
+    private readonly Controls.Button _recheck = new() { Margin = new Thickness(0, 0, 8, 0) };
+    private readonly Controls.Button _saveButton = new() { Margin = new Thickness(0, 0, 8, 0) };
+    private readonly Controls.Button _writeButton = new() { Margin = new Thickness(0, 0, 8, 0) };
+    private readonly Controls.MenuItem _cautious = new() { Header = ParadoxModTool.Settings.SettingsTexts.CompatchCautious, ToolTip = CompatchTexts.MenuCautiousTip, IsCheckable = true, StaysOpenOnClick = true };
     private readonly Controls.TextBlock _counters = new() { Margin = new Thickness(0, 6, 0, 0) };
-    private readonly Controls.WrapPanel _skipped = new() { Margin = new Thickness(0, 2, 0, 0) };
+    // Ausgeblendete Dateiarten und gesperrte Dateien: als Liste untereinander oder nebeneinander (KindsSideBySide).
+    private readonly Controls.Border _skipped = new() { Margin = new Thickness(0, 2, 0, 0) };
     private readonly Controls.Border _notice = new() { Visibility = Visibility.Collapsed, Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(0, 6, 0, 0) };
     private readonly Controls.TextBlock _noticeText = new() { VerticalAlignment = System.Windows.VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) };
     private readonly Controls.TabControl _tabs = new() { Margin = new Thickness(0, 8, 0, 0) };
@@ -57,13 +79,19 @@ public sealed partial class CompatchWindow : Window
     private readonly List<CompatchCompareWindow> _compareWindows = new();
     private readonly Controls.TextBlock _status = new() { Margin = new Thickness(0, 6, 0, 0), TextWrapping = TextWrapping.Wrap };
 
-    public CompatchWindow(CompatchHost host, CompatchState state, CompatchStateStore store)
+    /// <param name="updateInput">Update-Modus (Ziel <see cref="PatchTarget.UpdateMod"/>): die vorbereitete Eingabe aus <see cref="VanillaUpdateRun.Prepare"/>.</param>
+    /// <param name="afterUpdateWrite">Update-Modus: nach erfolgreichem Schreiben (Update-Reiter lädt neu).</param>
+    public CompatchWindow(CompatchHost host, CompatchState state, CompatchStateStore store, CompatchInput? updateInput = null, Action? afterUpdateWrite = null)
     {
         _host = host;
         _state = state;
         _store = store;
+        _updateInput = updateInput;
+        _afterUpdateWrite = afterUpdateWrite;
         var targetName = state.TargetModId is { } id && host.Registry.Get(id) is { } target ? target.Name : state.TargetFolder;
-        Title = CompatchTexts.WindowTitle(state.ModAName, state.ModBName, targetName);
+        Title = IsUpdate
+            ? VanillaUpdateTexts.WindowTitle(state.UpdateNewVersion ?? string.Empty) + " – " + state.ModBName
+            : CompatchTexts.WindowTitle(state.ModAName, state.ModBName, targetName);
         Width = 1300;
         Height = 820;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -73,12 +101,25 @@ public sealed partial class CompatchWindow : Window
         var mainOptions = MainSide() is null ? Visibility.Collapsed : Visibility.Visible;
         _mainAsBase.Visibility = mainOptions;
         _fillMissing.Visibility = mainOptions;
+        _hideFilled.Visibility = mainOptions;
+        _hideFilled.IsChecked = state.HideFilledMissing;
+        _hideReplaced.IsChecked = state.HideReplacedFiles;
+        _hideDecided.IsChecked = state.HideDecided;
+        _hideEqual.IsChecked = state.HideEqual ?? state.Target == PatchTarget.UpdateMod;
+        _uncertainOnly.IsChecked = state.UncertainOnly;
         _status.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
         _notice.SetResourceReference(Controls.Border.BackgroundProperty, "Theme.NoticeBackground");
 
         var root = new Controls.DockPanel { Margin = new Thickness(10) };
         var top = new Controls.StackPanel();
         Controls.DockPanel.SetDock(top, Controls.Dock.Top);
+
+        var tiles = new Controls.WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+        tiles.Children.Add(Tile(_writeButton, "📝", CompatchTexts.WritePatch, bold: true));
+        tiles.Children.Add(Tile(_saveButton, "💾", CompatchTexts.SaveState));
+        tiles.Children.Add(Tile(_recheck, "🔄", CompatchTexts.RecheckAll));
+        top.Children.Add(tiles);
+
         var toolbar = new Controls.WrapPanel();
         toolbar.Children.Add(Label(CompatchTexts.ViewLabel));
         toolbar.Children.Add(_viewPicker);
@@ -86,20 +127,23 @@ public sealed partial class CompatchWindow : Window
         toolbar.Children.Add(_stageFilter);
         toolbar.Children.Add(Label(CompatchTexts.FilterOrigin));
         toolbar.Children.Add(_originFilter);
-        toolbar.Children.Add(Label(CompatchTexts.FilterFolder));
-        toolbar.Children.Add(_folderFilter);
-        toolbar.Children.Add(_uncertainOnly);
-        toolbar.Children.Add(_mainAsBase);
-        toolbar.Children.Add(_fillMissing);
-        toolbar.Children.Add(Label(CompatchTexts.Search));
-        toolbar.Children.Add(_search);
-        toolbar.Children.Add(_recheck);
-        toolbar.Children.Add(_saveButton);
-        toolbar.Children.Add(_cautious);
-        toolbar.Children.Add(_writeButton);
-        toolbar.Children.Add(_cancel);
-        toolbar.Children.Add(_progress);
+        toolbar.Children.Add(_hideDecided);
+        toolbar.Children.Add(_hideEqual);
+        toolbar.Children.Add(_settingsButton);
         top.Children.Add(toolbar);
+
+        var searchIcon = new Controls.TextBlock { Text = "🔍", VerticalAlignment = System.Windows.VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) };
+        Controls.DockPanel.SetDock(searchIcon, Controls.Dock.Left);
+        _searchBar.Children.Add(searchIcon);
+        _searchBar.Children.Add(_search);
+        _settingsButton.Click += (_, _) =>
+        {
+            // Einmal gebaut: die Einträge sind feste Felder und dürfen nur in einem Menü stecken.
+            var menu = _settingsMenu ??= BuildSettingsMenu();
+            menu.PlacementTarget = _settingsButton;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
+        };
         top.Children.Add(_counters);
         top.Children.Add(_skipped);
         var noticePanel = new Controls.StackPanel { Orientation = Controls.Orientation.Horizontal };
@@ -115,7 +159,11 @@ public sealed partial class CompatchWindow : Window
         _listView.ColumnDefinitions.Add(new Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MinWidth = 220 });
         _listView.ColumnDefinitions.Add(new Controls.ColumnDefinition { Width = new GridLength(6) });
         _listView.ColumnDefinitions.Add(new Controls.ColumnDefinition { Width = new GridLength(2.4, GridUnitType.Star) });
-        _listView.Children.Add(_tree);
+        var treeColumn = new Controls.DockPanel();
+        Controls.DockPanel.SetDock(_searchSlotActions, Controls.Dock.Top);
+        treeColumn.Children.Add(_searchSlotActions);
+        treeColumn.Children.Add(_tree);
+        _listView.Children.Add(treeColumn);
         var splitter = new Controls.GridSplitter { Width = 6, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };
         Controls.Grid.SetColumn(splitter, 1);
         _listView.Children.Add(splitter);
@@ -142,15 +190,50 @@ public sealed partial class CompatchWindow : Window
         };
         _stageFilter.SelectionChanged += (_, _) => RefreshFilters();
         _originFilter.SelectionChanged += (_, _) => RefreshFilters();
-        _folderFilter.TextChanged += (_, _) => RefreshFilters();
         _search.TextChanged += (_, _) => RefreshFilters();
-        _uncertainOnly.Click += (_, _) => RefreshFilters();
+        _uncertainOnly.Click += (_, _) =>
+        {
+            _state.UncertainOnly = _uncertainOnly.IsChecked;
+            ScheduleSave();
+            RefreshFilters();
+        };
         _mainAsBase.Click += (_, _) => MainOptionsChanged();
         _fillMissing.Click += (_, _) => MainOptionsChanged();
-        _tree.SelectedItemChanged += (_, _) => OnActionSelected(SelectedAction);
+        _hideFilled.Click += (_, _) =>
+        {
+            _state.HideFilledMissing = _hideFilled.IsChecked == true;
+            ScheduleSave();
+            RefreshFilters();
+        };
+        _hideReplaced.Click += (_, _) =>
+        {
+            _state.HideReplacedFiles = _hideReplaced.IsChecked == true;
+            ScheduleSave();
+            RefreshFilters();
+        };
+        _hideDecided.Click += (_, _) =>
+        {
+            _state.HideDecided = _hideDecided.IsChecked == true;
+            ScheduleSave();
+            RefreshFilters();
+        };
+        _hideEqual.Click += (_, _) =>
+        {
+            _state.HideEqual = _hideEqual.IsChecked == true;
+            ScheduleSave();
+            RefreshFilters();
+        };
+        _tree.SelectedItemChanged += (_, _) => RefreshDetail();
+        _tree.AddHandler(Controls.TreeViewItem.ExpandedEvent, new RoutedEventHandler((_, e) =>
+        {
+            if (e.OriginalSource is Controls.TreeViewItem item)
+            {
+                ExpandPending(item);
+            }
+        }));
         _tree.MouseDoubleClick += (_, _) =>
         {
-            if (SelectedAction is { } action)
+            if ((SelectedAction ?? SelectedBlock?.Actions[0]) is { } action)
             {
                 OpenCompare(action);
             }
@@ -158,6 +241,7 @@ public sealed partial class CompatchWindow : Window
         _recheck.Click += (_, _) =>
         {
             _session?.RecheckAll();
+            ClearUndo();
             AfterChange(rebuild: true);
         };
         _saveButton.Click += (_, _) =>
@@ -171,7 +255,6 @@ public sealed partial class CompatchWindow : Window
             ScheduleSave();
         };
         _writeButton.Click += (_, _) => WriteClicked();
-        _cancel.Click += (_, _) => _cts?.Cancel();
         _autosave.Tick += (_, _) =>
         {
             _autosave.Stop();
@@ -220,10 +303,100 @@ public sealed partial class CompatchWindow : Window
     private MergeAction? SelectedAction => (_tree.SelectedItem as Controls.TreeViewItem)?.Tag as MergeAction;
 
     /// <summary>Aktionen, die die Filter der Werkzeugleiste zeigen, in der Reihenfolge von Baum, Karten und ◀ ▶.</summary>
-    private IReadOnlyList<MergeAction> FilteredActions() =>
-        _session is null ? Array.Empty<MergeAction>() : ActionOrder.Sort(_session.Actions.Where(Matches));
+    private IReadOnlyList<MergeAction> FilteredActions()
+    {
+        if (_session is null)
+        {
+            return Array.Empty<MergeAction>();
+        }
+
+        var session = _session;
+        // Sortiert wird je Lauf einmal (bei zehntausenden Stellen kostet das spürbar Zeit); Filtern behält die Reihenfolge.
+        if (!ReferenceEquals(_sortedRun, session.Run))
+        {
+            _sortedRun = session.Run;
+            _sorted = ActionOrder.Sort(session.Actions);
+        }
+
+        var hideFilled = _hideFilled.Visibility == Visibility.Visible && _hideFilled.IsChecked == true;
+        var hideDecided = _hideDecided.IsChecked == true;
+        var hideEqual = _hideEqual.IsChecked == true;
+        var replaced = _hideReplaced.IsChecked == true ? ActionFilters.ReplacedFiles(session.Actions, session.Run.Resolved) : null;
+        return _sorted.Where(a => Matches(a)
+            && !(hideFilled && a.FillsMissing)
+            && !(hideDecided && IsDone(session, a))
+            && !(hideEqual && a.Origin == MergeOrigin.Both)
+            && !(replaced?.Contains(TreePath.FileOf(a)) ?? false)).ToList();
+    }
 
     private static Controls.TextBlock Label(string text) => new() { Text = text, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+
+    /// <summary>Großer Knopf mit Symbol über dem Text (Kachel) für die Hauptfunktionen; der Knopf bleibt dasselbe Objekt (SetBusy).</summary>
+    private static Controls.Button Tile(Controls.Button button, string icon, string text, bool bold = false)
+    {
+        var content = new Controls.StackPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+        content.Children.Add(new Controls.TextBlock { Text = icon, FontSize = 20, HorizontalAlignment = System.Windows.HorizontalAlignment.Center });
+        content.Children.Add(new Controls.TextBlock
+        {
+            Text = text,
+            FontWeight = bold ? FontWeights.Bold : FontWeights.Normal,
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 2, 0, 0),
+        });
+        button.Content = content;
+        button.Width = 150;
+        button.MinHeight = 58;
+        button.Padding = new Thickness(8, 6, 8, 6);
+        return button;
+    }
+
+    /// <summary>
+    /// Menü "Einstellungen ▾": Optionen dieses Arbeitsstands (jeder Arbeitsstand merkt sie sich) und der Weg ins Einstellungsfenster,
+    /// wo die Standardwerte für neue Arbeitsstände liegen.
+    /// </summary>
+    private Controls.ContextMenu BuildSettingsMenu()
+    {
+        var menu = new Controls.ContextMenu();
+        foreach (var item in new[] { _mainAsBase, _fillMissing, _hideFilled, _hideReplaced, _uncertainOnly })
+        {
+            menu.Items.Add(item);
+        }
+
+        menu.Items.Add(new Controls.Separator());
+        menu.Items.Add(_cautious);
+        if (_host.OpenSettings is { } openSettings)
+        {
+            menu.Items.Add(new Controls.Separator());
+            var open = new Controls.MenuItem { Header = CompatchTexts.OpenSettingsWindow, ToolTip = CompatchTexts.OpenSettingsWindowTip };
+            open.Click += (_, _) => openSettings();
+            menu.Items.Add(open);
+        }
+
+        return menu;
+    }
+
+    /// <summary>Setzt das Suchfeld über den Baum der gezeigten Ansicht (in C ohne Ordnerbereich über die Karten).</summary>
+    private void PlaceSearch()
+    {
+        var slot = _view switch
+        {
+            CompatchView.Document => _searchSlotDocument,
+            CompatchView.Cards => _cardTree.Visibility == Visibility.Visible ? _searchSlotCardTree : _searchSlotCards,
+            _ => _searchSlotActions,
+        };
+        if (ReferenceEquals(_searchBar.Parent, slot))
+        {
+            return;
+        }
+
+        if (_searchBar.Parent is Controls.Border previous)
+        {
+            previous.Child = null;
+        }
+
+        slot.Child = _searchBar;
+    }
 
     /// <summary>Liest einmal im Hintergrund und vergleicht; danach arbeitet alles mit <see cref="CompatchSession.Replan"/>.</summary>
     /// <remarks>
@@ -272,7 +445,9 @@ public sealed partial class CompatchWindow : Window
             }
 
             _session = session;
-            _status.Text = CompatchTexts.Loaded(session.Actions.Count, watch.Elapsed.TotalSeconds) + (_store.Warning is { } warning ? "  " + warning : string.Empty);
+            ClearUndo();
+            _status.Text = CompatchTexts.Loaded(session.Actions.Count, watch.Elapsed.TotalSeconds) + (_store.Warning is { } warning ? "  " + warning : string.Empty)
+                + ForgetNotice(session);
             AfterChange(rebuild: true);
         }
         catch (OperationCanceledException)
@@ -293,11 +468,33 @@ public sealed partial class CompatchWindow : Window
         }
     }
 
+    /// <summary>
+    /// Update-Modus: Hat die Sitzung Entscheidungen veränderter Dateien verworfen (<see cref="CompatchSession.ForgottenFiles"/>), Arbeitsstand
+    /// und Basis gleich speichern, sonst verwürfe das nächste Öffnen auch die inzwischen neu getroffenen. Liefert den Hinweis für die Statuszeile.
+    /// </summary>
+    private string ForgetNotice(CompatchSession session)
+    {
+        if (session.ForgottenFiles.Count == 0 || session.Baseline is not { } baseline)
+        {
+            return string.Empty;
+        }
+
+        SaveStateNow();
+        var notice = "  " + CompatchTexts.ForgottenFiles(session.ForgottenFiles.Count, string.Join(", ", session.ForgottenFiles));
+        try
+        {
+            _store.SaveBase(baseline);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            notice += "  " + ex.Message;
+        }
+
+        return notice;
+    }
+
     private void SetBusy(bool busy)
     {
-        _progress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        _progress.IsIndeterminate = busy;
-        _cancel.IsEnabled = busy;
         _recheck.IsEnabled = !busy;
         _writeButton.IsEnabled = !busy;
         _saveButton.IsEnabled = !busy;
@@ -315,6 +512,24 @@ public sealed partial class CompatchWindow : Window
 
     private CompatchInput BuildInput()
     {
+        if (_updateInput is { } update)
+        {
+            // Update-Modus: Ordner und Regeln kommen aus VanillaUpdateRun.Prepare; nur der Zerlegungs-Cache gehört dem Fenster.
+            return new CompatchInput
+            {
+                VanillaFolder = update.VanillaFolder,
+                ModAFolder = update.ModAFolder,
+                ModBFolder = update.ModBFolder,
+                BLoadsAfterA = update.BLoadsAfterA,
+                Rules = update.Rules,
+                KeyOperators = update.KeyOperators,
+                Filter = update.Filter,
+                NoBasePaths = update.NoBasePaths,
+                ExcludeOwnPatchFilesOf = update.ExcludeOwnPatchFilesOf,
+                Cache = _cache,
+            };
+        }
+
         if (_host.VanillaRoot is null || !Directory.Exists(_host.VanillaRoot))
         {
             throw new CompatchInputException(CompatchTexts.ErrorNoVanilla);
@@ -339,6 +554,9 @@ public sealed partial class CompatchWindow : Window
             }
         }
 
+        var metadataFile = _host.Profile?.MetadataFile ?? string.Empty;
+        var hidesEarlier = _host.Profile?.ReplacePathHidesEarlierMods == true;
+        var roots = _host.Profile?.ReplacePathRoots ?? new List<string>();
         return new CompatchInput
         {
             VanillaFolder = _host.VanillaRoot,
@@ -347,6 +565,11 @@ public sealed partial class CompatchWindow : Window
             BLoadsAfterA = _state.BLoadsAfterA,
             Rules = rules,
             KeyOperators = _host.Profile?.KeyOperators ?? new List<string>(),
+            HiddenVanillaFolders = ReplacePaths.Of(new[] { _state.ModAFolder, _state.ModBFolder }, metadataFile, roots),
+            // CK III und EU V: replace_path der später ladenden Mod blendet auch die Dateien der früheren aus.
+            HiddenFoldersOfA = hidesEarlier && _state.BLoadsAfterA ? ReplacePaths.Of(new[] { _state.ModBFolder }, metadataFile, roots) : Array.Empty<string>(),
+            HiddenFoldersOfB = hidesEarlier && !_state.BLoadsAfterA ? ReplacePaths.Of(new[] { _state.ModAFolder }, metadataFile, roots) : Array.Empty<string>(),
+            ReplacePathRoots = roots,
             Filter = new CompatchFileFilter(hidden, locked, _state.SkipLocked),
             ExcludeOwnPatchFilesOf = _state.Target switch
             {
@@ -385,6 +608,7 @@ public sealed partial class CompatchWindow : Window
         try
         {
             _session.Remerge(BuildInput());
+            ClearUndo();
         }
         catch (CompatchInputException ex)
         {
@@ -422,7 +646,12 @@ public sealed partial class CompatchWindow : Window
     }
 
     /// <summary>Titel der zuschaltbaren Spalte: "Vanilla" oder "Basis: Hauptmod" (Plan 4).</summary>
-    internal string BaseColumnTitle => _state.MainReplacesVanilla && MainSide() is not null ? CompatchTexts.ColumnBase(MainName) : CompatchTexts.ColumnVanilla;
+    internal string BaseColumnTitle => IsUpdate
+        ? VanillaUpdateTexts.OldVanillaColumn
+        : _state.MainReplacesVanilla && MainSide() is not null ? CompatchTexts.ColumnBase(MainName) : CompatchTexts.ColumnVanilla;
+
+    /// <summary>Update-Modus: Mod an neue Vanilla anpassen (Spec 2026-09-30-vanilla-update-merge).</summary>
+    internal bool IsUpdate => _state.Target == PatchTarget.UpdateMod;
 
     private void CloseCompareWindows()
     {
@@ -461,6 +690,7 @@ public sealed partial class CompatchWindow : Window
             CompatchView.Document => _documentHost,
             _ => _listView,
         };
+        PlaceSearch();
         if (_viewPicker.SelectedIndex != (int)view)
         {
             _switchingView = true;
@@ -469,6 +699,11 @@ public sealed partial class CompatchWindow : Window
         }
 
         _tabs.SelectedIndex = 0;
+        if (view == CompatchView.Actions && _treeDirty)
+        {
+            RefreshTree();
+        }
+
         RefreshCurrentView(rebuild: true);
     }
 
@@ -484,48 +719,100 @@ public sealed partial class CompatchWindow : Window
         {
             _stageFilter.SelectedIndex = 0;
             _originFilter.SelectedIndex = 0;
-            _folderFilter.Text = string.Empty;
             _search.Text = string.Empty;
             _uncertainOnly.IsChecked = false;
+            _hideFilled.IsChecked = false;
+            _hideReplaced.IsChecked = false;
+            _hideDecided.IsChecked = false;
+            _hideEqual.IsChecked = false;
+            _state.HideDecided = false;
+            _state.HideEqual = false;
+            _state.HideFilledMissing = false;
+            _state.HideReplacedFiles = false;
+            _state.UncertainOnly = false;
             RefreshTree();
             SelectInTree(id, edit);
         }
     }
 
+    /// <summary>
+    /// Wählt eine Stelle (Aktions-ID) oder einen Block (Adress-ID) im Baum. Die Knoten auf dem Weg dorthin werden aufgeklappt und entstehen
+    /// dabei erst (siehe <see cref="RefreshTree"/>).
+    /// </summary>
     private bool SelectInTree(string id, bool edit)
     {
-        bool Find(Controls.ItemCollection items, List<Controls.TreeViewItem> ancestors)
+        var action = _lastVisible.FirstOrDefault(a => a.Id == id);
+        var blockTarget = false;
+        if (action is null)
         {
-            foreach (Controls.TreeViewItem item in items)
-            {
-                if (item.Tag is MergeAction action && action.Id == id)
-                {
-                    foreach (var ancestor in ancestors)
-                    {
-                        ancestor.IsExpanded = true;
-                    }
+            action = _lastVisible.FirstOrDefault(a => a.Address.Id == id);
+            blockTarget = action is not null && _blockAddresses.Contains(id);
+        }
 
-                    item.IsSelected = true;
-                    item.BringIntoView();
-                    if (edit)
-                    {
-                        ShowEditor(true);
-                    }
-
-                    return true;
-                }
-
-                if (Find(item.Items, ancestors.Append(item).ToList()))
-                {
-                    return true;
-                }
-            }
-
+        if (action is null)
+        {
             return false;
         }
 
-        return Find(_tree.Items, new List<Controls.TreeViewItem>());
+        var keys = ChainKeys(action, _blockAddresses.Contains(action.Address.Id)).ToList();
+        if (!blockTarget)
+        {
+            keys.Add("a:" + action.Id);
+        }
+
+        var items = _tree.Items;
+        Controls.TreeViewItem? found = null;
+        for (var i = 0; i < keys.Count; i++)
+        {
+            found = items.OfType<Controls.TreeViewItem>().FirstOrDefault(item => string.Equals(ItemKey(item), keys[i], StringComparison.OrdinalIgnoreCase));
+            if (found is null)
+            {
+                return false;
+            }
+
+            if (i < keys.Count - 1)
+            {
+                found.IsExpanded = true;
+                ExpandPending(found);
+                items = found.Items;
+            }
+        }
+
+        found!.IsSelected = true;
+        found.BringIntoView();
+        if (edit)
+        {
+            ShowEditor(true);
+        }
+
+        return true;
     }
+
+    /// <summary>Schlüssel der Knoten von der Wurzel bis zur Datei (und zum Block) einer Stelle: <c>d:</c>Ordner, <c>f:</c>Datei, <c>b:</c>Adresse.</summary>
+    private static IEnumerable<string> ChainKeys(MergeAction action, bool inBlock)
+    {
+        var parts = TreePath.FileOf(action).Split('/');
+        var path = string.Empty;
+        for (var i = 0; i < parts.Length; i++)
+        {
+            path = i == 0 ? parts[0] : path + "/" + parts[i];
+            yield return (i == parts.Length - 1 ? "f:" : "d:") + path;
+        }
+
+        if (inBlock)
+        {
+            yield return "b:" + action.Address.Id;
+        }
+    }
+
+    /// <summary>Schlüssel eines Baumeintrags (wie <see cref="ChainKeys"/>, Stellen mit <c>a:</c>); <see langword="null"/> für Platzhalter.</summary>
+    private static string? ItemKey(Controls.TreeViewItem item) => item.Tag switch
+    {
+        string key => key,
+        CompatchBlock block => "b:" + block.Address.Id,
+        MergeAction action => "a:" + action.Id,
+        _ => null,
+    };
 
     private void ScheduleSave()
     {
@@ -557,11 +844,47 @@ public sealed partial class CompatchWindow : Window
         var total = _session.Actions.Count;
         var main = Count(MergeStage.Conflict) + Count(MergeStage.Review) + Count(MergeStage.Automatic);
         _counters.Text = CompatchTexts.Counters(Count(MergeStage.Conflict), Count(MergeStage.Review), Count(MergeStage.Automatic), total - main, _session.SeenCount, total);
+        RefreshSkipped();
+    }
 
-        _skipped.Children.Clear();
+    /// <summary>
+    /// Einstellung "Ausgeblendete Dateiarten" (<see cref="ParadoxModTool.Settings.AppSettings.CompatchKindsSideBySide"/>): nebeneinander statt
+    /// als Liste untereinander. Das Hauptfenster setzt sie; offene Merge-Fenster zeichnen die Zeile sofort neu.
+    /// </summary>
+    internal static bool KindsSideBySide
+    {
+        get => _kindsSideBySide;
+        set
+        {
+            if (_kindsSideBySide == value)
+            {
+                return;
+            }
+
+            _kindsSideBySide = value;
+            foreach (var window in System.Windows.Application.Current?.Windows.OfType<CompatchWindow>() ?? Enumerable.Empty<CompatchWindow>())
+            {
+                window.RefreshSkipped();
+            }
+        }
+    }
+
+    private static bool _kindsSideBySide;
+
+    /// <summary>Ausgeblendete Dateiarten und übersprungene gesperrte Dateien mit "einblenden".</summary>
+    private void RefreshSkipped()
+    {
+        if (_session is null)
+        {
+            _skipped.Child = null;
+            return;
+        }
+
+        Controls.Panel list = KindsSideBySide ? new Controls.WrapPanel() : new Controls.StackPanel();
+        _skipped.Child = list;
         foreach (var skip in _session.Run.Skipped.Where(s => s.Reason != SkipReason.Metadata))
         {
-            var row = new Controls.StackPanel { Orientation = Controls.Orientation.Horizontal, Margin = new Thickness(0, 0, 16, 0) };
+            var row = new Controls.StackPanel { Orientation = Controls.Orientation.Horizontal, Margin = KindsSideBySide ? new Thickness(0, 0, 16, 0) : new Thickness(0, 0, 0, 2) };
             row.Children.Add(new Controls.TextBlock { Text = CompatchTexts.Skip(skip.Reason, skip.Kind, skip.Count) });
             if (skip.Reason is SkipReason.HiddenKind or SkipReason.Locked)
             {
@@ -583,7 +906,7 @@ public sealed partial class CompatchWindow : Window
                 row.Children.Add(link);
             }
 
-            _skipped.Children.Add(row);
+            list.Children.Add(row);
         }
     }
 
@@ -613,14 +936,7 @@ public sealed partial class CompatchWindow : Window
             return false;
         }
 
-        if (_folderFilter.Text.Length > 0 && !TreePath.FileOf(action).Contains(_folderFilter.Text.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        return _search.Text.Length == 0
-            || action.DisplayPath.Contains(_search.Text.Trim(), StringComparison.OrdinalIgnoreCase)
-            || action.Address.Key.Contains(_search.Text.Trim(), StringComparison.OrdinalIgnoreCase);
+        return ActionFilters.MatchesText(action, _search.Text);
     }
 
     /// <summary>Ordnerbaum Ordner → Datei → Stelle (Spec Nachtrag 2). Aufgeklappte Knoten und die Auswahl bleiben erhalten.</summary>
@@ -631,14 +947,24 @@ public sealed partial class CompatchWindow : Window
             return;
         }
 
+        // Unsichtbar (Karten oder Dokument): nicht neu bauen, sondern beim nächsten Einblenden von Ansicht A (ShowView).
+        if (_view != CompatchView.Actions)
+        {
+            _treeDirty = true;
+            return;
+        }
+
+        _treeDirty = false;
         var session = _session;
         var keepId = SelectedAction?.Id;
+        var keepBlock = SelectedBlock?.Address.Id;
+        var keepNode = (_tree.SelectedItem as Controls.TreeViewItem)?.Tag as string;
         var expanded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Collect(Controls.ItemCollection items)
         {
             foreach (Controls.TreeViewItem item in items)
             {
-                if (item.IsExpanded && item.Tag is string key)
+                if (item.IsExpanded && ItemKey(item) is { } key)
                 {
                     expanded.Add(key);
                 }
@@ -650,59 +976,232 @@ public sealed partial class CompatchWindow : Window
         Collect(_tree.Items);
         var firstRun = _tree.Items.Count == 0;
         _tree.Items.Clear();
-        Controls.TreeViewItem? select = null;
-        var nodes = ActionTree.Build(FilteredActions(), a => IsOpenConflict(session, a), a => a.Stage is MergeStage.Conflict or MergeStage.Review or MergeStage.Outdated && !session.IsExplicit(a.Id));
+        _pending.Clear();
+        var visible = FilteredActions();
+        var visibleIds = visible.Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
+        // Verschwindet die Auswahl (z. B. "Erledigte ausblenden" nach einer Entscheidung), wird der nächste Eintrag gewählt.
+        var anchor = keepId ?? SelectedBlock?.Actions[0].Id;
+        var stillThere = (keepId is not null && visibleIds.Contains(keepId)) || (keepBlock is not null && visible.Any(a => a.Address.Id == keepBlock));
+        var fallback = anchor is null || stillThere ? null : ActionOrder.NextVisible(_lastOrder, anchor, visibleIds);
+        _lastOrder = visible.Select(a => a.Id).ToList();
+        _lastVisible = visible;
+        var nodes = ActionTree.Build(visible, a => IsOpenConflict(session, a), a => a.Stage is MergeStage.Conflict or MergeStage.Review or MergeStage.Outdated && !session.IsExplicit(a.Id), presorted: true, isDone: a => IsDone(session, a));
+        _blockAddresses = BlockPaths(nodes);
 
-        Controls.TreeViewItem Build(ActionTreeNode node, List<Controls.TreeViewItem> ancestors)
+        // Was ausgewählt wird: die bisherige Auswahl oder der Nachfolger; der Weg dorthin wird aufgeklappt, damit der Eintrag entsteht.
+        string? selectKey = null;
+        if (keepId is null && keepBlock is null && keepNode is not null)
         {
-            if (node.Kind == TreeNodeKind.Action)
-            {
-                var action = node.Action!;
-                var marks = (action.Uncertain ? "  ⚠" : string.Empty)
-                    + (session.IsExplicit(action.Id) ? "  •" : string.Empty)
-                    + (session.IsSeen(action.Id) ? "  ✓" : string.Empty);
-                var leaf = new Controls.TreeViewItem { Header = CompatchTreeBuilder.ActionHeader(StageToken(session, action), action.DisplayPath + marks), Tag = action };
-                if (action.Id == keepId)
-                {
-                    select = leaf;
-                    foreach (var ancestor in ancestors)
-                    {
-                        ancestor.IsExpanded = true;
-                    }
-                }
-
-                return leaf;
-            }
-
-            var key = (node.Kind == TreeNodeKind.Folder ? "d:" : "f:") + node.Path;
-            var item = new Controls.TreeViewItem
-            {
-                Header = CompatchTreeBuilder.Header(node),
-                Tag = key,
-                IsExpanded = expanded.Contains(key) || (firstRun && node.OpenConflicts > 0),
-            };
-            var chain = ancestors.Append(item).ToList();
-            foreach (var child in node.Children)
-            {
-                item.Items.Add(Build(child, chain));
-            }
-
-            return item;
+            // Datei oder Ordner gewählt (Sammelknöpfe): Auswahl bleibt, solange der Knoten sichtbar ist.
+            selectKey = keepNode;
+        }
+        else if (stillThere)
+        {
+            selectKey = keepBlock is not null ? "b:" + keepBlock : "a:" + keepId;
+        }
+        else if (fallback is not null && visible.FirstOrDefault(a => a.Id == fallback) is { } next)
+        {
+            selectKey = _blockAddresses.Contains(next.Address.Id) ? "b:" + next.Address.Id : "a:" + next.Id;
         }
 
+        if (selectKey is not null && visible.FirstOrDefault(a => selectKey == "a:" + a.Id || selectKey == "b:" + a.Address.Id) is { } target)
+        {
+            foreach (var key in ChainKeys(target, _blockAddresses.Contains(target.Address.Id) && selectKey.StartsWith("a:", StringComparison.Ordinal)))
+            {
+                expanded.Add(key);
+            }
+        }
+
+        var context = new TreeBuild(session, expanded, firstRun, selectKey);
         foreach (var node in nodes)
         {
-            _tree.Items.Add(Build(node, new List<Controls.TreeViewItem>()));
+            _tree.Items.Add(BuildItem(node, context));
         }
 
-        if (select is not null)
+        if (context.Selected is not null)
         {
-            select.IsSelected = true;
+            context.Selected.IsSelected = true;
         }
         else
         {
             OnActionSelected(null);
         }
+    }
+
+    /// <summary>Platzhalter unter einem eingeklappten Knoten (damit der Pfeil erscheint); die echten Einträge entstehen beim Aufklappen.</summary>
+    private static readonly object TreePlaceholder = new();
+
+    /// <summary>Angaben für einen Aufbau des Baums: aufgeklappte Schlüssel, erster Lauf, gesuchte Auswahl und der gefundene Eintrag.</summary>
+    private sealed class TreeBuild(CompatchSession session, IReadOnlySet<string> expanded, bool firstRun, string? selectKey)
+    {
+        public CompatchSession Session { get; } = session;
+
+        public IReadOnlySet<string> Expanded { get; } = expanded;
+
+        public bool FirstRun { get; } = firstRun;
+
+        public string? SelectKey { get; } = selectKey;
+
+        public Controls.TreeViewItem? Selected { get; set; }
+    }
+
+    /// <summary>
+    /// Ein Eintrag des Baums. Ordner, Dateien und Blöcke bekommen ihre Kinder nur, wenn sie aufgeklappt sind; sonst einen Platzhalter, und die
+    /// Kinder entstehen beim Aufklappen (<see cref="ExpandPending"/>). So entstehen nach einer Entscheidung nur die sichtbaren Einträge statt
+    /// zehntausender (Nutzerwunsch Geschwindigkeit).
+    /// </summary>
+    private Controls.TreeViewItem BuildItem(ActionTreeNode node, TreeBuild context)
+    {
+        var session = context.Session;
+        if (node.Kind == TreeNodeKind.Action)
+        {
+            var action = node.Action!;
+            var marks = (action.Uncertain ? "  ⚠" : string.Empty)
+                + (session.IsExplicit(action.Id) ? "  •" : string.Empty);
+            // Eigenes Menü: ohne öffnete WPF beim Rechtsklick das Menü der Datei darüber, und "alle übernehmen" traf die ganze Datei.
+            var leaf = new Controls.TreeViewItem { Header = CompatchTreeBuilder.ActionHeader(StageToken(session, action), action.DisplayPath + marks, IsDone(session, action), session.IsSeen(action.Id)), Tag = action, ContextMenu = BulkMenu(action.Id, TreeNodeKind.Action) };
+
+            if (context.SelectKey == "a:" + action.Id)
+            {
+                context.Selected = leaf;
+            }
+
+            return leaf;
+        }
+
+        Controls.TreeViewItem item;
+        string key;
+        if (node.Kind == TreeNodeKind.Block)
+        {
+            var actions = node.Children.Select(c => c.Action!).ToList();
+            var blockToken = actions.Any(a => IsOpenConflict(session, a))
+                ? "CompatchConflict"
+                : node.Open > 0 ? "CompatchReview" : "CompatchVanilla";
+            key = "b:" + node.Path;
+            item = new Controls.TreeViewItem
+            {
+                Header = CompatchTreeBuilder.ActionHeader(blockToken, CompatchTexts.BlockHeader(node.Name, node.Count), node.Done == node.Count, actions.All(a => session.IsSeen(a.Id))),
+                Tag = new CompatchBlock(actions[0].Address, actions),
+                ContextMenu = BulkMenu(node.Path, TreeNodeKind.Block),
+            };
+        }
+        else
+        {
+            key = (node.Kind == TreeNodeKind.Folder ? "d:" : "f:") + node.Path;
+            item = new Controls.TreeViewItem { Header = CompatchTreeBuilder.NodeHeader(node), Tag = key, ContextMenu = BulkMenu(node.Path, node.Kind) };
+        }
+
+        if (string.Equals(context.SelectKey, key, StringComparison.OrdinalIgnoreCase))
+        {
+            context.Selected = item;
+        }
+
+        // Erster Lauf: nur Ordner mit Konflikten aufklappen; Dateien und Blöcke mit tausenden Stellen erst auf Klick.
+        if (context.Expanded.Contains(key) || (context.FirstRun && node.Kind == TreeNodeKind.Folder && node.OpenConflicts > 0))
+        {
+            foreach (var child in node.Children)
+            {
+                item.Items.Add(BuildItem(child, context));
+            }
+
+            item.IsExpanded = true;
+        }
+        else if (node.Children.Count > 0)
+        {
+            item.Items.Add(new Controls.TreeViewItem { Tag = TreePlaceholder });
+            _pending[item] = node;
+        }
+
+        return item;
+    }
+
+    /// <summary>Beim Aufklappen: die echten Einträge unter einem Knoten anlegen (einmal je Aufbau des Baums).</summary>
+    private void ExpandPending(Controls.TreeViewItem item)
+    {
+        if (_session is null || !_pending.Remove(item, out var node))
+        {
+            return;
+        }
+
+        item.Items.Clear();
+        var context = new TreeBuild(_session, new HashSet<string>(), false, null);
+        foreach (var child in node.Children)
+        {
+            item.Items.Add(BuildItem(child, context));
+        }
+    }
+
+    /// <summary>Adress-IDs aller Blockknoten (ab zwei Stellen einer Adresse, siehe <see cref="ActionTree"/>).</summary>
+    private static HashSet<string> BlockPaths(IEnumerable<ActionTreeNode> nodes)
+    {
+        var result = new HashSet<string>(StringComparer.Ordinal);
+        void Walk(IEnumerable<ActionTreeNode> list)
+        {
+            foreach (var node in list)
+            {
+                if (node.Kind == TreeNodeKind.Block)
+                {
+                    result.Add(node.Path);
+                }
+                else if (node.Kind != TreeNodeKind.Action)
+                {
+                    Walk(node.Children);
+                }
+            }
+        }
+
+        Walk(nodes);
+        return result;
+    }
+
+    /// <summary>
+    /// Rechtsklick auf Ordner, Datei oder Block (Nutzerwunsch): alle sichtbaren Stellen darunter als gelöst markieren (Vorschlag bestätigen) oder
+    /// eine Seite übernehmen. Die Stellen werden beim Klick bestimmt, damit die aktuellen Filter gelten.
+    /// </summary>
+    private Controls.ContextMenu BulkMenu(string path, TreeNodeKind kind)
+    {
+        var menu = new Controls.ContextMenu();
+        void Add(string header, Func<MergeAction, MergeDecision>? decisionFor)
+        {
+            var item = new Controls.MenuItem { Header = header };
+            item.Click += (_, _) => DecideAll(ActionFilters.Under(FilteredActions(), path, kind), decisionFor);
+            menu.Items.Add(item);
+        }
+
+        Add(CompatchTexts.BulkConfirm, null);
+        Add(CompatchTexts.BulkTake(_state.ModAName), _ => new MergeDecision(DecisionKind.TakeA));
+        Add(CompatchTexts.BulkTake(_state.ModBName), _ => new MergeDecision(DecisionKind.TakeB));
+        menu.Items.Add(new Controls.Separator());
+        var reset = new Controls.MenuItem { Header = CompatchTexts.BulkReset };
+        reset.Click += (_, _) => ResetAll(path, kind);
+        menu.Items.Add(reset);
+        return menu;
+    }
+
+    /// <summary>
+    /// Alle Stellen unter einem Knoten zurücksetzen (Nutzerwunsch 2026-10-01: Ausweg für eine ganze Datei). Gilt für alle Stellen, auch die von
+    /// "Erledigte ausblenden" versteckten, denn genau die sind entschieden. Ab zwei Stellen mit Nachfrage; Strg+Z nimmt es zurück.
+    /// </summary>
+    internal void ResetAll(string path, TreeNodeKind kind)
+    {
+        if (_session is not { } session)
+        {
+            return;
+        }
+
+        var actions = ActionFilters.Under(session.Actions, path, kind);
+        if (actions.Count == 0)
+        {
+            return;
+        }
+
+        var where = kind is TreeNodeKind.File or TreeNodeKind.Folder ? path : actions[0].Address.Key;
+        if (actions.Count > 1 && System.Windows.MessageBox.Show(this, CompatchTexts.ResetQuestion(actions.Count, where), CompatchTexts.ResetTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        Change(actions.Select(a => a.Address).Distinct(), s => s.ResetMany(actions.Select(a => a.Id)));
     }
 
     /// <summary>Hinweis "A hat sich geändert" (Spec, Fehler und Grenzfälle). Eigene Schreibvorgänge unterdrücken ihn kurz.</summary>

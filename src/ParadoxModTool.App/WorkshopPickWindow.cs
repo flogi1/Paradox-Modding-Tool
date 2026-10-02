@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ParadoxModTool.Localization;
 using ParadoxModTool.SteamIntegration;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
@@ -20,7 +21,7 @@ public sealed class WorkshopPickWindow : Window
     private WorkshopPickWindow(string header, IReadOnlyList<WorkshopMatch> items)
     {
         _items = items;
-        Title = "Workshop-Seite wählen";
+        Title = PublishTexts.WorkshopPickTitle;
         Width = 560;
         Height = 380;
         MinHeight = 260;
@@ -45,7 +46,7 @@ public sealed class WorkshopPickWindow : Window
                 DialogResult = true;
             }
         };
-        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        var cancel = new Button { Content = CommonTexts.Cancel, Width = 90, IsCancel = true };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
         buttons.Children.Add(ok);
         buttons.Children.Add(cancel);

@@ -84,8 +84,12 @@ public partial class MainWindow
         }
 
         var caret = pane.CurrentCaretOffset;
+        int? line = null;
         if (document.Document.Text != start.Text)
         {
+            // Der Entwurf geht womöglich von der Abhängigkeits-Kopie aus und enthält eingesetzte Mod-Fassungen: dieselbe Stelle über ihr Element
+            // suchen statt den Vanilla-Offset in den neuen Text zu übertragen (3c-Review).
+            line = GuiDraft.LineInCopy(GuiParser.Parse(document.Document.Text), caret, GuiParser.Parse(start.Text));
             document.Document.Text = start.Text;
         }
 
@@ -96,7 +100,7 @@ public partial class MainWindow
         document.IsGuiDraft = true;
         if (ReferenceEquals(pane.ActiveDocument, document))
         {
-            pane.GoToLine(document.Document.GetLineByOffset(Math.Min(caret, document.Document.TextLength)).LineNumber);
+            pane.GoToLine(line ?? document.Document.GetLineByOffset(Math.Min(caret, document.Document.TextLength)).LineNumber);
         }
     }
 
@@ -177,7 +181,7 @@ public partial class MainWindow
         try
         {
             var mod = RegisteredGuiMod(modRoot);
-            var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile);
+            var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile, CurrentGuiLayout.FirstWins);
             plan = GuiOverridePlanner.Plan(new GuiOverrideRequest(
                 source,
                 File.ReadAllText(path),
@@ -239,7 +243,7 @@ public partial class MainWindow
         }
 
         var mod = RegisteredGuiMod(modRoot);
-        var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile);
+        var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile, CurrentGuiLayout.FirstWins);
         bool Taken(string name) => GuiTypeEdits.IsTaken(name, probe.Kind, workspace.Index, null, workspace.Catalog.IsKnownEngineWidget);
         var ask = new GuiNewTypeWindow(
             GuiNewTypeMode.Copy,
@@ -394,9 +398,9 @@ public partial class MainWindow
             return;
         }
 
-        var defaults = GuiModTargets.For(modRoot);
+        var defaults = GuiModTargets.For(modRoot, firstWins: CurrentGuiLayout.FirstWins);
         var defaultDependencies = ModGuiDependencies.Defaults(_mods.Registry, mod);
-        var window = new GuiModSettingsWindow(mod.Name, defaults, mod.GuiOverrideFile, mod.GuiTypesFile, ModGuiDependencies.For(_mods.Registry, mod), defaultDependencies)
+        var window = new GuiModSettingsWindow(mod.Name, defaults, mod.GuiOverrideFile, mod.GuiTypesFile, ModGuiDependencies.For(_mods.Registry, mod), defaultDependencies, CurrentGuiLayout)
         {
             Owner = this,
         };

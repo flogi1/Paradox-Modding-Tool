@@ -6,9 +6,13 @@ using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
 using UserControl = System.Windows.Controls.UserControl;
 using ParadoxModTool.Editor;
+using ParadoxModTool.ErrorLog;
 using ParadoxModTool.Notes;
 
 namespace ParadoxModTool.App;
+
+/// <summary>Eine Zeile im Abschnitt "⚠ Fehler": Fehlerart und Name, darunter Zeile und Meldung; <c>Line</c> = Sprungziel, falls bekannt.</summary>
+public sealed record NotesErrorItem(string Title, string Detail, int? Line);
 
 /// <summary>
 /// Rechtes Panel mit Notiz und Lesezeichen des aktiven Dokuments (siehe NotesSidePanel.xaml). Liest die
@@ -64,6 +68,14 @@ public partial class NotesSidePanel : UserControl
     /// <summary>Das Häkchen "Erledigte" wurde umgeschaltet; das Hauptfenster lädt das Panel neu und merkt sich die Wahl.</summary>
     public event EventHandler? ShowDoneBugsChanged;
 
+    /// <summary>Doppelklick auf einen Fehler mit Zeile; der Wert ist die Zeile in der angezeigten Datei.</summary>
+    public event EventHandler<int>? JumpToErrorRequested;
+
+    /// <summary>Knopf "Im Fehlerprotokoll zeigen".</summary>
+    public event EventHandler? ShowInErrorLogRequested;
+
+    private bool _baseHasContent;
+
     /// <summary>Umschalter "Diese Datei / Ganzes Projekt" wurde geändert.</summary>
     public event EventHandler? BugScopeChanged;
 
@@ -82,7 +94,7 @@ public partial class NotesSidePanel : UserControl
             bookmarks = BookmarkStore.GetBookmarks(BookmarkStore.TryLoad(BookmarkStore.GetDefaultBookmarksFilePath()), filePath);
         }
 
-        HeaderText.Text = filePath is null ? "Notizen & Lesezeichen" : Path.GetFileName(filePath);
+        HeaderText.Text = filePath is null ? MiscWindowTexts.NotesPanelHeader : Path.GetFileName(filePath);
         HeaderText.ToolTip = filePath;
 
         NoteText.Text = note;
@@ -98,9 +110,54 @@ public partial class NotesSidePanel : UserControl
         BugsSection.Visibility = bugsVisible ? Visibility.Visible : Visibility.Collapsed;
         BugsRow.Height = bugsVisible ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
 
-        HasContent = !string.IsNullOrEmpty(note) || bookmarks.Count > 0 || bugsVisible;
+        _baseHasContent = !string.IsNullOrEmpty(note) || bookmarks.Count > 0 || bugsVisible;
+        HasContent = _baseHasContent || ErrorsSection.Visibility == Visibility.Visible || _hasWarnings;
         EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
     }
+
+    /// <summary>Eine Zeile im Abschnitt "⚠ Nach dem Ersetzen".</summary>
+    private sealed record WarningRow(string Text, BlockWarningHit Hit);
+
+    private bool _hasWarnings;
+
+    /// <summary>Doppelklick auf eine Zeile der Warnungen nach dem Ersetzen: die Stelle öffnen.</summary>
+    public event EventHandler<BlockWarningHit>? OpenReplaceWarningRequested;
+
+    /// <summary>Knopf ✕ im Abschnitt: die Liste leeren (das Hauptfenster setzt sie auf leer).</summary>
+    public event EventHandler? ClearReplaceWarningsRequested;
+
+    /// <summary>Knopf ⟳ im Abschnitt: die Liste gegen den aktuellen Text der Dateien aktualisieren (erledigte Stellen fallen weg, Zeilen werden nachgeführt).</summary>
+    public event EventHandler? RefreshReplaceWarningsRequested;
+
+    /// <summary>
+    /// Zeigt die Warnungen nach dem Ersetzen (OR-/NOR-/AND-Blöcke mit höchstens einem Eintrag, alle Fundstellen des letzten Ersetzens);
+    /// eine leere Liste blendet den Abschnitt aus. Sie gelten für das Panel unabhängig von der gerade angezeigten Datei.
+    /// </summary>
+    public void SetReplaceWarnings(IReadOnlyList<BlockWarningHit> hits)
+    {
+        _hasWarnings = hits.Count > 0;
+        WarningsHeader.Text = SearchTexts.BlockWarningPanelHeading(hits.Count);
+        WarningsClearButton.ToolTip = SearchTexts.BlockWarningPanelClearTip;
+        WarningsRefreshButton.ToolTip = SearchTexts.BlockWarningPanelRefreshTip;
+        WarningsList.ToolTip = SearchTexts.BlockWarningOpenHint;
+        WarningsList.ItemsSource = hits.Select(hit => new WarningRow(SearchTexts.BlockWarningText(hit), hit)).ToList();
+        WarningsSection.Visibility = _hasWarnings ? Visibility.Visible : Visibility.Collapsed;
+        WarningsRow.Height = _hasWarnings ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+        HasContent = _baseHasContent || ErrorsSection.Visibility == Visibility.Visible || _hasWarnings;
+        EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void WarningsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (WarningsList.SelectedItem is WarningRow row)
+        {
+            OpenReplaceWarningRequested?.Invoke(this, row.Hit);
+        }
+    }
+
+    private void ClearReplaceWarnings_Click(object sender, RoutedEventArgs e) => ClearReplaceWarningsRequested?.Invoke(this, EventArgs.Empty);
+
+    private void RefreshReplaceWarnings_Click(object sender, RoutedEventArgs e) => RefreshReplaceWarningsRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     /// Füllt den Abschnitt "Scope": Scope am Cursor mit dem Weg dorthin, die gespeicherten Scopes und die Warnungen der Datei.
@@ -119,7 +176,7 @@ public partial class NotesSidePanel : UserControl
         var context = insight.Context;
         if (context is null)
         {
-            ScopeCurrentText.Text = "Scope: außerhalb eines Objekts";
+            ScopeCurrentText.Text = MiscWindowTexts.NotesScopeOutside;
             ScopeCurrentText.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
             ScopeFieldText.Text = string.Empty;
         }
@@ -129,7 +186,7 @@ public partial class NotesSidePanel : UserControl
             ScopeCurrentText.SetResourceReference(TextBlock.ForegroundProperty, context.Confident ? "Theme.Text" : "Theme.TextMuted");
             ScopeFieldText.Text = context.FieldPath is null
                 ? string.Empty
-                : $"Feld: {context.FieldPath}" + (context.StartScope is null ? string.Empty : $"  (Start-Scope {context.StartScope}, Zustimmung {context.StartSupport:P0})");
+                : MiscWindowTexts.NotesScopeField(context.FieldPath) + (context.StartScope is null ? string.Empty : "  " + MiscWindowTexts.NotesScopeStart(context.StartScope, context.StartSupport));
         }
 
         var saved = new List<string>();
@@ -147,7 +204,7 @@ public partial class NotesSidePanel : UserControl
         ScopeSavedText.Text = string.Join("\n", saved);
 
         var issues = insight.Issues;
-        ScopeIssuesHeader.Text = $"⚠ Warnungen ({issues.Count})";
+        ScopeIssuesHeader.Text = MiscWindowTexts.NotesScopeWarnings(issues.Count);
         ScopeIssuesHeader.Visibility = issues.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         ScopeIssuesList.Visibility = issues.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         ScopeIssuesList.ItemsSource = issues;
@@ -248,6 +305,30 @@ public partial class NotesSidePanel : UserControl
     private void BugScope_Click(object sender, RoutedEventArgs e) => BugScopeChanged?.Invoke(this, EventArgs.Empty);
 
     private void ShowDone_Click(object sender, RoutedEventArgs e) => ShowDoneBugsChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Füllt den Abschnitt "⚠ Fehler"; eine leere Liste blendet ihn aus. Fehler zählen als Inhalt (Plan-2b-Ruling 4).</summary>
+    public void SetErrors(IReadOnlyList<NotesErrorItem> errors)
+    {
+        ErrorsHeader.Text = ErrorLogTexts.NotesHeading(errors.Count);
+        ShowInErrorLogButton.Content = ErrorLogTexts.NotesShowInLog;
+        ShowInErrorLogButton.ToolTip = ErrorLogTexts.NotesShowInLogTip;
+        ErrorsList.ToolTip = ErrorLogTexts.NotesJumpTip;
+        ErrorsList.ItemsSource = errors;
+        ErrorsSection.Visibility = errors.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ErrorsRow.Height = errors.Count == 0 ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        HasContent = _baseHasContent || errors.Count > 0 || _hasWarnings;
+        EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ErrorsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (ErrorsList.SelectedItem is NotesErrorItem { Line: int line })
+        {
+            JumpToErrorRequested?.Invoke(this, line);
+        }
+    }
+
+    private void ShowInErrorLog_Click(object sender, RoutedEventArgs e) => ShowInErrorLogRequested?.Invoke(this, EventArgs.Empty);
 
     private static bool IsInsideButton(DependencyObject element)
     {

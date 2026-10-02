@@ -38,9 +38,17 @@ public sealed class CreateFoldersUndoableAction : IUndoableAction
     {
         foreach (var directory in _created.OrderByDescending(d => d.Length))
         {
-            if (Directory.Exists(directory) && !Directory.EnumerateFileSystemEntries(directory).Any())
+            try
             {
-                Directory.Delete(directory);
+                if (Directory.Exists(directory) && !Directory.EnumerateFileSystemEntries(directory).Any())
+                {
+                    Directory.Delete(directory);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Kurz gesperrt (Explorer, Virenscanner, Indexdienst): ein leerer Ordner, der stehen bleibt, schadet nicht; die Dateischritte sind
+                // schon rückgängig.
             }
         }
     }

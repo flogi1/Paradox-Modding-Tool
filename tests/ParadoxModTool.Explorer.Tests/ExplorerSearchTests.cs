@@ -63,6 +63,28 @@ public class ExplorerSearchTests : IDisposable
     }
 
     [Fact]
+    public void Run_OhneUgcVerweise_FindetSieNicht()
+    {
+        File.WriteAllText(Path.Combine(_root, "ugc_123.mod"), "x");
+
+        var hidden = ExplorerSearch.Run(new[] { (_root, "Mod") }, NamePattern.Parse("ugc")!, 500, CancellationToken.None, hideUgcReferences: true).Hits;
+        var shown = ExplorerSearch.Run(new[] { (_root, "Mod") }, NamePattern.Parse("ugc")!, 500, CancellationToken.None).Hits;
+
+        Assert.Empty(hidden);
+        Assert.Single(shown);
+    }
+
+    [Fact]
+    public void Run_NurOrdner_LiefertKeineDateien()
+    {
+        var hits = ExplorerSearch.Run(new[] { (_root, "Mod") }, NamePattern.Parse("gui")!, 500, CancellationToken.None, foldersOnly: true).Hits;
+
+        var hit = Assert.Single(hits);
+        Assert.Equal("gui", hit.Name);
+        Assert.True(hit.IsDirectory);
+    }
+
+    [Fact]
     public void Run_MarkiertOrdnerUndLiefertLesbarenSpeicherort()
     {
         var folder = Search("common").Hits.Single();

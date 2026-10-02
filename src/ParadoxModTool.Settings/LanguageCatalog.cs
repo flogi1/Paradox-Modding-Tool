@@ -3,27 +3,34 @@ using ParadoxModTool.Localization;
 
 namespace ParadoxModTool.Settings;
 
-/// <summary>Eine wählbare Oberflächensprache: Code (Dateiname in <c>locales</c>) und Name in der Sprache selbst.</summary>
-public sealed record UiLanguageOption(string Code, string Name);
+/// <summary>Eine wählbare Oberflächensprache: Code (Dateiname in <c>locales</c>), Name in der Sprache selbst und woher die Datei kommt.</summary>
+public sealed record UiLanguageOption(string Code, string Name, LocaleOrigin Origin = LocaleOrigin.Program);
 
-/// <summary>Die Oberflächensprachen, für die es eine Datei in <c>locales</c> gibt. Deutsch (Quellsprache) ist immer dabei und steht vorn.</summary>
+/// <summary>Die Oberflächensprachen, für die es eine Datei in einem der <c>locales</c>-Ordner gibt. Deutsch (Quellsprache) ist immer dabei und steht vorn.</summary>
 public static class LanguageCatalog
 {
-    public static IReadOnlyList<UiLanguageOption> Find(string localesDirectory)
-    {
-        var codes = Directory.Exists(localesDirectory)
-            ? Directory.EnumerateFiles(localesDirectory, "*.json")
-                .Select(path => Path.GetFileNameWithoutExtension(path).ToLowerInvariant())
-                .Where(code => code.Length > 0 && !code.StartsWith('_'))
-            : Enumerable.Empty<string>();
+    public static IReadOnlyList<UiLanguageOption> Find(string localesDirectory) => Find(new LocaleSources(localesDirectory, null));
 
-        return codes.Append(UiText.SourceLanguage)
+    /// <summary>Sprachen aus Programm- und User-Ordner; gibt es eine Sprache in beiden, zählt sie als <see cref="LocaleOrigin.User"/>.</summary>
+    public static IReadOnlyList<UiLanguageOption> Find(LocaleSources sources)
+    {
+        var userCodes = Codes(sources.User).ToHashSet(StringComparer.Ordinal);
+        return Codes(sources.Program)
+            .Concat(userCodes)
+            .Append(UiText.SourceLanguage)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(code => code == UiText.SourceLanguage ? 0 : 1)
             .ThenBy(code => code, StringComparer.Ordinal)
-            .Select(code => new UiLanguageOption(code, DisplayName(code)))
+            .Select(code => new UiLanguageOption(code, DisplayName(code), userCodes.Contains(code) ? LocaleOrigin.User : LocaleOrigin.Program))
             .ToList();
     }
+
+    private static IEnumerable<string> Codes(string? directory) =>
+        directory is not null && Directory.Exists(directory)
+            ? Directory.EnumerateFiles(directory, "*.json")
+                .Select(path => Path.GetFileNameWithoutExtension(path).ToLowerInvariant())
+                .Where(code => code.Length > 0 && !code.StartsWith('_'))
+            : Enumerable.Empty<string>();
 
     /// <summary>Leer wird zur Quellsprache, sonst Kleinbuchstaben ohne Leerzeichen.</summary>
     public static string Normalize(string? code) =>

@@ -1,6 +1,10 @@
 using System.IO;
+using System.Security.Cryptography;
+using ParadoxModTool.BugTracking;
 using System.Windows;
 using ParadoxModTool.Editor;
+using ParadoxModTool.GitIntegration;
+using ParadoxModTool.Localization;
 using ParadoxModTool.Settings;
 using ParadoxModTool.SettingsUi;
 using ParadoxModTool.Theming;
@@ -70,7 +74,7 @@ public partial class MainWindow : ISettingsHost
 
     string ISettingsHost.CurrentThemeId => ThemeManager.Current.Id;
 
-    string ISettingsHost.CurrentThemeName => ThemeManager.Current.Name;
+    string ISettingsHost.CurrentThemeName => ParadoxModTool.Theming.ThemingTexts.DisplayName(ThemeManager.Current);
 
     Color ISettingsHost.IconColor(string iconId) => TabIconBrushes.CurrentColor(IconBrushKey(iconId));
 
@@ -107,11 +111,137 @@ public partial class MainWindow : ISettingsHost
         remove => ThemeManager.ThemeChanged -= value;
     }
 
-    IReadOnlyList<UiLanguageOption> ISettingsHost.Languages => LanguageCatalog.Find(Path.Combine(AppContext.BaseDirectory, "locales"));
+    IReadOnlyList<UiLanguageOption> ISettingsHost.Languages => LanguageCatalog.Find(LocaleSources.Default());
+
+    LocaleSources ISettingsHost.LocaleSources => LocaleSources.Default();
+
+    string ISettingsHost.TranslationGuideUrl => AppInfo.RepositoryUrl + "/blob/main/TRANSLATING.md";
+
+    void ISettingsHost.OpenTranslationFolder()
+    {
+        if (LocaleSources.Default().User is not { } folder)
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(folder);
+            System.Diagnostics.Process.Start("explorer.exe", $"\"{ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(folder)}\"");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+        {
+            // Ordner nicht anlegbar oder Explorer nicht startbar: nichts zu tun.
+        }
+    }
 
     bool ISettingsHost.UpdatesAvailable => AppInfo.HasRepository;
 
     Task ISettingsHost.CheckForUpdatesAsync() => CheckForUpdatesNowAsync();
+
+    async Task<string> ISettingsHost.CheckGitHubStatusAsync()
+    {
+        if (FindGhPath() is not { } path)
+        {
+            return SettingsTexts.BugTrackerGhMissing;
+        }
+
+        return await new GhClient(_bugProcessRunner, path).IsLoggedInAsync(CancellationToken.None)
+            ? SettingsTexts.BugTrackerLoggedIn(path)
+            : SettingsTexts.BugTrackerNotLoggedIn(path);
+    }
+
+    string ISettingsHost.StartGitHubLogin()
+    {
+        if (FindGhPath() is not { } path)
+        {
+            return SettingsTexts.BugTrackerGhMissing;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+                WorkingDirectory = System.IO.Path.GetDirectoryName(path)!,
+                Arguments = "auth login --web --hostname github.com --git-protocol https",
+            });
+            return SettingsTexts.BugTrackerLoginStarted;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            return SettingsTexts.BugTrackerLoginFailed(ex.Message);
+        }
+    }
+
+    bool ISettingsHost.HasDiscordToken => DiscordTokenStore.Load(DiscordTokenPath) is not null;
+
+    string ISettingsHost.SaveDiscordToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return SettingsTexts.DiscordTokenEmpty;
+        }
+
+        try
+        {
+            DiscordTokenStore.Save(DiscordTokenPath, token);
+            return SettingsTexts.DiscordTokenSaved;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)
+        {
+            return SettingsTexts.DiscordTokenSaveFailed(ex.Message);
+        }
+    }
+
+    void ISettingsHost.RemoveDiscordToken()
+    {
+        try
+        {
+            DiscordTokenStore.Delete(DiscordTokenPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Beim nächsten Versuch erneut.
+        }
+    }
+
+    string? ISettingsHost.ReadDiscordToken() => DiscordTokenStore.Load(DiscordTokenPath);
+
+    async Task<DiscordSetupState> ISettingsHost.CheckDiscordSetupAsync()
+    {
+        if (CreateDiscordClient() is not { } client)
+        {
+            return new DiscordSetupState(false, false, string.Empty, false, string.Empty, Array.Empty<string>(), null);
+        }
+
+        var result = await DiscordSetup.CheckAsync(client, CancellationToken.None);
+        return new DiscordSetupState(true, result.TokenValid, result.BotName, result.IntentEnabled, result.InviteUrl, result.Servers, result.Error);
+    }
+
+    void ISettingsHost.OpenUrl(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+        {
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            // Kein Browser: nichts zu tun.
+        }
+    }
+
+    /// <summary>Öffnet die Einstellungen (oder holt sie nach vorn) auf einer bestimmten Kategorie.</summary>
+    private void OpenSettingsAt(SettingsCategory category)
+    {
+        OpenSettingsWindow();
+        _settingsWindow?.Select(category);
+    }
 
     /// <summary>Ressourcen-Schlüssel des Symbol-Pinsels zu einer Symbol-Kennung.</summary>
     private static string IconBrushKey(string iconId) => iconId switch

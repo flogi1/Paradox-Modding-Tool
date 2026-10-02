@@ -25,7 +25,7 @@ public static class ModTextFile
         }
         catch (DecoderFallbackException)
         {
-            throw new InvalidDataException("Die Datei ist nicht UTF-8-kodiert und wird deshalb nicht bearbeitet.");
+            throw new InvalidDataException(ModsTexts.TextFileNotUtf8);
         }
     }
 

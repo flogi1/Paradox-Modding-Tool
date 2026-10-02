@@ -23,7 +23,7 @@ public static class ZipPackager
             var fileName = GitHubNames.ExpandFileName(variant.FileNameFormat, modName, version, tag, variant.Name);
             if (names.TryGetValue(fileName, out var other))
             {
-                problems.Add($"Die ZIP-Varianten „{other}“ und „{variant.Name}“ ergeben denselben Dateinamen {fileName}.");
+                problems.Add(GitTexts.ZipSameName(other, variant.Name, fileName));
             }
             else
             {
@@ -34,12 +34,12 @@ public static class ZipPackager
             {
                 if (Measure(modFolder, variant).FileCount == 0)
                 {
-                    problems.Add($"Die ZIP-Variante „{variant.Name}“ enthält keine Datei.");
+                    problems.Add(GitTexts.ZipEmpty(variant.Name));
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                problems.Add($"Der Mod-Ordner ist nicht lesbar: {ex.Message}");
+                problems.Add(GitTexts.ModFolderUnreadable(ex.Message));
             }
         }
 

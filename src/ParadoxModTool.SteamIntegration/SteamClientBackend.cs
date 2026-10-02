@@ -24,7 +24,7 @@ public sealed class SteamClientBackend : IWorkshopBackend
     {
         if (!uint.TryParse(upload.AppId, NumberStyles.None, CultureInfo.InvariantCulture, out var appId))
         {
-            throw new ArgumentException("Die AppID muss eine Zahl sein.", nameof(upload));
+            throw new ArgumentException(SteamTexts.AppIdNotNumber, nameof(upload));
         }
 
         using var api = _factory();
@@ -43,18 +43,18 @@ public sealed class SteamClientBackend : IWorkshopBackend
         {
             if (id is null)
             {
-                progress?.Report("Workshop-Seite wird angelegt …");
+                progress?.Report(SteamTexts.CreatingItem);
                 var createCall = api.CreateItem(appId);
                 if (createCall == 0)
                 {
-                    return Result(WorkshopPublishOutcome.Failed, null, "Steam hat die Anfrage zum Anlegen der Workshop-Seite nicht angenommen.");
+                    return Result(WorkshopPublishOutcome.Failed, null, SteamTexts.CreateRejected);
                 }
 
                 await WaitAsync(api, createCall, 0, progress, cancellation);
                 var created = api.ReadCreateItemResult(createCall);
                 if (created is null)
                 {
-                    return Result(WorkshopPublishOutcome.Failed, null, "Steams Antwort auf das Anlegen der Workshop-Seite war nicht lesbar.");
+                    return Result(WorkshopPublishOutcome.Failed, null, SteamTexts.CreateUnreadable);
                 }
 
                 if (created.Result != 1)
@@ -68,66 +68,66 @@ public sealed class SteamClientBackend : IWorkshopBackend
 
             if (!ulong.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out var fileId))
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Die Workshop-ID ist keine Zahl.");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.WorkshopIdNotNumber);
             }
 
             var handle = api.StartItemUpdate(appId, fileId);
             if (handle == 0)
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam konnte die Aktualisierung nicht beginnen. Prüfe die Workshop-ID.");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.UpdateNotStarted);
             }
 
             if (Rejected(upload.Title, api.SetItemTitle, handle))
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam hat den Titel abgelehnt (höchstens 128 Zeichen).");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.TitleRejected);
             }
 
             if (Rejected(upload.Description, api.SetItemDescription, handle))
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam hat die Beschreibung abgelehnt (höchstens 8000 Zeichen).");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.DescriptionRejected);
             }
 
             if (Rejected(upload.PreviewFile, api.SetItemPreview, handle))
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam hat das Vorschaubild abgelehnt (Datei fehlt oder ist zu groß).");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.PreviewRejected);
             }
 
             if (upload.Visibility is { } visibility && !api.SetItemVisibility(handle, (int)visibility))
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam hat die Sichtbarkeit abgelehnt.");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.VisibilityRejected);
             }
 
             if (!api.SetItemContent(handle, upload.ContentFolder))
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam hat den Inhaltsordner abgelehnt.");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.ContentRejected);
             }
 
-            progress?.Report("Änderung wird an Steam übergeben …");
+            progress?.Report(SteamTexts.Submitting);
             var submitCall = api.SubmitItemUpdate(handle, upload.ChangeNote);
             if (submitCall == 0)
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steam hat die Anfrage zum Hochladen nicht angenommen.");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.SubmitRejected);
             }
 
             await WaitAsync(api, submitCall, handle, progress, cancellation);
             var submitted = api.ReadSubmitItemResult(submitCall);
             if (submitted is null)
             {
-                return Result(WorkshopPublishOutcome.Failed, id, "Steams Antwort auf das Hochladen war nicht lesbar.");
+                return Result(WorkshopPublishOutcome.Failed, id, SteamTexts.SubmitUnreadable);
             }
 
             var agreement = submitted.NeedsLegalAgreement || needsAgreement;
             return submitted.Result != 1
                 ? Result(WorkshopPublishOutcome.Failed, id, SteamResultText.Describe(submitted.Result), agreement)
-                : Result(WorkshopPublishOutcome.Success, id, "Die Version wurde auf Steam hochgeladen.", agreement);
+                : Result(WorkshopPublishOutcome.Success, id, SteamTexts.Uploaded, agreement);
         }
         catch (OperationCanceledException)
         {
-            return Result(WorkshopPublishOutcome.Cancelled, id, "Der Upload wurde abgebrochen. Steam kann die Übertragung trotzdem noch abschließen.");
+            return Result(WorkshopPublishOutcome.Cancelled, id, SteamTexts.ClientCancelled);
         }
         catch (TimeoutException)
         {
-            return Result(WorkshopPublishOutcome.Timeout, id, "Steam hat nicht rechtzeitig geantwortet. Prüfe später auf der Workshop-Seite, ob die Version angekommen ist.");
+            return Result(WorkshopPublishOutcome.Timeout, id, SteamTexts.ClientTimeout);
         }
         finally
         {
@@ -166,11 +166,11 @@ public sealed class SteamClientBackend : IWorkshopBackend
 
     private static string? Describe(ItemUpdateProgress p) => p.Status switch
     {
-        ItemUpdateStatus.PreparingConfig => "Steam bereitet die Änderung vor …",
-        ItemUpdateStatus.PreparingContent => "Steam liest die Dateien ein …",
-        ItemUpdateStatus.UploadingContent => p.Total == 0 ? "Inhalt wird hochgeladen …" : $"Inhalt wird hochgeladen … {p.Processed * 100 / p.Total} %",
-        ItemUpdateStatus.UploadingPreviewFile => "Vorschaubild wird hochgeladen …",
-        ItemUpdateStatus.CommittingChanges => "Änderung wird festgeschrieben …",
+        ItemUpdateStatus.PreparingConfig => SteamTexts.PreparingConfig,
+        ItemUpdateStatus.PreparingContent => SteamTexts.PreparingContent,
+        ItemUpdateStatus.UploadingContent => p.Total == 0 ? SteamTexts.UploadingContent : SteamTexts.UploadingContentPercent(p.Processed * 100 / p.Total),
+        ItemUpdateStatus.UploadingPreviewFile => SteamTexts.UploadingPreview,
+        ItemUpdateStatus.CommittingChanges => SteamTexts.Committing,
         _ => null,
     };
 

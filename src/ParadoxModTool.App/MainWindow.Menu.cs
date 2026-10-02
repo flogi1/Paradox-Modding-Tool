@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using ParadoxModTool.Editor;
+using ParadoxModTool.SaveGames;
 using ParadoxModTool.Settings;
 using MenuItem = System.Windows.Controls.MenuItem;
 
@@ -13,6 +14,7 @@ public partial class MainWindow
     {
         WindowMenuItem.Header = MenuTexts.Games;
         SetMenuText(ModsMenuItem, MenuTexts.Mods, MenuTexts.ModsTip);
+        SetMenuText(MyModsMenuItem, MenuTexts.MyMods, MenuTexts.MyModsTip);
         SetMenuText(ProjectMenuItem, MenuTexts.Project, MenuTexts.ProjectTip);
         ProjectCopyMenuItem.Header = MenuTexts.ProjectCopy;
         ProjectMoveMenuItem.Header = MenuTexts.ProjectMove;
@@ -20,14 +22,22 @@ public partial class MainWindow
         SetMenuText(ProjectSyncMenuItem, MenuTexts.ProjectSync, MenuTexts.ProjectSyncTip);
         SetMenuText(SettingsMenuItem, SettingsTexts.MenuSettings, SettingsTexts.MenuSettingsTip);
         SetMenuText(CuToolMenuItem, MenuTexts.CuTool, MenuTexts.CuToolTip);
+        SetMenuText(PatchRecipesMenuItem, MenuTexts.PatchRecipes, MenuTexts.PatchRecipesTip);
         SetMenuText(ModCompatMenuItem, MenuTexts.ModCompat, MenuTexts.ModCompatTip);
+        SetMenuText(ErrorLogMenuItem, ParadoxModTool.ErrorLog.ErrorLogTexts.Menu, ParadoxModTool.ErrorLog.ErrorLogTexts.MenuTip);
+        SetMenuText(DesyncMenuItem, ParadoxModTool.Desync.DesyncTexts.Menu, ParadoxModTool.Desync.DesyncTexts.MenuTip);
+        SetMenuText(SaveExplorerMenuItem, SaveExplorerTexts.Menu, SaveExplorerSettings is null ? SaveExplorerTexts.NotAvailable : SaveExplorerTexts.MenuTip);
         SetMenuText(CompatchMenuItem, MenuTexts.Compatch, MenuTexts.CompatchTip);
         SetMenuText(ScriptDocsMenuItem, MenuTexts.ScriptDocs, MenuTexts.ScriptDocsTip);
         SetMenuText(TemplatesMenuItem, MenuTexts.Templates, MenuTexts.TemplatesTip);
         HelpMenuItem.Header = MenuTexts.Help;
         CheckUpdatesMenuItem.Header = MenuTexts.CheckUpdates;
         ReportBugMenuItem.Header = MenuTexts.ReportBug;
+        ChangelogMenuItem.Header = MenuTexts.Changelog;
         AboutMenuItem.Header = MenuTexts.About;
+        SetMenuText(SupportMenuItem, MenuTexts.Support, MenuTexts.SupportTip);
+        SetMenuText(SponsorMenuItem, MenuTexts.SupportGitHub, MenuTexts.SupportGitHubTip);
+        SetMenuText(KofiMenuItem, MenuTexts.SupportKofi, MenuTexts.SupportKofiTip);
         ApplyRepositoryAvailability();
         InitializeUpdateBarTexts();
 

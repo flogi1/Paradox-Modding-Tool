@@ -11,17 +11,17 @@ public static class IssueReport
     public static string BuildUrl(string repository, string appVersion, string osDescription, string frameworkDescription)
     {
         var body = new StringBuilder()
-            .AppendLine("## Was ist passiert?")
+            .AppendLine("## " + UpdateTexts.IssueWhatHappened)
             .AppendLine()
-            .AppendLine("## Schritte zum Nachstellen")
+            .AppendLine("## " + UpdateTexts.IssueSteps)
             .AppendLine("1. ")
             .AppendLine()
-            .AppendLine("## Erwartet / Tatsächlich")
+            .AppendLine("## " + UpdateTexts.IssueExpectedActual)
             .AppendLine()
-            .AppendLine("## Umgebung")
+            .AppendLine("## " + UpdateTexts.IssueEnvironment)
             .AppendLine($"- Paradox Modding Tool: {appVersion}")
-            .AppendLine($"- Betriebssystem: {osDescription}")
-            .AppendLine($"- Laufzeit: {frameworkDescription}")
+            .AppendLine($"- {UpdateTexts.IssueOs}: {osDescription}")
+            .AppendLine($"- {UpdateTexts.IssueRuntime}: {frameworkDescription}")
             .ToString();
 
         return $"https://github.com/{repository}/issues/new?title={Uri.EscapeDataString("[Bug] ")}&body={Uri.EscapeDataString(body)}";

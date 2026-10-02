@@ -17,14 +17,19 @@ public sealed record GuiModTargets(string ModRoot, string OverrideFileName, stri
 
     public string TypesPath(string context) => Path.Combine(GuiContexts.GuiFolder(ModRoot, context), TypesFileName);
 
-    /// <summary>Standardnamen aus dem Ordnernamen der Mod (<c>&lt;name&gt;_overrides.gui</c>, <c>&lt;name&gt;_types.gui</c>); gesetzte Namen gehen vor.</summary>
-    public static GuiModTargets For(string modRoot, string? overrideFileName = null, string? typesFileName = null)
+    /// <summary>
+    /// Standardnamen aus dem Ordnernamen der Mod (<c>&lt;name&gt;_overrides.gui</c>, <c>&lt;name&gt;_types.gui</c>); gesetzte Namen gehen vor. Bei
+    /// <paramref name="firstWins"/> (Crusader Kings III: die zuerst geladene Datei gewinnt) beginnen die Standardnamen mit <c>00_</c>, damit sie vor den
+    /// anderen Dateien der Mod laden.
+    /// </summary>
+    public static GuiModTargets For(string modRoot, string? overrideFileName = null, string? typesFileName = null, bool firstWins = false)
     {
         var baseName = BaseName(Path.GetFileName(modRoot.TrimEnd('\\', '/')));
+        var prefix = firstWins ? "00_" : string.Empty;
         return new GuiModTargets(
             modRoot,
-            string.IsNullOrWhiteSpace(overrideFileName) ? baseName + "_overrides.gui" : overrideFileName.Trim(),
-            string.IsNullOrWhiteSpace(typesFileName) ? baseName + "_types.gui" : typesFileName.Trim(),
+            string.IsNullOrWhiteSpace(overrideFileName) ? prefix + baseName + "_overrides.gui" : overrideFileName.Trim(),
+            string.IsNullOrWhiteSpace(typesFileName) ? prefix + baseName + "_types.gui" : typesFileName.Trim(),
             Pascal(baseName));
     }
 

@@ -38,6 +38,54 @@ public class PlannerRoundTripTests : CompatchTestBase
     }
 
     [Fact]
+    public void Changed_scalar_subkey_is_injected_with_its_new_value()
+    {
+        const string Vanilla = "farm = { cost = 1 time = 1 }\nmine = { cost = 1 }\n";
+        PutVanilla(Buildings + "00_x.txt", Vanilla);
+        PutA(Buildings + "00_x.txt", Vanilla.Replace("farm = { cost = 1 time = 1 }", "farm = { cost = 2 time = 1 }"));
+        PutB(Buildings + "00_x.txt", Vanilla.Replace("mine = { cost = 1 }", "mine = { cost = 3 }"));
+
+        var op = Assert.Single(RunAndCheck().Plan.Entries);
+
+        Assert.Equal(PatchForm.Inject, op.Form);
+        Assert.Contains("cost = 2", op.Text);
+        Assert.DoesNotContain("time", op.Text);
+    }
+
+    [Fact]
+    public void Changed_and_added_subkeys_are_injected_together()
+    {
+        const string Vanilla = "farm = { cost = 1 time = 1 }\nmine = { cost = 1 }\n";
+        PutVanilla(Buildings + "00_x.txt", Vanilla);
+        PutA(Buildings + "00_x.txt", Vanilla.Replace("farm = { cost = 1 time = 1 }", "farm = { cost = 2 time = 1 a = 1 }"));
+        PutB(Buildings + "00_x.txt", Vanilla.Replace("mine = { cost = 1 }", "mine = { cost = 3 }"));
+
+        var op = Assert.Single(RunAndCheck().Plan.Entries);
+
+        Assert.Equal(PatchForm.Inject, op.Form);
+        Assert.Contains("cost = 2", op.Text);
+        Assert.Contains("a = 1", op.Text);
+    }
+
+    [Theory]
+    [InlineData("farm = { cost = 1 mod = { x = 1 } }", "farm = { cost = 1 mod = { x = 2 } }")]
+    [InlineData("farm = { cost = 1 time = 1 }", "farm = { cost = 1 }")]
+    [InlineData("farm = { cost = 1 }", "farm = { cost = 1 cost = 2 }")]
+    [InlineData("farm = { cost = 1 time = 1 }", "farm = { time = 1 cost = 2 }")]
+    [InlineData("farm = { cost = 1 }", "farm = { cost ?= 1 }")]
+    public void Changes_INJECT_cannot_express_stay_without_the_inject_form(string vanillaFarm, string wantedFarm)
+    {
+        var vanilla = vanillaFarm + "\nmine = { cost = 1 }\n";
+        PutVanilla(Buildings + "00_x.txt", vanilla);
+        PutA(Buildings + "00_x.txt", vanilla.Replace(vanillaFarm, wantedFarm));
+        PutB(Buildings + "00_x.txt", vanilla.Replace("mine = { cost = 1 }", "mine = { cost = 3 }"));
+
+        var run = CompatchEngine.Run(Input(), PatchTarget.Compatch);
+
+        Assert.DoesNotContain(PatchForm.Inject, run.Plan.AvailableForms[EntryAddress.ForKey("in_game/common/building_types", "farm")]);
+    }
+
+    [Fact]
     public void Own_file_sorts_after_mod_files_with_zzz_prefix()
     {
         PutVanilla(Buildings + "00_x.txt", "farm = { cost = 1 time = 1 }\n");

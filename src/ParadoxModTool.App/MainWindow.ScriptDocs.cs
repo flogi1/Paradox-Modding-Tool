@@ -28,8 +28,8 @@ public partial class MainWindow
         () => _activeProfile);
 
     /// <summary>
-    /// Der <c>docs</c>-Ordner des Spiels: der vom Nutzer gewählte, sonst der Ordner neben dem Mod-Ordner des Spielprofils
-    /// (Documents/Paradox Interactive/&lt;Spiel&gt;/docs).
+    /// Der Ordner mit den Doku-Logs des Spiels: der vom Nutzer gewählte, sonst der Ordner des Spielprofils neben dem Mod-Ordner
+    /// (Documents/Paradox Interactive/&lt;Spiel&gt;/docs bzw. /logs bei CK III).
     /// </summary>
     private string? ResolveScriptDocsFolder()
     {
@@ -38,21 +38,9 @@ public partial class MainWindow
             return _scriptDocsFolderOverride;
         }
 
-        if (_activeProfile?.DefaultModRootTemplate is not { Length: > 0 } template)
-        {
-            return null;
-        }
-
-        try
-        {
-            var modFolder = Path.GetFullPath(Environment.ExpandEnvironmentVariables(template));
-            var gameFolder = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(modFolder));
-            return gameFolder is null ? null : Path.Combine(gameFolder, "docs");
-        }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            return null;
-        }
+        return _activeProfile is { DefaultModRootTemplate: { Length: > 0 } template } profile
+            ? ScriptDocsLocation.Default(template, profile.ScriptDocsFolder)
+            : null;
     }
 
     private readonly ScriptHintIndex _scriptHintIndex = new();
@@ -64,9 +52,11 @@ public partial class MainWindow
     private async void InitializeScriptHints()
     {
         ScriptHintSettings.Provider = _scriptHintIndex;
+        ModifierValueSettings.ReloadRequested += (_, _) => RefreshModifierFormats(report: true);
         ScriptDocs.DatabaseChanged += async (_, _) =>
         {
             _scriptHintIndex.SetDatabase(ScriptDocs.Database);
+            RefreshModifierFormats();
 
             // Neue Logs können neue Scopes bedeuten, geänderte Spieldateien neue Felder: Regeln abgleichen (lernt nur bei Bedarf).
             await UpdateScopeRulesAsync(force: false);
@@ -81,6 +71,8 @@ public partial class MainWindow
         {
             // Ohne Datenbank gibt es einfach keine Hinweise im Editor; das Fenster "Script-Datenbank" zeigt den Zustand.
         }
+
+        RefreshModifierFormats();
     }
 
     // Werkzeugleisten-Schalter und Einstellungsfenster schreiben dieselbe Einstellung; SyncScriptHintControls zieht die Schalter nach.
@@ -88,7 +80,8 @@ public partial class MainWindow
 
     private ScopeService ScopeRuleService => _scopeService ??= new ScopeService(
         Path.Combine(GameContext.Repository.GameDirectory(GameContext.GameId), "scopes", "rules.json"),
-        () => CollectOriginRoots().Vanilla);
+        () => CollectOriginRoots().Vanilla,
+        () => _activeProfile?.DefaultEventType);
 
     /// <summary>Gleicht die Scope-Regeln mit Script-Datenbank und Vanilla-Dateien ab und lernt im Hintergrund neu, falls nötig.</summary>
     private async Task<ScopeUpdateResult?> UpdateScopeRulesAsync(bool force, CancellationToken cancellation = default, IProgress<(int Done, int Total)>? progress = null)
@@ -115,8 +108,8 @@ public partial class MainWindow
 
         MessageBox.Show(
             this,
-            result is null ? "Die Scope-Regeln konnten nicht gelernt werden." : result.Summary + (result.Learned ? $"\n\nDauer: {result.Duration.TotalSeconds:0.0} s" : string.Empty),
-            "Scope-Regeln",
+            result is null ? MiscWindowTexts.ScopeRulesFailed : result.Summary + (result.Learned ? "\n\n" + MiscWindowTexts.ScopeRulesDuration(result.Duration.TotalSeconds) : string.Empty),
+            MiscWindowTexts.ScopeRulesTitle,
             MessageBoxButton.OK,
             result is null ? MessageBoxImage.Warning : MessageBoxImage.Information);
     }
@@ -134,12 +127,7 @@ public partial class MainWindow
     {
         if (ParadoxModTool.Editor.ScopeSettings.Engine is not { } engine)
         {
-            MessageBox.Show(
-                this,
-                "Die Script-Datenbank ist noch nicht geladen. Sie wird beim Start aus den Doku-Logs des Spiels gelesen (Werkzeuge › Script-Datenbank…).",
-                "Scope Finder",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            MessageBox.Show(this, ScopeFinderTexts.DatabaseMissing, ScopeFinderTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -154,34 +142,57 @@ public partial class MainWindow
         var starts = new List<ScopePathWindow.StartOption>();
         if (context?.CurrentScope is { } current)
         {
-            starts.Add(new ScopePathWindow.StartOption($"Hier: {current}" + (context.Confident ? string.Empty : " (unsicher)"), current, string.Empty));
+            var label = context.Confident ? ScopeFinderTexts.StartHere(current) : ScopeFinderTexts.StartHereUnsure(current);
+            starts.Add(new ScopePathWindow.StartOption(label, current, string.Empty));
         }
 
         if (context?.StartScope is { } root)
         {
-            starts.Add(new ScopePathWindow.StartOption($"root: {root}", root, "root"));
+            starts.Add(new ScopePathWindow.StartOption(ScopeFinderTexts.StartRoot(root), root, "root"));
         }
 
         if (context is not null)
         {
             foreach (var (name, scope) in context.SavedScopes.Where(s => s.Value is not null).Select(s => (s.Key, s.Value!)))
             {
-                starts.Add(new ScopePathWindow.StartOption($"scope:{name}: {scope}", scope, $"scope:{name}"));
+                starts.Add(new ScopePathWindow.StartOption(ScopeFinderTexts.StartSaved(name, scope), scope, $"scope:{name}"));
             }
 
             foreach (var (name, scope) in context.LearnedSavedScopes.Where(s => !context.SavedScopes.ContainsKey(s.Key)).OrderBy(s => s.Key, StringComparer.Ordinal).Select(s => (s.Key, s.Value)))
             {
-                starts.Add(new ScopePathWindow.StartOption($"scope:{name}: {scope}", scope, $"scope:{name}"));
+                starts.Add(new ScopePathWindow.StartOption(ScopeFinderTexts.StartSaved(name, scope), scope, $"scope:{name}"));
             }
         }
 
-        starts.AddRange(_pathFinder!.Scopes.Select(s => new ScopePathWindow.StartOption($"{s} (frei gewählt)", s, string.Empty)));
+        starts.AddRange(_pathFinder!.Scopes.Select(s => new ScopePathWindow.StartOption(ScopeFinderTexts.StartFree(s), s, string.Empty)));
 
-        var dialog = new ScopePathWindow(_pathFinder, starts, context is not null && ScopePathFinder.LooksLikeTriggerContext(context)) { Owner = this };
-        if (dialog.ShowDialog() == true && dialog.ChosenPath is { } path)
+        // Script-Values: die der Mod werden bei jedem Öffnen frisch gelesen (eigene neue Werte sind sofort da), die aus Vanilla kommen mit den Scope-Regeln.
+        var modRoot = ScriptValueModRoot(pane.CurrentFilePath);
+        var modScriptValues = modRoot is null ? Array.Empty<string>() : ScriptValueNames.Read(new[] { modRoot });
+        var dialog = new ScopePathWindow(
+            _pathFinder,
+            starts,
+            context is not null && ScopePathFinder.LooksLikeTriggerContext(context),
+            modScriptValues,
+            ScopeRuleService.ScriptValues) { Owner = this };
+        if (dialog.ShowDialog() == true && dialog.ChosenChain is { } chain)
         {
-            pane.InsertScopePath(path, dialog.PreferredForm, dialog.ChainOnly);
+            pane.InsertScopeChain(chain, dialog.PreferredForm, dialog.ChainOnly);
         }
+    }
+
+    /// <summary>
+    /// Der Mod-Ordner für die Script-Value-Vorschläge: bei aktiver Mod ihr Pfad, der die Datei enthält, sonst ihr erster Pfad; ohne aktive Mod der Ordner
+    /// ungebundener Dateien, wenn die Datei darin liegt. Anders als beim GUI-Werkzeug ohne Merken der zuletzt erkannten Mod.
+    /// </summary>
+    private string? ScriptValueModRoot(string? file)
+    {
+        if (_mods?.ActiveMod is { } mod)
+        {
+            return mod.Paths.FirstOrDefault(p => file is not null && IsInsideFolder(file, p)) ?? mod.Paths.FirstOrDefault();
+        }
+
+        return _mods?.UnmanagedFolder is { } unmanaged && file is not null && IsInsideFolder(file, unmanaged) ? unmanaged : null;
     }
 
     private void GoToMatchingBracket_Click(object sender, RoutedEventArgs e) => ActivePane.GoToMatchingBracket();

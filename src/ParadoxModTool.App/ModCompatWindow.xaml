@@ -1,7 +1,12 @@
 <Window x:Class="ParadoxModTool.App.ModCompatWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Mod-Kompatibilität" Height="720" Width="1240" MinHeight="480" MinWidth="960"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        xmlns:loc="clr-namespace:ParadoxModTool.Localization;assembly=ParadoxModTool.Localization"
+        xmlns:modcompat="clr-namespace:ParadoxModTool.ModCompat;assembly=ParadoxModTool.ModCompat"
+        xmlns:mods="clr-namespace:ParadoxModTool.Mods;assembly=ParadoxModTool.Mods"
+        xmlns:compatch="clr-namespace:ParadoxModTool.Compatch;assembly=ParadoxModTool.Compatch"
+        Title="{x:Static local:ModCompatWindowTexts.Title}" Height="720" Width="1240" MinHeight="480" MinWidth="960"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <!--
         Mod-Kompatibilität: links das Kompatibilitätsset (Mods in simulierter Ladereihenfolge, unabhängig vom Playset des Spiels),
@@ -15,47 +20,47 @@
         </Grid.ColumnDefinitions>
 
         <DockPanel Grid.Column="0">
-            <TextBlock DockPanel.Dock="Top" Text="Kompatibilitätsset" FontWeight="Bold" Margin="0,0,0,2" />
+            <TextBlock DockPanel.Dock="Top" Text="{x:Static local:ModCompatWindowTexts.SetHeader}" FontWeight="Bold" Margin="0,0,0,2" />
             <ComboBox x:Name="SetCombo" DockPanel.Dock="Top" SelectionChanged="SetCombo_SelectionChanged" />
             <TextBlock x:Name="SetDescriptionText" DockPanel.Dock="Top" Margin="0,4,0,0" TextWrapping="Wrap" FontStyle="Italic"
                        Foreground="{DynamicResource Theme.TextMuted}" Visibility="Collapsed" />
             <WrapPanel DockPanel.Dock="Top" Margin="0,4,0,6">
-                <Button Content="Neu" Padding="8,2" Margin="0,0,6,0" Click="NewSet_Click" />
-                <Button x:Name="RenameSetButton" Content="Umbenennen" Padding="8,2" Margin="0,0,6,0" Click="RenameSet_Click" />
-                <Button x:Name="DescriptionSetButton" Content="Beschreibung ändern" Padding="8,2" Margin="0,0,6,0" Click="EditDescription_Click" />
-                <Button x:Name="DeleteSetButton" Content="Löschen" Padding="8,2" Click="DeleteSet_Click" />
+                <Button Content="{x:Static local:ModCompatWindowTexts.NewSet}" Padding="8,2" Margin="0,0,6,0" Click="NewSet_Click" />
+                <Button x:Name="RenameSetButton" Content="{x:Static mods:ModsTexts.Rename}" Padding="8,2" Margin="0,0,6,0" Click="RenameSet_Click" />
+                <Button x:Name="DescriptionSetButton" Content="{x:Static local:ModCompatWindowTexts.EditDescription}" Padding="8,2" Margin="0,0,6,0" Click="EditDescription_Click" />
+                <Button x:Name="DeleteSetButton" Content="{x:Static loc:CommonTexts.Delete}" Padding="8,2" Click="DeleteSet_Click" />
             </WrapPanel>
             <TextBlock DockPanel.Dock="Bottom" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}"
-                       Text="Weiter unten in der Liste = später geladen = gewinnt. Das Set gehört PMT und ist unabhängig vom Playset des Spiels; dort wird nichts geändert." />
+                       Text="{x:Static local:ModCompatWindowTexts.LoadOrderHint}" />
             <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                <Button Content="Aus Register" Padding="8,2" Margin="0,0,6,4" Click="AddFromRegister_Click"
-                        ToolTip="Eigene Mods aus dem Fenster Mods hinzufügen (auch Dev-Branches und Submods)" />
-                <Button x:Name="AddWorkshopButton" Content="Aus Workshop" Padding="8,2" Margin="0,0,6,4" Click="AddFromWorkshop_Click"
-                        ToolTip="Installierte Workshop-Mods hinzufügen (nur lesend)" />
-                <Button Content="Ordner" Padding="8,2" Margin="0,0,6,4" Click="AddFolder_Click"
-                        ToolTip="Einen beliebigen Mod-Ordner hinzufügen" />
-                <Button x:Name="ImportPlaysetButton" Content="Playset importieren" Padding="8,2" Margin="0,0,0,4" Click="ImportPlayset_Click"
-                        ToolTip="Die aktivierten Mods eines Spiel-Playsets als Kopie übernehmen (in dessen Ladereihenfolge)" />
+                <Button Content="{x:Static compatch:CompatchTexts.FromRegister}" Padding="8,2" Margin="0,0,6,4" Click="AddFromRegister_Click"
+                        ToolTip="{x:Static local:ModCompatWindowTexts.FromRegisterTip}" />
+                <Button x:Name="AddWorkshopButton" Content="{x:Static compatch:CompatchTexts.FromWorkshop}" Padding="8,2" Margin="0,0,6,4" Click="AddFromWorkshop_Click"
+                        ToolTip="{x:Static local:ModCompatWindowTexts.FromWorkshopTip}" />
+                <Button Content="{x:Static compatch:CompatchTexts.FromFolder}" Padding="8,2" Margin="0,0,6,4" Click="AddFolder_Click"
+                        ToolTip="{x:Static local:ModCompatWindowTexts.FolderTip}" />
+                <Button x:Name="ImportPlaysetButton" Content="{x:Static local:ModCompatWindowTexts.ImportPlayset}" Padding="8,2" Margin="0,0,0,4" Click="ImportPlayset_Click"
+                        ToolTip="{x:Static local:ModCompatWindowTexts.ImportPlaysetTip}" />
             </WrapPanel>
             <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                <Button x:Name="UpButton" Content="Hoch" Padding="8,2" Margin="0,0,6,0" Click="MoveUp_Click" />
-                <Button x:Name="DownButton" Content="Runter" Padding="8,2" Margin="0,0,6,0" Click="MoveDown_Click" />
-                <Button x:Name="RemoveMemberButton" Content="Entfernen" Padding="8,2" Click="RemoveMember_Click" />
+                <Button x:Name="UpButton" Content="{x:Static local:ModCompatWindowTexts.Up}" Padding="8,2" Margin="0,0,6,0" Click="MoveUp_Click" />
+                <Button x:Name="DownButton" Content="{x:Static local:ModCompatWindowTexts.Down}" Padding="8,2" Margin="0,0,6,0" Click="MoveDown_Click" />
+                <Button x:Name="RemoveMemberButton" Content="{x:Static loc:CommonTexts.Remove}" Padding="8,2" Click="RemoveMember_Click" />
             </WrapPanel>
             <ListView x:Name="MemberList" SelectionMode="Extended" SelectionChanged="MemberList_SelectionChanged">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Vergleich" Width="70">
+                        <GridViewColumn Header="{x:Static local:ModCompatWindowTexts.CompareColumn}" Width="70">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"
-                                              ToolTip="Bestimmt bei Gegenseite „Markierte in der Liste“, welche Mods verglichen werden" />
+                                              ToolTip="{x:Static local:ModCompatWindowTexts.CompareColumnTip}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Nr" DisplayMemberBinding="{Binding Position}" Width="34" />
+                        <GridViewColumn Header="{x:Static local:ModCompatWindowTexts.NumberColumn}" DisplayMemberBinding="{Binding Position}" Width="34" />
                         <GridViewColumn Header="Mod" DisplayMemberBinding="{Binding NameText}" Width="170" />
-                        <GridViewColumn Header="Herkunft" DisplayMemberBinding="{Binding OriginText}" Width="80" />
+                        <GridViewColumn Header="{x:Static local:ModCompatWindowTexts.OriginColumn}" DisplayMemberBinding="{Binding OriginText}" Width="80" />
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -72,57 +77,92 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Mod 1" FontWeight="Bold" Margin="0,0,0,2" />
                     <ComboBox x:Name="FocusCombo" DisplayMemberPath="NameText" SelectionChanged="FocusCombo_SelectionChanged"
-                              ToolTip="Die Mod, die geprüft wird (meist die eigene). Jeder Fund betrifft sie." />
+                              ToolTip="{x:Static local:ModCompatWindowTexts.FocusTip}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="Gegenseite" FontWeight="Bold" Margin="0,0,0,2" />
+                    <TextBlock Text="{x:Static local:ModCompatWindowTexts.Counterpart}" FontWeight="Bold" Margin="0,0,0,2" />
                     <ComboBox x:Name="CounterCombo" SelectedIndex="0"
-                              ToolTip="„Alle im Set“ vergleicht alle Mods, unabhängig vom Häkchen Vergleich. „Markierte in der Liste“ nur die Mods mit gesetztem Häkchen Vergleich.">
-                        <ComboBoxItem Content="Alle im Set" />
-                        <ComboBoxItem Content="Markierte in der Liste" />
+                              ToolTip="{x:Static local:ModCompatWindowTexts.CounterpartTip}">
+                        <ComboBoxItem Content="{x:Static local:ModCompatWindowTexts.AllInSet}" />
+                        <ComboBoxItem Content="{x:Static local:ModCompatWindowTexts.MarkedInList}" />
                     </ComboBox>
                 </StackPanel>
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="12,0,0,0">
-                    <Button x:Name="RunButton" Content="Prüfen" Padding="10,2" Margin="0,0,6,0" Click="Run_Click" />
-                    <Button x:Name="CancelButton" Content="Abbrechen" Padding="10,2" IsEnabled="False" Click="Cancel_Click" />
+                    <Button x:Name="RunButton" Content="{x:Static local:ModCompatWindowTexts.Run}" Padding="10,2" Margin="0,0,6,0" Click="Run_Click" />
+                    <Button x:Name="CancelButton" Content="{x:Static loc:CommonTexts.Cancel}" Padding="10,2" IsEnabled="False" Click="Cancel_Click" />
                 </StackPanel>
             </Grid>
             <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
-                <CheckBox x:Name="ConflictCheck" Content="Konflikte" IsChecked="True" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed" />
-                <CheckBox x:Name="HintCheck" Content="Hinweise" IsChecked="True" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed" />
-                <CheckBox x:Name="InfoCheck" Content="Infos" IsChecked="False" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed" />
-                <CheckBox x:Name="SenseCheck" Content="Nur Meine Mod (Sinnhaftigkeit)" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed"
-                          ToolTip="Nur Funde, die zeigen, wo Mod 1 mehr überschreibt als nötig" />
-                <CheckBox x:Name="HideUncertainCheck" Content="Unsichere ausblenden" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed"
-                          ToolTip="Funde ausblenden, die nicht durch das Wiki gesichert sind" />
-                <TextBlock Text="Pfad oder Schlüssel enthält:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                <CheckBox x:Name="ConflictCheck" Content="{x:Static modcompat:ModCompatTexts.Conflicts}" IsChecked="True" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed" />
+                <CheckBox x:Name="HintCheck" Content="{x:Static modcompat:ModCompatTexts.Hints}" IsChecked="True" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed" />
+                <CheckBox x:Name="InfoCheck" Content="{x:Static modcompat:ModCompatTexts.Infos}" IsChecked="False" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed" />
+                <CheckBox x:Name="SenseCheck" Content="{x:Static local:ModCompatWindowTexts.SenseOnly}" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed"
+                          ToolTip="{x:Static local:ModCompatWindowTexts.SenseOnlyTip}" />
+                <CheckBox x:Name="HideUncertainCheck" Content="{x:Static local:ModCompatWindowTexts.HideUncertain}" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed"
+                          ToolTip="{x:Static local:ModCompatWindowTexts.HideUncertainTip}" />
+                <CheckBox x:Name="HideResolvedCheck" Content="{x:Static local:ModCompatWindowTexts.HideResolved}" IsChecked="True" Margin="0,0,12,0" VerticalAlignment="Center" Click="Filter_Changed"
+                          ToolTip="{x:Static local:ModCompatWindowTexts.HideResolvedTip}" />
+                <TextBlock Text="{x:Static local:ModCompatWindowTexts.FilterLabel}" VerticalAlignment="Center" Margin="0,0,4,0" />
                 <TextBox x:Name="FilterBox" Width="200" Margin="0,0,12,0" TextChanged="Filter_TextChanged" />
-                <Button x:Name="ReportButton" Content="Bericht speichern" Padding="8,2" Margin="0,0,6,0" Click="Report_Click"
-                        ToolTip="Die angezeigten Funde als Textdatei (Markdown) speichern, als Planungshilfe für einen Kompatibilitätspatch" />
-                <Button x:Name="RulesButton" Content="Überschreib-Regeln" Padding="8,2" Click="Rules_Click"
-                        ToolTip="Regeltabelle für dieses Spiel ansehen und anpassen: welcher Ordner überschreibt wie (Datei, Schlüssel, erster oder letzter gewinnt)" />
+                <Button x:Name="ReportButton" Content="{x:Static local:ModCompatWindowTexts.SaveReport}" Padding="8,2" Margin="0,0,6,0" Click="Report_Click"
+                        ToolTip="{x:Static local:ModCompatWindowTexts.SaveReportTip}" />
+                <Button x:Name="RulesButton" Content="{x:Static local:ModCompatWindowTexts.Rules}" Padding="8,2" Click="Rules_Click"
+                        ToolTip="{x:Static local:ModCompatWindowTexts.RulesTip}" />
             </WrapPanel>
             <TextBlock x:Name="StatusText" DockPanel.Dock="Bottom" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.TextMuted}" />
             <DockPanel DockPanel.Dock="Bottom" Height="200" Margin="0,6,0,0">
                 <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                    <Button x:Name="CompareButton" Content="Vergleichen" Padding="8,2" Margin="0,0,6,0" Click="Compare_Click"
-                            ToolTip="Zwei Fassungen der Fundstelle im Vergleichsfenster öffnen (nur lesend, auch per Doppelklick)" />
+                    <Button x:Name="CompareButton" Content="{x:Static local:ModCompatWindowTexts.Compare}" Padding="8,2" Margin="0,0,6,0" Click="Compare_Click"
+                            ToolTip="{x:Static local:ModCompatWindowTexts.CompareTip}" />
                     <Button x:Name="CreateCompatchButton" Padding="8,2" Margin="0,0,6,0" Click="CreateCompatch_Click" />
-                    <Button x:Name="OpenButton" Content="Im Editor öffnen" Padding="8,2" Click="OpenInEditor_Click"
-                            ToolTip="Die Datei der eigenen Mod im Editor öffnen (fremde Mods nur über Vergleichen)" />
+                    <Button x:Name="OpenButton" Content="{x:Static local:ModCompatWindowTexts.OpenInEditor}" Padding="8,2" Click="OpenInEditor_Click"
+                            ToolTip="{x:Static local:ModCompatWindowTexts.OpenInEditorTip}" />
                 </WrapPanel>
                 <TextBox x:Name="DetailBox" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" />
             </DockPanel>
-            <ListView x:Name="ResultList" SelectionMode="Single" SelectionChanged="ResultList_SelectionChanged" MouseDoubleClick="ResultList_DoubleClick">
+            <ListView x:Name="ResultList" SelectionMode="Extended" SelectionChanged="ResultList_SelectionChanged" MouseDoubleClick="ResultList_DoubleClick"
+                      GridViewColumnHeader.Click="ResultHeader_Click">
+                <ListView.ContextMenu>
+                    <ContextMenu Opened="ResultContextMenu_Opened">
+                        <MenuItem x:Name="MarkResolvedMenuItem" Header="{x:Static local:ModCompatWindowTexts.MarkResolved}" Click="MarkResolved_Click" />
+                        <MenuItem x:Name="UnmarkResolvedMenuItem" Header="{x:Static local:ModCompatWindowTexts.UnmarkResolved}" Click="UnmarkResolved_Click" />
+                    </ContextMenu>
+                </ListView.ContextMenu>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Resolved}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Schwere" DisplayMemberBinding="{Binding SeverityText}" Width="70" />
-                        <GridViewColumn Header="Art" DisplayMemberBinding="{Binding KindText}" Width="150" />
-                        <GridViewColumn Header="Pfad" DisplayMemberBinding="{Binding Path}" Width="330" />
-                        <GridViewColumn Header="Schlüssel" DisplayMemberBinding="{Binding Key}" Width="140" />
-                        <GridViewColumn Header="Gewinner" DisplayMemberBinding="{Binding WinnerText}" Width="110" />
-                        <GridViewColumn Header="Empfehlung" DisplayMemberBinding="{Binding SuggestionText}" Width="180" />
-                        <GridViewColumn Header="Sicherheit" DisplayMemberBinding="{Binding UncertainText}" Width="70" />
+                        <GridViewColumn DisplayMemberBinding="{Binding SeverityText}" Width="70">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.SeverityColumn}" Tag="Severity" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding KindText}" Width="150">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.KindColumn}" Tag="Kind" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path}" Width="330">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.PathColumn}" Tag="Path" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Key}" Width="140">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.KeyColumn}" Tag="Key" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding WinnerText}" Width="110">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.WinnerColumn}" Tag="Winner" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding SuggestionText}" Width="180">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.SuggestionColumn}" Tag="Suggestion" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding UncertainText}" Width="70">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.CertaintyColumn}" Tag="Certainty" />
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding ResolvedText}" Width="60">
+                            <GridViewColumnHeader Content="{x:Static local:ModCompatWindowTexts.ResolvedColumn}" Tag="Resolved" />
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>

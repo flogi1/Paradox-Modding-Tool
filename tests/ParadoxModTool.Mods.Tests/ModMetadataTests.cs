@@ -151,4 +151,52 @@ public class ModMetadataTests : TempDirTests
 
         Assert.Null(ModMetadata.ReadClassicFile(folder, ModMetadata.ClassicWorkshopDescriptorFile));
     }
+
+    [Fact]
+    public void Classic_falls_back_to_descriptor_inside_folder()
+    {
+        var folder = Make("AGOT Flogis Buildings");
+        File.WriteAllText(Path.Combine(folder, "descriptor.mod"), "name=\"X\"\n");
+        File.WriteAllText(Path.Combine(Dir, "AGOT Flogis Buildings Mod.mod"), "name=\"Other\"\n");
+
+        Assert.Equal("X", ModMetadata.Read(folder, ModMetadata.ClassicSiblingMetadataFile)!.Name);
+    }
+
+    [Fact]
+    public void Classic_sibling_wins_over_descriptor()
+    {
+        var folder = Make("m");
+        File.WriteAllText(Path.Combine(folder, "descriptor.mod"), "name=\"D\"\n");
+        File.WriteAllText(Path.Combine(Dir, "m.mod"), "name=\"S\"\n");
+
+        Assert.Equal("S", ModMetadata.Read(folder, ModMetadata.ClassicSiblingMetadataFile)!.Name);
+    }
+
+    [Fact]
+    public void Classic_reads_all_replace_path_lines()
+    {
+        var folder = Make("m");
+        File.WriteAllText(Path.Combine(Dir, "m.mod"),
+            "name=\"M\"\nreplace_path=\"common/religion/religion_types\"\nreplace_path = \"history/characters/\"\n# replace_path=\"x\"\n");
+
+        var metadata = ModMetadata.Read(folder, ModMetadata.ClassicSiblingMetadataFile)!;
+
+        Assert.Equal(new[] { "common/religion/religion_types", "history/characters" }, metadata.ReplacePaths);
+    }
+
+    [Fact]
+    public void Json_reads_replace_paths_from_game_custom_data()
+    {
+        var folder = Mod("m", "{\"name\":\"n\",\"game_custom_data\":{\"replace_paths\":[\"events\",\"common/casus_belli\"]}}");
+
+        Assert.Equal(new[] { "events", "common/casus_belli" }, ModMetadata.Read(folder, MetadataFile)!.ReplacePaths);
+    }
+
+    [Fact]
+    public void Json_without_game_custom_data_has_no_replace_paths()
+    {
+        var folder = Mod("m", "{\"name\":\"n\"}");
+
+        Assert.Empty(ModMetadata.Read(folder, MetadataFile)!.ReplacePaths);
+    }
 }

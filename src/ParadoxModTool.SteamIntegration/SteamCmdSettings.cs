@@ -57,7 +57,7 @@ public sealed class SteamCmdSettingsStore
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
-            LoadWarning = "steam.json war nicht lesbar; eine Kopie liegt als steam.json.bad neben der Datei.";
+            LoadWarning = SteamTexts.SettingsUnreadable;
             try
             {
                 File.Copy(FilePath, FilePath + ".bad", overwrite: true);

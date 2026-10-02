@@ -87,5 +87,5 @@ public static class CompatchTargets
 
     /// <summary>"Kompatch für A + B" (Namen der Ziele in Listenreihenfolge).</summary>
     public static string Describe(ModInfo compatch) =>
-        "Kompatch für " + string.Join(" + ", compatch.CompatchTargets.Select(t => t.DisplayName.Length > 0 ? t.DisplayName : t.ModId ?? t.WorkshopId ?? t.Folder ?? "?"));
+        ModsTexts.CompatchRole(string.Join(" + ", compatch.CompatchTargets.Select(t => t.DisplayName.Length > 0 ? t.DisplayName : t.ModId ?? t.WorkshopId ?? t.Folder ?? "?")));
 }

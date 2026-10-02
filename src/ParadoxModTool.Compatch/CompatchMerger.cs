@@ -20,8 +20,15 @@ public static class CompatchMerger
                 continue;
             }
 
+            var noBase = WithoutOldVersion(info, input);
             MergeWalker.Merge(MergeBasis.Entries(info, input), info.A.Entries, info.B.Entries, input.LogicFieldKeys, point =>
             {
+                if (noBase && point.Origin == MergeOrigin.Both)
+                {
+                    // Update-Modus ohne alte Fassung: gleiche Stellen sind "neu auf beiden Seiten", aber es gibt nichts zu entscheiden.
+                    return MergeChoice.Entries(point, DecisionKind.TakeA);
+                }
+
                 var action = ActionFor(info, point, input);
                 actions.Add(action);
                 return MergeChoice.Entries(point, action.DefaultDecision);
@@ -38,9 +45,10 @@ public static class CompatchMerger
         var defaultDecision = DefaultFor(point.Origin, info);
         MergeStage stage;
         var notes = new List<string>();
+        var fillsMissing = false;
         if (point.Ambiguous)
         {
-            notes.Add("Zuordnung unklar");
+            notes.Add(CompatchTexts.NoteAmbiguous);
         }
 
         if (FillsFromMain(point, input) is { } main)
@@ -52,9 +60,10 @@ public static class CompatchMerger
             var insideLogic = point.InsideLogicBlock || (LogicFields.IsLogicScope(info.Address.Scope) && point.Path.Count > 1);
             stage = insideLogic || point.Ambiguous ? MergeStage.Review : MergeStage.Automatic;
             notes.Insert(0, CompatchTexts.NoteMissingInTarget);
+            fillsMissing = true;
             if (insideLogic)
             {
-                notes.Add("Logikblock");
+                notes.Add(CompatchTexts.NoteLogicBlock);
             }
         }
         else
@@ -64,8 +73,16 @@ public static class CompatchMerger
                 : inLogic || point.Ambiguous ? MergeStage.Review : MergeStage.Automatic;
             if (inLogic && origin is not null)
             {
-                notes.Add("Logikblock");
+                notes.Add(CompatchTexts.NoteLogicBlock);
             }
+        }
+
+        if (origin is not MergeOrigin.Both && WithoutOldVersion(info, input))
+        {
+            // Update-Modus ohne alte Vanilla-Fassung: Wer was geändert hat, ist unbekannt. Nichts automatisch, die Mod ist vorausgewählt.
+            stage = stage == MergeStage.Automatic ? MergeStage.Review : stage;
+            defaultDecision = DecisionKind.TakeB;
+            notes.Insert(0, CompatchTexts.NoteNoOldVersion);
         }
 
         return new MergeAction
@@ -84,6 +101,7 @@ public static class CompatchMerger
             Uncertain = info.Uncertain,
             Note = notes.Count == 0 ? null : string.Join(", ", notes),
             ValueHash = SiblingMatcher.Hash(Canonical(point.A) + "|" + Canonical(point.B), 16),
+            FillsMissing = fillsMissing,
         };
     }
 
@@ -110,6 +128,7 @@ public static class CompatchMerger
         MergeOrigin? origin = info.A.FileHash == baseHash
             ? MergeOrigin.B
             : info.B.FileHash == baseHash ? MergeOrigin.A : null;
+        var noBase = WithoutOldVersion(info, input);
         return new MergeAction
         {
             Id = info.Address.Id,
@@ -118,13 +137,17 @@ public static class CompatchMerger
             Path = Array.Empty<string>(),
             DisplayPath = info.Address.Scope,
             Origin = origin,
-            Stage = origin is null ? MergeStage.Conflict : MergeStage.Automatic,
-            DefaultDecision = DefaultFor(origin, info),
+            Stage = origin is null ? MergeStage.Conflict : noBase ? MergeStage.Review : MergeStage.Automatic,
+            DefaultDecision = noBase ? DecisionKind.TakeB : DefaultFor(origin, info),
             Uncertain = info.Uncertain,
-            Note = info.Note,
+            Note = noBase ? string.Join(", ", new[] { CompatchTexts.NoteNoOldVersion, info.Note }.Where(n => !string.IsNullOrEmpty(n))) : info.Note,
             ValueHash = SiblingMatcher.Hash(info.A.FileHash + "|" + info.B.FileHash, 16),
         };
     }
+
+    /// <summary>Update-Modus: liegt die Datei der Adresse ohne alte Vanilla-Fassung vor (<see cref="CompatchInput.NoBasePaths"/>)?</summary>
+    private static bool WithoutOldVersion(AddressInfo info, CompatchInput input) =>
+        input.NoBasePaths.Count > 0 && input.NoBasePaths.Any(p => string.Equals(EntryAddress.Norm(p), FileOf(info), StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Datei einer Adresse: bei Schlüsseln die Gewinner-Datei ohne Patch, sonst A, B, Vanilla, zuletzt der Bereich; Dateirest und ganze Datei: ihr Pfad.</summary>
     public static string FileOf(AddressInfo info) => info.Address.Kind == AddressKind.Key

@@ -67,7 +67,7 @@ public static class BuiltInThemes
     public static ThemeDefinition CreateLight() => new()
     {
         Id = ThemeDefinition.LightId,
-        Name = "Hell",
+        Name = ThemingTexts.LightName,
         IsDark = false,
         Colors = ThemeTokens.All.ToDictionary(t => t.Key, t => t.Light),
         CategoryColors = new Dictionary<string, string>(LightCategories),
@@ -76,7 +76,7 @@ public static class BuiltInThemes
     public static ThemeDefinition CreateDark() => new()
     {
         Id = ThemeDefinition.DarkId,
-        Name = "Dunkel",
+        Name = ThemingTexts.DarkName,
         IsDark = true,
         Colors = ThemeTokens.All.ToDictionary(t => t.Key, t => t.Dark),
         CategoryColors = new Dictionary<string, string>(DarkCategories),
@@ -105,7 +105,7 @@ public static class ThemeNormalizer
         var result = new ThemeDefinition
         {
             Id = source.Id,
-            Name = string.IsNullOrWhiteSpace(source.Name) ? "Unbenanntes Theme" : source.Name.Trim(),
+            Name = string.IsNullOrWhiteSpace(source.Name) ? ThemingTexts.Unnamed : source.Name.Trim(),
             IsDark = source.IsDark,
         };
 

@@ -50,4 +50,10 @@ public sealed class FileParts
     public List<KeyPart> Keys { get; } = new();
 
     public List<ScriptEntry> Rest { get; } = new();
+
+    /// <summary>
+    /// Textstelle des ersten obersten Eintrags, der Schlüssel trägt (Anweisung, Hülle, <c>types</c>-Block, Template); <see langword="null"/>
+    /// ohne Schlüssel. Bei Hüllen und GUI-Typen liegt <see cref="KeyPart.Original"/> darin, neuer Dateirest gehört aber davor.
+    /// </summary>
+    public int? FirstKeyStart { get; set; }
 }

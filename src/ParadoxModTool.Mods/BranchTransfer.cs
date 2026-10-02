@@ -43,22 +43,22 @@ public static class BranchTransfer
     {
         if (from.Id == to.Id)
         {
-            return TransferCheck.No("Quelle und Ziel sind dieselbe Mod.");
+            return TransferCheck.No(ModsTexts.TransferSameMod);
         }
 
         if (ModProjects.Root(registry, from).Id != ModProjects.Root(registry, to).Id)
         {
-            return TransferCheck.No("Die Mods gehören nicht zum selben Projekt.");
+            return TransferCheck.No(ModsTexts.TransferNotSameProject);
         }
 
         if (to.IsLocked)
         {
-            return TransferCheck.No($"\"{to.Name}\" ist gesperrt.");
+            return TransferCheck.No(ModsTexts.TransferTargetLocked(to.Name));
         }
 
         if (from.IsLocked)
         {
-            return TransferCheck.No($"\"{from.Name}\" ist gesperrt; daraus wird nichts übertragen.");
+            return TransferCheck.No(ModsTexts.TransferSourceLocked(from.Name));
         }
 
         return TransferCheck.Yes;
@@ -67,7 +67,7 @@ public static class BranchTransfer
     /// <summary>Die Dateien unter einem Ordner der Mod (relativ zum Arbeitsordner, mit <c>/</c>), ohne ausgeschlossene Ordner und Dateien.</summary>
     public static IReadOnlyList<string> FilesUnder(ModInfo mod, string relativeFolder)
     {
-        var folder = WorkingFolder(mod) ?? throw new DirectoryNotFoundException($"Die Mod \"{mod.Name}\" hat keinen vorhandenen Ordner.");
+        var folder = WorkingFolder(mod) ?? throw new DirectoryNotFoundException(ModsTexts.NoExistingFolder(mod.Name));
         var normalized = Normalize(relativeFolder);
         return ModStaging.EnumerateFiles(folder, ModStagingRules.Default.Extend(null, null, new[] { normalized }));
     }
@@ -88,8 +88,8 @@ public static class BranchTransfer
         }
 
         var relative = Normalize(relativePath);
-        var fromFolder = WorkingFolder(from) ?? throw new DirectoryNotFoundException($"Die Mod \"{from.Name}\" hat keinen vorhandenen Ordner.");
-        var toFolder = WorkingFolder(to) ?? throw new DirectoryNotFoundException($"Die Mod \"{to.Name}\" hat keinen vorhandenen Ordner.");
+        var fromFolder = WorkingFolder(from) ?? throw new DirectoryNotFoundException(ModsTexts.NoExistingFolder(from.Name));
+        var toFolder = WorkingFolder(to) ?? throw new DirectoryNotFoundException(ModsTexts.NoExistingFolder(to.Name));
         var source = ToFullPath(fromFolder, relative);
         var target = ToFullPath(toFolder, relative);
 
@@ -142,7 +142,7 @@ public static class BranchTransfer
         {
             if (new FileInfo(target).Length != new FileInfo(source).Length)
             {
-                throw new IOException($"Die Zieldatei {relative} hat eine andere Größe als die Quelle; die Quelle bleibt erhalten.");
+                throw new IOException(ModsTexts.TransferSizeMismatch(relative));
             }
 
             File.Delete(source);

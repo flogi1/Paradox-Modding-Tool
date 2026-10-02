@@ -31,7 +31,7 @@ public static class KeyPartReader
         var parsed = cache.Get(fullPath);
         if (parsed.Root is null)
         {
-            return new FileParts { Side = side, RelativePath = relativePath, FullPath = fullPath, Rule = rule, IsScript = true, Error = parsed.Error ?? "nicht lesbar", Text = parsed.Text, EncodingName = parsed.EncodingName };
+            return new FileParts { Side = side, RelativePath = relativePath, FullPath = fullPath, Rule = rule, IsScript = true, Error = parsed.Error ?? CompatchTexts.NoteUnreadable, Text = parsed.Text, EncodingName = parsed.EncodingName };
         }
 
         var result = new FileParts { Side = side, RelativePath = relativePath, FullPath = fullPath, Rule = rule, IsScript = true, Text = parsed.Text, EncodingName = parsed.EncodingName };
@@ -40,7 +40,12 @@ public static class KeyPartReader
             .Where(s => s.Key.StartsWith('@') && s.Value is ScriptScalar)
             .GroupBy(s => s.Key, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => (ScriptScalar)g.Last().Value, StringComparer.Ordinal);
-        if (rule.Behavior == OverrideBehavior.LastWins && extension == ".gui")
+        if (RuleKeys.Applies(rule))
+        {
+            ReadKeyed(result, parsed.Root, used, constants);
+        }
+        // GUI-Typen und -Templates: EU V "zuletzt geladen gewinnt", CK III "zuerst geladen gewinnt" (gemessen 2026-09-30); zerlegt wird gleich.
+        else if (GuiUnits.Applies(rule, relativePath))
         {
             ReadGui(result, parsed.Root, used, constants);
         }
@@ -57,6 +62,7 @@ public static class KeyPartReader
             }
         }
 
+        result.FirstKeyStart = used.Select(e => e.SourceStart).Min();
         return result;
     }
 
@@ -137,32 +143,22 @@ public static class KeyPartReader
         }
     }
 
-    /// <summary>GUI: <c>template name { }</c> und <c>type name = basis { }</c> in <c>types X { }</c> sind Schlüssel; alles andere ist Dateirest.</summary>
+    /// <summary>Schlüssel nach <see cref="RuleKeys"/>; Einträge einer Hülle merken sich deren schließende Klammer für neue Geschwister.</summary>
+    private static void ReadKeyed(FileParts result, ScriptBlock root, HashSet<ScriptEntry> used, IReadOnlyDictionary<string, ScriptScalar> constants)
+    {
+        foreach (var keyed in RuleKeys.Read(root, result.Rule))
+        {
+            used.Add(keyed.Wrapper ?? keyed.Statement);
+            var containerEnd = keyed.Wrapper?.SourceEnd is { } end ? end - 1 : (int?)null;
+            result.Keys.Add(Make(result, OverrideOperator.None, keyed.Key, new ScriptEntry[] { keyed.Statement }, constants, containerEnd));
+        }
+    }
+
+    /// <summary>GUI: Typen und Templates nach <see cref="GuiUnits"/> sind Schlüssel; alles andere ist Dateirest.</summary>
     private static void ReadGui(FileParts result, ScriptBlock root, HashSet<ScriptEntry> used, IReadOnlyDictionary<string, ScriptScalar> constants)
     {
-        foreach (var unit in EntryUnits.Build(root.Entries))
-        {
-            var first = FirstWord(unit);
-            if (first == "template")
-            {
-                MarkUsed(unit);
-                Add(unit, "template " + HeaderName(unit), null);
-            }
-            else if (first == "types" && unit.Value is ScriptBlock typesBlock)
-            {
-                MarkUsed(unit);
-                var typesEnd = unit.Entry.SourceEnd is { } end ? end - 1 : (int?)null;
-                foreach (var inner in EntryUnits.Build(typesBlock.Entries))
-                {
-                    if (FirstWord(inner) == "type")
-                    {
-                        Add(inner, "type " + HeaderName(inner), typesEnd);
-                    }
-                }
-            }
-        }
-
-        void MarkUsed(EntryUnit unit)
+        var read = GuiUnits.Read(root);
+        foreach (var unit in read.Consumed)
         {
             used.Add(unit.Entry);
             foreach (var header in unit.Header)
@@ -171,21 +167,11 @@ public static class KeyPartReader
             }
         }
 
-        void Add(EntryUnit unit, string key, int? containerEnd) =>
-            result.Keys.Add(Make(result, OverrideOperator.None, key, unit.Header.Append(unit.Entry).ToList(), constants, containerEnd));
-    }
-
-    private static string? FirstWord(EntryUnit unit) =>
-        unit.Kind == EntryUnit.UnitKind.Body && unit.Header.Count > 0 && unit.Header[0] is ScriptListItem { Value: ScriptScalar word } ? word.Text : null;
-
-    /// <summary>"template name" → name, "type name = basis" → name.</summary>
-    private static string HeaderName(EntryUnit unit) =>
-        unit.Header.Skip(1).Select(h => h switch
+        foreach (var key in read.Keys)
         {
-            ScriptStatement statement => statement.Key,
-            ScriptListItem { Value: ScriptScalar value } => value.Text,
-            _ => string.Empty,
-        }).FirstOrDefault(name => name.Length > 0) ?? string.Empty;
+            result.Keys.Add(Make(result, OverrideOperator.None, key.Key, key.Unit.Header.Append(key.Unit.Entry).ToList(), constants, key.ContainerEnd));
+        }
+    }
 
     private static FileParts ReadLocalization(MergeSide side, string relativePath, string fullPath, RuleMatch rule, ParseCache cache)
     {

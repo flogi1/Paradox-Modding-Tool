@@ -36,7 +36,7 @@ public sealed class VanillaHistoryStore
     {
         if (!File.Exists(vanillaFileFullPath))
         {
-            throw new FileNotFoundException("Vanilla-Datei nicht gefunden.", vanillaFileFullPath);
+            throw new FileNotFoundException(VanillaDiffTexts.VanillaFileMissing, vanillaFileFullPath);
         }
 
         var targetDir = Path.Combine(_historyRoot, SanitizeRelativePathForFolder(relativePath));
@@ -71,12 +71,15 @@ public sealed class VanillaHistoryStore
 
         if (!File.Exists(file))
         {
-            throw new FileNotFoundException(
-                $"Kein gespeicherter Snapshot für \"{relativePath}\" bei Spielversion \"{gameVersion}\".", file);
+            throw new FileNotFoundException(VanillaDiffTexts.NoSnapshot(relativePath, gameVersion), file);
         }
 
         return File.ReadAllText(file);
     }
+
+    /// <summary>Datei des Snapshots (zum Kopieren ohne Umkodieren); ob sie existiert, sagt <see cref="HasSnapshot"/>.</summary>
+    public string SnapshotPath(string relativePath, string gameVersion) =>
+        Path.Combine(_historyRoot, SanitizeRelativePathForFolder(relativePath), SanitizeForFileName(gameVersion) + ".txt");
 
     public bool HasSnapshot(string relativePath, string gameVersion) =>
         File.Exists(Path.Combine(_historyRoot, SanitizeRelativePathForFolder(relativePath), SanitizeForFileName(gameVersion) + ".txt"));

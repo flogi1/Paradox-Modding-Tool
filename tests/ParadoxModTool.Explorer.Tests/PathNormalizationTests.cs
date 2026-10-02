@@ -31,6 +31,19 @@ public class PathNormalizationTests
         Assert.NotEqual(a, b);
     }
 
+    [Theory]
+    [InlineData("C:/Users/x/Documents/Paradox Interactive/Crusader Kings III/mod\\Flogi's Mod\\common\\decisions", "C:\\Users\\x\\Documents\\Paradox Interactive\\Crusader Kings III\\mod\\Flogi's Mod\\common\\decisions")]
+    [InlineData("C:\\Mods\\A\\", "C:\\Mods\\A\\")]
+    [InlineData("C:\\Mods\\.\\A\\..\\B", "C:\\Mods\\B")]
+    public void ToWindowsPath_VereinheitlichtGemischteSchraegstriche(string path, string expected) => Assert.Equal(expected, PathNormalization.ToWindowsPath(path));
+
+    [Fact]
+    public void ToWindowsPath_UngueltigerPfad_BleibtBestehen()
+    {
+        Assert.Equal("a\0b", PathNormalization.ToWindowsPath("a\0b"));
+        Assert.Equal(string.Empty, PathNormalization.ToWindowsPath(string.Empty));
+    }
+
     [Fact]
     public void IsSameOrUnder_ErkenntOrdnerUnterhalbUndDenOrdnerSelbst()
     {

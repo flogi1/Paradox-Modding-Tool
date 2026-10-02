@@ -7,10 +7,32 @@ namespace ParadoxModTool.GameProfiles;
 /// </summary>
 public sealed class FolderCategory
 {
+    private string _label = string.Empty;
+    private string? _description;
+
     public string Path { get; set; } = string.Empty;
-    public string Label { get; set; } = string.Empty;
+
+    /// <summary>Optionaler Key in <c>locales/*.json</c> für <see cref="Label"/>; ohne Key gilt der Text aus dem Profil.</summary>
+    public string? LabelKey { get; set; }
+
+    /// <summary>Anzeigename in der gewählten Sprache (Rückfall: Text aus dem Profil).</summary>
+    public string Label
+    {
+        get => GameProfileTexts.Resolve(LabelKey, _label) ?? string.Empty;
+        set => _label = value;
+    }
+
     public string DefaultColor { get; set; } = "#808080";
-    public string? Description { get; set; }
+
+    /// <summary>Optionaler Key in <c>locales/*.json</c> für <see cref="Description"/>.</summary>
+    public string? DescriptionKey { get; set; }
+
+    /// <summary>Beschreibung in der gewählten Sprache; <see langword="null"/>, wenn das Profil keine hat.</summary>
+    public string? Description
+    {
+        get => GameProfileTexts.Resolve(DescriptionKey, _description);
+        set => _description = value;
+    }
 }
 
 /// <summary>Ordnet eine Dateiendung ihrem Parser/Highlighter-Bezeichner zu.</summary>
@@ -24,7 +46,18 @@ public sealed class FileTypeMapping
 /// <summary>Ein Eintrag im Spielstart-Untermenü der Werkzeugleiste.</summary>
 public sealed class LaunchOption
 {
-    public string Label { get; set; } = string.Empty;
+    private string _label = string.Empty;
+
+    /// <summary>Optionaler Key in <c>locales/*.json</c> für <see cref="Label"/>; ohne Key gilt der Text aus dem Profil.</summary>
+    public string? LabelKey { get; set; }
+
+    /// <summary>Anzeigename in der gewählten Sprache (Rückfall: Text aus dem Profil).</summary>
+    public string Label
+    {
+        get => GameProfileTexts.Resolve(LabelKey, _label) ?? string.Empty;
+        set => _label = value;
+    }
+
     public string Args { get; set; } = string.Empty;
 }
 
@@ -34,6 +67,12 @@ public sealed class OverrideRuleEntry
     public string Folder { get; set; } = string.Empty;
     public string Behavior { get; set; } = "PerKey";
     public bool Certain { get; set; } = true;
+
+    /// <summary>Hüllen-Blöcke, deren Einträge einzeln zählen (EU IV: <c>country_decisions</c>, <c>spriteTypes</c>). Der Schlüssel lautet dann <c>Hülle &gt; Name</c>.</summary>
+    public List<string>? Unwrap { get; set; }
+
+    /// <summary>Feld im Block, das den Schlüssel liefert (EU IV: <c>id</c> bei Events, <c>name</c> bei GUI-Typen). Leer = der Blockname.</summary>
+    public string? KeyField { get; set; }
 }
 
 /// <summary>
@@ -46,6 +85,10 @@ public sealed class GameProfile
 {
     public string Id { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
+
+    /// <summary>Erscheinungsdatum des Spiels (ISO, z. B. <c>2013-08-13</c>); bestimmt die Reihenfolge in der Spielauswahl.</summary>
+    public DateOnly? ReleaseDate { get; set; }
+
     public string EngineFamily { get; set; } = string.Empty;
     public string DefaultModRootTemplate { get; set; } = string.Empty;
 
@@ -68,7 +111,10 @@ public sealed class GameProfile
     public string EffectiveVanillaHistoryFolderName =>
         string.IsNullOrWhiteSpace(VanillaHistoryFolderName) ? DisplayName + " Vanilla History" : VanillaHistoryFolderName;
 
+    /// <summary>Pfad der Fehlerkatalog-Datei für das error.log, relativ zum profiles-Ordner (z.B. "errorlog/eu5.json"); null = kein Katalog.</summary>
     public string? ErrorLogRules { get; set; }
+    /// <summary>Pfad der Desync-Regeln für die OOS-Analyse, relativ zum profiles-Ordner (z.B. "desync/eu5.json"); null = keine Desync-Analyse.</summary>
+    public string? DesyncRules { get; set; }
     public string? Notes { get; set; }
 
     /// <summary>Überschreib-Verhalten je Ordner (Mod-Kompatibilität): Ordnermuster mit <c>*</c> für ein Segment, Verhalten als Name von <c>OverrideBehavior</c>, "Certain" = laut Wiki gesichert.</summary>
@@ -86,11 +132,170 @@ public sealed class GameProfile
     /// <summary>Woher die Script-Datenbank dieses Spiels stammt: "log" (Standard, aus docs/*.log) oder "wiki" (siehe ScriptDocsWikiFile).</summary>
     public string ScriptDocsSourceKind { get; set; } = "log";
 
+    /// <summary>
+    /// Ordner der Doku-Logs (modifiers.log, triggers.log …), relativ zum Spieldatenordner des Nutzers (dem Ordner über dem Mod-Ordner).
+    /// EU V schreibt sie nach "docs", CK III mit dem Konsolenbefehl <c>script_docs</c> nach "logs".
+    /// </summary>
+    public string ScriptDocsFolder { get; set; } = "docs";
+
+    /// <summary>
+    /// Art der Events ohne Feld <c>type</c> für die Scope-Verfolgung (CK III laut <c>game/events/_events.info</c>: <c>character_event</c>).
+    /// <see langword="null"/>, wenn das Spiel <c>type</c> verlangt (EU V) oder es nicht geprüft ist.
+    /// </summary>
+    public string? DefaultEventType { get; set; }
+
+    /// <summary>
+    /// <c>replace_path</c> einer Mod blendet auch die Dateien der Mods aus, die im Playset vor ihr laden, nicht nur Vanilla (Crusader Kings III und
+    /// Europa Universalis V, gemessen 2026-09-30 mit zwei Test-Mods). <see langword="false"/> = nur Vanilla (Europa Universalis IV, gemessen) oder
+    /// nicht gemessen.
+    /// </summary>
+    public bool ReplacePathHidesEarlierMods { get; set; }
+
+    /// <summary>
+    /// Wurzelordner, die <c>replace_path</c> nicht mitnennt (EU V: <c>in_game</c>, <c>main_menu</c>, <c>loading_screen</c>; <c>common/x</c> blendet
+    /// <c>in_game/common/x</c> aus, <c>in_game/common/x</c> wirkt nicht, gemessen 2026-09-30). Leer = Pfade gelten ab dem Mod-Ordner.
+    /// </summary>
+    public List<string> ReplacePathRoots { get; set; } = new();
+
+    /// <summary>
+    /// Ordner, in deren Unterordnern ein <c>replace_path</c> das Spiel beim Start abstürzen lässt, sobald dort .gui-Dateien liegen (EU IV:
+    /// <c>interface</c>; das Spiel sucht die Dateien ohne den Unterordner, gemessen 2026-09-30). Die Mod-Kompatibilität warnt davor.
+    /// </summary>
+    public List<string> ReplacePathGuiCrashRoots { get; set; } = new();
+
     /// <summary>Bei ScriptDocsSourceKind="wiki": Pfad relativ zum profiles-Ordner (z. B. "scriptdocs/eu4.json").</summary>
     public string? ScriptDocsWikiFile { get; set; }
 
     /// <summary>GUI-Einordnung für den GUI-Editor. Null bei Spielen ohne GUI-Unterstützung.</summary>
     public GuiProfileSettings? Gui { get; set; }
+
+    /// <summary>Spielstand-Explorer: Ordner, Textmarke, Objektarten und Werttypen der Spielstände. Null = Explorer für dieses Spiel nicht verfügbar.</summary>
+    public SaveGameSettings? SaveGames { get; set; }
+
+    /// <summary>Woher die Anzeigeformate der Modifier-Werte kommen (Hover "Im Spiel: +10 %"). Null = keine Anzeige.</summary>
+    public ModifierFormatSettings? ModifierFormats { get; set; }
+}
+
+/// <summary>
+/// Anzeigeformate der Modifier-Werte (siehe docs/superpowers/specs/2026-09-26-modifier-values-design.md, Abschnitt "Profil").
+/// </summary>
+public sealed class ModifierFormatSettings
+{
+    /// <summary>"definitions" (Definitionsdateien des Spiels), "wiki" (Script-Datenbank aus der Wiki, geschätzt) oder "none".</summary>
+    public string Source { get; set; } = "none";
+
+    /// <summary>Ordner der Definitionsdateien, relativ zum Spielinhalt (<c>game/</c>) und genauso relativ zum Mod-Ordner.</summary>
+    public List<string> Folders { get; set; } = new();
+
+    /// <summary>Nachkommastellen, wenn ein Eintrag kein <c>decimals</c> hat.</summary>
+    public int DefaultDecimals { get; set; } = 2;
+
+    /// <summary>Nullen am Ende der Nachkommastellen weglassen ("+12.5 %" statt "+12.50 %").</summary>
+    public bool TrimTrailingZeros { get; set; } = true;
+
+    /// <summary>Umrechnung je Wert von <c>game_data.format</c>; ein Format ohne Eintrag zählt als Faktor 1.</summary>
+    public Dictionary<string, ModifierFormatFactor> Formats { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>Ordner mit den Lokalisierungsdateien der Modifier-Namen, relativ zum Spielinhalt und zum Mod-Ordner; gelesen werden alle <c>*_l_&lt;sprache&gt;.yml</c> darunter.</summary>
+    public List<string> NameLocFolders { get; set; } = new();
+
+    /// <summary>Lokalisierungsschlüssel des Modifier-Namens in Rangfolge; <c>{name}</c> steht für den Modifier (Groß-/Kleinschreibung egal), z. B. <c>MOD_{name}</c>.</summary>
+    public List<string> NameKeys { get; set; } = new();
+
+    /// <summary>Lokalisierungsschlüssel eines Begriffs oder Verweises im Namen (<c>[levy|E]</c>, <c>$nobles$</c>) in Rangfolge; <c>{id}</c> steht für den Begriff, z. B. <c>game_concept_{id}</c>.</summary>
+    public List<string> NameRefKeys { get; set; } = new() { "{id}" };
+}
+
+/// <summary>Faktor, mit dem der Wert eines Sonderformats multipliziert wird (z. B. 1000 für Werte, die das Spiel in Tausend speichert).</summary>
+public sealed class ModifierFormatFactor
+{
+    public decimal Factor { get; set; } = 1;
+}
+
+/// <summary>
+/// Alles Spielabhängige des Spielstand-Explorers (siehe docs/superpowers/specs/2026-09-26-save-explorer-design.md, Abschnitt "Spielprofil").
+/// Der Code kennt nur die festen Namensquellen und Darstellungen; das Profil wählt aus.
+/// </summary>
+public sealed class SaveGameSettings
+{
+    /// <summary>Ordnername der Spielstände unter dem Spieldatenordner (EU V: "save games").</summary>
+    public string Folder { get; set; } = "save games";
+
+    /// <summary>Dateiendung mit Punkt (EU V: ".eu5").</summary>
+    public string Extension { get; set; } = string.Empty;
+
+    /// <summary>Woran ein lesbarer Text-Stand erkannt wird.</summary>
+    public SaveTextMarker TextMarker { get; set; } = new();
+
+    /// <summary>Name des Metadaten-Blocks nach der Kopfzeile (EU V: "metadata", Crusader Kings III: "meta_data").</summary>
+    public string MetadataBlock { get; set; } = "metadata";
+
+    /// <summary>Feld mit dem Spieldatum im Metadaten-Block (EU V: "date", Crusader Kings III: "meta_date").</summary>
+    public string DateField { get; set; } = "date";
+
+    /// <summary>Objektarten in Anzeigereihenfolge; Besitzer ohne passende Art erscheinen unter "Sonstige".</summary>
+    public List<SaveObjectKindSetting> ObjectKinds { get; set; } = new();
+
+    /// <summary>Werttyp (Feld <c>type</c> im Spielstand) auf Darstellung; Typen ohne Eintrag zeigen den Rohwert.</summary>
+    public Dictionary<string, SaveValueTypeSetting> ValueTypes { get; set; } = new(StringComparer.Ordinal);
+}
+
+/// <summary>Erste Zeile beginnt mit <see cref="Prefix"/>, und ab <see cref="Offset"/> (0-basiert) steht <see cref="Value"/>.</summary>
+public sealed class SaveTextMarker
+{
+    public string Prefix { get; set; } = "SAV";
+    public int Offset { get; set; }
+    public string Value { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Wert an derselben Stelle für einen Text-Stand, dessen Inhalt als ZIP-Eintrag <c>gamestate</c> hinter dem Metadaten-Block liegt
+    /// (Crusader Kings III: "02"); <see langword="null"/> = solche Stände gelten als nicht lesbar (EU V).
+    /// </summary>
+    public string? CompressedValue { get; set; }
+}
+
+/// <summary>
+/// Eine Objektart: Pfad-Muster der Besitzer (<c>*</c> = genau ein Segment), Text der Anzeige und Namensquelle
+/// (<c>table</c>: Wert aus <see cref="NameTable"/> unter der Id, <c>field</c>: Feld <see cref="NameField"/> des Objekts,
+/// <c>pathSegment</c>: letztes Pfadsegment, <c>id</c>: die Id).
+/// </summary>
+public sealed class SaveObjectKindSetting
+{
+    public string Path { get; set; } = string.Empty;
+    public string LabelKey { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string NameSource { get; set; } = "id";
+    public string? NameTable { get; set; }
+    public string? NameField { get; set; }
+
+    /// <summary>Feld des Objekts mit der Id seines Landes (EU V Charaktere: <c>country</c>); zusammen mit <see cref="TagTable"/> ergibt es den Land-Tag.</summary>
+    public string? TagField { get; set; }
+
+    /// <summary>Tabelle Id auf Tag (EU V: <c>countries/tags</c>).</summary>
+    public string? TagTable { get; set; }
+
+    /// <summary>Verweis im Skript mit <c>{0}</c> für die Id (EU V Charaktere: <c>character:{0}</c>); ohne Angabe gibt es keinen Skript-Verweis.</summary>
+    public string? ScriptReference { get; set; }
+
+    /// <summary>
+    /// Unterpfad vom Objekt zu seinem <c>variables</c>-Block, wenn die Variablen nicht direkt im Objekt liegen (Crusader Kings III Charaktere:
+    /// <c>alive_data</c>); <see langword="null"/> = direkt im Objekt.
+    /// </summary>
+    public string? VariablesPath { get; set; }
+}
+
+/// <summary>
+/// Darstellung eines Werttyps: <c>fixedPoint</c> (Rohwert / <see cref="Factor"/>), <c>tickDate</c> (<see cref="TicksPerDay"/> ab
+/// <see cref="EpochYear"/>.1.1, 365 Tage je Jahr), <c>objectName</c> (Name des Objekts <see cref="ObjectPath"/>/Rohwert), <c>yesNo</c>,
+/// <c>flagName</c>, <c>raw</c>.
+/// </summary>
+public sealed class SaveValueTypeSetting
+{
+    public string Format { get; set; } = "raw";
+    public long Factor { get; set; } = 1;
+    public string? ObjectPath { get; set; }
+    public int TicksPerDay { get; set; } = 1;
+    public int EpochYear { get; set; }
 }
 
 /// <summary>Einordnung von GUI-Blöcken für den GUI-Editor (siehe docs/superpowers/specs/2026-09-22-gui-editor-design.md).</summary>
@@ -104,4 +309,10 @@ public sealed class GuiProfileSettings
 
     /// <summary>Widget-Halter, deren Inhalt im Layout des Elternelements liegt (z.B. item in Rastern, scrollwidget in scrollarea). Andere Halter (Tooltips, Kontextmenüs) erscheinen nicht im Layout.</summary>
     public List<string> LayoutHolders { get; set; } = new();
+
+    /// <summary>Kontextordner der .gui-Dateien; <see langword="null"/> = EU V (<c>in_game</c>, <c>main_menu</c>, <c>loading_screen</c>), leer = flaches <c>gui/</c> (CK III).</summary>
+    public List<string>? Contexts { get; set; }
+
+    /// <summary>Welche Definition eines Typs oder Templates gilt: <c>lastWins</c> (EU V, Standard) oder <c>firstWins</c> (CK III, zuerst geladene Datei).</summary>
+    public string TypeOverride { get; set; } = "lastWins";
 }

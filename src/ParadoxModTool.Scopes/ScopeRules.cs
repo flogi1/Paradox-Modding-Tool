@@ -28,7 +28,7 @@ public sealed class DiscriminatorRule
 /// <summary>Das Ergebnis des Lernens: Start-Scopes je Feldpfad für ein Spiel.</summary>
 public sealed class ScopeRules
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     /// <summary>Mindestzustimmung, ab der ein gelernter Scope als sicher gilt.</summary>
     public const double ConfidentSupport = 0.9;
@@ -45,6 +45,12 @@ public sealed class ScopeRules
 
     public int FilesScanned { get; set; }
 
+    /// <summary>
+    /// Art der Events ohne Feld <c>type</c> (Spielprofil <c>defaultEventType</c>, CK III: <c>character_event</c>); <see langword="null"/> = solche Events
+    /// haben keinen Pfad. Mitgelernt, damit ein geänderter Wert im Profil neu lernen lässt.
+    /// </summary>
+    public string? DefaultEventType { get; set; }
+
     public Dictionary<string, FieldRule> Fields { get; set; } = new(StringComparer.Ordinal);
 
     public Dictionary<string, DiscriminatorRule> Discriminators { get; set; } = new(StringComparer.Ordinal);
@@ -57,6 +63,12 @@ public sealed class ScopeRules
 
     /// <summary>Gelernter Typ je Name über alle Felder, falls der Name überall zum selben Scope führt (<c>actor</c> → <c>country</c>); Rückfall, wenn das Feld keine eigene Regel hat.</summary>
     public Dictionary<string, string> SavedNames { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Namen der Vanilla-Script-Values (<see cref="ScriptValueNames"/>), sortiert: Wert-Vorschläge im Scope Finder. Sie werden mit den Regeln neu gelesen, also
+    /// auch automatisch nach einem Spiel-Update (der Fingerabdruck umfasst <c>common/script_values</c>).
+    /// </summary>
+    public List<string> ScriptValues { get; set; } = new();
 
     public int ConfidentCount => Fields.Values.Count(f => f.Scope is not null && f.Support >= ConfidentSupport);
 

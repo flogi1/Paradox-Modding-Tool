@@ -1,6 +1,8 @@
 <Window x:Class="ParadoxModTool.App.ReleasesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        xmlns:loc="clr-namespace:ParadoxModTool.Localization;assembly=ParadoxModTool.Localization"
         Title="Releases" Height="600" Width="900" MinHeight="440" MinWidth="720"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <!--
@@ -9,14 +11,14 @@
     -->
     <DockPanel Margin="12">
         <TextBlock x:Name="InfoText" DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{DynamicResource Theme.TextMuted}" TextWrapping="Wrap"
-                   Text="Der Changelog liegt im Mod-Ordner und wird mit hochgeladen. Sicherungen vor jeder Änderung liegen in den Programmdaten." />
+                   Text="{x:Static local:PublishTexts.ReleasesInfo}" />
 
         <StackPanel DockPanel.Dock="Top">
             <TextBlock x:Name="TitleText" FontWeight="Bold" FontSize="15" />
             <DockPanel Margin="0,8,0,0">
-                <Button DockPanel.Dock="Right" Content="Wählen" Padding="8,2" Margin="8,0,0,0" Click="PickChangelog_Click"
-                        ToolTip="Die Changelog-Datei dieser Mod festlegen (innerhalb des Mod-Ordners)" />
-                <TextBlock Text="Changelog-Datei:" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <Button DockPanel.Dock="Right" Content="{x:Static local:PublishTexts.PickChangelog}" Padding="8,2" Margin="8,0,0,0" Click="PickChangelog_Click"
+                        ToolTip="{x:Static local:PublishTexts.PickChangelogTip}" />
+                <TextBlock Text="{x:Static local:PublishTexts.ChangelogFileLabel}" Margin="0,0,8,0" VerticalAlignment="Center" />
                 <TextBlock x:Name="ChangelogPathText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
             <TextBlock x:Name="StatusText" Margin="0,8,0,0" TextWrapping="Wrap" />
@@ -37,32 +39,32 @@
             </Grid.ColumnDefinitions>
 
             <DockPanel Grid.Column="0">
-                <TextBlock DockPanel.Dock="Top" Text="Erfasste Releases" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static local:PublishTexts.RecordedReleases}" FontWeight="Bold" Margin="0,0,0,4" />
                 <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                    <Button x:Name="PublishButton" Content="Auf Steam veröffentlichen" Padding="8,2" Margin="0,0,6,4" Click="Publish_Click"
-                            ToolTip="Die Version dieser Mod auf den Steam Workshop hochladen (erstes Veröffentlichen oder Update)" />
-                    <Button x:Name="GitHubPublishButton" Content="Auf GitHub veröffentlichen" Padding="8,2" Margin="0,0,6,4" Click="GitHubPublish_Click"
-                            ToolTip="Die Version dieser Mod als Release auf GitHub veröffentlichen (mehrere Repositories und ZIP-Varianten möglich)" />
-                    <Button x:Name="RecordButton" Content="Release erfassen" Padding="8,2" Margin="0,0,6,4" Click="Record_Click"
-                            ToolTip="Die Version aus der Metadaten-Datei der Mod mit dem heutigen Datum als Release erfassen" />
-                    <Button x:Name="ImportButton" Content="Aus Changelog übernehmen" Padding="8,2" Margin="0,0,6,4" Click="Import_Click"
-                            ToolTip="Versionen aus dem Changelog erfassen, die noch fehlen (ohne Datum)" />
-                    <Button x:Name="NewVersionButton" Content="Neue Version anlegen" Padding="8,2" Margin="0,0,6,4" Click="NewVersion_Click"
-                            ToolTip="Legt ein Versions-Banner oben im Changelog an und erfasst die Release. Den Text trägst du danach rechts ein." />
-                    <Button x:Name="DateButton" Content="Datum ändern" Padding="8,2" Margin="0,0,6,4" Click="ChangeDate_Click" />
-                    <Button x:Name="DeleteButton" Content="Löschen" Padding="8,2" Margin="0,0,0,4" Click="Delete_Click"
-                            ToolTip="Die Release aus der Erfassung entfernen (der Changelog bleibt unberührt)" />
+                    <Button x:Name="PublishButton" Content="{x:Static local:PublishTexts.SteamTitle}" Padding="8,2" Margin="0,0,6,4" Click="Publish_Click"
+                            ToolTip="{x:Static local:PublishTexts.SteamPublishTip}" />
+                    <Button x:Name="GitHubPublishButton" Content="{x:Static local:PublishTexts.GitHubTitle}" Padding="8,2" Margin="0,0,6,4" Click="GitHubPublish_Click"
+                            ToolTip="{x:Static local:PublishTexts.GitHubPublishTip}" />
+                    <Button x:Name="RecordButton" Content="{x:Static local:PublishTexts.Record}" Padding="8,2" Margin="0,0,6,4" Click="Record_Click"
+                            ToolTip="{x:Static local:PublishTexts.RecordTip}" />
+                    <Button x:Name="ImportButton" Content="{x:Static local:PublishTexts.Import}" Padding="8,2" Margin="0,0,6,4" Click="Import_Click"
+                            ToolTip="{x:Static local:PublishTexts.ImportTip}" />
+                    <Button x:Name="NewVersionButton" Content="{x:Static local:PublishTexts.NewVersion}" Padding="8,2" Margin="0,0,6,4" Click="NewVersion_Click"
+                            ToolTip="{x:Static local:PublishTexts.NewVersionTip}" />
+                    <Button x:Name="DateButton" Content="{x:Static local:PublishTexts.ChangeDate}" Padding="8,2" Margin="0,0,6,4" Click="ChangeDate_Click" />
+                    <Button x:Name="DeleteButton" Content="{x:Static loc:CommonTexts.Delete}" Padding="8,2" Margin="0,0,0,4" Click="Delete_Click"
+                            ToolTip="{x:Static local:PublishTexts.DeleteTip}" />
                 </WrapPanel>
                 <ListBox x:Name="ReleaseList" DisplayMemberPath="Display" SelectionChanged="ReleaseList_SelectionChanged" />
             </DockPanel>
 
             <DockPanel Grid.Column="2">
-                <TextBlock DockPanel.Dock="Top" Text="Changelog-Text der gewählten Version (direkt bearbeitbar)" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static local:PublishTexts.ChangelogTextHeader}" FontWeight="Bold" Margin="0,0,0,4" />
                 <WrapPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                    <Button x:Name="SaveTextButton" Content="Änderung speichern" Padding="8,2" Margin="0,0,6,4" Click="SaveText_Click"
-                            ToolTip="Schreibt den Text in den Changelog (Strg+S). Vorher wird eine Sicherung angelegt." />
-                    <Button x:Name="RevertTextButton" Content="Verwerfen" Padding="8,2" Margin="0,0,0,4" Click="RevertText_Click"
-                            ToolTip="Die Änderung verwerfen und den Text aus dem Changelog neu laden" />
+                    <Button x:Name="SaveTextButton" Content="{x:Static local:PublishTexts.SaveChange}" Padding="8,2" Margin="0,0,6,4" Click="SaveText_Click"
+                            ToolTip="{x:Static local:PublishTexts.SaveTextTip}" />
+                    <Button x:Name="RevertTextButton" Content="{x:Static local:PublishTexts.Revert}" Padding="8,2" Margin="0,0,0,4" Click="RevertText_Click"
+                            ToolTip="{x:Static local:PublishTexts.RevertTextTip}" />
                 </WrapPanel>
                 <TextBox x:Name="PreviewBox" AcceptsReturn="True" AcceptsTab="True" TextWrapping="NoWrap" FontFamily="Consolas"
                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"

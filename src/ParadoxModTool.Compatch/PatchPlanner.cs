@@ -59,7 +59,10 @@ public static class PatchPlanner
 
                     var forms = AvailableForms(info, state.Entries, input);
                     plan.AvailableForms[address] = forms;
-                    var form = formChoices is not null && formChoices.TryGetValue(address, out var wanted) && forms.Contains(wanted) ? wanted : forms[0];
+                    // UpdateMod: das Ergebnis gehört in die eigene Datei der Mod, nie in eine PMT-eigene Datei.
+                    var form = target == PatchTarget.UpdateMod
+                        ? PatchForm.WholeFile
+                        : formChoices is not null && formChoices.TryGetValue(address, out var wanted) && forms.Contains(wanted) ? wanted : forms[0];
                     if (form == PatchForm.WholeFile)
                     {
                         Collect(info.NoPatch.RelativePath ?? info.A.RelativePath ?? info.B.RelativePath ?? info.Vanilla.RelativePath ?? address.Scope, address);
@@ -73,7 +76,7 @@ public static class PatchPlanner
 
         foreach (var (path, addresses) in wholeFiles.OrderBy(w => w.Key, StringComparer.OrdinalIgnoreCase))
         {
-            plan.Files.Add(FileOp(path, addresses, resolved, applied, input));
+            plan.Files.Add(FileOp(path, addresses, resolved, applied, input, target));
         }
 
         return plan;
@@ -89,7 +92,7 @@ public static class PatchPlanner
             {
                 case OverrideBehavior.PerKey:
                     // Ein REPLACE: läuft nach jedem INJECT: und würde die Ergänzung des Kompatchs wieder löschen (Prüfbefund C1).
-                    if (Has("INJECT") && !info.NoPatch.Operators.Contains(OverrideOperator.Replace) && InjectExtras(info.NoPatch.Entries, desired) is not null)
+                    if (Has("INJECT") && !info.NoPatch.Operators.Contains(OverrideOperator.Replace) && InjectEntries(info.NoPatch.Entries, desired) is not null)
                     {
                         forms.Add(PatchForm.Inject);
                     }
@@ -118,12 +121,8 @@ public static class PatchPlanner
         return forms;
     }
 
-    /// <summary>
-    /// Die Ergänzungen, wenn der gewünschte Block mit allen Einträgen des Blocks ohne Patch beginnt (gleiche Reihenfolge) und danach
-    /// weitere folgen; sonst <see langword="null"/>. <c>INJECT:</c> hängt hinten an, deshalb nur dann (Prüfbefund I5: ein eingefügtes
-    /// <c>else_if</c> vor <c>else</c> darf nicht hinter <c>else</c> landen).
-    /// </summary>
-    internal static IReadOnlyList<ScriptEntry>? InjectExtras(IReadOnlyList<ScriptEntry> noPatch, IReadOnlyList<ScriptEntry> desired)
+    /// <summary>Der Inhalt von <c>INJECT:</c> für den Block ohne Patch und den gewünschten Block, siehe <see cref="InjectShape.Of"/>; sonst <see langword="null"/>.</summary>
+    internal static IReadOnlyList<ScriptEntry>? InjectEntries(IReadOnlyList<ScriptEntry> noPatch, IReadOnlyList<ScriptEntry> desired)
     {
         if (noPatch.Count != 1 || desired.Count != 1
             || noPatch[0] is not ScriptStatement { Value: ScriptBlock have } before
@@ -133,22 +132,7 @@ public static class PatchPlanner
             return null;
         }
 
-        var haveEntries = have.Entries.Where(e => e is not ScriptCommentEntry).ToList();
-        var wantEntries = want.Entries.Where(e => e is not ScriptCommentEntry).ToList();
-        if (wantEntries.Count <= haveEntries.Count)
-        {
-            return null;
-        }
-
-        for (var i = 0; i < haveEntries.Count; i++)
-        {
-            if (!StructuralEquality.EntryEqual(haveEntries[i], wantEntries[i]))
-            {
-                return null;
-            }
-        }
-
-        return wantEntries.Skip(haveEntries.Count).ToList();
+        return InjectShape.Of(have.Entries, want.Entries, StructuralEquality.EntryEqual)?.Entries;
     }
 
     /// <summary>
@@ -196,7 +180,7 @@ public static class PatchPlanner
         {
             PatchForm.Inject => Render(new ScriptEntry[]
             {
-                new ScriptStatement { Key = "INJECT:" + key, Value = new ScriptBlock { Entries = InjectExtras(info.NoPatch.Entries, state.Entries)!.ToList() } },
+                new ScriptStatement { Key = "INJECT:" + key, Value = new ScriptBlock { Entries = InjectEntries(info.NoPatch.Entries, state.Entries)!.ToList() } },
             }),
             PatchForm.Replace when info.Behavior == OverrideBehavior.LocalizationKeys => LocLine(state.Entries) + "\n",
             PatchForm.Replace => Render(state.Entries.Select(e => e is ScriptStatement s
@@ -239,7 +223,7 @@ public static class PatchPlanner
         return entries.Skip(1).Prepend(first).ToList();
     }
 
-    private static PatchFileOp FileOp(string path, IReadOnlyList<EntryAddress> addresses, ResolvedEntries resolved, ApplyResult applied, CompatchInput input)
+    private static PatchFileOp FileOp(string path, IReadOnlyList<EntryAddress> addresses, ResolvedEntries resolved, ApplyResult applied, CompatchInput input, PatchTarget target)
     {
         var rule = input.Rules.Match(path);
         if (!resolved.NoPatchFiles.TryGetValue(path, out var owner))
@@ -259,8 +243,14 @@ public static class PatchPlanner
         }
 
         var spans = new List<(int Start, int End, string Text)>();
-        var normalized = parts.Error is not null || addresses.Any(a => a.Kind == AddressKind.FileRest);
-        foreach (var address in addresses.Where(a => a.Kind == AddressKind.Key))
+        // Neu geschriebene Stellen bekommen Einrückungsart und Tiefe der Datei (Nutzertest 2026-10-01: sonst Leerzeichen zwischen Tabs).
+        var style = StyleOf(text);
+        // UpdateMod: der Dateirest wird als Text geändert (RestSpans), damit Kommentare und Leerzeilen der Mod bleiben (Spec, Abschnitt 5).
+        var updateMod = target == PatchTarget.UpdateMod;
+        var normalized = parts.Error is not null || (!updateMod && addresses.Any(a => a.Kind == AddressKind.FileRest));
+        // UpdateMod: neue Schlüssel kommen hinter ihren Vorgänger in der neuen Vanilla-Datei (A), damit der Vergleich mit Vanilla ruhig bleibt.
+        var order = updateMod ? KeyOrderInA(path, addresses, resolved, rule, input) : null;
+        foreach (var address in addresses.Where(a => a.Kind == AddressKind.Key).OrderBy(a => order is not null && order.TryGetValue(a, out var i) ? i : int.MaxValue))
         {
             if (normalized)
             {
@@ -269,10 +259,17 @@ public static class PatchPlanner
 
             var desired = applied.Desired[address].Entries;
             var existing = parts.Keys.Where(k => k.Address == address).ToList();
-            var replacement = desired.Count == 0 ? string.Empty : Eol(Render(WithPrefixOf(existing.FirstOrDefault(), existing.Count == 0 ? desired : WithoutLeadingComments(desired))).TrimEnd('\n'), eol);
             if (existing.Count == 0)
             {
-                spans.Add(InsertNew(address, replacement, parts, text, eol));
+                if (desired.Count > 0 && Predecessor(address, order, parts) is { } before)
+                {
+                    spans.Add((before.End, before.End, eol + eol + Eol(RenderAt(desired, style, DepthAt(text, before.Start, style)), eol)));
+                }
+                else if (desired.Count > 0)
+                {
+                    spans.Add(InsertNew(address, desired, style, parts, text, eol));
+                }
+
                 continue;
             }
 
@@ -284,7 +281,22 @@ public static class PatchPlanner
                     break;
                 }
 
-                spans.Add((span.Start, span.End, i == 0 ? replacement : string.Empty));
+                var replacement = i > 0 || desired.Count == 0
+                    ? string.Empty
+                    : Eol(RenderAt(WithPrefixOf(existing[0], WithoutLeadingComments(desired)), style, DepthAt(text, span.Start, style)).TrimStart(' ', '\t'), eol);
+                spans.Add((span.Start, span.End, replacement));
+            }
+        }
+
+        if (!normalized && updateMod && addresses.FirstOrDefault(a => a.Kind == AddressKind.FileRest) is { } restAddress)
+        {
+            if (RestSpans(parts, applied.Desired[restAddress].Entries, text, eol, style) is { } restSpans)
+            {
+                spans.AddRange(restSpans);
+            }
+            else
+            {
+                normalized = true;
             }
         }
 
@@ -293,7 +305,12 @@ public static class PatchPlanner
             return new PatchFileOp(path, Eol(NormalizedFile(parts, addresses, applied), eol), null, bom, addresses, true, true, parts.EncodingName);
         }
 
-        foreach (var (start, end, value) in spans.OrderByDescending(s => s.Start))
+        // Bei gleichem Anfang zuerst ersetzen/entfernen, dann einfügen: sonst schnitte das Entfernen den eingefügten Text mit weg.
+        // Mehrere Einfügungen an derselben Stelle in umgekehrter Reihenfolge, damit sie in ihrer Reihenfolge im Text stehen.
+        var ordered = spans.Select((span, index) => (Span: span, Index: index))
+            .OrderByDescending(s => s.Span.Start).ThenBy(s => s.Span.End > s.Span.Start ? 0 : 1).ThenByDescending(s => s.Index)
+            .Select(s => s.Span);
+        foreach (var (start, end, value) in ordered)
         {
             text = text[..start] + value + text[end..];
         }
@@ -302,26 +319,158 @@ public static class PatchPlanner
     }
 
     /// <summary>
+    /// Update-Modus: Dateirest als Text ändern, Einheit für Einheit (Kopfzeile plus Rumpf wie bei GUI-Fenstern). Gewünschte Einheiten werden
+    /// den Einheiten der Mod zugeordnet wie im Merge (<see cref="SiblingMatcher"/>). Eine geänderte Einheit wird an ihrer Stelle ersetzt; die
+    /// Kommentare davor bleiben die der Mod. Nicht mehr gewünschte Einheiten werden samt Zeilenende herausgeschnitten. Neue kommen hinter
+    /// ihren Vorgänger, ohne Vorgänger vor den ersten obersten Schlüsseleintrag (Konstanten und <c>namespace</c> stehen vor ihrer Verwendung;
+    /// nie in einen <c>types</c>-Block, Nutzertest 2026-10-01). Alles andere bleibt Zeichen für Zeichen. <see langword="null"/>, wenn eine
+    /// betroffene Einheit keine Textstelle hat.
+    /// </summary>
+    private static List<(int Start, int End, string Text)>? RestSpans(FileParts parts, IReadOnlyList<ScriptEntry> desired, string text, string eol, ScriptWriteOptions style)
+    {
+        var modUnits = EntryUnits.Build(parts.Rest);
+        var wanted = EntryUnits.Build(desired);
+        var aligned = SiblingMatcher.Align(modUnits, wanted, SiblingMatcher.RepeatedBaseKeys(modUnits, wanted)).Units;
+        var modByKey = modUnits.ToDictionary(u => u.Key, StringComparer.Ordinal);
+        var paired = new HashSet<string>(StringComparer.Ordinal);
+        var spans = new List<(int Start, int End, string Text)>();
+        var inserts = new List<(int At, bool Behind, List<EntryUnit> Units)>();
+        int? after = null;
+        foreach (var unit in aligned)
+        {
+            if (modByKey.TryGetValue(unit.Key, out var mod) && paired.Add(unit.Key))
+            {
+                if (UnitSpan(mod) is not { } span)
+                {
+                    return null;
+                }
+
+                if (EntryUnits.HeaderText(mod.Header) != EntryUnits.HeaderText(unit.Header) || !StructuralEquality.EntryEqual(mod.Entry, unit.Entry))
+                {
+                    var rendered = RenderAt(WithoutLeadingComments(unit.Header.Append(unit.Entry).ToList()), style, DepthAt(text, span.Start, style));
+                    spans.Add((span.Start, span.End, Eol(rendered.TrimStart(' ', '\t'), eol)));
+                }
+
+                after = span.End;
+                continue;
+            }
+
+            var at = after ?? parts.FirstKeyStart ?? text.Length;
+            if (inserts.Count > 0 && inserts[^1].At == at)
+            {
+                inserts[^1].Units.Add(unit);
+            }
+            else
+            {
+                inserts.Add((at, after is not null, new List<EntryUnit> { unit }));
+            }
+        }
+
+        foreach (var mod in modUnits.Where(u => !paired.Contains(u.Key)))
+        {
+            if (UnitSpan(mod) is not { } span)
+            {
+                return null;
+            }
+
+            var end = span.End;
+            if (end < text.Length && text[end] == '\r')
+            {
+                end++;
+            }
+
+            if (end < text.Length && text[end] == '\n')
+            {
+                end++;
+            }
+
+            spans.Add((span.Start, end, string.Empty));
+        }
+
+        foreach (var (at, behind, units) in inserts)
+        {
+            var rendered = Eol(RenderAt(units.SelectMany(u => u.Header.Append(u.Entry)).ToList(), style, 0), eol);
+            spans.Add((at, at, behind
+                ? eol + rendered
+                : (at == text.Length && text.Length > 0 && !text.EndsWith('\n') ? eol : string.Empty) + rendered + eol));
+        }
+
+        return spans;
+    }
+
+    /// <summary>Reihenfolge der Schlüssel in der Datei der Seite A (Update-Modus: neue Vanilla-Fassung); <see langword="null"/> ohne diese Datei.</summary>
+    private static Dictionary<EntryAddress, int>? KeyOrderInA(string path, IReadOnlyList<EntryAddress> addresses, ResolvedEntries resolved, RuleMatch rule, CompatchInput input)
+    {
+        var fullPath = addresses.Select(a => resolved.Addresses[a].A)
+            .Where(a => a.FullPath is not null && string.Equals(PatchWriter.Norm(a.RelativePath ?? string.Empty), PatchWriter.Norm(path), StringComparison.OrdinalIgnoreCase))
+            .Select(a => a.FullPath)
+            .FirstOrDefault();
+        if (fullPath is null)
+        {
+            return null;
+        }
+
+        var order = new Dictionary<EntryAddress, int>();
+        foreach (var part in KeyPartReader.Read(MergeSide.A, path, fullPath, rule, input.KeyOperators, input.Cache).Keys)
+        {
+            order.TryAdd(part.Address, order.Count);
+        }
+
+        return order;
+    }
+
+    /// <summary>
+    /// Textstelle des nächsten Schlüssels vor <paramref name="address"/> in <paramref name="order"/>, den die Datei schon hat, im selben
+    /// umgebenden Block (GUI-Typ nur hinter GUI-Typ, Define nur im selben Elternblock); sonst <see langword="null"/>.
+    /// </summary>
+    private static (int Start, int End)? Predecessor(EntryAddress address, Dictionary<EntryAddress, int>? order, FileParts parts)
+    {
+        if (order is null || !order.TryGetValue(address, out var index))
+        {
+            return null;
+        }
+
+        var behavior = parts.Rule.Behavior;
+        string? Container(string key) => key.StartsWith("type ", StringComparison.Ordinal) ? "types" : ParentOf(key, behavior);
+        var container = Container(address.Key);
+        var candidates = parts.Keys
+            .Where(k => order.TryGetValue(k.Address, out var i) && i < index && Container(k.Address.Key) == container)
+            .OrderByDescending(k => order[k.Address])
+            .ToList();
+        return candidates.Count == 0 ? null : Span(candidates.Last(k => k.Address == candidates[0].Address));
+    }
+
+    /// <summary>Textstelle einer Einheit von der ersten Kopfzeile bis zum Ende des Rumpfs (ohne die Kommentare davor).</summary>
+    private static (int Start, int End)? UnitSpan(EntryUnit unit)
+    {
+        var entries = unit.Header.Append(unit.Entry).ToList();
+        return entries.Any(e => e.SourceStart is null || e.SourceEnd is null)
+            ? null
+            : (entries.Min(e => e.SourceStart!.Value), entries.Max(e => e.SourceEnd!.Value));
+    }
+
+    /// <summary>
     /// Ein Schlüssel, den die Gewinnerdatei noch nicht hat: GUI-Typen kommen in den vorhandenen <c>types</c>-Block, Defines in ihren
     /// Elternblock (Prüfbefund I4); gibt es den Block nicht, wird er mit angelegt. Alles andere wird angehängt.
     /// </summary>
-    private static (int Start, int End, string Text) InsertNew(EntryAddress address, string replacement, FileParts parts, string text, string eol)
+    private static (int Start, int End, string Text) InsertNew(EntryAddress address, IReadOnlyList<ScriptEntry> entries, ScriptWriteOptions style, FileParts parts, string text, string eol)
     {
         var isType = address.Key.StartsWith("type ", StringComparison.Ordinal);
-        var parent = parts.Rule.Behavior == OverrideBehavior.PartialKeys && address.Key.Contains('.') ? address.Key[..address.Key.IndexOf('.')] : null;
+        var parent = ParentOf(address.Key, parts.Rule.Behavior);
         if (isType || parent is not null)
         {
             var sibling = parts.Keys.FirstOrDefault(k => k.ContainerEnd is { } end && end < text.Length && text[end] == '}'
-                && (isType ? k.Address.Key.StartsWith("type ", StringComparison.Ordinal) : k.Address.Key.StartsWith(parent + ".", StringComparison.Ordinal)));
+                && (isType ? k.Address.Key.StartsWith("type ", StringComparison.Ordinal) : ParentOf(k.Address.Key, parts.Rule.Behavior) == parent));
             if (sibling?.ContainerEnd is { } at)
             {
-                return (at, at, eol + replacement + eol);
+                return (at, at, eol + Eol(RenderAt(entries, style, DepthAt(text, at, style) + 1), eol) + eol);
             }
 
-            replacement = (isType ? "types " + OwnFileName : parent + " =") + " {" + eol + replacement + eol + "}";
+            var wrapped = (isType ? "types " + OwnFileName : parent + " =") + " {" + eol + Eol(RenderAt(entries, style, 1), eol) + eol + "}";
+            return (text.Length, text.Length, (text.EndsWith('\n') ? string.Empty : eol) + wrapped + eol);
         }
 
-        return (text.Length, text.Length, (text.EndsWith('\n') ? string.Empty : eol) + replacement + eol);
+        return (text.Length, text.Length, (text.EndsWith('\n') ? string.Empty : eol) + Eol(RenderAt(entries, style, 0), eol) + eol);
     }
 
     /// <summary>
@@ -332,7 +481,6 @@ public static class PatchPlanner
     {
         var restAddress = addresses.FirstOrDefault(a => a.Kind == AddressKind.FileRest);
         var entries = new List<ScriptEntry>(restAddress is not null ? applied.Desired[restAddress].Entries : parts.Rest);
-        var partialKeys = parts.Rule.Behavior == OverrideBehavior.PartialKeys;
         var parents = new Dictionary<string, List<ScriptEntry>>(StringComparer.Ordinal);
         var guiTypes = new List<ScriptEntry>();
         void Place(EntryAddress address, IReadOnlyList<ScriptEntry> chosen)
@@ -341,9 +489,8 @@ public static class PatchPlanner
             {
                 guiTypes.AddRange(chosen);
             }
-            else if (partialKeys && address.Key.Contains('.'))
+            else if (ParentOf(address.Key, parts.Rule.Behavior) is { } parent)
             {
-                var parent = address.Key[..address.Key.IndexOf('.')];
                 if (!parents.TryGetValue(parent, out var children))
                 {
                     children = new List<ScriptEntry>();
@@ -420,16 +567,53 @@ public static class PatchPlanner
             return "types " + OwnFileName + " {\n" + Render(entries) + "}\n";
         }
 
-        if (info.Behavior == OverrideBehavior.PartialKeys && key.Contains('.'))
+        if (ParentOf(key, info.Behavior) is { } parent)
         {
-            return key[..key.IndexOf('.')] + " = {\n" + Render(entries) + "}\n";
+            return parent + " = {\n" + Render(entries) + "}\n";
         }
 
         return Render(entries);
     }
 
+    /// <summary>Der Block, in dem der Schlüssel steht: Elternblock bei Defines, Hülle bei <see cref="RuleKeys"/>; sonst <see langword="null"/>.</summary>
+    private static string? ParentOf(string key, OverrideBehavior behavior) =>
+        behavior == OverrideBehavior.PartialKeys
+            ? key.Contains('.') ? key[..key.IndexOf('.')] : null
+            : RuleKeys.WrapperOf(key);
+
     private static string Render(IReadOnlyList<ScriptEntry> entries) =>
         ScriptWriter.Write(new ScriptBlock { Entries = entries.ToList() }, preferSourceVerbatim: true).Replace("\r\n", "\n").TrimEnd('\n') + "\n";
+
+    /// <summary>Wie <see cref="Render"/>, aber in Einrückungsart <paramref name="style"/> und Tiefe <paramref name="depth"/>; ohne Zeilenende am Schluss.</summary>
+    private static string RenderAt(IReadOnlyList<ScriptEntry> entries, ScriptWriteOptions style, int depth) =>
+        ScriptWriter.Write(new ScriptBlock { Entries = entries.ToList() }, preferSourceVerbatim: true, style, depth).Replace("\r\n", "\n").TrimEnd('\n');
+
+    /// <summary>
+    /// Einrückungsart einer Datei: Tabs, wenn mehr Zeilen mit einem Tab als mit Leerzeichen eingerückt sind. Wörtlicher Text wird umgerückt,
+    /// damit auch Blocktexte aus dem Kompatch-Fenster (Leerzeichen, Tiefe 0) zur Stelle in der Datei passen.
+    /// </summary>
+    private static ScriptWriteOptions StyleOf(string text)
+    {
+        int tabs = 0, spaces = 0;
+        for (var i = 0; i < text.Length - 1; i++)
+        {
+            if (text[i] == '\n')
+            {
+                tabs += text[i + 1] == '\t' ? 1 : 0;
+                spaces += text[i + 1] == ' ' ? 1 : 0;
+            }
+        }
+
+        return new ScriptWriteOptions { UseTabs = tabs > spaces, ReindentVerbatim = true };
+    }
+
+    /// <summary>Tiefe an einer Textstelle aus der Einrückung ihrer Zeile; 0, wenn davor in der Zeile schon Text steht.</summary>
+    private static int DepthAt(string text, int position, ScriptWriteOptions style)
+    {
+        var lineStart = position == 0 ? 0 : text.LastIndexOf('\n', position - 1) + 1;
+        var lead = text[lineStart..position];
+        return lead.Any(c => c is not (' ' or '\t')) ? 0 : lead.Count(c => c == '\t') + lead.Count(c => c == ' ') / style.IndentSize;
+    }
 
     private static string Eol(string text, string eol) => text.Replace("\r\n", "\n").Replace("\n", eol);
 

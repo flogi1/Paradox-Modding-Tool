@@ -24,7 +24,10 @@ public sealed class SettingsWindowModelTests
     public void KnownCategoryIsKept()
     {
         Assert.Equal(SettingsCategory.Hotkeys, SettingsCategories.Parse("Hotkeys"));
-        Assert.Equal(12, SettingsCategories.All.Count);
+        Assert.Equal(16, SettingsCategories.All.Count);
+        Assert.Equal(SettingsCategory.SaveExplorer, SettingsCategories.All[SettingsCategories.All.ToList().IndexOf(SettingsCategory.ErrorLog) + 1]);
+        Assert.Equal(SettingsCategory.BugTracker, SettingsCategories.All[^2]);
+        Assert.Contains(SettingsCategory.ErrorLog, SettingsCategories.All);
         Assert.Equal(SettingsCategory.General, SettingsCategories.All[0]);
         Assert.Equal(SettingsCategory.Update, SettingsCategories.All[^1]);
     }

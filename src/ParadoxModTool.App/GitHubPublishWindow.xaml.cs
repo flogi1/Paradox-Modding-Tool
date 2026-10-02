@@ -17,7 +17,7 @@ namespace ParadoxModTool.App;
 /// </summary>
 public partial class GitHubPublishWindow : Window
 {
-    private const string Caption = "Auf GitHub veröffentlichen";
+    private static string Caption => PublishTexts.GitHubTitle;
 
     private readonly ModRegistry _registry;
     private readonly ModInfo _mod;
@@ -60,7 +60,7 @@ public partial class GitHubPublishWindow : Window
         _settings = _settingsStore.Load();
         _log = ReleaseLog.Load(registry.DataDirectory(mod.Id));
 
-        TitleText.Text = "Auf GitHub veröffentlichen: " + mod.Name;
+        TitleText.Text = PublishTexts.GitHubTitleFor(mod.Name);
         if (_settingsStore.LoadWarning is { } warning)
         {
             ResultText.Text = warning;
@@ -81,7 +81,7 @@ public partial class GitHubPublishWindow : Window
             if (_publishing)
             {
                 e.Cancel = true;
-                Report("Die Veröffentlichung läuft noch. Brich sie ab oder warte, bis sie fertig ist.");
+                Report(PublishTexts.PublishRunning);
             }
         };
     }
@@ -110,8 +110,8 @@ public partial class GitHubPublishWindow : Window
         _metadata = ModMetadata.Find(_mod, _metadataFile);
         LoadChangelog();
         VersionText.Text = _metadata is null
-            ? "Keine lesbare metadata.json gefunden."
-            : VersionValid ? $"Version {Version}" : "metadata.json enthält keine gültige Version.";
+            ? PublishTexts.NoMetadata
+            : VersionValid ? $"Version {Version}" : GitTexts.CheckVersionInvalid;
         if (string.IsNullOrWhiteSpace(CommitMessageBox.Text))
         {
             CommitMessageBox.Text = VersionValid ? $"Release {Version}" : string.Empty;
@@ -177,7 +177,7 @@ public partial class GitHubPublishWindow : Window
 
     private void UpdateNotesCount()
     {
-        NotesCountText.Text = $"{NotesBox.Text.Length:N0} von {ReleaseNotesFormatter.MaxLength:N0} Zeichen";
+        NotesCountText.Text = PublishTexts.NotesCount(NotesBox.Text.Length, ReleaseNotesFormatter.MaxLength);
         NotesCountText.Foreground = ReleaseNotesFormatter.IsTooLong(NotesBox.Text) ? Danger : Muted;
     }
 
@@ -215,13 +215,13 @@ public partial class GitHubPublishWindow : Window
         _ghLoggedIn = false;
         if (_gh is not null)
         {
-            GhStatusText.Text = "gh wird geprüft …";
+            GhStatusText.Text = PublishTexts.GhChecking;
             _ghLoggedIn = await _gh.IsLoggedInAsync(CancellationToken.None);
         }
 
         GhStatusText.Text = _ghPath is null
-            ? "gh (GitHub CLI) ist nicht eingerichtet. Lade es herunter oder installiere es selbst (winget install GitHub.cli)."
-            : _ghLoggedIn ? $"gh: {_ghPath}\nBei GitHub angemeldet." : $"gh: {_ghPath}\nBei GitHub ist keine Anmeldung aktiv.";
+            ? PublishTexts.GhMissing
+            : _ghLoggedIn ? PublishTexts.GhLoggedIn(_ghPath) : PublishTexts.GhNotLoggedIn(_ghPath);
         GhDownloadButton.Visibility = _ghPath is null ? Visibility.Visible : Visibility.Collapsed;
         GhLoginButton.Visibility = _ghPath is not null && !_ghLoggedIn ? Visibility.Visible : Visibility.Collapsed;
         RefreshChecks();
@@ -243,9 +243,8 @@ public partial class GitHubPublishWindow : Window
         var folder = GhInstaller.DefaultFolder;
         var answer = MessageBox.Show(
             this,
-            "gh (GitHub CLI) wird von GitHub heruntergeladen.\n\nQuelle: github.com/cli/cli (offizielle Veröffentlichung)\nGröße: ca. 15 MB\nZiel: " + folder
-            + "\n\nDie Prüfsumme der Datei wird kontrolliert; bei Abweichung wird nichts installiert.\n\nFortfahren?",
-            "gh herunterladen",
+            PublishTexts.GhDownloadConfirm(folder),
+            PublishTexts.GhDownload,
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
         if (answer != MessageBoxResult.Yes)
@@ -267,7 +266,7 @@ public partial class GitHubPublishWindow : Window
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            Report("Der Download ist fehlgeschlagen: " + ex.Message);
+            Report(PublishTexts.DownloadFailed(ex.Message));
         }
         finally
         {
@@ -295,11 +294,11 @@ public partial class GitHubPublishWindow : Window
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
-            Report("gh konnte nicht gestartet werden: " + ex.Message);
+            Report(GitTexts.GhStartFailed(ex.Message));
             return;
         }
 
-        Report("gh wurde in einem eigenen Fenster gestartet.\n\nFolge dort dem Ablauf (GitHub im Browser bestätigen). Das Programm sieht nichts davon. Wenn gh fertig ist, klicke hier auf \"Status aktualisieren\".");
+        Report(PublishTexts.GhLoginStarted);
     }
 
     // ---- Git-Stand
@@ -373,7 +372,7 @@ public partial class GitHubPublishWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Report("Die Repositories konnten nicht gespeichert werden: " + ex.Message);
+            Report(PublishTexts.ReposSaveFailed(ex.Message));
             RefreshRepos();
             return false;
         }
@@ -407,7 +406,7 @@ public partial class GitHubPublishWindow : Window
     private void RepoRemove_Click(object sender, RoutedEventArgs e)
     {
         if (SelectedRepoRow is not { } row
-            || MessageBox.Show(this, $"Das Repository {row.Entry.Repo} aus der Liste dieser Mod entfernen?\nAuf GitHub wird nichts gelöscht.", Caption, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            || MessageBox.Show(this, PublishTexts.RepoRemoveConfirm(row.Entry.Repo), Caption, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -430,19 +429,27 @@ public partial class GitHubPublishWindow : Window
         var state = _gitState;
         if (state is null)
         {
-            GitInfoText.Text = "Der Mod-Ordner ist kein Git-Ordner (oder git ist nicht installiert). Die Git-Funktionen sind aus.";
+            GitInfoText.Text = PublishTexts.NotGitFolder;
             GitChangeList.ItemsSource = null;
             GitCommitButton.IsEnabled = GitPushButton.IsEnabled = false;
             return;
         }
 
-        GitInfoText.Text =
-            $"Ordner: {state.TopLevel}\norigin: {state.Origin ?? "keiner"}\nBranch: {state.Branch ?? "(losgelöster HEAD)"}    Upstream: {state.Upstream ?? "keiner"}\n"
-            + $"HEAD: {state.ShortHead}  {state.HeadSubject}\nvorn: {state.Ahead}    hinten: {state.Behind}    Änderungen: {state.Changes.Count}    HEAD gepusht: {(state.HeadPushed ? "ja" : "nein")}";
+        GitInfoText.Text = PublishTexts.GitInfo(
+            state.TopLevel,
+            state.Origin ?? PublishTexts.GitNone,
+            state.Branch ?? PublishTexts.GitDetached,
+            state.Upstream ?? PublishTexts.GitNone,
+            state.ShortHead,
+            state.HeadSubject,
+            state.Ahead,
+            state.Behind,
+            state.Changes.Count,
+            state.HeadPushed ? PublishTexts.GitYes : PublishTexts.GitNo);
         var lines = state.Changes.Take(200).Select(c => $"{c.Status,-3} {c.Path}").ToList();
         if (state.Changes.Count > 200)
         {
-            lines.Add($"… und {state.Changes.Count - 200} weitere");
+            lines.Add(PublishTexts.AndMore(state.Changes.Count - 200));
         }
 
         GitChangeList.ItemsSource = lines;
@@ -462,15 +469,15 @@ public partial class GitHubPublishWindow : Window
         var message = CommitMessageBox.Text.Trim();
         if (message.Length == 0)
         {
-            Report("Die Commit-Nachricht fehlt.");
+            Report(GitTexts.CommitMessageMissing);
             return;
         }
 
         var shown = string.Join("\n", state.Changes.Take(15).Select(c => $"{c.Status,-3} {c.Path}"));
-        var more = state.Changes.Count > 15 ? $"\n… und {state.Changes.Count - 15} weitere" : string.Empty;
+        var more = state.Changes.Count > 15 ? "\n" + PublishTexts.AndMore(state.Changes.Count - 15) : string.Empty;
         if (MessageBox.Show(
                 this,
-                $"{state.Changes.Count} Datei(en) werden committet (git add -A, die .gitignore gilt):\n\n{shown}{more}\n\nNachricht: {message}\n\nFortfahren?",
+                PublishTexts.CommitConfirm(state.Changes.Count, shown, more, message),
                 Caption,
                 MessageBoxButton.OKCancel,
                 MessageBoxImage.Question) != MessageBoxResult.OK)
@@ -489,7 +496,7 @@ public partial class GitHubPublishWindow : Window
         }
 
         var target = state.Upstream ?? $"origin/{state.Branch}";
-        if (MessageBox.Show(this, $"Den Branch {state.Branch} nach {target} pushen? (nie erzwungen)", Caption, MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+        if (MessageBox.Show(this, PublishTexts.PushConfirm(state.Branch, target), Caption, MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
         {
             return;
         }
@@ -533,12 +540,12 @@ public partial class GitHubPublishWindow : Window
             var details = new List<string> { variant.FileNameFormat };
             if (variant.OnlyFolders.Count > 0)
             {
-                details.Add("nur " + string.Join(", ", variant.OnlyFolders));
+                details.Add(PublishTexts.VariantOnly(string.Join(", ", variant.OnlyFolders)));
             }
 
             if (variant.RootFolder is not null)
             {
-                details.Add("Wurzel " + variant.RootFolder);
+                details.Add(PublishTexts.VariantRoot(variant.RootFolder));
             }
 
             Text = $"{variant.Name}    ({string.Join("; ", details)})";
@@ -609,11 +616,11 @@ public partial class GitHubPublishWindow : Window
         try
         {
             var result = ZipPackager.Measure(folder, row.Variant);
-            VariantInfoText.Text = $"Dateien: {result.FileCount:N0} ({FormatBytes(result.TotalBytes)}), ausgeschlossen: {result.Excluded.Count:N0} Einträge";
+            VariantInfoText.Text = PublishTexts.VariantInfo(result.FileCount, FormatBytes(result.TotalBytes), result.Excluded.Count);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            VariantInfoText.Text = "Der Mod-Ordner ist nicht lesbar: " + ex.Message;
+            VariantInfoText.Text = GitTexts.ModFolderUnreadable(ex.Message);
         }
     }
 
@@ -634,7 +641,7 @@ public partial class GitHubPublishWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Report("Die ZIP-Varianten konnten nicht gespeichert werden: " + ex.Message);
+            Report(PublishTexts.VariantsSaveFailed(ex.Message));
             RefreshVariants();
             return false;
         }
@@ -668,7 +675,7 @@ public partial class GitHubPublishWindow : Window
     private void VariantRemove_Click(object sender, RoutedEventArgs e)
     {
         if (SelectedVariantRow is not { } row
-            || MessageBox.Show(this, $"Die ZIP-Variante \"{row.Variant.Name}\" entfernen?", Caption, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            || MessageBox.Show(this, PublishTexts.VariantRemoveConfirm(row.Variant.Name), Caption, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }
@@ -687,12 +694,12 @@ public partial class GitHubPublishWindow : Window
         {
             var excluded = ZipPackager.Measure(folder, row.Variant).Excluded;
             var lines = excluded.Take(60).ToList();
-            var more = excluded.Count > lines.Count ? $"\n… und {excluded.Count - lines.Count} weitere" : string.Empty;
-            Report(lines.Count == 0 ? "Bei dieser Variante wird nichts ausgeschlossen." : "Nicht im ZIP:\n\n" + string.Join("\n", lines) + more);
+            var more = excluded.Count > lines.Count ? "\n" + PublishTexts.AndMore(excluded.Count - lines.Count) : string.Empty;
+            Report(lines.Count == 0 ? PublishTexts.VariantNothingExcluded : PublishTexts.VariantExcludedList(string.Join("\n", lines) + more));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Report("Der Mod-Ordner ist nicht lesbar: " + ex.Message);
+            Report(GitTexts.ModFolderUnreadable(ex.Message));
         }
     }
 
@@ -700,18 +707,19 @@ public partial class GitHubPublishWindow : Window
     {
         if (ModFolder is not { } folder || !VersionValid)
         {
-            Report("Ohne lesbare metadata.json mit gültiger Version kann ich keine ZIP-Dateien erstellen.");
+            Report(PublishTexts.ZipNeedsVersion);
             return;
         }
 
         var variants = EnabledVariants();
         if (variants.Count == 0)
         {
-            Report("Es ist keine ZIP-Variante angehakt.");
+            Report(PublishTexts.NoVariantChecked);
             return;
         }
 
-        using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "Ordner für die ZIP-Dateien wählen", UseDescriptionForTitle = true };
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = PublishTexts.ZipFolderPick, UseDescriptionForTitle = true };
+        dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("publish.zipFolder");
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
         {
             return;
@@ -723,12 +731,12 @@ public partial class GitHubPublishWindow : Window
         {
             var tag = FirstTag();
             var zips = await Task.Run(() => ZipPackager.Build(folder, _mod.Name, Version!, tag, variants, target));
-            Report($"{zips.Count} ZIP-Datei(en) erstellt in:\n{target}");
+            Report(PublishTexts.ZipsCreated(zips.Count, target));
             Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Report("Die ZIP-Dateien konnten nicht erstellt werden: " + ex.Message);
+            Report(GitTexts.ZipsFailed(ex.Message));
         }
         finally
         {
@@ -838,7 +846,7 @@ public partial class GitHubPublishWindow : Window
         RefreshChecks();
         if (_readiness is not { CanPublish: true } || _gh is null || ModFolder is not { } folder || !VersionValid)
         {
-            Report("Die Veröffentlichung ist noch nicht möglich. Die roten Hinweise unter \"Prüfungen\" zeigen, was fehlt.");
+            Report(PublishTexts.GitHubNotReady);
             return;
         }
 
@@ -848,8 +856,7 @@ public partial class GitHubPublishWindow : Window
         {
             var answer = MessageBox.Show(
                 this,
-                "Der Git-Stand des Mod-Ordners ist nicht sauber:\n\n" + string.Join("\n", warnings)
-                + "\n\nJa: Trotzdem veröffentlichen (der Tag zeigt auf den Standard-Branch des Repos).\nNein: Zum Git-Reiter.\nAbbrechen: nichts tun.",
+                PublishTexts.GitNotClean(string.Join("\n", warnings)),
                 Caption,
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Warning);
@@ -869,11 +876,11 @@ public partial class GitHubPublishWindow : Window
 
         var repos = EnabledRepos();
         var variants = EnabledVariants();
-        var summary = $"Version {Version} von „{_mod.Name}“ als Release veröffentlichen?\n\n"
+        var summary = PublishTexts.GitHubConfirm(Version, _mod.Name) + "\n\n"
             + string.Join("\n", repos.Select(r => $"• {r.Repo}  (Tag {TagFor(r)})"))
-            + $"\n\nZIP-Dateien: {(variants.Count == 0 ? "keine" : string.Join(", ", variants.Select(v => v.Name)))}"
-            + (DraftCheck.IsChecked == true ? "\nAls Entwurf" : string.Empty)
-            + (PreReleaseCheck.IsChecked == true ? "\nAls Vorabversion" : string.Empty);
+            + "\n\n" + PublishTexts.ConfirmZips(variants.Count == 0 ? PublishTexts.ConfirmNoZips : string.Join(", ", variants.Select(v => v.Name)))
+            + (DraftCheck.IsChecked == true ? "\n" + PublishTexts.ConfirmDraft : string.Empty)
+            + (PreReleaseCheck.IsChecked == true ? "\n" + PublishTexts.ConfirmPreRelease : string.Empty);
         if (MessageBox.Show(this, summary, Caption, MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
         {
             return;
@@ -912,7 +919,7 @@ public partial class GitHubPublishWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            result = new GitHubPublishResult(Array.Empty<GitHubRepoResult>(), "Die Veröffentlichung ist fehlgeschlagen: " + ex.Message);
+            result = new GitHubPublishResult(Array.Empty<GitHubRepoResult>(), PublishTexts.GitHubPublishFailed(ex.Message));
         }
         finally
         {
@@ -950,12 +957,12 @@ public partial class GitHubPublishWindow : Window
             }
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or IOException or UnauthorizedAccessException)
             {
-                problems.Add("Der Vermerk in den Releases konnte nicht gespeichert werden: " + ex.Message);
+                problems.Add(PublishTexts.ReleaseMarkFailed(ex.Message));
             }
         }
 
         ResultList.ItemsSource = result.Repos.Select(r => new ResultRow($"{r.Repo}  {r.Tag}: {r.Message}", r.Url)).ToList();
-        ResultText.Text = string.Join("\n", new[] { $"{successes.Count} von {result.Repos.Count} Repositories veröffentlicht." }.Concat(problems));
+        ResultText.Text = string.Join("\n", new[] { PublishTexts.ResultSummary(successes.Count, result.Repos.Count) }.Concat(problems));
         ResultText.Foreground = result.AllSucceeded && problems.Count == 0 ? Muted : Danger;
         _ = CheckReposAsync();
     }

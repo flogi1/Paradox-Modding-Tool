@@ -16,6 +16,7 @@ public sealed class AppSettings
     private bool _colorizeWholeTab;
     private bool _multiRowTabs;
     private bool _pathBarVisible = true;
+    private bool _replaceWarningsInWindow;
     private bool _notesPanelVisible = true;
     private bool _notesPanelAlwaysVisible;
     private bool _documentBarVisible = true;
@@ -24,12 +25,41 @@ public sealed class AppSettings
     private bool _checkForUpdatesOnStartup = true;
     private bool _compatchCautiousWrite;
     private bool _compatchSkipLocked;
+    private bool _compatchResultRight;
+    private bool _compatchMainAsBase;
+    private bool _compatchFillMissing;
+    private bool _compatchHideFilled;
+    private bool _compatchHideReplaced;
+    private bool _compatchHideDecided;
+    private bool _compatchUncertainOnly;
+    private bool _compatchKindsSideBySide;
+    private bool _explorerButtonsOnLeft;
+    private bool _explorerShowErrorMarks = true;
+    private bool _explorerSearchFoldersOnly;
+    private bool _explorerHideUgcReferences = true;
     private string _compatchDefaultView = "A";
     private readonly HashSet<string> _hiddenToolbarItems = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Dictionary<string, string>> _iconColors = new(StringComparer.Ordinal);
     private string _uiLanguage = LanguageCatalog.Normalize(null);
     private string _settingsWindowCategory = nameof(SettingsCategory.General);
     private WindowBoundsState? _settingsWindowBounds;
+    private bool _errorLogStandalone;
+    private WindowBoundsState? _errorLogWindowBounds;
+    private bool _saveExplorerStandalone;
+    private WindowBoundsState? _saveExplorerWindowBounds;
+    private string _myModsView = "Tiles";
+    private string _myModsGrouping = "Games";
+    private string _myModsSort = "Name";
+    private bool _myModsSortDescending;
+    private bool _myModsOnlyPublished;
+    private bool _myModsOnlyOpenBugs;
+    private bool _myModsOnlyWarnings;
+    private List<string> _myModsGameOrder = new();
+    private List<string> _myModsHiddenGames = new();
+    private List<string> _myModsHiddenAlertKinds = new();
+    private bool _myModsStartMaximized = true;
+    private bool _myModsAlertsCollapsed;
+    private WindowBoundsState? _myModsWindowBounds;
 
     /// <summary>Eine einzelne Einstellung hat sich geändert; das Argument ist der Name der Eigenschaft.</summary>
     public event EventHandler<string>? Changed;
@@ -53,6 +83,9 @@ public sealed class AppSettings
     /// <summary>Pfadleiste über dem Editor in beiden Arbeitsbereichen.</summary>
     public bool PathBarVisible { get => _pathBarVisible; set => Set(ref _pathBarVisible, value); }
 
+    /// <summary>Warnungen nach dem Ersetzen (OR-/NOR-/AND-Blöcke mit höchstens einem Eintrag) in einem eigenen Fenster statt im Notiz-Panel. Standard: aus.</summary>
+    public bool ReplaceWarningsInWindow { get => _replaceWarningsInWindow; set => Set(ref _replaceWarningsInWindow, value); }
+
     /// <summary>Notiz/Lesezeichen-Panel eingeschaltet.</summary>
     public bool NotesPanelVisible { get => _notesPanelVisible; set => Set(ref _notesPanelVisible, value); }
 
@@ -72,6 +105,42 @@ public sealed class AppSettings
     public bool CompatchCautiousWrite { get => _compatchCautiousWrite; set => Set(ref _compatchCautiousWrite, value); }
 
     public bool CompatchSkipLocked { get => _compatchSkipLocked; set => Set(ref _compatchSkipLocked, value); }
+
+    /// <summary>Kompatch-Merge: Ergebnis-Spalte ganz rechts (A | B ‖ Ergebnis) statt in der Mitte.</summary>
+    public bool CompatchResultRight { get => _compatchResultRight; set => Set(ref _compatchResultRight, value); }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Hauptmod als Basis. Ein offener Arbeitsstand behält seinen eigenen Wert.</summary>
+    public bool CompatchMainAsBase { get => _compatchMainAsBase; set => Set(ref _compatchMainAsBase, value); }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Fehlendes aus dem Hauptmod ergänzen. Ein offener Arbeitsstand behält seinen eigenen Wert.</summary>
+    public bool CompatchFillMissing { get => _compatchFillMissing; set => Set(ref _compatchFillMissing, value); }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Ergänzte fehlende Blöcke ausblenden. Ein offener Arbeitsstand behält seinen eigenen Wert.</summary>
+    public bool CompatchHideFilled { get => _compatchHideFilled; set => Set(ref _compatchHideFilled, value); }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Einfach ersetzte doppelte Dateien ausblenden. Ein offener Arbeitsstand behält seinen eigenen Wert.</summary>
+    public bool CompatchHideReplaced { get => _compatchHideReplaced; set => Set(ref _compatchHideReplaced, value); }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Erledigte ausblenden. Ein offener Arbeitsstand behält seinen eigenen Wert.</summary>
+    public bool CompatchHideDecided { get => _compatchHideDecided; set => Set(ref _compatchHideDecided, value); }
+
+    /// <summary>Kompatch, Standard für neue Arbeitsstände: Nur unsichere Stellen zeigen. Ein offener Arbeitsstand behält seinen eigenen Wert.</summary>
+    public bool CompatchUncertainOnly { get => _compatchUncertainOnly; set => Set(ref _compatchUncertainOnly, value); }
+
+    /// <summary>Kompatch-Startfenster: Dateiarten nebeneinander statt als Liste untereinander. Standard: aus (Liste).</summary>
+    public bool CompatchKindsSideBySide { get => _compatchKindsSideBySide; set => Set(ref _compatchKindsSideBySide, value); }
+
+    /// <summary>Verzeichnis-Übersicht: Lupe und Arbeitsbereich-Knöpfe links vor dem Namen.</summary>
+    public bool ExplorerButtonsOnLeft { get => _explorerButtonsOnLeft; set => Set(ref _explorerButtonsOnLeft, value); }
+
+    /// <summary>Verzeichnis-Übersicht: Bug-Markierungen (Meldungen des letzten Spiellaufs) zeigen. Standard: an.</summary>
+    public bool ExplorerShowErrorMarks { get => _explorerShowErrorMarks; set => Set(ref _explorerShowErrorMarks, value); }
+
+    /// <summary>Verzeichnis-Übersicht: Namenssuche nur nach Ordnern.</summary>
+    public bool ExplorerSearchFoldersOnly { get => _explorerSearchFoldersOnly; set => Set(ref _explorerSearchFoldersOnly, value); }
+
+    /// <summary>Verzeichnis-Übersicht: Workshop-Verweise <c>ugc_*.mod</c> ausblenden. Standard: an.</summary>
+    public bool ExplorerHideUgcReferences { get => _explorerHideUgcReferences; set => Set(ref _explorerHideUgcReferences, value); }
 
     /// <summary>Standardansicht des Komp-Patch Tools: "A" (Aktionen), "B" (Dokument) oder "C" (Karten); Unbekanntes wird "A".</summary>
     public string CompatchDefaultView { get => _compatchDefaultView; set => Set(ref _compatchDefaultView, NormalizeView(value)); }
@@ -95,6 +164,103 @@ public sealed class AppSettings
 
             _settingsWindowBounds = Copy(value);
             Changed?.Invoke(this, nameof(SettingsWindowBounds));
+        }
+    }
+
+    /// <summary>Fehlerprotokoll als eigenes Fenster statt über dem Hauptfenster (Standard aus); gilt ab dem nächsten Öffnen.</summary>
+    public bool ErrorLogStandalone { get => _errorLogStandalone; set => Set(ref _errorLogStandalone, value); }
+
+    /// <summary>Position und Größe des Fensters "Fehlerprotokoll". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? ErrorLogWindowBounds
+    {
+        get => Copy(_errorLogWindowBounds);
+        set
+        {
+            if (SameBounds(_errorLogWindowBounds, value))
+            {
+                return;
+            }
+
+            _errorLogWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(ErrorLogWindowBounds));
+        }
+    }
+
+    /// <summary>Spielstand-Explorer als eigenes Fenster statt über dem Hauptfenster (Standard aus); gilt ab dem nächsten Öffnen.</summary>
+    public bool SaveExplorerStandalone { get => _saveExplorerStandalone; set => Set(ref _saveExplorerStandalone, value); }
+
+    /// <summary>Position und Größe des Fensters "Spielstand-Explorer". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? SaveExplorerWindowBounds
+    {
+        get => Copy(_saveExplorerWindowBounds);
+        set
+        {
+            if (SameBounds(_saveExplorerWindowBounds, value))
+            {
+                return;
+            }
+
+            _saveExplorerWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(SaveExplorerWindowBounds));
+        }
+    }
+
+    /// <summary>Meine Mods: "Tiles" oder "List"; Unbekanntes wird "Tiles".</summary>
+    public string MyModsView { get => _myModsView; set => Set(ref _myModsView, OneOf(value, "Tiles", "List")); }
+
+    /// <summary>Meine Mods: "Games" oder "All"; Unbekanntes wird "Games".</summary>
+    public string MyModsGrouping { get => _myModsGrouping; set => Set(ref _myModsGrouping, OneOf(value, "Games", "All")); }
+
+    /// <summary>Meine Mods: "Name", "Subscribers", "OpenBugs" oder "LastRelease"; Unbekanntes wird "Name".</summary>
+    public string MyModsSort { get => _myModsSort; set => Set(ref _myModsSort, OneOf(value, "Name", "Subscribers", "OpenBugs", "LastRelease")); }
+
+    public bool MyModsSortDescending { get => _myModsSortDescending; set => Set(ref _myModsSortDescending, value); }
+
+    public bool MyModsOnlyPublished { get => _myModsOnlyPublished; set => Set(ref _myModsOnlyPublished, value); }
+
+    public bool MyModsOnlyOpenBugs { get => _myModsOnlyOpenBugs; set => Set(ref _myModsOnlyOpenBugs, value); }
+
+    public bool MyModsOnlyWarnings { get => _myModsOnlyWarnings; set => Set(ref _myModsOnlyWarnings, value); }
+
+    /// <summary>Meine Mods: Reihenfolge der Spiele. Übernimmt eine Kopie; meldet nur eine echte Änderung.</summary>
+    public IReadOnlyList<string> MyModsGameOrder
+    {
+        get => _myModsGameOrder;
+        set => SetList(ref _myModsGameOrder, value, nameof(MyModsGameOrder));
+    }
+
+    /// <summary>Meine Mods: ausgeblendete Spiele. Übernimmt eine Kopie; meldet nur eine echte Änderung.</summary>
+    public IReadOnlyList<string> MyModsHiddenGames
+    {
+        get => _myModsHiddenGames;
+        set => SetList(ref _myModsHiddenGames, value, nameof(MyModsHiddenGames));
+    }
+
+    /// <summary>Meine Mods: ausgeblendete Hinweisarten. Übernimmt eine Kopie; meldet nur eine echte Änderung.</summary>
+    public IReadOnlyList<string> MyModsHiddenAlertKinds
+    {
+        get => _myModsHiddenAlertKinds;
+        set => SetList(ref _myModsHiddenAlertKinds, value, nameof(MyModsHiddenAlertKinds));
+    }
+
+    /// <summary>Meine Mods: beim Öffnen als Vollbild (maximiert); aus = gemerkte Fenstergröße.</summary>
+    public bool MyModsStartMaximized { get => _myModsStartMaximized; set => Set(ref _myModsStartMaximized, value); }
+
+    public bool MyModsAlertsCollapsed { get => _myModsAlertsCollapsed; set => Set(ref _myModsAlertsCollapsed, value); }
+
+    /// <summary>Position und Größe des Fensters "Meine Mods". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? MyModsWindowBounds
+    {
+        get => Copy(_myModsWindowBounds);
+        set
+        {
+            if (SameBounds(_myModsWindowBounds, value))
+            {
+                return;
+            }
+
+            _myModsWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(MyModsWindowBounds));
         }
     }
 
@@ -173,6 +339,7 @@ public sealed class AppSettings
         _colorizeWholeTab = state.ColorizeWholeTab;
         _multiRowTabs = state.MultiRowTabs;
         _pathBarVisible = state.PathBarVisible;
+        _replaceWarningsInWindow = state.ReplaceWarningsInWindow;
         _notesPanelVisible = state.NotesPanelVisible;
         _notesPanelAlwaysVisible = state.NotesPanelAlwaysVisible;
         _documentBarVisible = state.DocumentBarVisible;
@@ -181,10 +348,39 @@ public sealed class AppSettings
         _checkForUpdatesOnStartup = state.CheckForUpdatesOnStartup;
         _compatchCautiousWrite = state.CompatchCautiousWrite;
         _compatchSkipLocked = state.CompatchSkipLocked;
+        _compatchResultRight = state.CompatchResultRight;
+        _compatchMainAsBase = state.CompatchMainAsBase;
+        _compatchFillMissing = state.CompatchFillMissing;
+        _compatchHideFilled = state.CompatchHideFilled;
+        _compatchHideReplaced = state.CompatchHideReplaced;
+        _compatchHideDecided = state.CompatchHideDecided;
+        _compatchUncertainOnly = state.CompatchUncertainOnly;
+        _compatchKindsSideBySide = state.CompatchKindsSideBySide;
+        _explorerButtonsOnLeft = state.ExplorerButtonsOnLeft;
+        _explorerShowErrorMarks = state.ExplorerShowErrorMarks;
+        _explorerSearchFoldersOnly = state.ExplorerSearchFoldersOnly;
+        _explorerHideUgcReferences = state.ExplorerHideUgcReferences;
         _compatchDefaultView = NormalizeView(state.CompatchDefaultView);
         _uiLanguage = LanguageCatalog.Normalize(state.UiLanguage);
         _settingsWindowCategory = SettingsCategories.Parse(state.SettingsWindowCategory).ToString();
         _settingsWindowBounds = Copy(state.SettingsWindowBounds);
+        _errorLogStandalone = state.ErrorLogStandalone;
+        _errorLogWindowBounds = Copy(state.ErrorLogWindowBounds);
+        _saveExplorerStandalone = state.SaveExplorerStandalone;
+        _saveExplorerWindowBounds = Copy(state.SaveExplorerWindowBounds);
+        _myModsView = OneOf(state.MyModsView, "Tiles", "List");
+        _myModsGrouping = OneOf(state.MyModsGrouping, "Games", "All");
+        _myModsSort = OneOf(state.MyModsSort, "Name", "Subscribers", "OpenBugs", "LastRelease");
+        _myModsSortDescending = state.MyModsSortDescending;
+        _myModsOnlyPublished = state.MyModsOnlyPublished;
+        _myModsOnlyOpenBugs = state.MyModsOnlyOpenBugs;
+        _myModsOnlyWarnings = state.MyModsOnlyWarnings;
+        _myModsGameOrder = CleanList(state.MyModsGameOrder);
+        _myModsHiddenGames = CleanList(state.MyModsHiddenGames);
+        _myModsHiddenAlertKinds = CleanList(state.MyModsHiddenAlertKinds);
+        _myModsStartMaximized = state.MyModsStartMaximized;
+        _myModsAlertsCollapsed = state.MyModsAlertsCollapsed;
+        _myModsWindowBounds = Copy(state.MyModsWindowBounds);
         LoadToolbar(state);
         LoadIconColors(state, themeIds);
         Reloaded?.Invoke(this, EventArgs.Empty);
@@ -198,6 +394,7 @@ public sealed class AppSettings
         state.ColorizeWholeTab = _colorizeWholeTab;
         state.MultiRowTabs = _multiRowTabs;
         state.PathBarVisible = _pathBarVisible;
+        state.ReplaceWarningsInWindow = _replaceWarningsInWindow;
         state.NotesPanelVisible = _notesPanelVisible;
         state.NotesPanelAlwaysVisible = _notesPanelAlwaysVisible;
         state.DocumentBarVisible = _documentBarVisible;
@@ -206,10 +403,39 @@ public sealed class AppSettings
         state.CheckForUpdatesOnStartup = _checkForUpdatesOnStartup;
         state.CompatchCautiousWrite = _compatchCautiousWrite;
         state.CompatchSkipLocked = _compatchSkipLocked;
+        state.CompatchResultRight = _compatchResultRight;
+        state.CompatchMainAsBase = _compatchMainAsBase;
+        state.CompatchFillMissing = _compatchFillMissing;
+        state.CompatchHideFilled = _compatchHideFilled;
+        state.CompatchHideReplaced = _compatchHideReplaced;
+        state.CompatchHideDecided = _compatchHideDecided;
+        state.CompatchUncertainOnly = _compatchUncertainOnly;
+        state.CompatchKindsSideBySide = _compatchKindsSideBySide;
+        state.ExplorerButtonsOnLeft = _explorerButtonsOnLeft;
+        state.ExplorerShowErrorMarks = _explorerShowErrorMarks;
+        state.ExplorerSearchFoldersOnly = _explorerSearchFoldersOnly;
+        state.ExplorerHideUgcReferences = _explorerHideUgcReferences;
         state.CompatchDefaultView = _compatchDefaultView;
         state.UiLanguage = _uiLanguage;
         state.SettingsWindowCategory = _settingsWindowCategory;
         state.SettingsWindowBounds = Copy(_settingsWindowBounds);
+        state.ErrorLogStandalone = _errorLogStandalone;
+        state.ErrorLogWindowBounds = Copy(_errorLogWindowBounds);
+        state.SaveExplorerStandalone = _saveExplorerStandalone;
+        state.SaveExplorerWindowBounds = Copy(_saveExplorerWindowBounds);
+        state.MyModsView = _myModsView;
+        state.MyModsGrouping = _myModsGrouping;
+        state.MyModsSort = _myModsSort;
+        state.MyModsSortDescending = _myModsSortDescending;
+        state.MyModsOnlyPublished = _myModsOnlyPublished;
+        state.MyModsOnlyOpenBugs = _myModsOnlyOpenBugs;
+        state.MyModsOnlyWarnings = _myModsOnlyWarnings;
+        state.MyModsGameOrder = new List<string>(_myModsGameOrder);
+        state.MyModsHiddenGames = new List<string>(_myModsHiddenGames);
+        state.MyModsHiddenAlertKinds = new List<string>(_myModsHiddenAlertKinds);
+        state.MyModsStartMaximized = _myModsStartMaximized;
+        state.MyModsAlertsCollapsed = _myModsAlertsCollapsed;
+        state.MyModsWindowBounds = Copy(_myModsWindowBounds);
         state.HiddenToolbarItems = _hiddenToolbarItems.OrderBy(id => id, StringComparer.Ordinal).ToList();
         state.ScriptHintButtonsVisible = IsToolbarItemVisible(ToolbarItemIds.AutoComplete) && IsToolbarItemVisible(ToolbarItemIds.Hover);
         state.IconColorsByTheme = _iconColors
@@ -287,6 +513,25 @@ public sealed class AppSettings
         "C" => "C",
         _ => "A",
     };
+
+    /// <summary>Der passende erlaubte Wert (Groß-/Kleinschreibung egal), sonst der erste.</summary>
+    private static string OneOf(string? value, params string[] allowed) =>
+        allowed.FirstOrDefault(a => string.Equals(a, value?.Trim(), StringComparison.OrdinalIgnoreCase)) ?? allowed[0];
+
+    private static List<string> CleanList(IEnumerable<string>? values) =>
+        (values ?? Array.Empty<string>()).Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.Ordinal).ToList();
+
+    private void SetList(ref List<string> field, IEnumerable<string>? value, string name)
+    {
+        var clean = CleanList(value);
+        if (field.SequenceEqual(clean, StringComparer.Ordinal))
+        {
+            return;
+        }
+
+        field = clean;
+        Changed?.Invoke(this, name);
+    }
 
     private void Set<T>(ref T field, T value, [CallerMemberName] string name = "")
     {

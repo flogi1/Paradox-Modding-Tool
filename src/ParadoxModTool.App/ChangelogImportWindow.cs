@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using ParadoxModTool.Localization;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
@@ -16,7 +17,7 @@ public sealed class ChangelogImportWindow : Window
 
     private ChangelogImportWindow(IReadOnlyList<string> versions)
     {
-        Title = "Aus Changelog übernehmen";
+        Title = PublishTexts.Import;
         Width = 380;
         Height = 480;
         MinHeight = 300;
@@ -31,13 +32,13 @@ public sealed class ChangelogImportWindow : Window
             list.Children.Add(box);
         }
 
-        var all = new Button { Content = "Alle", Width = 70, Margin = new Thickness(0, 0, 6, 0) };
+        var all = new Button { Content = PublishTexts.ImportAll, Width = 70, Margin = new Thickness(0, 0, 6, 0) };
         all.Click += (_, _) => _boxes.ForEach(b => b.IsChecked = true);
-        var none = new Button { Content = "Keine", Width = 70 };
+        var none = new Button { Content = PublishTexts.ImportNone, Width = 70 };
         none.Click += (_, _) => _boxes.ForEach(b => b.IsChecked = false);
         var ok = new Button { Content = "OK", Width = 90, Margin = new Thickness(0, 0, 6, 0), IsDefault = true };
         ok.Click += (_, _) => DialogResult = true;
-        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        var cancel = new Button { Content = CommonTexts.Cancel, Width = 90, IsCancel = true };
 
         var left = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Left };
         left.Children.Add(all);
@@ -51,7 +52,7 @@ public sealed class ChangelogImportWindow : Window
 
         var header = new TextBlock
         {
-            Text = "Diese Versionen stehen im Changelog, sind aber noch nicht als Release erfasst. Das Datum bleibt leer und lässt sich danach ändern.",
+            Text = PublishTexts.ImportHeader,
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 0, 0, 8),
         };

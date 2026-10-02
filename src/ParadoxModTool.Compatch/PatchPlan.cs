@@ -20,6 +20,9 @@ public enum PatchTarget
     Compatch,
     BaseModA,
     BaseModB,
+
+    /// <summary>Mod an neue Vanilla anpassen: Vanilla = alte, A = neue Vanilla-Fassung, B = die Mod; geschrieben wird in die eigenen Dateien von B.</summary>
+    UpdateMod,
 }
 
 /// <summary>

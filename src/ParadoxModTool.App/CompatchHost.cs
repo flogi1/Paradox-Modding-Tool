@@ -7,7 +7,24 @@ using ParadoxModTool.VersionManager;
 namespace ParadoxModTool.App;
 
 /// <summary>Voreinstellungen für einen neuen Lauf (aus den Einstellungen).</summary>
-public sealed record CompatchDefaults(bool Cautious, bool SkipLocked, IReadOnlyList<string> HiddenKinds, CompatchView View, bool CardsFolderPane, bool HideComments);
+/// <remarks>Ab <paramref name="MainAsBase"/>: Standard für neue Arbeitsstände aus dem Einstellungsfenster (jeder Arbeitsstand merkt sich danach eigene Werte).</remarks>
+public sealed record CompatchDefaults(
+    bool Cautious,
+    bool SkipLocked,
+    IReadOnlyList<string> HiddenKinds,
+    CompatchView View,
+    bool CardsFolderPane,
+    bool HideComments,
+    bool MainAsBase = false,
+    bool FillMissing = false,
+    bool HideFilled = false,
+    bool HideReplaced = false,
+    bool HideDecided = false,
+    bool UncertainOnly = false,
+    bool KindsSideBySide = false);
+
+/// <summary>Optionen des Startdialogs, die "Als Voreinstellung merken" in den Standard für neue Arbeitsstände schreibt.</summary>
+public sealed record CompatchStartOptions(bool Cautious, bool SkipLocked, bool MainAsBase, bool FillMissing);
 
 /// <summary>Vorbelegung des Startdialogs: Ordner von A und B und das Ziel (Register-ID), jeweils optional.</summary>
 public sealed record CompatchPreset(string? FolderA, string? FolderB, string? TargetModId);
@@ -30,7 +47,11 @@ public sealed record CompatchHost(
     Action<CompatchStartMemory> RememberStart,
     Action<CompatchView> RememberView,
     Action<bool> RememberCardsFolderPane,
-    Action<bool> RememberHideComments)
+    Action<bool> RememberHideComments,
+    Action? OpenSettings = null,
+    Action<CompatchStartOptions>? RememberStartOptions = null,
+    Action<string>? OpenPatchRecipes = null,
+    Action<string>? PatchFilesChanged = null)
 {
     /// <summary>Einmal je Host angelegt, damit die Workshop-Ordner nur einmal gesucht werden.</summary>
     public CompatchPickContext Pick { get; } = new(Registry, MetadataFile, SteamAppId);

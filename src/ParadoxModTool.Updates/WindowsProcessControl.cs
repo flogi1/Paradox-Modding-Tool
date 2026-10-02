@@ -9,7 +9,6 @@ public sealed class WindowsProcessControl : IProcessControl
     /// <summary>Prozesse namens ParadoxModTool mit Programmdatei im Ordner. Ist der Pfad nicht lesbar, zählt der Prozess vorsichtshalber mit.</summary>
     public IReadOnlyList<int> FindInFolder(string folder, int ownPid)
     {
-        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder)) + Path.DirectorySeparatorChar;
         var result = new List<int>();
         foreach (var process in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(UpdatePaths.ExecutableName)))
         {
@@ -30,7 +29,7 @@ public sealed class WindowsProcessControl : IProcessControl
                     path = null;
                 }
 
-                if (path is null || Path.GetFullPath(path).StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                if (path is null || IsInstalledIn(path, folder))
                 {
                     result.Add(process.Id);
                 }
@@ -39,6 +38,17 @@ public sealed class WindowsProcessControl : IProcessControl
 
         return result;
     }
+
+    /// <summary>
+    /// Liegt die Programmdatei direkt im Programmordner? PMT liegt immer oben im Ordner; ein Vergleich per Präfix verfehlte eine Installation im
+    /// Laufwerk selbst (<c>D:\</c> wurde zu <c>D:\\</c>) und zählte bei Unterordnern fremde Kopien mit.
+    /// </summary>
+    public static bool IsInstalledIn(string exePath, string folder) =>
+        Path.GetDirectoryName(Path.GetFullPath(exePath)) is { } directory
+        && string.Equals(
+            Path.TrimEndingDirectorySeparator(directory),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder)),
+            StringComparison.OrdinalIgnoreCase);
 
     public bool HasExited(int pid)
     {

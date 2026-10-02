@@ -1,40 +1,43 @@
 namespace ParadoxModTool.ModCompat;
 
-/// <summary>Deutsche Anzeigetexte für Bericht und Fenster.</summary>
+/// <summary>Anzeigetexte für Bericht und Fenster (über <see cref="ModCompatTexts"/> lokalisiert).</summary>
 public static class CompatText
 {
     public static string Severity(CompatSeverity severity) => severity switch
     {
-        CompatSeverity.Conflict => "Konflikt",
-        CompatSeverity.Hint => "Hinweis",
+        CompatSeverity.Conflict => ModCompatTexts.SeverityConflict,
+        CompatSeverity.Hint => ModCompatTexts.SeverityHint,
         _ => "Info",
     };
 
     public static string Kind(CompatKind kind) => kind switch
     {
-        CompatKind.FileOverride => "Datei ersetzt",
-        CompatKind.FileIdentical => "Datei identisch",
-        CompatKind.KeyIdentical => "Schlüssel identisch",
-        CompatKind.KeyCombinable => "Kombinierbar",
-        CompatKind.KeyLoss => "Beitrag geht verloren",
-        CompatKind.KeyConflict => "Schlüsselkonflikt",
-        CompatKind.RedundantOverride => "Unnötige Kopie",
-        CompatKind.TooCoarse => "Zu grob überschrieben",
-        CompatKind.AdditiveOnly => "Nur Ergänzung",
-        CompatKind.ReplaceNeeded => "Ersetzung nötig",
-        CompatKind.Unreadable => "Nicht lesbar",
-        CompatKind.MissingFolder => "Ordner fehlt",
+        CompatKind.FileOverride => ModCompatTexts.KindFileOverride,
+        CompatKind.FileIdentical => ModCompatTexts.KindFileIdentical,
+        CompatKind.KeyIdentical => ModCompatTexts.KindKeyIdentical,
+        CompatKind.KeyCombinable => ModCompatTexts.KindKeyCombinable,
+        CompatKind.KeyLoss => ModCompatTexts.KindKeyLoss,
+        CompatKind.KeyConflict => ModCompatTexts.KindKeyConflict,
+        CompatKind.RedundantOverride => ModCompatTexts.KindRedundantOverride,
+        CompatKind.TooCoarse => ModCompatTexts.KindTooCoarse,
+        CompatKind.AdditiveOnly => ModCompatTexts.KindAdditiveOnly,
+        CompatKind.ValueChangeOnly => ModCompatTexts.KindValueChangeOnly,
+        CompatKind.ReplaceNeeded => ModCompatTexts.KindReplaceNeeded,
+        CompatKind.Unreadable => ModCompatTexts.KindUnreadable,
+        CompatKind.MissingFolder => ModCompatTexts.KindMissingFolder,
+        CompatKind.ReplacePathNoEffect => ModCompatTexts.KindReplacePathNoEffect,
+        CompatKind.ReplacePathGuiCrash => ModCompatTexts.KindReplacePathGuiCrash,
         _ => kind.ToString(),
     };
 
     public static string Suggestion(CompatSuggestion suggestion) => suggestion switch
     {
-        CompatSuggestion.NeedsCompatch => "Kompatibilitätspatch nötig",
-        CompatSuggestion.ReviewBothSides => "Beide Seiten prüfen",
-        CompatSuggestion.UseInject => "INJECT: genügt",
-        CompatSuggestion.UseReplace => "REPLACE: nötig",
-        CompatSuggestion.ProvideOnlyChanged => "Nur Geändertes bereitstellen",
-        CompatSuggestion.RemoveRedundant => "Kopie entfernen",
+        CompatSuggestion.NeedsCompatch => ModCompatTexts.SuggestionNeedsCompatch,
+        CompatSuggestion.ReviewBothSides => ModCompatTexts.SuggestionReviewBothSides,
+        CompatSuggestion.UseInject => ModCompatTexts.SuggestionUseInject,
+        CompatSuggestion.UseReplace => ModCompatTexts.SuggestionUseReplace,
+        CompatSuggestion.ProvideOnlyChanged => ModCompatTexts.SuggestionProvideOnlyChanged,
+        CompatSuggestion.RemoveRedundant => ModCompatTexts.SuggestionRemoveRedundant,
         _ => string.Empty,
     };
 
@@ -51,13 +54,13 @@ public static class CompatText
 
     public static string Behavior(OverrideBehavior behavior) => behavior switch
     {
-        OverrideBehavior.WholeFile => "Nur Datei",
-        OverrideBehavior.PerKey => "Je Schlüssel (INJECT/REPLACE)",
-        OverrideBehavior.FirstWins => "Erster gewinnt",
-        OverrideBehavior.LastWins => "Letzter gewinnt",
-        OverrideBehavior.PartialKeys => "Einzelne Werte",
-        OverrideBehavior.AppendOnly => "Nur anhängen",
-        OverrideBehavior.LocalizationKeys => "Lokalisierung",
+        OverrideBehavior.WholeFile => ModCompatTexts.BehaviorWholeFile,
+        OverrideBehavior.PerKey => ModCompatTexts.BehaviorPerKey,
+        OverrideBehavior.FirstWins => ModCompatTexts.BehaviorFirstWins,
+        OverrideBehavior.LastWins => ModCompatTexts.BehaviorLastWins,
+        OverrideBehavior.PartialKeys => ModCompatTexts.BehaviorPartialKeys,
+        OverrideBehavior.AppendOnly => ModCompatTexts.BehaviorAppendOnly,
+        OverrideBehavior.LocalizationKeys => ModCompatTexts.BehaviorLocalizationKeys,
         _ => behavior.ToString(),
     };
 }

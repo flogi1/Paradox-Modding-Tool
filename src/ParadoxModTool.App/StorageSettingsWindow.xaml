@@ -1,16 +1,18 @@
 <Window x:Class="ParadoxModTool.App.StorageSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Speicherorte für Snapshots und Vanilla-Historie" Width="620" SizeToContent="Height"
+        xmlns:loc="clr-namespace:ParadoxModTool.Localization;assembly=ParadoxModTool.Localization"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        Title="{x:Static local:MiscWindowTexts.StorageTitle}" Width="620" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <StackPanel Margin="14">
         <RadioButton x:Name="ExternalRadio" GroupName="Mode" IsChecked="True"
-                     Content="Außerhalb des Mod-Ordners speichern (empfohlen)"
+                     Content="{x:Static local:MiscWindowTexts.StorageExternal}"
                      Checked="Mode_Changed" FontWeight="SemiBold" />
         <StackPanel x:Name="ExternalPanel" Margin="22,6,0,0">
-            <TextBlock Text="Oberordner:" />
+            <TextBlock Text="{x:Static local:MiscWindowTexts.StorageParentFolder}" />
             <DockPanel Margin="0,2,0,0">
-                <Button x:Name="BrowseButton" DockPanel.Dock="Right" Content="Durchsuchen" Padding="10,2"
+                <Button x:Name="BrowseButton" DockPanel.Dock="Right" Content="{x:Static loc:CommonTexts.Browse}" Padding="10,2"
                         Margin="6,0,0,0" Click="BrowseButton_Click" />
                 <TextBox x:Name="ParentTextBox" TextChanged="ParentTextBox_TextChanged" />
             </DockPanel>
@@ -18,14 +20,14 @@
         </StackPanel>
 
         <RadioButton x:Name="InsideRadio" GroupName="Mode" Margin="0,16,0,0"
-                     Content="Direkt im Mod-Ordner speichern (nicht empfohlen)"
+                     Content="{x:Static local:MiscWindowTexts.StorageInside}"
                      Checked="Mode_Changed" FontWeight="SemiBold" />
         <TextBlock x:Name="InsideWarning" Margin="22,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource Theme.Danger}" Visibility="Collapsed"
-                   Text="Achtung: Steam lädt beim Veröffentlichen den GESAMTEN Inhalt des Mod-Ordners hoch. Snapshots (ZIP-Dateien mit dem kompletten Mod) und die Vanilla-Historie würden dann mit veröffentlicht und blähen den Workshop-Upload stark auf." />
+                   Text="{x:Static local:MiscWindowTexts.StorageInsideWarning}" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-            <Button x:Name="OkButton" Content="OK" Padding="18,4" Margin="0,0,8,0" IsDefault="True" Click="OkButton_Click" />
-            <Button Content="Abbrechen" Padding="10,4" IsCancel="True" />
+            <Button x:Name="OkButton" Content="{x:Static loc:CommonTexts.Ok}" Padding="18,4" Margin="0,0,8,0" IsDefault="True" Click="OkButton_Click" />
+            <Button Content="{x:Static loc:CommonTexts.Cancel}" Padding="10,4" IsCancel="True" />
         </StackPanel>
     </StackPanel>
 </Window>

@@ -97,12 +97,18 @@ public static class GuiDraft
         definition.Kind == GuiNodeKind.TypeDefinition ? GuiDefinitionKind.Type : GuiDefinitionKind.Template;
 
     /// <summary>
-    /// Definition gleicher Art und gleichen Namens in der Mod (die zuletzt geladene), sonst in einer Abhängigkeits-Mod (Spec: Mod vor Abhängigkeit
-    /// vor Vanilla); null, wenn keine sie hat.
+    /// Wirksame Mod-Definition gleicher Art und gleichen Namens: in der Mod die zuletzt geladene, sonst in einer Abhängigkeits-Mod (Spec: Mod vor
+    /// Abhängigkeit vor Vanilla); bei <see cref="GuiLayout.FirstWins"/> die erste nach Pfad über Mod und Abhängigkeiten zusammen. Null, wenn keine Mod sie hat.
     /// </summary>
     public static GuiDefinition? ModDefinition(GuiIndex index, GuiNode definition)
     {
         var all = index.FindAll(definition.Name, KindOf(definition));
+        if (index.Layout.FirstWins)
+        {
+            // Eigene Mod und Abhängigkeiten zählen gemeinsam nach Pfad (siehe GuiIndex.FirstLoaded).
+            return GuiIndex.FirstLoaded(all.Where(d => d.File.Layer != GuiLayer.Vanilla));
+        }
+
         return all.LastOrDefault(d => d.File.Layer == GuiLayer.Mod) ?? all.LastOrDefault(d => d.File.Layer == GuiLayer.Dependency);
     }
 }

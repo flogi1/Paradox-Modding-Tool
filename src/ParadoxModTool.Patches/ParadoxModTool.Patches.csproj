@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Patches</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.VanillaDiff\ParadoxModTool.VanillaDiff.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.UndoRedo\ParadoxModTool.UndoRedo.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Mods\ParadoxModTool.Mods.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Designer;
+using ParadoxModTool.GuiDesign.Index;
 
 namespace ParadoxModTool.Editor.Gui;
 
@@ -16,6 +17,7 @@ public sealed class GuiModSettingsWindow : Window
     private readonly TextBox _typesFile = new() { MinWidth = 320, Margin = new Thickness(0, 2, 0, 8) };
     private readonly ListBox _dependencies = new() { Height = 120, Margin = new Thickness(0, 2, 0, 4) };
     private readonly TextBlock _error = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly GuiLayout _layout;
 
     /// <param name="defaults">Standard-Zieldateien (aus dem Ordnernamen) als Platzhalter-Hinweis.</param>
     /// <param name="defaultDependencies">Vorbelegung der Abhängigkeiten (Knopf "Vorbelegung").</param>
@@ -25,8 +27,10 @@ public sealed class GuiModSettingsWindow : Window
         string? overrideFile,
         string? typesFile,
         IReadOnlyList<string> dependencies,
-        IReadOnlyList<string> defaultDependencies)
+        IReadOnlyList<string> defaultDependencies,
+        GuiLayout? layout = null)
     {
+        _layout = layout ?? GuiLayout.Default;
         Title = GuiTexts.ModSettingsTitle(modName);
         SizeToContent = SizeToContent.WidthAndHeight;
         ResizeMode = ResizeMode.NoResize;
@@ -44,6 +48,7 @@ public sealed class GuiModSettingsWindow : Window
         add.Click += (_, _) =>
         {
             var dialog = new OpenFolderDialog { Title = GuiTexts.ModSettingsAddTitle };
+            dialog.ClientGuid = ParadoxModTool.GameProfiles.GameDialogMemory.For("gui.modSettings.folder");
             if (dialog.ShowDialog(this) == true && !_dependencies.Items.Contains(dialog.FolderName))
             {
                 _dependencies.Items.Add(dialog.FolderName);
@@ -89,10 +94,17 @@ public sealed class GuiModSettingsWindow : Window
         buttons.Children.Add(cancel);
 
         var panel = new StackPanel { Margin = new Thickness(14), MaxWidth = 560 };
-        panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsOverrideFile, TextWrapping = TextWrapping.Wrap });
+        panel.Children.Add(new TextBlock { Text = _layout.IsFlat ? GuiTexts.ModSettingsOverrideFileFlat : GuiTexts.ModSettingsOverrideFile, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(_overrideFile);
         panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsTypesFile, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(_typesFile);
+        if (_layout.FirstWins)
+        {
+            var firstWins = new TextBlock { Text = GuiTexts.ModSettingsFirstWinsHint, TextWrapping = TextWrapping.Wrap, MaxWidth = 460, Margin = new Thickness(0, 2, 0, 6) };
+            firstWins.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
+            panel.Children.Add(firstWins);
+        }
+
         panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsDependencies, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(_dependencies);
         panel.Children.Add(listButtons);

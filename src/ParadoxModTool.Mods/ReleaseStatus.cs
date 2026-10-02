@@ -13,11 +13,11 @@ public sealed record ReleaseStatus(string? MetadataVersion, string? ChangelogTop
         var metadataValid = VersionNumber.TryParse(metadata?.Version, out var metadataVersion);
         if (metadata is null)
         {
-            hints.Add("Keine lesbare metadata.json gefunden.");
+            hints.Add(ModsTexts.NoReadableMetadata);
         }
         else if (!metadataValid)
         {
-            hints.Add("metadata.json enthält keine gültige Version.");
+            hints.Add(ModsTexts.NoValidVersion);
         }
 
         string? top = null;
@@ -25,7 +25,7 @@ public sealed record ReleaseStatus(string? MetadataVersion, string? ChangelogTop
         {
             if (changelog.Count == 0)
             {
-                hints.Add("Der Changelog enthält keine Versions-Banner.");
+                hints.Add(ModsTexts.StatusNoBanners);
             }
             else
             {
@@ -35,11 +35,11 @@ public sealed record ReleaseStatus(string? MetadataVersion, string? ChangelogTop
                     var listed = changelog.Any(e => VersionNumber.TryParse(e.Version, out var v) && v.Equals(metadataVersion));
                     if (!listed)
                     {
-                        hints.Add($"Im Changelog fehlt ein Abschnitt für Version {metadataVersion.Text}.");
+                        hints.Add(ModsTexts.StatusMissingSection(metadataVersion.Text));
                     }
                     else if (!VersionNumber.TryParse(top, out var topVersion) || !topVersion.Equals(metadataVersion))
                     {
-                        hints.Add($"metadata.json steht auf {metadataVersion.Text}, der Changelog beginnt mit {top}.");
+                        hints.Add(ModsTexts.StatusMismatch(metadataVersion.Text, top));
                     }
                 }
             }
@@ -47,7 +47,7 @@ public sealed record ReleaseStatus(string? MetadataVersion, string? ChangelogTop
 
         if (metadataValid && !releases.Any(r => VersionNumber.TryParse(r.Version, out var v) && v.Equals(metadataVersion)))
         {
-            hints.Add($"Version {metadataVersion.Text} ist noch nicht als Release erfasst.");
+            hints.Add(ModsTexts.StatusNotReleased(metadataVersion.Text));
         }
 
         var latest = releases

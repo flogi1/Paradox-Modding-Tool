@@ -28,10 +28,18 @@ public enum OverrideBehavior
 }
 
 /// <summary>Ein Eintrag der Tabelle. <see cref="Folder"/> ist relativ zum Wurzelordner der Spielinhalte, <c>*</c> steht für genau ein Segment.</summary>
-public sealed record OverrideRule(string Folder, OverrideBehavior Behavior, bool Certain = true);
+/// <remarks>
+/// <see cref="Unwrap"/> und <see cref="KeyField"/> bestimmen, was der Schlüssel eines Eintrags ist (siehe <see cref="RuleKeys"/>): Einträge in einer
+/// Hülle wie <c>country_decisions = { … }</c> zählen einzeln, und bei <see cref="KeyField"/> liefert das Feld im Block den Namen (<c>id</c> bei EU-IV-Events).
+/// </remarks>
+public sealed record OverrideRule(string Folder, OverrideBehavior Behavior, bool Certain = true, IReadOnlyList<string>? Unwrap = null, string? KeyField = null);
 
 /// <summary>Ergebnis der Regelsuche für einen Dateipfad. <see cref="Scope"/> ist der Ordner, in dem Schlüssel einander überschreiben.</summary>
-public readonly record struct RuleMatch(OverrideBehavior Behavior, bool Certain, bool Known, string Scope);
+public readonly record struct RuleMatch(OverrideBehavior Behavior, bool Certain, bool Known, string Scope, string? KeyField = null, IReadOnlyList<string>? Wrappers = null)
+{
+    /// <summary>Hüllen-Blöcke, deren Einträge einzeln zählen; leer, wenn die Regel keine hat.</summary>
+    public IReadOnlyList<string> Unwrap => Wrappers ?? Array.Empty<string>();
+}
 
 /// <summary>Die Regeltabelle eines Spiels: ausgelieferte Einträge, darüber die Einträge der Spielebene. Der längste passende Ordner gilt, bei gleicher Länge der spätere Eintrag.</summary>
 public sealed class OverrideRules
@@ -40,10 +48,18 @@ public sealed class OverrideRules
 
     public OverrideRules(IEnumerable<OverrideRule> shipped, IEnumerable<OverrideRule>? game = null)
     {
-        foreach (var rule in shipped.Concat(game ?? Array.Empty<OverrideRule>()))
+        foreach (var entry in shipped.Concat(game ?? Array.Empty<OverrideRule>()))
         {
+            var rule = entry;
             var segments = Split(rule.Folder);
-            // Ein Eintrag desselben Ordners aus der höheren Ebene ersetzt den früheren.
+            // Ein Eintrag desselben Ordners aus der höheren Ebene ersetzt den früheren. Die Spielebene (Regelfenster) kennt keine
+            // Schlüsselangaben; ohne eigene behält sie die des früheren Eintrags, sonst kämen die Fehlalarme über gemeinsame Hüllen zurück.
+            var earlier = _entries.FindLast(e => e.Segments.SequenceEqual(segments, StringComparer.OrdinalIgnoreCase));
+            if (earlier.Rule is { } previous && rule.Unwrap is null && rule.KeyField is null)
+            {
+                rule = rule with { Unwrap = previous.Unwrap, KeyField = previous.KeyField };
+            }
+
             _entries.RemoveAll(e => e.Segments.SequenceEqual(segments, StringComparer.OrdinalIgnoreCase));
             _entries.Add((segments, rule));
         }
@@ -58,7 +74,8 @@ public sealed class OverrideRules
         {
             if (Enum.TryParse<OverrideBehavior>(entry.Behavior, ignoreCase: true, out var behavior) && Split(entry.Folder).Length > 0)
             {
-                shipped.Add(new OverrideRule(entry.Folder, behavior, entry.Certain));
+                shipped.Add(new OverrideRule(entry.Folder, behavior, entry.Certain, entry.Unwrap is { Count: > 0 } unwrap ? unwrap.ToList() : null,
+                    string.IsNullOrWhiteSpace(entry.KeyField) ? null : entry.KeyField.Trim()));
             }
         }
 
@@ -89,7 +106,7 @@ public sealed class OverrideRules
             depth++;
         }
 
-        return new RuleMatch(found.Rule.Behavior, found.Rule.Certain, true, string.Join('/', directory[..depth]));
+        return new RuleMatch(found.Rule.Behavior, found.Rule.Certain, true, string.Join('/', directory[..depth]), found.Rule.KeyField, found.Rule.Unwrap);
     }
 
     private static bool Matches(string[] pattern, string[] directory)

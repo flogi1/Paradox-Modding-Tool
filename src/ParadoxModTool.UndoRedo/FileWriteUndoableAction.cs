@@ -14,7 +14,7 @@ public sealed class FileWriteUndoableAction : IUndoableAction
     private readonly string _newContent;
     private readonly Encoding _encoding;
 
-    private string? _previousContent;
+    private byte[]? _previousContent;
     private bool _fileExistedBefore;
     private bool _executed;
 
@@ -43,7 +43,8 @@ public sealed class FileWriteUndoableAction : IUndoableAction
             // späteren Redo (nach einem Undo) darf der schon einmal ermittelte Vorzustand
             // nicht durch den zwischenzeitlich von Undo() wiederhergestellten Inhalt ersetzt werden.
             _fileExistedBefore = File.Exists(_filePath);
-            _previousContent = _fileExistedBefore ? File.ReadAllText(_filePath) : null;
+            // Bytes statt Text: so kommen auch Windows-1252-Dateien (EU IV) und der alte BOM-Zustand unverändert zurück
+            _previousContent = _fileExistedBefore ? File.ReadAllBytes(_filePath) : null;
         }
 
         var directory = Path.GetDirectoryName(_filePath);
@@ -65,7 +66,7 @@ public sealed class FileWriteUndoableAction : IUndoableAction
 
         if (_fileExistedBefore)
         {
-            File.WriteAllText(_filePath, _previousContent!, _encoding);
+            File.WriteAllBytes(_filePath, _previousContent!);
         }
         else if (File.Exists(_filePath))
         {

@@ -27,6 +27,17 @@ public class GuiElementPathTests
     }
 
     [Fact]
+    public void ElementAtLineUsesTheFirstNonBlankCharacterOfTheLine()
+    {
+        var (resolver, doc) = GuiResolverTests.Setup(Text);
+
+        Assert.Equal("window", GuiElementPath.ElementAtLine(doc, 8, resolver)!.Name);
+        Assert.Equal("text_single", GuiElementPath.ElementAtLine(doc, 12, resolver)!.Name);
+        Assert.Equal("my_button", GuiElementPath.ElementAtLine(doc, 3, resolver)!.Name);
+        Assert.Null(GuiElementPath.ElementAtLine(doc, 0, resolver));
+    }
+
+    [Fact]
     public void CrumbsRunFromTheTopToTheElementAtTheCursor()
     {
         var (resolver, doc) = GuiResolverTests.Setup(Text);

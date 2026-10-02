@@ -13,7 +13,7 @@ public sealed class SteamHelperLauncher : ISteamHelperLauncher
 
     public async Task<int> RunAsync(string requestFile, Action<string> onLine, CancellationToken cancellation)
     {
-        var path = Environment.ProcessPath ?? throw new InvalidOperationException("Der Pfad des Programms ist unbekannt.");
+        var path = Environment.ProcessPath ?? throw new InvalidOperationException(SteamTexts.ProgramPathUnknown);
         var info = new ProcessStartInfo(path)
         {
             UseShellExecute = false,

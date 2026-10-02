@@ -23,7 +23,13 @@ internal static class SenseChecker
         foreach (var relative in files.Entries.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase))
         {
             ct.ThrowIfCancellationRequested();
-            var basePart = lower.FirstOrDefault(p => File.Exists(PathOf(p, relative)));
+            // Eine mit replace_path ausgeblendete Datei (Vanilla, bei CK III auch einer früheren Mod) lädt das Spiel nicht; sie ist keine Grundlage.
+            if (request.IsHidden(focus, relative) || ParadoxModTool.Mods.ModMetadata.IsDescriptionFile(relative))
+            {
+                continue;
+            }
+
+            var basePart = lower.FirstOrDefault(p => File.Exists(PathOf(p, relative)) && !request.IsHidden(p, relative));
             if (basePart is null)
             {
                 continue;
@@ -62,7 +68,7 @@ internal static class SenseChecker
 
         if (SameBytes(modPath, basePath))
         {
-            result.Add(Make(CompatKind.RedundantOverride, CompatSeverity.Hint, string.Empty, $"Die Datei {relative} in \"{focus.Name}\" ist eine unveränderte Kopie der Fassung aus \"{basePart.Name}\". Sie lässt sich löschen.", CompatSuggestion.RemoveRedundant, null, null));
+            result.Add(Make(CompatKind.RedundantOverride, CompatSeverity.Hint, string.Empty, ModCompatTexts.FindingRedundantFile(relative, focus.Name, basePart.Name), CompatSuggestion.RemoveRedundant, null, null));
             return result;
         }
 
@@ -105,31 +111,28 @@ internal static class SenseChecker
             }
 
             changedKeys.Add(statement.Key);
-            var additive = original.Value is ScriptBlock baseBlock
-                && statement.Value is ScriptBlock modBlock
-                && IsAdditiveOnly(baseBlock, modBlock);
-            result.Add(additive
-                ? Make(CompatKind.AdditiveOnly, CompatSeverity.Hint, statement.Key, $"\"{statement.Key}\" fügt gegenüber \"{basePart.Name}\" nur Teilschlüssel hinzu. Statt den ganzen Eintrag zu ersetzen, genügt INJECT:{statement.Key}.", CompatSuggestion.UseInject, statement, original)
-                : Make(CompatKind.ReplaceNeeded, CompatSeverity.Info, statement.Key, $"\"{statement.Key}\" ändert oder entfernt vorhandene Werte aus \"{basePart.Name}\". Dafür ist REPLACE:{statement.Key} nötig (ohne die restliche Datei).", CompatSuggestion.UseReplace, statement, original));
+            var shape = original.Value is ScriptBlock baseBlock && statement.Value is ScriptBlock modBlock
+                ? InjectShape.Of(baseBlock.Entries, modBlock.Entries, ScriptStructuralComparer.EntryEquals)
+                : null;
+            result.Add(shape switch
+            {
+                null => Make(CompatKind.ReplaceNeeded, CompatSeverity.Info, statement.Key, ModCompatTexts.FindingReplaceNeeded(statement.Key, basePart.Name), CompatSuggestion.UseReplace, statement, original),
+                { Changed: 0 } => Make(CompatKind.AdditiveOnly, CompatSeverity.Hint, statement.Key, ModCompatTexts.FindingAdditiveOnly(statement.Key, basePart.Name), CompatSuggestion.UseInject, statement, original),
+                _ => Make(CompatKind.ValueChangeOnly, CompatSeverity.Hint, statement.Key, ModCompatTexts.FindingValueChangeOnly(statement.Key, basePart.Name), CompatSuggestion.UseInject, statement, original),
+            });
         }
 
         if (unchanged == plain.Count)
         {
-            result.Insert(0, Make(CompatKind.RedundantOverride, CompatSeverity.Hint, string.Empty, $"Alle Einträge der Datei {relative} in \"{focus.Name}\" entsprechen der Fassung aus \"{basePart.Name}\" (nur Formatierung). Sie lässt sich löschen.", CompatSuggestion.RemoveRedundant, null, null));
+            result.Insert(0, Make(CompatKind.RedundantOverride, CompatSeverity.Hint, string.Empty, ModCompatTexts.FindingFormattingOnly(relative, focus.Name, basePart.Name), CompatSuggestion.RemoveRedundant, null, null));
         }
         else if (unchanged >= 1 && changedKeys.Count + added >= 1)
         {
             var needed = changedKeys.Count + added;
-            result.Insert(0, Make(CompatKind.TooCoarse, CompatSeverity.Hint, string.Empty, $"{unchanged} von {plain.Count} Einträgen der Datei {relative} sind unverändert aus \"{basePart.Name}\" kopiert. Nötig sind nur {needed}. Als REPLACE:/INJECT: bereitgestellt kollidiert die Mod seltener mit anderen.", CompatSuggestion.ProvideOnlyChanged, null, null));
+            result.Insert(0, Make(CompatKind.TooCoarse, CompatSeverity.Hint, string.Empty, ModCompatTexts.FindingTooCoarse(unchanged, plain.Count, relative, basePart.Name, needed), CompatSuggestion.ProvideOnlyChanged, null, null));
         }
 
         return result;
-    }
-
-    private static bool IsAdditiveOnly(ScriptBlock baseBlock, ScriptBlock modBlock)
-    {
-        var diffs = ScriptDiffer.Diff(baseBlock, modBlock).Where(d => d.Kind != DiffKind.Unchanged).ToList();
-        return diffs.Count > 0 && diffs.All(d => d.Kind == DiffKind.Added);
     }
 
     private static bool SameBytes(string a, string b)

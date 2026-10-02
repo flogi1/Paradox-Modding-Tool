@@ -60,7 +60,7 @@ public static class ActionText
 
     /// <summary>Zeilen A | Ergebnis | B (| Vanilla) der Aktion selbst (nicht des ganzen Schlüssels).</summary>
     public static IReadOnlyList<AlignedRow> Rows(MergeAction action, MergeDecision decision, bool withVanilla, bool hideComments = false) =>
-        ColumnAligner.Align(Render(action.A, hideComments), Render(ResultEntries(action, decision), hideComments), Render(action.B, hideComments), withVanilla ? Render(action.Vanilla, hideComments) : null);
+        EntryAligner.Align(action.A, ResultEntries(action, decision), action.B, withVanilla ? action.Vanilla : null, hideComments);
 
     /// <summary>Zeilen für eine ganze Datei: Pfad in A | gewählte Seite | Pfad in B.</summary>
     public static IReadOnlyList<AlignedRow> WholeFileRows(AddressInfo info, MergeDecision decision) =>

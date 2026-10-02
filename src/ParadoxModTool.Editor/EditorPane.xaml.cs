@@ -67,6 +67,14 @@ public partial class EditorPane : UserControl
 
         // Ausgeblendete Filter-Häkchen gelten für alle Arbeitsbereiche; die Leiste baut sich bei jeder Änderung neu auf.
         FilterBarSettings.Changed += (_, _) => RebuildCategoryFilter();
+        FolderFilterSettings.Changed += (_, _) =>
+        {
+            // Das Ereignis ist prozessweit; ein Arbeitsbereich eines anderen (beendeten) UI-Threads baut nichts um.
+            if (Dispatcher.CheckAccess())
+            {
+                RebuildCategoryFilter();
+            }
+        };
 
         // Symbol-Einstellungen gelten für alle Arbeitsbereiche; Tabs zeichnen ihre Symbole bei jeder Änderung neu.
         TabIconSettings.Changed += (_, _) =>
@@ -181,6 +189,9 @@ public partial class EditorPane : UserControl
     /// <summary>Der aktuelle Textinhalt des aktiven Dokuments — u. a. für die "Speichern"-Aktion.</summary>
     public string CurrentText => Editor.Text;
 
+    /// <summary>Der markierte Text des sichtbaren Editors (leer ohne Markierung), z. B. als Vorgabe für Strg+F.</summary>
+    public string SelectedText => Editor.SelectedText;
+
     /// <summary>
     /// Die aktuelle Cursorposition im sichtbaren Editor-Steuerelement dieses Arbeitsbereichs.
     /// Wird für die Session-Speicherung (Abschnitt 12) benötigt, da <see cref="OpenDocument.CaretOffset"/>
@@ -218,6 +229,26 @@ public partial class EditorPane : UserControl
         return Editor.Document.GetText(line.Offset, line.Length);
     }
 
+    public bool HasActiveDocument => ActiveDocument is not null;
+
+    /// <summary>
+    /// Fügt erzeugten GUI-Code eines Bausteins am Cursor ein (Plan-Ruling 8): Zeilenenden wie im Dokument, folgende Zeilen mit der Einrückung der
+    /// Cursorzeile.
+    /// </summary>
+    public void InsertGuiBlock(string text)
+    {
+        if (ActiveDocument is null)
+        {
+            return;
+        }
+
+        var document = Editor.Document;
+        var line = document.GetLineByOffset(Editor.CaretOffset);
+        var indent = new string(document.GetText(line.Offset, line.Length).TakeWhile(c => c is ' ' or '\t').ToArray());
+        var newline = document.GetLineByNumber(1).DelimiterLength == 2 ? "\r\n" : "\n";
+        InsertAtCaret(GuiDesign.Blocks.GuiBlockInsertion.ForCaret(text, indent, newline));
+    }
+
     /// <summary>Fügt Text an der Cursorposition des aktiven Dokuments ein (ersetzt eine Auswahl) und gibt dem Editor den Fokus.</summary>
     public void InsertAtCaret(string text)
     {
@@ -231,10 +262,11 @@ public partial class EditorPane : UserControl
     }
 
     /// <summary>
-    /// Fügt einen Scope-Weg (siehe <c>ScopePathFinder</c>) ein: als verschachtelte Blöcke mit dem Cursor im innersten oder, bei <paramref name="chainOnly"/>, nur als
-    /// Ausdruck (<c>owner.capital</c>). Auf einer leeren Zeile ersetzt der Block deren Inhalt; steht in der Zeile schon Text, kommt er in die Zeile darunter.
+    /// Fügt eine Scope-Kette aus dem Scope Finder (siehe <c>ScopeChain</c>) ein: als verschachtelte Blöcke mit dem Cursor im ersten <c>limit</c> bzw. im innersten
+    /// Block oder, bei <paramref name="chainOnly"/>, nur als Ausdruck (<c>owner.capital</c>, mit Wert am Ende). Auf einer leeren Zeile ersetzt der Block deren
+    /// Inhalt; steht in der Zeile schon Text, kommt er in die Zeile darunter.
     /// </summary>
-    public void InsertScopePath(ScopePath path, string preferredForm, bool chainOnly)
+    public void InsertScopeChain(ScopeChain chain, string preferredForm, bool chainOnly)
     {
         if (ActiveDocument is null)
         {
@@ -243,9 +275,9 @@ public partial class EditorPane : UserControl
 
         if (chainOnly)
         {
-            if (path.ChainText() is { } chain)
+            if (chain.ChainText() is { } expression)
             {
-                InsertAtCaret(chain);
+                InsertAtCaret(expression);
             }
 
             return;
@@ -257,7 +289,7 @@ public partial class EditorPane : UserControl
         var indent = new string(lineText.TakeWhile(c => c is ' ' or '\t').ToArray());
         var newline = document.GetLineByNumber(1).DelimiterLength == 2 ? "\r\n" : "\n";
         var tab = indent.Length > 0 && indent[0] == ' ' ? "    " : "\t";
-        var block = path.ToBlock(preferredForm, indent, newline, out var caret, tab);
+        var block = chain.ToBlock(preferredForm, indent, newline, out var caret, tab);
 
         int start, length;
         if (lineText.Trim().Length == 0)
@@ -328,6 +360,9 @@ public partial class EditorPane : UserControl
     /// <summary>Klick auf das Bug-Symbol eines Tabs: MainWindow schaltet zum nächsten offenen Bug der Datei weiter.</summary>
     public event EventHandler<OpenDocument>? ShowBugRequested;
 
+    /// <summary>Klick auf das Fehler-Symbol eines Tabs: Das Hauptfenster öffnet das Fehlerprotokoll, gefiltert auf die Datei.</summary>
+    public event EventHandler<OpenDocument>? ShowErrorLogRequested;
+
     /// <summary>
     /// Lädt eine Datei standardmäßig als UTF-8 (Abschnitt 5h) in einen neuen Tab, oder
     /// wechselt zu einem in diesem Arbeitsbereich bereits offenen Tab derselben Datei.
@@ -370,6 +405,9 @@ public partial class EditorPane : UserControl
     /// programmweiten Aktionsverlauf nicht rückgängig sichtbar - der offene Tab zeigt dann bis zum
     /// nächsten manuellen Neuladen weiterhin den (bereits zurückgenommenen) neuen Stand.
     /// </summary>
+    /// <summary>Der aktuelle Text der Datei, wenn sie hier geöffnet ist (auch mit ungespeicherten Änderungen); sonst <see langword="null"/>.</summary>
+    public string? TryGetOpenText(string filePath) => _documents.FirstOrDefault(d => PathsEqual(d.FilePath, filePath))?.Document.Text;
+
     public void ReloadIfOpen(string filePath, string newContent)
     {
         var document = _documents.FirstOrDefault(d => PathsEqual(d.FilePath, filePath));
@@ -525,11 +563,7 @@ public partial class EditorPane : UserControl
     }
 
     /// <summary>Entfernt ein Dokument aus diesem Arbeitsbereich, ohne es zu verändern — Gegenstück zu <see cref="AdoptDocument"/> beim Verschieben.</summary>
-    public void ReleaseDocument(OpenDocument document)
-    {
-        _documents.Remove(document);
-        UpdatePathDisplay();
-    }
+    public void ReleaseDocument(OpenDocument document) => RemoveDocument(document);
 
     /// <summary>
     /// Schließt ein einzelnes Dokument (Nutzer-Feedback: "X"-Button direkt am Tab). Bewusst OHNE
@@ -538,10 +572,50 @@ public partial class EditorPane : UserControl
     /// Ausbaustufe kann hier eine Sicherheitsabfrage ergänzen, sobald der Änderungsstatus eines
     /// Dokuments bekannt ist.
     /// </summary>
-    public void CloseDocument(OpenDocument document)
+    public void CloseDocument(OpenDocument document) => RemoveDocument(document);
+
+    /// <summary>
+    /// Zuletzt ausgewählte Dokumente dieses Arbeitsbereichs, das zuletzt gewählte am Ende (Nutzer-Feedback: nach dem Schließen
+    /// soll das vorher ausgewählte, noch offene Dokument wieder erscheinen statt eines leeren Editors).
+    /// </summary>
+    private readonly List<OpenDocument> _selectionHistory = new();
+
+    private void RemoveDocument(OpenDocument document)
     {
+        _selectionHistory.Remove(document);
+        if (ReferenceEquals(ActiveDocument, document) && DocumentAfterClosing(document) is { } next)
+        {
+            // Vor dem Entfernen umschalten: die Tableiste ist eine ListBox und wählt nach dem Entfernen des aktiven Eintrags
+            // von sich aus nichts mehr aus.
+            Tabs.SelectedItem = next;
+        }
+
         _documents.Remove(document);
         UpdatePathDisplay();
+    }
+
+    /// <summary>
+    /// Das zuletzt ausgewählte, noch offene und in der Tableiste sichtbare Dokument; ohne Verlauf der rechte, sonst der linke
+    /// Nachbar in der Tableiste.
+    /// </summary>
+    private OpenDocument? DocumentAfterClosing(OpenDocument closing)
+    {
+        var visible = Tabs.Items.OfType<OpenDocument>().Where(d => !ReferenceEquals(d, closing)).ToList();
+        for (var i = _selectionHistory.Count - 1; i >= 0; i--)
+        {
+            if (visible.Contains(_selectionHistory[i]))
+            {
+                return _selectionHistory[i];
+            }
+        }
+
+        var index = Tabs.Items.IndexOf(closing);
+        if (visible.Count == 0)
+        {
+            return null;
+        }
+
+        return visible[Math.Clamp(index, 0, visible.Count - 1)];
     }
 
     /// <summary>Schließt das aktive Dokument dieses Arbeitsbereichs (Knopf "Schließen" der Werkzeugleiste).</summary>
@@ -644,8 +718,8 @@ public partial class EditorPane : UserControl
 
         PathText.Text = ActiveDocument switch
         {
-            null => "Kein Dokument geöffnet",
-            { FilePath: null } => "Unbenannt (noch nicht gespeichert)",
+            null => EditorTexts.NoDocument,
+            { FilePath: null } => EditorTexts.UntitledNotSaved,
             { FilePath: { } path } => path,
         };
     }
@@ -720,8 +794,20 @@ public partial class EditorPane : UserControl
             && FilterBarSettings.IsShown(FilterEntryKeys.ForCategory(document.Category));
         var originHidden = _hiddenOrigins.Contains(document.Origin)
             && FilterBarSettings.IsShown(FilterEntryKeys.ForOrigin(document.Origin));
-        return !categoryHidden && !originHidden;
+        return !categoryHidden && !originHidden && FolderFilterMatcher.Accepts(ActiveFolderFilters(), document.FilePath);
     }
+
+    /// <summary>Ordner-Filter, deren Häkchen in diesem Arbeitsbereich an ist (aus der Leiste ausgeblendete filtern nicht).</summary>
+    private IReadOnlyCollection<FolderFilterDefinition> ActiveFolderFilters() =>
+        _activeFolderFilters.Count == 0
+            ? Array.Empty<FolderFilterDefinition>()
+            : FolderFilterSettings.Filters.Where(f => f.ShowInBar && _activeFolderFilters.Contains(f.Id)).ToList();
+
+    /// <summary>Kennungen der Ordner-Filter, deren Häkchen in diesem Arbeitsbereich an ist.</summary>
+    private readonly HashSet<string> _activeFolderFilters = new();
+
+    /// <summary>Rechtsklick "Umbenennen" auf ein Ordner-Filter-Häkchen; der Wert ist die Kennung des Filters.</summary>
+    public event EventHandler<string>? FolderFilterRenameRequested;
 
     private void CategoryFilter_Changed(object sender, RoutedEventArgs e)
     {
@@ -750,11 +836,11 @@ public partial class EditorPane : UserControl
         {
             (FileOrigin.Vanilla, "Vanilla"),
             (FileOrigin.Mod, "Mod"),
-            (FileOrigin.External, "Extern"),
+            (FileOrigin.External, EditorTexts.OriginExternal),
         }.Where(o => FilterBarSettings.IsShown(FilterEntryKeys.ForOrigin(o.Item1))).ToList();
         if (origins.Count > 0)
         {
-            CategoryFilterPanel.Children.Add(CreateMutedLabel("Herkunft:", new Thickness(0, 0, 6, 0)));
+            CategoryFilterPanel.Children.Add(CreateMutedLabel(EditorTexts.FilterOrigin, new Thickness(0, 0, 6, 0)));
             foreach (var (origin, text) in origins)
             {
                 AddOriginCheckBox(origin, text, CreateOriginIcon(origin));
@@ -766,7 +852,7 @@ public partial class EditorPane : UserControl
             .ToList();
         if (categories.Count > 0)
         {
-            CategoryFilterPanel.Children.Add(CreateMutedLabel("Kategorie:", new Thickness(origins.Count > 0 ? 10 : 0, 0, 6, 0)));
+            CategoryFilterPanel.Children.Add(CreateMutedLabel(EditorTexts.FilterCategory, new Thickness(origins.Count > 0 ? 10 : 0, 0, 6, 0)));
         }
 
         foreach (var category in categories)
@@ -788,14 +874,68 @@ public partial class EditorPane : UserControl
                 Tag = category.Id,
                 IsChecked = !_hiddenCategories.Contains(category.Id),
                 Margin = new Thickness(0, 0, 8, 0),
-                ToolTip = $"'{category.Name}' ein-/ausblenden",
+                ToolTip = EditorTexts.FilterCategoryTip(category.Name),
             };
             checkBox.Click += CategoryFilterCheckBox_Click;
             checkBox.ContextMenu = CreateHideFromBarMenu(FilterEntryKeys.ForCategory(category.Id));
             CategoryFilterPanel.Children.Add(checkBox);
         }
 
+        AddFolderFilterCheckBoxes(origins.Count > 0 || categories.Count > 0);
         CollectionViewSource.GetDefaultView(_documents).Refresh();
+    }
+
+    /// <summary>
+    /// Gruppe "Nur Ordner:" der Filterleiste. Anders als bei Herkunft und Kategorie schränkt ein Häkchen hier ein: an = nur Tabs aus
+    /// diesem Ordnerbaum; mehrere an = Tabs aus allen gewählten Ordnern; keins an = keine Einschränkung.
+    /// </summary>
+    private void AddFolderFilterCheckBoxes(bool hasGroupsBefore)
+    {
+        _activeFolderFilters.RemoveWhere(id => FolderFilterSettings.Find(id) is null);
+        var filters = FolderFilterSettings.Filters.Where(f => f.ShowInBar).ToList();
+        if (filters.Count == 0)
+        {
+            return;
+        }
+
+        CategoryFilterPanel.Children.Add(CreateMutedLabel(EditorTexts.FilterFolders, new Thickness(hasGroupsBefore ? 10 : 0, 0, 6, 0)));
+        foreach (var filter in filters)
+        {
+            var id = filter.Id;
+            var checkBox = new CheckBox
+            {
+                Content = new TextBlock { Text = filter.Name },
+                IsChecked = _activeFolderFilters.Contains(id),
+                Margin = new Thickness(0, 0, 8, 0),
+                ToolTip = EditorTexts.FilterFolderTip(filter.FolderPath),
+            };
+            checkBox.Click += (_, _) =>
+            {
+                if (checkBox.IsChecked == true)
+                {
+                    _activeFolderFilters.Add(id);
+                }
+                else
+                {
+                    _activeFolderFilters.Remove(id);
+                }
+
+                CollectionViewSource.GetDefaultView(_documents).Refresh();
+            };
+
+            var menu = new ContextMenu();
+            var rename = new MenuItem { Header = EditorTexts.FolderFilterRename };
+            rename.Click += (_, _) => FolderFilterRenameRequested?.Invoke(this, id);
+            var delete = new MenuItem { Header = EditorTexts.FolderFilterDelete };
+            delete.Click += (_, _) => FolderFilterSettings.Remove(id);
+            var hide = new MenuItem { Header = EditorTexts.HideFromBar };
+            hide.Click += (_, _) => FolderFilterSettings.SetShown(id, false);
+            menu.Items.Add(rename);
+            menu.Items.Add(delete);
+            menu.Items.Add(hide);
+            checkBox.ContextMenu = menu;
+            CategoryFilterPanel.Children.Add(checkBox);
+        }
     }
 
     private static UIElement? CreateOriginIcon(FileOrigin origin) => origin switch
@@ -809,7 +949,7 @@ public partial class EditorPane : UserControl
     private static ContextMenu CreateHideFromBarMenu(string key)
     {
         var menu = new ContextMenu();
-        var item = new MenuItem { Header = "Aus Leiste ausblenden" };
+        var item = new MenuItem { Header = EditorTexts.HideFromBar };
         item.Click += (_, _) => FilterBarSettings.SetShown(key, false);
         menu.Items.Add(item);
         return menu;
@@ -830,6 +970,25 @@ public partial class EditorPane : UserControl
                 FilterEntryKeys.ForCategory(category.Id),
                 category.Name.Replace("_", "__"),
                 new Border { Width = 10, Height = 10, Background = FileCategoryClassifier.ColorFor(category.Id) });
+        }
+
+        if (FolderFilterSettings.Filters.Count > 0)
+        {
+            menu.Items.Add(new Separator());
+            foreach (var filter in FolderFilterSettings.Filters)
+            {
+                var id = filter.Id;
+                var item = new MenuItem
+                {
+                    Header = filter.Name.Replace("_", "__"),
+                    ToolTip = filter.FolderPath,
+                    IsCheckable = true,
+                    IsChecked = filter.ShowInBar,
+                    StaysOpenOnClick = true,
+                };
+                item.Click += (_, _) => FolderFilterSettings.SetShown(id, item.IsChecked);
+                menu.Items.Add(item);
+            }
         }
 
         menu.IsOpen = true;
@@ -880,9 +1039,9 @@ public partial class EditorPane : UserControl
             Margin = new Thickness(0, 0, 8, 0),
             ToolTip = origin switch
             {
-                FileOrigin.Vanilla => "Dateien des Basisspiels ein-/ausblenden",
-                FileOrigin.Mod => "Dateien aus Mod-Ordnern ein-/ausblenden",
-                _ => "Dateien außerhalb von Spiel- und Mod-Ordnern (auch ungespeicherte) ein-/ausblenden",
+                FileOrigin.Vanilla => EditorTexts.FilterVanillaTip,
+                FileOrigin.Mod => EditorTexts.FilterModTip,
+                _ => EditorTexts.FilterExternalTip,
             },
         };
         checkBox.Click += OriginFilterCheckBox_Click;
@@ -929,6 +1088,15 @@ public partial class EditorPane : UserControl
         }
     }
 
+    /// <summary>Fragt für alle offenen Dokumente die Fehlermarkierung neu ab (nach jeder Änderung im Fehlerprotokoll).</summary>
+    public void RefreshErrorMarks()
+    {
+        foreach (var document in _documents)
+        {
+            document.RefreshErrorMark();
+        }
+    }
+
     /// <summary>Menü "Symbole": schaltet einzelne Tab-Symbole ein oder aus (siehe <see cref="TabIconSettings"/>).</summary>
     private void TabIconsButton_Click(object sender, RoutedEventArgs e)
     {
@@ -939,6 +1107,7 @@ public partial class EditorPane : UserControl
         AddIconMenuItem(menu, TabIconKind.Vanilla, new VanillaIcon { Width = 12, Height = 12 });
         AddIconMenuItem(menu, TabIconKind.Mod, new TextBlock { Text = "🛠" });
         AddIconMenuItem(menu, TabIconKind.Lock, new TextBlock { Text = "🔒" });
+        AddIconMenuItem(menu, TabIconKind.ErrorLog, new TextBlock { Text = "⚠" });
         menu.IsOpen = true;
     }
 
@@ -990,7 +1159,7 @@ public partial class EditorPane : UserControl
 
         var auto = new MenuItem
         {
-            Header = $"Automatisch ({FileCategoryClassifier.DisplayName(FileCategoryClassifier.Classify(document.FilePath))})",
+            Header = EditorTexts.CategoryAutomatic(FileCategoryClassifier.DisplayName(FileCategoryClassifier.Classify(document.FilePath))),
             IsCheckable = true,
             IsChecked = document.ManualCategory is null,
         };
@@ -1013,7 +1182,7 @@ public partial class EditorPane : UserControl
         }
 
         menu.Items.Add(new Separator());
-        var manage = new MenuItem { Header = "Kategorien verwalten" };
+        var manage = new MenuItem { Header = SettingsTexts.ManageCategories };
         manage.Click += (_, _) => ManageCategoriesRequested?.Invoke(this, EventArgs.Empty);
         menu.Items.Add(manage);
 
@@ -1099,6 +1268,8 @@ public partial class EditorPane : UserControl
 
         if (Tabs.SelectedItem is OpenDocument document)
         {
+            _selectionHistory.Remove(document);
+            _selectionHistory.Add(document);
             Editor.Document = document.Document;
             Editor.SyntaxHighlighting = document.Highlighting;
 
@@ -1345,6 +1516,14 @@ public partial class EditorPane : UserControl
         }
     }
 
+    private void TabErrorIcon_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: OpenDocument document })
+        {
+            ShowErrorLogRequested?.Invoke(this, document);
+        }
+    }
+
     /// <summary>Nutzer-Feedback Runde 5: "📋"-Button neben der Pfadanzeige kopiert den Pfad der aktiven Datei.</summary>
     private void CopyPathButton_Click(object sender, RoutedEventArgs e) => CopyPathToClipboard(ActiveDocument?.FilePath);
 
@@ -1406,6 +1585,8 @@ public partial class EditorPane : UserControl
 
         try
         {
+            // Der Explorer versteht nur Backslashes; ein gemischter Pfad (…/mod\Name) öffnet sonst "Dokumente".
+            filePath = Path.GetFullPath(filePath);
             if (File.Exists(filePath))
             {
                 Process.Start("explorer.exe", $"/select,\"{filePath}\"");
@@ -1418,7 +1599,7 @@ public partial class EditorPane : UserControl
                 Process.Start("explorer.exe", $"\"{directory}\"");
             }
         }
-        catch (Win32Exception)
+        catch (Exception ex) when (ex is Win32Exception or ArgumentException or NotSupportedException or PathTooLongException)
         {
             // Explorer konnte nicht gestartet werden - stillschweigend ignorieren, kein
             // kritischer Pfad (der Nutzer sieht einfach keine Reaktion und kann es erneut

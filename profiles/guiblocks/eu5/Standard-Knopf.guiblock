@@ -1,0 +1,16 @@
+# block: Standard-Knopf
+# group: Bedienelemente
+# description: Knopf mit Text und Tooltip, die Breite passt sich dem Text an; die Aktion läuft über ein scripted_gui in common/scripted_guis mit dem eigenen Land als root. Vorbild: in_game/gui/agenda_view.gui, in_game/gui/economy_lateralview.gui
+# param: name | Name | my_button
+# param: text | Text (Lokalisierungsschlüssel) | MY_BUTTON
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_BUTTON_TT
+# param: scripted_gui | scripted_gui | my_scripted_gui
+# requires: button_regular, button_resize_to_fit_text
+
+button_regular = {
+	name = "$name$"
+	using = button_resize_to_fit_text
+	text = "$text$"
+	tooltip = "$tooltip$"
+	onclick = "[GetScriptedGui('$scripted_gui$').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+}

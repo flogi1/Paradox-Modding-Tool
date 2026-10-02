@@ -49,9 +49,10 @@ public sealed class GuiIndex
     private readonly Dictionary<string, List<GuiUsage>> _usages = new(StringComparer.Ordinal);
     private readonly List<GuiFileDiagnostic> _diagnostics = new();
 
-    private GuiIndex(IReadOnlyList<GuiSourceFile> files, IReadOnlyList<GuiDocument> documents)
+    private GuiIndex(IReadOnlyList<GuiSourceFile> files, IReadOnlyList<GuiDocument> documents, GuiLayout? layout = null)
     {
         Files = files;
+        Layout = layout ?? GuiLayout.Default;
         for (var i = 0; i < files.Count; i++)
         {
             _documents[files[i]] = documents[i];
@@ -68,23 +69,23 @@ public sealed class GuiIndex
     public static GuiIndex Empty { get; } = new(Array.Empty<GuiSourceFile>(), Array.Empty<GuiDocument>());
 
     /// <summary>Parst alle Dateien parallel. <paramref name="readText"/> ersetzt das Lesen von der Platte (Tests).</summary>
-    public static GuiIndex Build(IReadOnlyList<GuiSourceFile> files, Func<GuiSourceFile, string>? readText = null)
+    public static GuiIndex Build(IReadOnlyList<GuiSourceFile> files, Func<GuiSourceFile, string>? readText = null, GuiLayout? layout = null)
     {
         readText ??= file => File.ReadAllText(file.FullPath);
         var documents = new GuiDocument[files.Count];
         Parallel.For(0, files.Count, i => documents[i] = GuiParser.Parse(readText(files[i])));
-        return new GuiIndex(files, documents);
+        return new GuiIndex(files, documents, layout);
     }
 
     /// <summary>Index aus bereits geparsten Dokumenten, z.B. Vanilla aus einem früheren Aufbau plus neu geparste Mod-Dateien.</summary>
-    public static GuiIndex FromDocuments(IReadOnlyList<GuiSourceFile> files, IReadOnlyList<GuiDocument> documents)
+    public static GuiIndex FromDocuments(IReadOnlyList<GuiSourceFile> files, IReadOnlyList<GuiDocument> documents, GuiLayout? layout = null)
     {
         if (files.Count != documents.Count)
         {
             throw new ArgumentException("Gleich viele Dateien und Dokumente erwartet.", nameof(documents));
         }
 
-        return new GuiIndex(files, documents);
+        return new GuiIndex(files, documents, layout);
     }
 
     public IReadOnlyList<GuiSourceFile> Files { get; }
@@ -99,9 +100,31 @@ public sealed class GuiIndex
 
     public GuiSourceFile? FileOf(GuiNode node) => _fileByRoot.TryGetValue(node.Root, out var file) ? file : null;
 
-    /// <summary>Wirksame Definition: höchste Ebene (Mod vor Abhängigkeit vor Vanilla), innerhalb einer Ebene die zuletzt geladene.</summary>
+    /// <summary>Kontextordner und Überschreib-Reihenfolge des Spiels, zu dem die Dateien gehören.</summary>
+    public GuiLayout Layout { get; }
+
+    /// <summary>
+    /// Wirksame Definition: höchste Ebene (Mod vor Abhängigkeit vor Vanilla), innerhalb einer Ebene die zuletzt geladene, bei
+    /// <see cref="GuiLayout.FirstWins"/> (Crusader Kings III) die zuerst geladene. Bei FirstWins bilden eigene Mod und Abhängigkeits-Mods eine
+    /// gemeinsame Ebene, sortiert nach relativem Pfad (gemessen 2026-09-30: die Playset-Reihenfolge zählt nicht); gleicher Pfad in zwei Mods = die
+    /// eigene Mod, deren Datei die andere ersetzt.
+    /// </summary>
     public GuiDefinition? Find(string name, GuiDefinitionKind kind) =>
-        _definitions.TryGetValue((kind, name), out var list) ? list.OrderBy(d => d.File.Layer).Last() : null;
+        !_definitions.TryGetValue((kind, name), out var list) ? null
+        : Layout.FirstWins ? FirstLoaded(list)
+        : list.OrderBy(d => d.File.Layer).Last();
+
+    /// <summary>Wirksame Definition bei FirstWins: zuerst die Mods (eigene und Abhängigkeiten zusammen, nach Pfad), sonst Vanilla in Ladereihenfolge.</summary>
+    public static GuiDefinition? FirstLoaded(IEnumerable<GuiDefinition> definitions)
+    {
+        var all = definitions.ToList();
+        return all
+            .Where(d => d.File.Layer != GuiLayer.Vanilla)
+            .OrderBy(d => d.File.RelativePath, StringComparer.OrdinalIgnoreCase)
+            .ThenByDescending(d => d.File.Layer)
+            .FirstOrDefault()
+            ?? all.FirstOrDefault(d => d.File.Layer == GuiLayer.Vanilla);
+    }
 
     public IReadOnlyList<GuiDefinition> FindAll(string name, GuiDefinitionKind kind) =>
         _definitions.TryGetValue((kind, name), out var list) ? list : Array.Empty<GuiDefinition>();
@@ -144,7 +167,7 @@ public sealed class GuiIndex
             documents.Add(GuiParser.Parse(text));
         }
 
-        return new GuiIndex(files, documents);
+        return new GuiIndex(files, documents, Layout);
     }
 
     private void Collect(GuiSourceFile file, GuiDocument document)

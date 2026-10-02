@@ -17,7 +17,9 @@ public sealed class TaskProgressWindow : Window
     private readonly Func<string, int, int, string> _countText;
     private readonly Controls.ProgressBar _bar = new() { Height = 10, Minimum = 0, Maximum = 1, IsIndeterminate = true };
     private readonly Controls.TextBlock _status = new() { Margin = new Thickness(0, 6, 0, 12), TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis };
+    private readonly Controls.Button _cancel = new() { Padding = new Thickness(8, 2, 8, 2), HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
     private bool _closedByCaller;
+    private bool _cancelLocked;
 
     /// <param name="title">Titel im Fenster und in der Titelleiste.</param>
     /// <param name="hint">Erklärzeile unter dem Titel (z. B. "Das kann eine Weile dauern"); leer = keine.</param>
@@ -59,12 +61,20 @@ public sealed class TaskProgressWindow : Window
 
         panel.Children.Add(_bar);
         panel.Children.Add(_status);
-        var cancel = new Controls.Button { Content = cancelText, Padding = new Thickness(8, 2, 8, 2), HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
-        cancel.Click += (_, _) => _onCancel();
-        panel.Children.Add(cancel);
+        _cancel.Content = cancelText;
+        _cancel.Click += (_, _) => _onCancel();
+        panel.Children.Add(_cancel);
         grid.Children.Add(panel);
         Content = grid;
 
+        // Ist Abbrechen nicht mehr möglich, verschwände das Fenster sonst, während die Aufgabe unsichtbar weiterläuft.
+        Closing += (_, e) =>
+        {
+            if (_cancelLocked && !_closedByCaller)
+            {
+                e.Cancel = true;
+            }
+        };
         Closed += (_, _) =>
         {
             if (!_closedByCaller)
@@ -72,6 +82,13 @@ public sealed class TaskProgressWindow : Window
                 _onCancel();
             }
         };
+    }
+
+    /// <summary>Ab hier lässt sich die Aufgabe nicht mehr abbrechen: Knopf aus, Schließen per X wirkungslos, bis der Aufrufer schließt.</summary>
+    public void DisableCancel()
+    {
+        _cancelLocked = true;
+        _cancel.IsEnabled = false;
     }
 
     /// <summary>Schließt das Fenster, ohne den Abbruch auszulösen (die Aufgabe ist fertig oder schon abgebrochen).</summary>

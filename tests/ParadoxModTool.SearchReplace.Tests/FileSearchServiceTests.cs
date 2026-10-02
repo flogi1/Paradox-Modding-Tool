@@ -40,6 +40,19 @@ public class FileSearchServiceTests : IDisposable
     }
 
     [Fact]
+    public void Search_EinzelneDateiAlsPfad_DurchsuchtNurDieseDatei()
+    {
+        var target = Path.Combine(_dir, "descriptor.mod");
+        File.WriteAllText(target, "name = \"tax\"");
+        File.WriteAllText(Path.Combine(_dir, "other.txt"), "tax = 5");
+
+        var matches = FileSearchService.Search(target, "tax", new SearchOptions());
+
+        Assert.Single(matches);
+        Assert.Equal(target, matches[0].FilePath);
+    }
+
+    [Fact]
     public void EnumerateSearchableFiles_DurchsuchtUnterordnerRekursiv()
     {
         var subDir = Path.Combine(_dir, "common", "idea_groups");

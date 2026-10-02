@@ -25,6 +25,18 @@ public class ModFileIndexTests : TempDirTests
     }
 
     [Fact]
+    public void Default_rules_skip_the_patch_recipe_folder()
+    {
+        var mod = Make("mod");
+        Write(mod, ".pmt-patches/x.json", "{}");
+        Write(mod, "common/a.txt", "x");
+
+        var files = ModStaging.EnumerateFiles(mod, ModStagingRules.Default);
+
+        Assert.Equal(new[] { "common/a.txt" }, files);
+    }
+
+    [Fact]
     public void EnumerateFiles_BeachtetOnlyFolders()
     {
         var mod = Make("mod");

@@ -31,8 +31,8 @@ public partial class MainWindow
         {
             var answer = MessageBox.Show(
                 this,
-                $"\"{document.DisplayName}\" hat ungespeicherte Änderungen.\n\nVor dem Schließen speichern?",
-                "Ungespeicherte Änderungen",
+                MainTexts.CloseUnsaved(document.DisplayName),
+                MainTexts.CloseUnsavedTitle,
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Warning,
                 MessageBoxResult.Yes);
@@ -247,9 +247,8 @@ public partial class MainWindow
             {
                 var reload = MessageBox.Show(
                     this,
-                    $"Die Datei \"{document.DisplayName}\" wurde außerhalb des Programms geändert, und hier gibt es ungespeicherte Änderungen.\n\n" +
-                    "Die geänderte Fassung von der Platte laden? Die eigenen ungespeicherten Änderungen lassen sich danach mit Strg+Z zurückholen.",
-                    "Datei extern geändert",
+                    MainTexts.ExternalChanged(document.DisplayName),
+                    MainTexts.ExternalChangedTitle,
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning,
                     MessageBoxResult.No) == MessageBoxResult.Yes;
@@ -272,10 +271,8 @@ public partial class MainWindow
 
     private static bool AskUseRecovery(string filePath) =>
         MessageBox.Show(
-            $"Die Datei \"{Path.GetFileName(filePath)}\" wurde seit der letzten Sicherung außerhalb des Programms verändert.\n\n" +
-            "Ja: die gesicherten, ungespeicherten Änderungen wiederherstellen (beim Speichern wird die geänderte Datei überschrieben).\n" +
-            "Nein: die Datei von der Platte behalten und die Sicherung verwerfen.",
-            "Wiederherstellung",
+            MainTexts.RecoveryChanged(Path.GetFileName(filePath)),
+            MainTexts.RecoveryTitle,
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
             MessageBoxResult.No) == MessageBoxResult.Yes;

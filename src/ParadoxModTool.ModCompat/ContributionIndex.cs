@@ -74,7 +74,37 @@ public static class ContributionExtractor
         var parsed = cache.Get(fullPath);
         if (parsed.Root is null)
         {
-            error = parsed.Error ?? "nicht lesbar";
+            error = parsed.Error ?? ModCompatTexts.Unreadable;
+            return result;
+        }
+
+        if (GuiUnits.Applies(rule, relativePath))
+        {
+            // Je GUI-Typ und Template ein Beitrag; oberste Fenster und Widgets sind keine Schlüssel (zwei eigene Fenster widersprechen sich nicht).
+            foreach (var gui in GuiUnits.Read(parsed.Root).Keys)
+            {
+                var entries = gui.Unit.Header.Append(gui.Unit.Entry).ToList();
+                var statement = new ScriptStatement
+                {
+                    Key = gui.Key,
+                    Value = new ScriptBlock { Entries = entries },
+                    SourceText = gui.Unit.Entry.SourceText,
+                    SourceStart = entries.Select(e => e.SourceStart).FirstOrDefault(s => s is not null),
+                    SourceEnd = gui.Unit.Entry.SourceEnd,
+                };
+                result.Add(Make(p, relativePath, fullPath, rule, new OverrideKey(OverrideOperator.None, gui.Key), statement, parsed.Text));
+            }
+
+            return result;
+        }
+
+        if (RuleKeys.Applies(rule))
+        {
+            foreach (var keyed in RuleKeys.Read(parsed.Root, rule))
+            {
+                result.Add(Make(p, relativePath, fullPath, rule, new OverrideKey(OverrideOperator.None, keyed.Key), keyed.Statement, parsed.Text));
+            }
+
             return result;
         }
 
@@ -201,14 +231,14 @@ public sealed class ContributionIndex
     public IReadOnlyList<CompatParticipant> MissingFolders => _missing;
 
     /// <summary>Baut den Index für <paramref name="mods"/> (ohne Vanilla, nach Rang geordnet). Wirft <see cref="OperationCanceledException"/> bei Abbruch.</summary>
-    public static ContributionIndex Build(IReadOnlyList<CompatParticipant> mods, OverrideRules rules, ParseCache cache, IProgress<CompatProgress>? progress, CancellationToken ct)
+    public static ContributionIndex Build(IReadOnlyList<CompatParticipant> mods, OverrideRules rules, ParseCache cache, IProgress<CompatProgress>? progress, CancellationToken ct, Func<CompatParticipant, string, bool>? isHidden = null)
     {
         var index = new ContributionIndex();
         var ordered = mods.OrderBy(m => m.Rank).ToList();
         for (var i = 0; i < ordered.Count; i++)
         {
             ct.ThrowIfCancellationRequested();
-            progress?.Report(new CompatProgress($"Lese Dateien: {ordered[i].Name}", i, ordered.Count));
+            progress?.Report(new CompatProgress(ModCompatTexts.ProgressReadFiles(ordered[i].Name), i, ordered.Count));
             try
             {
                 index._files[ordered[i].Id] = ModFileIndex.Build(ordered[i].Folder, null, ct);
@@ -224,6 +254,12 @@ public sealed class ContributionIndex
         {
             foreach (var relative in index._files[mod.Id].Entries.Keys)
             {
+                // Mit replace_path einer späteren Mod ausgeblendet oder Beschreibung der Mod (.metadata/, descriptor.mod): Das Spiel lädt die Datei nicht.
+                if (isHidden?.Invoke(mod, relative) == true || ModMetadata.IsDescriptionFile(relative))
+                {
+                    continue;
+                }
+
                 if (!index._pathGroups.TryGetValue(relative, out var list))
                 {
                     list = new List<CompatParticipant>();
@@ -251,10 +287,10 @@ public sealed class ContributionIndex
                 ct.ThrowIfCancellationRequested();
                 if (++done % 200 == 0)
                 {
-                    progress?.Report(new CompatProgress($"Prüfe Dateien: {mod.Name}", done, total));
+                    progress?.Report(new CompatProgress(ModCompatTexts.ProgressCheckFiles(mod.Name), done, total));
                 }
 
-                if (index._overridden.Contains((mod.Id, relative)))
+                if (index._overridden.Contains((mod.Id, relative)) || isHidden?.Invoke(mod, relative) == true || ModMetadata.IsDescriptionFile(relative))
                 {
                     continue;
                 }

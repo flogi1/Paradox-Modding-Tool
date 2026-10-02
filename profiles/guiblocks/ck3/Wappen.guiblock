@@ -1,0 +1,9 @@
+# block: Wappen
+# group: Anzeige
+# description: Wappen eines Titels mit Krone, Klick öffnet den Titel, Tooltip zeigt den Namen; mit der Vorgabe das Wappen des Haupttitels des eigenen Charakters. Andere Größen: coa_title_tiny_crown, coa_title_small_crown, coa_title_big_crown; ohne Krone ohne _crown. Wappen einer Dynastie: coa_dynasty_medium mit datacontext [GetPlayer.GetDynasty]. Wappen erscheinen nur im laufenden Spiel. Vorbild: gui/debug/window_component_library.gui, gui/shared/coat_of_arms.gui
+# param: title | Titel (Datenkontext) | GetPlayer.GetPrimaryTitle
+# requires: coa_title_medium_crown
+
+coa_title_medium_crown = {
+	datacontext = "[$title$]"
+}

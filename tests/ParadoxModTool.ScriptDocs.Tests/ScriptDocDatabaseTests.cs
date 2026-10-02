@@ -114,6 +114,57 @@ public sealed class ScriptDocDatabaseTests : IDisposable
     }
 
     [Fact]
+    public void MergeDuplicates_KeepsPlainAndDataFormsOfAnEventTarget()
+    {
+        var data = new ScriptDocEntry { Kind = ScriptDocKind.EventTarget, Name = "culture", Targets = new() { "culture" } };
+        data.Extra["Requires Data"] = "yes";
+        var plain = new ScriptDocEntry { Kind = ScriptDocKind.EventTarget, Name = "culture", Scopes = new() { "country", "character" }, Targets = new() { "culture" } };
+
+        var merged = Assert.Single(ScriptDocImporter.MergeDuplicates(new[] { data, plain }));
+
+        Assert.Equal("country, character", merged.Extra["Plain Inputs"]);
+        Assert.Equal(string.Empty, merged.Extra["Data Inputs"]);
+    }
+
+    [Fact]
+    public void MergeDuplicates_SingleTargetGetsOnlyItsOwnForm()
+    {
+        var modifier = new ScriptDocEntry { Kind = ScriptDocKind.EventTarget, Name = "modifier", Scopes = new() { "country" }, Targets = new() { "value" } };
+        modifier.Extra["Requires Data"] = "yes";
+
+        var merged = Assert.Single(ScriptDocImporter.MergeDuplicates(new[] { modifier }));
+
+        Assert.Equal("country", merged.Extra["Data Inputs"]);
+        Assert.False(merged.Extra.ContainsKey("Plain Inputs"));
+    }
+
+    [Fact]
+    public void NeedsImport_TrueWhenTheEventTargetImportHasAnOldFormat()
+    {
+        var db = new ScriptDocDatabase();
+        var ticks = new Dictionary<ScriptDocKind, long> { [ScriptDocKind.EventTarget] = 100 };
+        db.ApplyImport(Array.Empty<ScriptDocEntry>(), new[] { ScriptDocKind.EventTarget }, T0, new Dictionary<string, long> { [ScriptDocLogFiles.FileNameOf(ScriptDocKind.EventTarget)] = 100 });
+        Assert.False(db.NeedsImport(ticks));
+
+        db.Imports[^1].FormatVersion = 0;
+
+        Assert.True(db.NeedsImport(ticks));
+    }
+
+    [Fact]
+    public void FormatVersion_SurvivesSaveAndLoad_SoTheNextStartDoesNotReimport()
+    {
+        var storage = new ScriptDocStorage(Path.Combine(_dir, "script-docs-format"));
+        var db = new ScriptDocDatabase();
+        var ticks = new Dictionary<ScriptDocKind, long> { [ScriptDocKind.EventTarget] = 100 };
+        db.ApplyImport(Array.Empty<ScriptDocEntry>(), new[] { ScriptDocKind.EventTarget }, T0, new Dictionary<string, long> { [ScriptDocLogFiles.FileNameOf(ScriptDocKind.EventTarget)] = 100 });
+
+        storage.Save(db);
+
+        Assert.False(storage.Load().NeedsImport(ticks));
+    }
+
+    [Fact]
     public void NeedsImport_TrueWithoutImportOrWhenWriteTimeDiffers()
     {
         var db = new ScriptDocDatabase();
