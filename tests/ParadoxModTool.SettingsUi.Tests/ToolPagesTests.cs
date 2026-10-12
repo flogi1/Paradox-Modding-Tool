@@ -12,11 +12,11 @@ namespace ParadoxModTool.SettingsUi.Tests;
 public sealed class ToolPagesTests
 {
     [Fact]
-    public void WorkspaceToolbarPageTogglesFilterAndIconEntries() => Sta.Run(() =>
+    public void ToolbarsPageTogglesFilterAndIconEntries() => Sta.Run(() =>
     {
         FilterBarSettings.LoadHidden(null);
         TabIconSettings.LoadHidden(null);
-        using var page = new WorkspaceToolbarPage(new FakeHost());
+        using var page = new ToolbarsPage(new FakeHost());
 
         UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.OriginVanilla));
         UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.IconLabel("Lock")));
@@ -28,11 +28,11 @@ public sealed class ToolPagesTests
     });
 
     [Fact]
-    public void WorkspaceToolbarPageListsCategoriesAndRebuildsAfterManaging() => Sta.Run(() =>
+    public void ToolbarsPageListsCategoriesAndRebuildsAfterManaging() => Sta.Run(() =>
     {
         FileCategoryClassifier.SetCategories(new[] { new CategoryDefinition { Id = "a", Name = "Erste_Kategorie" } });
         var host = new FakeHost();
-        using var page = new WorkspaceToolbarPage(host);
+        using var page = new ToolbarsPage(host);
         Assert.Single(UiFind.All<System.Windows.Controls.CheckBox>(page.View), box => UiFind.Label(box) == "Erste_Kategorie");
 
         FileCategoryClassifier.SetCategories(new[] { new CategoryDefinition { Id = "b", Name = "Zweite" } });
@@ -46,11 +46,12 @@ public sealed class ToolPagesTests
     });
 
     [Fact]
-    public void WorkspaceToolbarPageFollowsDropdownChanges() => Sta.Run(() =>
+    public void ToolbarsPageFollowsDropdownChanges() => Sta.Run(() =>
     {
         TabIconSettings.LoadHidden(null);
-        using var page = new WorkspaceToolbarPage(new FakeHost());
-        var box = UiFind.CheckBox(page, SettingsTexts.IconLabel("Bug"));
+        using var page = new ToolbarsPage(new FakeHost());
+        // "Bug" gibt es auch als Häkchen des (hier ausgeblendeten) klassischen Bereichs; das Symbol-Häkchen steht weiter unten.
+        var box = UiFind.All<System.Windows.Controls.CheckBox>(page.View).Last(candidate => UiFind.Label(candidate) == SettingsTexts.IconLabel("Bug"));
 
         TabIconSettings.SetVisible(TabIconKind.Bug, false);
 
@@ -59,10 +60,10 @@ public sealed class ToolPagesTests
     });
 
     [Fact]
-    public void WorkspaceToolbarPageTogglesTheToolbarButtons() => Sta.Run(() =>
+    public void ToolbarsPageTogglesTheToolbarButtons() => Sta.Run(() =>
     {
         var host = new FakeHost();
-        using var page = new WorkspaceToolbarPage(host);
+        using var page = new ToolbarsPage(host);
 
         UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.WorkspaceFilterButton));
 
@@ -71,10 +72,10 @@ public sealed class ToolPagesTests
     });
 
     [Fact]
-    public void WorkspaceToolbarPageFollowsButtonChanges() => Sta.Run(() =>
+    public void ToolbarsPageFollowsButtonChanges() => Sta.Run(() =>
     {
         var host = new FakeHost();
-        using var page = new WorkspaceToolbarPage(host);
+        using var page = new ToolbarsPage(host);
         var box = UiFind.CheckBox(page, SettingsTexts.WorkspaceIconButton);
         Assert.True(box.IsChecked);
 

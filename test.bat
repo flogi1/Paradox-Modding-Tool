@@ -19,6 +19,7 @@ call :run_test tests\ParadoxModTool.Session.Tests
 call :run_test tests\ParadoxModTool.Localization.Tests
 call :run_test tests\ParadoxModTool.Settings.Tests
 call :run_test tests\ParadoxModTool.SettingsUi.Tests
+call :run_test tests\ParadoxModTool.Shell.Tests
 call :run_test tests\ParadoxModTool.Editor.Tests
 call :run_test tests\ParadoxModTool.SearchReplace.Tests
 call :run_test tests\ParadoxModTool.Notes.Tests
@@ -29,6 +30,7 @@ call :run_test tests\ParadoxModTool.Explorer.Tests
 call :run_test tests\ParadoxModTool.Desync.Tests
 call :run_test tests\ParadoxModTool.GuiDesign.Tests
 call :run_test tests\ParadoxModTool.Updates.Tests
+call :run_test tests\ParadoxModTool.Generators.Tests
 
 echo.
 if "%FAILED%"=="1" (

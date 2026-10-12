@@ -1,0 +1,11 @@
+######################################################
+# {{ tag }} log purger
+######################################################
+
+log_purger_{{ tag }} = {
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+	cmf_suppress = { v = iv2_nat_{{ tag }}_{{ i.number }} }
+{{~ end ~}}
+{{~ end ~}}
+}

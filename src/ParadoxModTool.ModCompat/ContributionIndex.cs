@@ -129,7 +129,9 @@ public static class ContributionExtractor
                 continue;
             }
 
-            result.Add(Make(p, relativePath, fullPath, rule, OverrideKey.Parse(statement.Key), statement, parsed.Text));
+            // Mit Präfixen der Ordnerregel (Victoria 3) gelten nur diese; sonst alle wie bisher.
+            var parsedKey = rule.Operators is { } folderOperators ? OverrideKey.ParseInFolder(statement.Key, folderOperators) : OverrideKey.Parse(statement.Key);
+            result.Add(Make(p, relativePath, fullPath, rule, parsedKey, statement, parsed.Text));
         }
 
         return result;

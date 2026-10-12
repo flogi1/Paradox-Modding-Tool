@@ -1,0 +1,14 @@
+{{~ # KI-Liste einer Regierungs- bzw. Rang-Gruppe: potential aus den Bedingungswerten, Aktionen Wählen + Ideen ~}}
+{{~ if (groupType == "gov" || groupType == "rank") && condition_lines.size > 0 ~}}
+{{ govrank_list_prefix }}{{ religionList }} = {
+	potential = {
+{{ condition_block "\t\t" }}
+	}
+	actions = {
+		iv2_ga_select_ideagroup_{{ g }}
+{{~ for i in ideas ~}}
+		iv2_ga_ideagroup_{{ g }}_{{ i.index }}
+{{~ end ~}}
+	}
+}
+{{~ end ~}}

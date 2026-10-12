@@ -1,0 +1,19 @@
+{{~ if groupType == "reli" ~}}
+iv2_ga_list_reli_{{ religionList }} = {
+	potential = {
+{{~ if condition_lines.size > 0 ~}}
+{{ condition_block "\t\t" }}
+{{~ else ~}}
+{{~ for line in extras ~}}
+		{{ line }}
+{{~ end ~}}
+{{~ end ~}}
+	}
+	actions = {
+		iv2_ga_select_ideagroup_{{ g }}
+{{~ for i in ideas ~}}
+		iv2_ga_ideagroup_{{ g }}_{{ i.index }}
+{{~ end ~}}
+	}
+}
+{{~ end ~}}

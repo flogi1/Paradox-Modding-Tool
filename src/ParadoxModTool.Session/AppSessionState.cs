@@ -69,6 +69,33 @@ public sealed class AppSessionState
     /// </summary>
     public string? PlaysetsFilePath { get; set; }
 
+    /// <summary>
+    /// Argumente der zuletzt gewählten Startoption dieses Spiels (z. B. <c>-debug_mode</c>, leer = "Normal"); beim nächsten Start ist sie wieder
+    /// gewählt. <see langword="null"/> = noch nie gewählt, dann gilt die erste Option des Spielprofils.
+    /// </summary>
+    public string? LaunchOptionArgs { get; set; }
+
+    /// <summary>Generator-Formular: ein über die Suche eingefügter Modifier landet auch in den höheren Stufen der Idee. Standard: an.</summary>
+    public bool GeneratorCopyModifiers { get; set; } = true;
+
+    /// <summary>Generator-Formular: kopierte Werte skalieren (Wert × Stufe / Einfügestufe). Standard: an.</summary>
+    public bool GeneratorScaleModifiers { get; set; } = true;
+
+    /// <summary>Generator-Formular: ✕ an einem Modifier-Chip entfernt den Schlüssel auch aus den anderen Stufen. Standard: an.</summary>
+    public bool GeneratorRemoveAcrossLevels { get; set; } = true;
+
+    /// <summary>Fenster "Aus Datenbank": zuletzt gesuchter Text.</summary>
+    public string? GeneratorLookupSearch { get; set; }
+
+    /// <summary>Fenster "Aus Datenbank": zuletzt gewählte Art (Kennung der Quelle); <see langword="null"/> = alle.</summary>
+    public string? GeneratorLookupSource { get; set; }
+
+    /// <summary>Fenster "Aus Datenbank": zuletzt eingegebener Tag-Filter.</summary>
+    public string? GeneratorLookupTag { get; set; }
+
+    /// <summary>Position und Größe des Fensters "Wappen wählen"; <see langword="null"/> vor dem ersten Schließen.</summary>
+    public WindowBoundsState? GeneratorImageGridBounds { get; set; }
+
     /// <summary>Vom Nutzer gewählter Logordner des Fehlerprotokolls; <see langword="null"/> = Ordner "logs" neben dem Mod-Ordner des Spiels.</summary>
     public string? ErrorLogFolder { get; set; }
 
@@ -123,6 +150,12 @@ public sealed class AppSessionState
     /// Rückfalloption.
     /// </summary>
     public string? VanillaDiffModRootOverride { get; set; }
+
+    /// <summary>
+    /// Aktive Mod des Hauptfensters: Id der fest gewählten Mod oder <c>*auto*</c> (Mod der offenen Datei). <see langword="null"/> = noch nie gewählt;
+    /// dann setzt der erste Start die gerade erkannte Mod fest (siehe <c>ActiveModChoice.Initial</c>).
+    /// </summary>
+    public string? ActiveModChoice { get; set; }
 
     /// <summary>Ordner oder Datei, in dem zuletzt im Fenster "Suchen &amp; Ersetzen" gesucht wurde; das Fenster zeigt ihn beim nächsten Öffnen wieder.</summary>
     public string? SearchLastFolder { get; set; }
@@ -218,6 +251,53 @@ public sealed class AppSessionState
     /// <see langword="null"/> = noch nicht aus <see cref="ScriptHintButtonsVisible"/> übernommen (Sitzung vor der UI-Reorganisation).
     /// </summary>
     public List<string>? HiddenToolbarItems { get; set; }
+
+    /// <summary>
+    /// Interface-Rework 2: die Einträge, die die Migration einer alten Sitzung aus der kleinen Leiste ausgeblendet hat (sie sind jetzt Kacheln).
+    /// Im klassischen Layout bleiben sie sichtbar, bis der Nutzer sie selbst ein- oder ausblendet. <see langword="null"/> = nichts migriert.
+    /// </summary>
+    public List<string>? ToolbarItemsHiddenByMigration { get; set; }
+
+    // ---- Interface-Rework 2 (gilt für alle Spiele; null = Standard) ----
+
+    /// <summary>Fensterlayout: <c>Tiles</c> (Kachelleiste und kleine Werkzeugleiste, Standard) oder <c>Classic</c> (heutiges Layout). <see langword="null"/> = Sitzung vor dem Rework.</summary>
+    public string? WindowLayout { get; set; }
+
+    /// <summary>Position der kleinen Werkzeugleiste: <c>Top</c> (Standard), <c>Left</c>, <c>Right</c>, <c>Bottom</c>.</summary>
+    public string? ToolbarPosition { get; set; }
+
+    /// <summary>Beschriftung neben den Symbolen der kleinen Werkzeugleiste (nur waagerecht). Standard: an.</summary>
+    public bool? ToolbarLabelsVisible { get; set; }
+
+    /// <summary>Reihenfolge der kleinen Werkzeugleiste: Kennungen aus ToolbarItemIds und Trennlinien <c>sep:&lt;n&gt;</c>. <see langword="null"/> = Standardreihenfolge.</summary>
+    public List<string>? ToolbarOrder { get; set; }
+
+    /// <summary>Kachelleiste anzeigen. Standard: an.</summary>
+    public bool? TileBarVisible { get; set; }
+
+    /// <summary>Standard-Kachelgröße: <c>Large</c> (Standard), <c>Medium</c>, <c>Compact</c>.</summary>
+    public string? TileSize { get; set; }
+
+    /// <summary>Beschriftung unter den Kachel-Symbolen. Standard: an.</summary>
+    public bool? TileLabelsVisible { get; set; }
+
+    /// <summary>Reihenfolge der Kacheln (Kennungen aus TileIds). <see langword="null"/> = Katalogreihenfolge.</summary>
+    public List<string>? TileOrder { get; set; }
+
+    /// <summary>Ausgeblendete Kacheln. <see langword="null"/> = Katalog-Standard (Generator-Pakete, Paket-Editor, Desync-Analyse).</summary>
+    public List<string>? HiddenTiles { get; set; }
+
+    /// <summary>Kacheln, die unabhängig von der Standardgröße nur ihr Symbol zeigen.</summary>
+    public List<string>? IconOnlyTiles { get; set; }
+
+    /// <summary>Knopf "Kategorie ▾" in der Leiste jedes Arbeitsbereichs anzeigen. Standard: an.</summary>
+    public bool WorkspaceCategoryButtonVisible { get; set; } = true;
+
+    /// <summary>Knopf "Sortierung ▾" in der Leiste jedes Arbeitsbereichs anzeigen. Standard: an.</summary>
+    public bool WorkspaceSortButtonVisible { get; set; } = true;
+
+    /// <summary>Knöpfe Notizen, Lesezeichen und Bug in der Leiste jedes Arbeitsbereichs anzeigen (neues Layout). Standard: an.</summary>
+    public bool WorkspaceMarkButtonsVisible { get; set; } = true;
 
     /// <summary>Statusleiste mit dem Scope am Cursor unter dem Editor. Standard: an.</summary>
     public bool ScopeStatusBarEnabled { get; set; } = true;

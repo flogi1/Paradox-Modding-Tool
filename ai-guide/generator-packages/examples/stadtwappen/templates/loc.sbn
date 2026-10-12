@@ -1,0 +1,3 @@
+{{ for i in ideas }} sw_{{ tag }}_{{ i.number }}: "{{ i.name }}"
+ sw_{{ tag }}_{{ i.number }}_desc: "{{ i.desc }}"
+{{ end }}

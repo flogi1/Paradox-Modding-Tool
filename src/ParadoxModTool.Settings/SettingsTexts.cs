@@ -29,9 +29,7 @@ public static class SettingsTexts
     public static string CategoryLabel(SettingsCategory category) => category switch
     {
         SettingsCategory.General => T("settings.category.general", "Allgemein"),
-        SettingsCategory.Toolbar => T("settings.category.toolbar", "Allgemeine Werkzeugleiste"),
         SettingsCategory.Workspace => T("settings.category.workspace", "Arbeitsbereich"),
-        SettingsCategory.WorkspaceToolbar => T("settings.category.workspaceToolbar", "Werkzeugleiste Arbeitsbereich"),
         SettingsCategory.NotesPanel => T("settings.category.notesPanel", "Notiz/Lesezeichen-Panel"),
         SettingsCategory.Explorer => T("settings.category.explorer", "Verzeichnis-Übersicht"),
         SettingsCategory.Compatch => T("settings.category.compatch", "Komp-Patch Tool"),
@@ -39,6 +37,8 @@ public static class SettingsTexts
         SettingsCategory.ErrorLog => T("settings.category.errorLog", "Fehlerprotokoll"),
         SettingsCategory.SaveExplorer => T("settings.category.saveExplorer", "Spielstand-Explorer"),
         SettingsCategory.Layout => T("settings.category.layout", "Layout"),
+        SettingsCategory.Tiles => T("settings.category.tiles", "Kachelleiste"),
+        SettingsCategory.Toolbars => T("settings.category.toolbars", "Werkzeugleisten"),
         SettingsCategory.Language => T("settings.category.language", "Sprache"),
         SettingsCategory.Themes => T("settings.category.themes", "Themes"),
         SettingsCategory.Hotkeys => T("settings.category.hotkeys", "Hotkeys"),
@@ -72,11 +72,11 @@ public static class SettingsTexts
 
     public static string ShowInToolbar => T("settings.general.showInToolbar", "In der Werkzeugleiste anzeigen");
 
-    // 2. Allgemeine Werkzeugleiste
-    public static string ToolbarHint => T("settings.toolbar.hint", "Blendet einzelne Einträge der allgemeinen Werkzeugleiste ein oder aus. Startoption, Playset und Spiel starten stehen unter Allgemein.");
+    // Werkzeugleisten: Gruppen und Einträge
 
     public static string ToolbarGroupLabel(ToolbarGroup group) => group switch
     {
+        ToolbarGroup.Files => T("settings.toolbarGroup.files", "Dateien"),
         ToolbarGroup.History => T("settings.toolbarGroup.history", "Rückgängig und Wiederholen"),
         ToolbarGroup.Tools => T("settings.toolbarGroup.tools", "Werkzeuge"),
         ToolbarGroup.Toggles => T("settings.toolbarGroup.toggles", "Ansicht und Schalter"),
@@ -86,6 +86,12 @@ public static class SettingsTexts
 
     public static string ToolbarItemLabel(string id) => id switch
     {
+        ToolbarItemIds.New => MenuTexts.WorkspaceNew,
+        ToolbarItemIds.Open => MenuTexts.WorkspaceOpen,
+        ToolbarItemIds.Save => MenuTexts.WorkspaceSave,
+        ToolbarItemIds.SaveAll => MenuTexts.WorkspaceSaveAll,
+        ToolbarItemIds.Close => MenuTexts.WorkspaceClose,
+        ToolbarItemIds.Move => T("settings.toolbarItem.move", "In anderen Arbeitsbereich"),
         ToolbarItemIds.Undo => T("settings.toolbarItem.undo", "Rückgängig"),
         ToolbarItemIds.Redo => T("settings.toolbarItem.redo", "Wiederholen"),
         ToolbarItemIds.Search => T("settings.toolbarItem.search", "Suchen & Ersetzen"),
@@ -180,7 +186,7 @@ public static class SettingsTexts
 
     public static string ResultsOnTopTip => T("settings.workspace.resultsOnTop.tip", "Legt fest, ob die Suchergebnisleiste über oder unter dem Arbeitsbereich erscheint (Standard: unten)");
 
-    // 4. Werkzeugleiste Arbeitsbereich
+    // Werkzeugleisten: Arbeitsbereich, Filter, Symbole
     public static string ManageCategories => T("settings.wsToolbar.categories", "Kategorien verwalten");
 
     public static string ManageCategoriesTip => T("settings.wsToolbar.categories.tip", "Dateikategorien anlegen, umbenennen, einfärben und mit Endungs- und Ordnerregeln versehen");
@@ -232,7 +238,9 @@ public static class SettingsTexts
 
     public static string SaveExplorerPlacementHint => T("settings.saveExplorer.placement", "PMT merkt sich Position und Größe des Fensters. Als eigenes Fenster öffnet es beim ersten Mal auf einem anderen Bildschirm als PMT, falls einer angeschlossen ist.");
 
-    public static string ListSearchTip => T("settings.listSearch.tip", "Liste durchsuchen: Enter wählt den ersten Treffer, Escape leert die Suche.");
+    public static string ListSearchTip => T("settings.listSearch.tip", "Liste durchsuchen: Enter wählt den ersten Treffer, Pfeil nach unten geht in die Liste, Escape leert die Suche (ein zweites Escape schließt die Liste).");
+
+    public static string ListSearchPlaceholder => T("settings.listSearch.placeholder", "Suchen");
 
     public static string ErrorLogPlacementHint => T("settings.errorLog.placement", "PMT merkt sich Position und Größe des Fensters. Als eigenes Fenster öffnet es beim ersten Mal auf einem anderen Bildschirm als PMT, falls einer angeschlossen ist.");
 
@@ -286,6 +294,26 @@ public static class SettingsTexts
     public static string CompatchDefaultView => T("settings.compatch.defaultView", "Standardansicht");
 
     // 8. Layout
+    public static string WindowLayoutHeading => T("settings.layout.windowLayout", "Fensterlayout");
+
+    public static string WindowLayoutTiles => T("settings.layout.windowLayout.tiles", "Neues Layout (Kachelleiste und kleine Werkzeugleiste)");
+
+    public static string WindowLayoutClassic => T("settings.layout.windowLayout.classic", "Klassisches Layout (alle Werkzeuge in Menü und einer Werkzeugleiste)");
+
+    public static string WindowLayoutHint => T("settings.layout.windowLayout.hint", "Das klassische Layout behält alle Werkzeuge in der Menüleiste und einer Werkzeugleiste, dazu eine Leiste je Arbeitsbereich. Wirkt sofort.");
+
+    public static string ToolbarPositionHeading => T("settings.layout.toolbarPosition", "Position der kleinen Werkzeugleiste");
+
+    public static string ToolbarPositionTop => T("settings.layout.toolbarPosition.top", "Oben");
+
+    public static string ToolbarPositionLeft => T("settings.layout.toolbarPosition.left", "Links");
+
+    public static string ToolbarPositionRight => T("settings.layout.toolbarPosition.right", "Rechts");
+
+    public static string ToolbarPositionBottom => T("settings.layout.toolbarPosition.bottom", "Unten");
+
+    public static string ToolbarPositionHint => T("settings.layout.toolbarPosition.hint", "Links oder rechts angeheftet zeigt die Leiste nur Symbole; Tooltips tragen die Namen. Startoption und Playset werden dort zu Symbolknöpfen mit Liste.");
+
     public static string ColorizeWholeTab => T("settings.layout.colorizeTab", "Farbcodes färben den ganzen Reiter ein");
 
     public static string ColorizeWholeTabTip => T("settings.layout.colorizeTab.tip", "Färbt den kompletten Tab-Reiter halbtransparent in der Kategorie-Farbe ein, statt nur den schmalen Balken links (Standard: aus)");
@@ -353,6 +381,7 @@ public static class SettingsTexts
         HotkeyGroup.Search => T("settings.hotkeyGroup.search", "Suchen & Ersetzen"),
         HotkeyGroup.CuTool => T("settings.hotkeyGroup.cuTool", "Compare und Update Tool"),
         HotkeyGroup.PatchRecipes => T("settings.hotkeyGroup.patchRecipes", "Patch-Rezepte"),
+        HotkeyGroup.GeneratorPackages => T("settings.hotkeyGroup.generatorPackages", "Generator-Pakete"),
         HotkeyGroup.Compatch => T("settings.hotkeyGroup.compatch", "Kompatch-Merge (Ansicht A und Vergleichsfenster)"),
         HotkeyGroup.Gui => T("settings.hotkeyGroup.gui", "GUI-Inspektor"),
         HotkeyGroup.Publish => T("settings.hotkeyGroup.publish", "Veröffentlichen"),
@@ -437,11 +466,34 @@ public static class SettingsTexts
         "patch.nextDiff" => T("settings.hotkey.patch.nextDiff", "Nächster Unterschied"),
         "patch.previousDiff" => T("settings.hotkey.patch.previousDiff", "Vorheriger Unterschied"),
         "patch.undoTake" => T("settings.hotkey.patch.undoTake", "Letzte Zurücknahme rückgängig machen"),
+        "generator.applyCount" => T("settings.hotkey.generator.applyCount", "Eingegebene Anzahl übernehmen (im Anzahl-Feld)"),
+        "generator.take" => T("settings.hotkey.generator.take", "Markierte Zeilen in der Vorschau zurücknehmen"),
+        "generator.clearMarks" => T("settings.hotkey.generator.clearMarks", "Markierung aufheben"),
+        "generator.nextDiff" => T("settings.hotkey.generator.nextDiff", "Nächster Unterschied"),
+        "generator.previousDiff" => T("settings.hotkey.generator.previousDiff", "Vorheriger Unterschied"),
+        "generator.undoTake" => T("settings.hotkey.generator.undoTake", "Letzte Zurücknahme rückgängig machen"),
+        "generator.modifierInsert" => T("settings.hotkey.generator.modifierInsert", "Gewählten Modifier einfügen (Fenster \"Modifier suchen\")"),
+        "generator.modifierList" => T("settings.hotkey.generator.modifierList", "Aus dem Suchfeld in die Liste wechseln (Fenster \"Modifier suchen\")"),
+        "generator.lookupTake" => T("settings.hotkey.generator.lookupTake", "Gewählten Eintrag übernehmen (Fenster \"Ideen-Datenbank\")"),
+        "generator.guide" => T("settings.hotkey.generator.guide", "Anleitung zu Generator-Paketen öffnen"),
+        "packageEditor.save" => T("settings.hotkey.packageEditor.save", "Paket speichern (Paket-Editor)"),
+        "packageEditor.guide" => T("settings.hotkey.packageEditor.guide", "Anleitung beim Kapitel der offenen Maske öffnen (Paket-Editor)"),
+        "aiPackage.guide" => T("settings.hotkey.aiPackage.guide", "Anleitung beim Kapitel \"Mit KI erstellen\" öffnen (Paket mit KI erstellen)"),
+        "candidates.guide" => T("settings.hotkey.candidates.guide", "Anleitung beim Kapitel \"Modifier ohne Idee\" öffnen (Modifier ohne Idee)"),
+        "aiPackage.sourceSearch" => T("settings.hotkey.aiPackage.sourceSearch", "Ins Suchfeld springen (Codefenster beim Übernehmen von Codeblöcken)"),
+        "aiPackage.sourceFindNext" => T("settings.hotkey.aiPackage.sourceFindNext", "Nächste Fundstelle im Suchfeld (Codefenster beim Übernehmen von Codeblöcken)"),
         "cu.compare" => T("settings.hotkey.cu.compare", "Dateien A und B vergleichen (in einem der beiden Felder)"),
         "compatch.nextDiff" => T("settings.hotkey.compatch.nextDiff", "Zur nächsten Abweichung zwischen den Mods springen"),
         "compatch.previousDiff" => T("settings.hotkey.compatch.previousDiff", "Zur vorigen Abweichung zwischen den Mods springen"),
         "compatch.takeRows" => T("settings.hotkey.compatch.takeRows", "Markierte Zeilen ins Ergebnis übernehmen"),
         "compatch.undoTake" => T("settings.hotkey.compatch.undoTake", "Letzte Entscheidung oder Übernahme rückgängig machen (jede Ansicht)"),
+        "compatch.confirm" => T("settings.hotkey.compatch.confirm", "Ansicht A: gewählte Stelle oder gewählten Block mit \"Passt\" bestätigen"),
+        "compatch.takeA" => T("settings.hotkey.compatch.takeA", "Ansicht A: gewählte Stelle oder gewählten Block aus Mod A übernehmen"),
+        "compatch.takeB" => T("settings.hotkey.compatch.takeB", "Ansicht A: gewählte Stelle oder gewählten Block aus Mod B übernehmen"),
+        "compatch.reset" => T("settings.hotkey.compatch.reset", "Ansicht A: gewählte Stelle oder gewählten Block zurücksetzen"),
+        "compatch.compare" => T("settings.hotkey.compatch.compare", "Ansicht A: Vergleichsfenster zur gewählten Stelle öffnen"),
+        "compatch.treePrevious" => T("settings.hotkey.compatch.treePrevious", "Vorschau: vorigen Eintrag im Baum wählen"),
+        "compatch.treeNext" => T("settings.hotkey.compatch.treeNext", "Vorschau: nächsten Eintrag im Baum wählen"),
         "gui.inspect" => T("settings.hotkey.gui.inspect", "Gewähltes Element inspizieren"),
         "gui.toList" => T("settings.hotkey.gui.toList", "Vom Suchfeld in die Trefferliste wechseln"),
         "gui.dataHelperAppend" => T("settings.hotkey.gui.dataHelperAppend", "GUI-Daten-Helfer, Suchfeld bei \"Glied anhängen\": ersten Treffer anhängen"),
@@ -550,6 +602,70 @@ public static class SettingsTexts
     public static string UpdateNow => T("settings.update.now", "Jetzt suchen");
 
     public static string UpdatesUnavailable => T("settings.update.unavailable", "Dieser Build kennt kein GitHub-Repository; die Update-Suche ist nicht verfügbar.");
+
+    // Reihenfolge-Liste
+    public static string ReorderUp => T("settings.reorder.up", "Nach oben");
+
+    public static string ReorderDown => T("settings.reorder.down", "Nach unten");
+
+    public static string ReorderDragHint => T("settings.reorder.hint", "Zeile ziehen oder mit den Pfeilen verschieben; Alt+↑/↓ mit der Tastatur");
+
+    public static string ReorderRemove => T("settings.reorder.remove", "Entfernen");
+
+    // Kachelleiste
+    public static string TileBarVisible => T("settings.tiles.show", "Kachelleiste anzeigen");
+
+    public static string TileSizeHeading => T("settings.tiles.size", "Standard-Kachelgröße");
+
+    public static string TileSizeLarge => T("settings.tiles.size.large", "Groß");
+
+    public static string TileSizeMedium => T("settings.tiles.size.medium", "Mittel");
+
+    public static string TileSizeCompact => T("settings.tiles.size.compact", "Nur Symbole");
+
+    public static string TileLabelsVisible => T("settings.tiles.labels", "Beschriftung unter den Symbolen");
+
+    public static string TileOrderHeading => T("settings.tiles.orderHeading", "Kacheln: Reihenfolge, Sichtbarkeit, Größe");
+
+    public static string TileOrderHint => T("settings.tiles.orderHint", "Reihenfolge per Ziehen einer Zeile oder mit den Pfeilen. „Nur Symbol“ verkleinert eine einzelne Kachel unabhängig von der Standardgröße. Kacheln mit Untermenü zeigen in der Leiste einen kleinen Pfeil.");
+
+    public static string TileVisible => T("settings.tiles.visible", "Sichtbar");
+
+    public static string TileIconOnly => T("settings.tiles.iconOnly", "Nur Symbol");
+
+    public static string TileResetOrder => T("settings.tiles.resetOrder", "Standardreihenfolge");
+
+    public static string TilesClassicHint => T("settings.tiles.classicHint", "Im klassischen Layout gibt es keine Kachelleiste. Die Einstellungen gelten, sobald das neue Layout gewählt ist.");
+
+    public static string TileNeedsGuiTools => T("settings.tiles.needsGuiTools", "Nur mit eingeschalteten GUI-Werkzeugen (Kategorie GUI-Werkzeuge)");
+
+    /// <summary>Name der Kachel "Desync-Analyse" (das Desync-Projekt ist von den Einstellungen aus nicht erreichbar).</summary>
+    public static string TileDesync => T("settings.tiles.desync", "Desync-Analyse");
+
+    // Werkzeugleisten
+    public static string ToolbarItemsHeading => T("settings.toolbars.itemsHeading", "Einträge der kleinen Werkzeugleiste");
+
+    public static string ToolbarLabelsVisible => T("settings.toolbars.labels", "Beschriftung neben den Symbolen (nur waagerecht)");
+
+    public static string ToolbarItemsHint => T("settings.toolbars.itemsHint", "Reihenfolge per Ziehen einer Zeile oder mit den Pfeilen. Trennlinien sind eigene Einträge: verschieben, entfernen oder neue hinzufügen. Startoption, Playset und Spiel starten stehen zusätzlich unter Allgemein.");
+
+    public static string ToolbarSeparator => T("settings.toolbars.separator", "Trennlinie");
+
+    public static string ToolbarAddSeparator => T("settings.toolbars.addSeparator", "Trennlinie hinzufügen");
+
+    public static string ToolbarResetOrder => T("settings.toolbars.resetOrder", "Standardreihenfolge");
+
+    public static string ToolbarClassicHint => T("settings.toolbars.classicHint", "Im klassischen Layout hat die Werkzeugleiste feste Gruppen; hier lassen sich einzelne Einträge ausblenden.");
+
+    public static string WorkspaceButtonsHeading => T("settings.toolbars.workspaceButtons", "Knöpfe je Arbeitsbereich");
+
+    public static string WorkspaceButtonsHint => T("settings.toolbars.workspaceHint", "Kategorie, Filter, Symbole und Sortierung bleiben je Arbeitsbereich. Notizen, Lesezeichen und Bug können zusätzlich dort stehen; sie wirken auf das aktive Dokument dieses Arbeitsbereichs.");
+
+    public static string WorkspaceCategoryButton => T("settings.toolbars.categoryButton", "Kategorie-Button in der Werkzeugleiste anzeigen");
+
+    public static string WorkspaceSortButton => T("settings.toolbars.sortButton", "Sortierungs-Button in der Werkzeugleiste anzeigen");
+
+    public static string WorkspaceMarkButtons => T("settings.toolbars.markButtons", "Notizen, Lesezeichen und Bug in der Werkzeugleiste anzeigen");
 
     private static string T(string key, string fallback) => UiText.Get(key, fallback);
 

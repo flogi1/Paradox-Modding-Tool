@@ -10,7 +10,7 @@ public enum ModDetectionKind
     /// <summary>Der Kandidat liegt in einem Ordner mit Metadaten-Datei, der noch keine Mod ist.</summary>
     Unknown,
 
-    /// <summary>Der Kandidat liegt in einem Mod-Ordner, den der Nutzer bewusst nicht als Mod führt. Die Suche endet dort, es gilt keine andere Mod.</summary>
+    /// <summary>Der Kandidat liegt in einem Mod-Ordner, den der Nutzer bewusst nicht als Mod führt, oder in einer abonnierten Workshop-Mod. Die Suche endet dort, es gilt keine andere Mod.</summary>
     Ignored,
 }
 
@@ -59,7 +59,8 @@ public static class ModDetector
             var folder = FindModFolder(candidate, metadataFile);
             if (folder is not null)
             {
-                return registry.IsIgnored(folder) ? ModDetection.ForIgnoredFolder(folder) : ModDetection.ForFolder(folder);
+                // Abonnierte Workshop-Mods sind fremde Mods: keine Rückfrage, sie gelten wie ein ignorierter Ordner (anlegen geht von Hand im Mods-Fenster)
+                return registry.IsIgnored(folder) || CompatchTargets.IsWorkshopFolder(folder) ? ModDetection.ForIgnoredFolder(folder) : ModDetection.ForFolder(folder);
             }
         }
 
@@ -70,7 +71,10 @@ public static class ModDetector
         ModPaths.TryNormalize(candidate, out var normalized)
         && excluded.Any(root => ModPaths.TryNormalize(root, out var normalizedRoot) && ModPaths.IsUnder(normalized, normalizedRoot));
 
-    /// <summary>Der nächste Ordner vom Kandidaten aufwärts (einschließlich), der <paramref name="metadataFile"/> enthält.</summary>
+    /// <summary>
+    /// Der nächste Ordner vom Kandidaten aufwärts (einschließlich), der <paramref name="metadataFile"/> hat; beim klassischen Format (<c>*.mod</c>) zählt eine
+    /// Geschwisterdatei <c>&lt;Ordner&gt;.mod</c> oder eine <c>descriptor.mod</c> im Ordner (siehe <see cref="ModMetadata.ResolveFilePath"/>).
+    /// </summary>
     private static string? FindModFolder(string candidate, string metadataFile)
     {
         if (string.IsNullOrWhiteSpace(metadataFile) || !ModPaths.TryNormalize(candidate, out var start))
@@ -81,7 +85,7 @@ public static class ModDetector
         var directory = File.Exists(start) ? Path.GetDirectoryName(start) : start;
         while (!string.IsNullOrEmpty(directory))
         {
-            if (File.Exists(Path.Combine(directory, metadataFile)))
+            if (ModMetadata.ResolveFilePath(directory, metadataFile) is not null)
             {
                 return directory;
             }

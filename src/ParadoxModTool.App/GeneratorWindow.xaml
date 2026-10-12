@@ -1,0 +1,88 @@
+<Window x:Class="ParadoxModTool.App.GeneratorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ParadoxModTool.App"
+        Title="{x:Static local:GeneratorTexts.Title}" Height="820" Width="1300"
+        Closing="Window_Closing">
+    <!-- Generator-Pakete (Spec 2026-10-03-generator-packages-core, Mockup): links Pakete und Arbeitsstände, rechts Reiter Formular und Vorschau. -->
+    <DockPanel Margin="6">
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
+            <Button DockPanel.Dock="Right" x:Name="GenerateButton" Click="Generate_Click" Padding="12,3" Margin="6,0,0,0">
+                <TextBlock Text="{x:Static local:GeneratorTexts.Generate}" FontWeight="SemiBold" />
+            </Button>
+            <Button DockPanel.Dock="Right" x:Name="PreviewButton" Click="Preview_Click" Padding="12,3" Margin="6,0,0,0">
+                <TextBlock Text="{x:Static local:GeneratorTexts.Preview}" />
+            </Button>
+            <Button DockPanel.Dock="Right" x:Name="SaveButton" Click="Save_Click" Padding="12,3" Margin="6,0,0,0">
+                <TextBlock Text="{x:Static local:GeneratorTexts.Save}" />
+            </Button>
+            <Button DockPanel.Dock="Right" x:Name="GuideButton" Click="Guide_Click" Padding="12,3" Margin="6,0,0,0" ToolTip="{x:Static local:GeneratorTexts.GuideTip}">
+                <TextBlock Text="{x:Static local:GeneratorTexts.Guide}" />
+            </Button>
+            <StackPanel x:Name="IssuesPanel" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <DockPanel Grid.Column="0">
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static local:GeneratorTexts.Packages}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <ListBox DockPanel.Dock="Top" x:Name="PackageList" Height="160" SelectionChanged="PackageList_SelectionChanged" />
+                <WrapPanel DockPanel.Dock="Top" Margin="0,4,0,0">
+                    <Button x:Name="EditPackageButton" Click="EditPackage_Click" Padding="8,2" Margin="0,0,6,0" ToolTip="{x:Static local:GeneratorTexts.EditPackageTip}">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.EditPackage}" />
+                    </Button>
+                    <Button x:Name="NewPackageButton" Click="NewPackage_Click" Padding="8,2" Margin="0,0,6,0" ToolTip="{x:Static local:GeneratorTexts.NewPackageTip}">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.NewPackage}" />
+                    </Button>
+                    <Button x:Name="AiPackageButton" Click="AiPackage_Click" Padding="8,2" ToolTip="{x:Static local:AiPackageTexts.OpenTip}">
+                        <TextBlock Text="{x:Static local:AiPackageTexts.Open}" />
+                    </Button>
+                </WrapPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static local:GeneratorTexts.States}" FontWeight="SemiBold" Margin="0,10,0,4" />
+                <TextBox DockPanel.Dock="Top" x:Name="StateSearch" TextChanged="StateSearch_TextChanged" ToolTip="{x:Static local:GeneratorTexts.SearchStatesTip}" Margin="0,0,0,4" />
+                <WrapPanel DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                    <Button x:Name="NewStateButton" Click="NewState_Click" Padding="8,2" Margin="0,0,6,0">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.NewState}" />
+                    </Button>
+                    <Button x:Name="ReadFromModButton" Click="ReadFromMod_Click" Padding="8,2" Margin="0,0,6,0" Visibility="Collapsed" ToolTip="{x:Static local:GeneratorTexts.ReadFromModTip}">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.ReadFromMod}" />
+                    </Button>
+                    <Button x:Name="TakeOverButton" Click="TakeOver_Click" Padding="8,2" Margin="0,4,6,0" Visibility="Collapsed" ToolTip="{x:Static local:GeneratorTexts.TakeOverTip}">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.TakeOver}" />
+                    </Button>
+                    <Button x:Name="CheckModButton" Click="CheckMod_Click" Padding="8,2" Margin="0,4,0,0" Visibility="Collapsed" ToolTip="{x:Static local:GeneratorTexts.CheckTip}">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.Check}" />
+                    </Button>
+                    <Button x:Name="CandidatesButton" Click="Candidates_Click" Padding="8,2" Margin="6,4,0,0" Visibility="Collapsed" ToolTip="{x:Static local:GeneratorTexts.CandidatesTip}">
+                        <TextBlock Text="{x:Static local:GeneratorTexts.Candidates}" />
+                    </Button>
+                </WrapPanel>
+                <ListBox x:Name="StateList" SelectionChanged="StateList_SelectionChanged" />
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+
+            <TabControl Grid.Column="2" x:Name="Tabs">
+                <TabItem x:Name="FormTab">
+                    <TabItem.Header>
+                        <TextBlock Text="{x:Static local:GeneratorTexts.FormTab}" />
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="FormPanel" Margin="8" />
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem x:Name="PreviewTabItem" IsEnabled="False">
+                    <TabItem.Header>
+                        <TextBlock x:Name="PreviewTabHeader" Text="{x:Static local:GeneratorTexts.PreviewTab}" />
+                    </TabItem.Header>
+                    <ContentControl x:Name="PreviewHost" />
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </DockPanel>
+</Window>

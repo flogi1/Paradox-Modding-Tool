@@ -42,6 +42,18 @@ public sealed class ModifierNameIndexTests : IDisposable
     }
 
     [Fact]
+    public void Vic3_profile_resolves_concept_names()
+    {
+        var settings = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", "vic3.json")).ModifierFormats!;
+        Write(Game, "localization/english/modifiers_l_english.yml", "l_english:\n battle_casualties_mult:0 \"[concept_casualties] Taken\"\n");
+        Write(Game, "localization/english/concepts_l_english.yml", "l_english:\n concept_casualties:0 \"Casualties\"\n");
+
+        var index = Build(settings, new[] { "battle_casualties_mult" }, "english");
+
+        Assert.Equal("Casualties Taken", index.Find("battle_casualties_mult"));
+    }
+
+    [Fact]
     public void UiLanguageComesFirstThenEnglish()
     {
         Write(Game, "localization/english/a_l_english.yml", "l_english:\n k_a:0 \"Tax\"\n k_b:0 \"Only English\"\n");

@@ -32,6 +32,18 @@ public class KeyPartReaderTests : CompatchTestBase
     }
 
     [Fact]
+    public void Inject_in_a_replace_only_folder_acts_as_replace()
+    {
+        const string Relative = "common/scripted_effects/a.txt";
+        PutA(Relative, "INJECT:foo = { a = 1 }\n");
+
+        var parts = KeyPartReader.Read(MergeSide.A, Relative, Path.Combine(ADir, Relative), Vic3Rules().Match(Relative), EuVOps, new ParseCache());
+
+        Assert.Equal("foo", Assert.Single(parts.Keys).Address.Key);
+        Assert.Equal(OverrideOperator.Replace, parts.Keys[0].Operator);
+    }
+
+    [Fact]
     public void Gui_types_and_templates_become_keys_and_windows_go_to_rest()
     {
         var parts = Read("in_game/gui/a.gui", "types T {\n type btn = button { size = { 1 2 } }\n}\ntemplate t { x = 1 }\nwindow = { name = w }\n");

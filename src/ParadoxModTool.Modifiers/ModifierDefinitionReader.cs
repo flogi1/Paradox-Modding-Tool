@@ -47,6 +47,56 @@ public static class ModifierDefinitionReader
         return result;
     }
 
+    /// <summary>Eigenschaften aller Blöcke auf oberster Ebene, auch der Boolean-Modifier (siehe <see cref="ModifierTraits"/>).</summary>
+    public static IReadOnlyDictionary<string, ModifierTraits> ReadTraits(string text)
+    {
+        var tokens = ScriptLexer.Tokenize(text);
+        var result = new Dictionary<string, ModifierTraits>(StringComparer.OrdinalIgnoreCase);
+        var i = 0;
+        while (i < tokens.Count)
+        {
+            if (i + 2 < tokens.Count && tokens[i].Kind == TokenKind.Word && tokens[i + 1].Kind == TokenKind.Equals && tokens[i + 2].Kind == TokenKind.Open)
+            {
+                var name = tokens[i].Text;
+                i += 3;
+                if (ReadBlock(tokens, ref i) is not { } block)
+                {
+                    break;
+                }
+
+                bool boolean = false, bad = false;
+                var category = string.Empty;
+                foreach (var field in block)
+                {
+                    switch (field.Key.ToLowerInvariant())
+                    {
+                        case "boolean":
+                            boolean = IsYes(field.Value);
+                            break;
+                        case "color":
+                            bad = string.Equals(field.Value, "bad", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "category" when field.Value is not null:
+                            category = field.Value;
+                            break;
+                        case "game_data" when field.Block is not null && category.Length == 0:
+                            // EU V: category steht im Block game_data.
+                            category = field.Block.LastOrDefault(f => f.Key.Equals("category", StringComparison.OrdinalIgnoreCase) && f.Value is not null)?.Value ?? category;
+                            break;
+                    }
+                }
+
+                result[name] = new ModifierTraits(boolean, bad, category);
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        return result;
+    }
+
     private static ModifierDefinition? ToDefinition(List<Field> fields)
     {
         bool percent = false, alreadyPercent = false, noDifferenceSign = false;

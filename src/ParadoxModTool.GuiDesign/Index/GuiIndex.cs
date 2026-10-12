@@ -111,13 +111,25 @@ public sealed class GuiIndex
     /// </summary>
     public GuiDefinition? Find(string name, GuiDefinitionKind kind) =>
         !_definitions.TryGetValue((kind, name), out var list) ? null
-        : Layout.FirstWins ? FirstLoaded(list)
+        : Layout.FirstWins ? FirstLoaded(list, Layout.ModsBeforeVanilla)
         : list.OrderBy(d => d.File.Layer).Last();
 
-    /// <summary>Wirksame Definition bei FirstWins: zuerst die Mods (eigene und Abhängigkeiten zusammen, nach Pfad), sonst Vanilla in Ladereihenfolge.</summary>
-    public static GuiDefinition? FirstLoaded(IEnumerable<GuiDefinition> definitions)
+    /// <summary>
+    /// Wirksame Definition bei FirstWins: zuerst die Mods (eigene und Abhängigkeiten zusammen, nach Pfad), sonst Vanilla in Ladereihenfolge. Ohne
+    /// <paramref name="modsBeforeVanilla"/> (Victoria 3) zählen alle Dateien gemeinsam in Ladereihenfolge (<see cref="ParadoxModTool.GameProfiles.GameLoadOrder"/>); bei gleichem Pfad
+    /// geht die höhere Ebene vor, weil ihre Datei die andere ersetzt.
+    /// </summary>
+    public static GuiDefinition? FirstLoaded(IEnumerable<GuiDefinition> definitions, bool modsBeforeVanilla = true)
     {
         var all = definitions.ToList();
+        if (!modsBeforeVanilla)
+        {
+            return all
+                .OrderBy(d => d.File.RelativePath, ParadoxModTool.GameProfiles.GameLoadOrder.Instance)
+                .ThenByDescending(d => d.File.Layer)
+                .FirstOrDefault();
+        }
+
         return all
             .Where(d => d.File.Layer != GuiLayer.Vanilla)
             .OrderBy(d => d.File.RelativePath, StringComparer.OrdinalIgnoreCase)

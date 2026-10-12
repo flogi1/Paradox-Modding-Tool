@@ -17,7 +17,8 @@ public sealed record GitHubReadinessInput(
     IReadOnlyList<GitHubRepoCheck> Checks,
     bool UpdateExisting,
     IReadOnlyList<string> ZipProblems,
-    IReadOnlyList<string> GitWarnings);
+    IReadOnlyList<string> GitWarnings,
+    bool ClassicMetadata = false);
 
 /// <summary>Die Hinweise vor dem Veröffentlichen auf GitHub und ob es erlaubt ist (Gegenstück zu <see cref="PublishReadiness"/> für Steam).</summary>
 public static class GitHubReadiness
@@ -37,7 +38,7 @@ public static class GitHubReadiness
 
         if (!input.VersionValid)
         {
-            hints.Add(new PublishHint(GitTexts.CheckVersionInvalid, true));
+            hints.Add(new PublishHint(ModsTexts.NoValidVersionFor(input.ClassicMetadata), true));
         }
 
         if (input.SelectedRepoCount == 0)

@@ -1,0 +1,2 @@
+{{~ # IV2 AI chooser (Idea Variation 2 Skripte/KI-Auswaehler/iv2_build_ai_chooser.py): the group must have an entry in the chooser ~}}
+\# group:{{ g }}\r?\n => {{ g }}

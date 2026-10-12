@@ -51,6 +51,12 @@ public enum GuiPlanBlockerKind
     /// <summary>Die Mod definiert den Namen mehrfach; <c>Places</c> nennt die Fundstellen.</summary>
     DuplicateInMod,
 
+    /// <summary>
+    /// Die Mod-Definition lädt nach einer anderen und wirkt im Spiel nicht (Victoria 3: Vanilla und Mods in einer Ladereihenfolge); <c>Places</c>
+    /// nennt die Mod-Fundstelle und die wirksame Definition.
+    /// </summary>
+    ModLoadsAfterVanilla,
+
     /// <summary>Eine neue Definition hat einen Namen, den es in einer anderen Datei schon gibt.</summary>
     NameTaken,
 
@@ -351,6 +357,14 @@ public static class GuiOverridePlanner
             if (mods.Count > 1)
             {
                 _blockers.Add(new GuiPlanBlocker(GuiPlanBlockerKind.DuplicateInMod, node.Name, mods.Select(Place).ToList()));
+                return;
+            }
+
+            // Victoria 3: Lädt die Mod-Definition nach Vanilla (oder einer anderen Mod), wirkt sie nicht; eine Änderung dort bliebe ohne Wirkung.
+            if (mods.Count == 1 && Index.Layout is { FirstWins: true, ModsBeforeVanilla: false }
+                && Index.Find(node.Name, kind) is { } effective && !ReferenceEquals(effective, mods[0]))
+            {
+                _blockers.Add(new GuiPlanBlocker(GuiPlanBlockerKind.ModLoadsAfterVanilla, node.Name, new[] { Place(mods[0]), Place(effective) }));
                 return;
             }
 

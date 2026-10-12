@@ -53,7 +53,7 @@ public static class FileCategoryClassifier
 
     public static bool Exists(string? id) => _categories.Any(c => c.Id == id);
 
-    public static string DisplayName(string? id) => Find(id).Name;
+    public static string DisplayName(string? id) => CategoryDefaults.DisplayName(Find(id));
 
     /// <summary>Der aktuell wirksame Hex-Farbcode einer Kategorie.</summary>
     public static string ColorHexFor(string? id)

@@ -7,17 +7,24 @@ namespace ParadoxModTool.Mods;
 public sealed record ReleaseStatus(string? MetadataVersion, string? ChangelogTop, string? LatestRelease, IReadOnlyList<string> Hints)
 {
     /// <param name="changelog">Die Abschnitte des Changelogs; <see langword="null"/>, wenn die Mod keinen Changelog hat (dann gibt es dazu auch keinen Hinweis).</param>
-    public static ReleaseStatus Evaluate(ModMetadata? metadata, IReadOnlyList<ChangelogEntry>? changelog, IReadOnlyList<ReleaseEntry> releases)
+    /// <param name="classic">Das Spiel nutzt die klassische <c>.mod</c>-Datei; die Hinweise nennen dann sie statt der <c>metadata.json</c>.</param>
+    /// <param name="descriptorMissing">Beim klassischen Format fehlt die <c>descriptor.mod</c> im Mod-Ordner (siehe <see cref="PublishReadinessInput.ClassicDescriptorMissing"/>).</param>
+    public static ReleaseStatus Evaluate(ModMetadata? metadata, IReadOnlyList<ChangelogEntry>? changelog, IReadOnlyList<ReleaseEntry> releases, bool classic = false, bool descriptorMissing = false)
     {
         var hints = new List<string>();
         var metadataValid = VersionNumber.TryParse(metadata?.Version, out var metadataVersion);
         if (metadata is null)
         {
-            hints.Add(ModsTexts.NoReadableMetadata);
+            hints.Add(ModsTexts.NoReadableMetadataFor(classic));
         }
         else if (!metadataValid)
         {
-            hints.Add(ModsTexts.NoValidVersion);
+            hints.Add(ModsTexts.NoValidVersionFor(classic));
+        }
+
+        if (classic && descriptorMissing && metadata is not null)
+        {
+            hints.Add(ModsTexts.PublishDescriptorMissing);
         }
 
         string? top = null;
@@ -39,7 +46,7 @@ public sealed record ReleaseStatus(string? MetadataVersion, string? ChangelogTop
                     }
                     else if (!VersionNumber.TryParse(top, out var topVersion) || !topVersion.Equals(metadataVersion))
                     {
-                        hints.Add(ModsTexts.StatusMismatch(metadataVersion.Text, top));
+                        hints.Add(classic ? ModsTexts.StatusMismatchClassic(metadataVersion.Text, top) : ModsTexts.StatusMismatch(metadataVersion.Text, top));
                     }
                 }
             }

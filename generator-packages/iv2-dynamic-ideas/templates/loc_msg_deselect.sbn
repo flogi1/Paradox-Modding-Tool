@@ -1,0 +1,12 @@
+{{~
+# Meldungen der Abwahl (Ort 18, Abschnitt der Abwahlen), wie army_1 der Mod: 9 Schlüssel.
+~}}
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_{{ id }}$"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_{{ id }}$"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_{{ id }}$"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_MAP: ""

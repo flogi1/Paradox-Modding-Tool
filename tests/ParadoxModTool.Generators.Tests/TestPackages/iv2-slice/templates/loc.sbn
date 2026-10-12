@@ -1,0 +1,6 @@
+{{ for c in categories -}}
+{{ for i in c.ideas -}}
+ iv2_historic_idea_{{ tag }}_{{ i.number }}: "{{ i.name }}"
+ iv2_ga_select_historic_{{ tag }}_{{ i.number }}_desc: "{{ i.desc }}"
+{{ end -}}
+{{ end -}}

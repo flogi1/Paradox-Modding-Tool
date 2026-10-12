@@ -46,6 +46,24 @@ public class ContributionIndexTests : CompatTestBase
     }
 
     [Fact]
+    public void Folder_operators_decide_how_a_prefix_is_read()
+    {
+        var a = Mod("A", 1);
+        Put(a, "common/scripted_effects/a.txt", "INJECT:foo = { x = 1 }\n");
+        Put(a, "common/coat_of_arms/a.txt", "INJECT:bar = { x = 1 }\n");
+        var rules = new OverrideRules(new[]
+        {
+            new OverrideRule("common/*", OverrideBehavior.LastWins, Operators: Array.Empty<string>()),
+            new OverrideRule("common/scripted_effects", OverrideBehavior.PerKey, Operators: new[] { "REPLACE", "TRY_REPLACE", "REPLACE_OR_CREATE" }),
+        });
+
+        var index = ContributionIndex.Build(new[] { a }, rules, new ParseCache(), null, CancellationToken.None);
+
+        Assert.Equal(OverrideOperator.Replace, index.KeyGroups["common/scripted_effects|foo"].Contributions[0].Operator);
+        Assert.Equal(OverrideOperator.None, index.KeyGroups["common/coat_of_arms|INJECT:bar"].Contributions[0].Operator);
+    }
+
+    [Fact]
     public void Contribution_carries_text_line_and_path()
     {
         var a = Mod("A", 1);

@@ -1,0 +1,37 @@
+{{~ # Tooltip des Exklusiv-Symbols im Auswahlfenster; leer, wenn die Gruppe niemanden ausschließt (dann fällt das Template weg) ~}}
+{{~ if exclusive_numbers.size > 0 ~}}
+template iv_2_tooltip_template_mut_idea_{{ g }}_1 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/{{ category }}_exclusive.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_mut_{{ g }}_1"
+		}
+
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_mut_{{ category }}"
+		}
+
+		blockoverride "tooltip_content" {
+		TooltipFlavorTextBlock = {
+				blockoverride "text" {
+					text = "iv2_ideagroup_desc_text_mut_{{ g }}_1"
+				}
+			}
+		}
+
+	}
+}
+{{~ end ~}}

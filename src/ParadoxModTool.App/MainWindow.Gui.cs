@@ -175,7 +175,8 @@ public partial class MainWindow
         GuiInspectMenuItem.Visibility = GuiSettings.ToolsEnabled ? Visibility.Visible : Visibility.Collapsed;
         GuiDataHelperMenuItem.Visibility = GuiInspectMenuItem.Visibility;
         GuiBlocksMenuItem.Visibility = GuiInspectMenuItem.Visibility;
-        ApplyToolbarVisibility();
+        RebuildToolbar();
+        TileBarControl.Rebuild();
     }
 
     private GuiInspectorWindow? _guiInspector;

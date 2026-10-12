@@ -27,9 +27,16 @@ public class SessionStoreTests : IDisposable
     {
         SplitViewEnabled = true,
         ActiveGameProfileId = "eu5",
+        LaunchOptionArgs = "-debug_mode",
+        GeneratorScaleModifiers = false,
+        GeneratorLookupSearch = "way",
+        GeneratorLookupSource = "advances",
+        GeneratorLookupTag = "SWE",
+        GeneratorImageGridBounds = new WindowBoundsState { Width = 900, Height = 700 },
         LeftPane = new PaneSessionState
         {
             ActiveDocumentIndex = 1,
+            TabSort = "Name",
             Documents =
             {
                 new DocumentSessionState { FilePath = @"C:\mod\common\a.txt", CaretOffset = 12 },
@@ -58,12 +65,29 @@ public class SessionStoreTests : IDisposable
         Assert.NotNull(loaded);
         Assert.True(loaded!.SplitViewEnabled);
         Assert.Equal("eu5", loaded.ActiveGameProfileId);
+        Assert.Equal("-debug_mode", loaded.LaunchOptionArgs);
+        Assert.False(loaded.GeneratorScaleModifiers);
+        Assert.True(loaded.GeneratorCopyModifiers);
+        Assert.Equal(("way", "advances", "SWE"), (loaded.GeneratorLookupSearch, loaded.GeneratorLookupSource, loaded.GeneratorLookupTag));
+        Assert.Equal(900, loaded.GeneratorImageGridBounds!.Width);
         Assert.Equal(1, loaded.LeftPane.ActiveDocumentIndex);
+        Assert.Equal("Name", loaded.LeftPane.TabSort);
+        Assert.Equal("Manual", loaded.RightPane.TabSort);
         Assert.Equal(2, loaded.LeftPane.Documents.Count);
         Assert.Equal(@"C:\mod\common\a.txt", loaded.LeftPane.Documents[0].FilePath);
         Assert.Equal(12, loaded.LeftPane.Documents[0].CaretOffset);
         Assert.Single(loaded.RightPane.Documents);
         Assert.Equal(@"C:\mod\gui\c.gui", loaded.RightPane.Documents[0].FilePath);
+    }
+
+    [Fact]
+    public void Generator_switches_default_on()
+    {
+        var state = new AppSessionState();
+
+        Assert.True(state.GeneratorCopyModifiers);
+        Assert.True(state.GeneratorScaleModifiers);
+        Assert.True(state.GeneratorRemoveAcrossLevels);
     }
 
     [Fact]

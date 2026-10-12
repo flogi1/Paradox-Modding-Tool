@@ -1,0 +1,10 @@
+WE_PERFORM_iv2_ga_deselect_ideagroup_{{ g }}_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}

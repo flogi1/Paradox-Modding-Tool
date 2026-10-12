@@ -368,7 +368,7 @@ public sealed class CompatchStartWindow : Window
             var hidden = ReplacePaths.Of(new[] { side.Folder }, metadataFile, _host.Profile?.ReplacePathRoots);
             if (hidden.Count > 0)
             {
-                // CK III und EU V: Die später ladende Mod blendet auch die Dateien der anderen aus.
+                // CK III, EU V und Victoria 3: Die später ladende Mod blendet auch die Dateien der anderen aus.
                 lines.Add(hidesEarlier && later && other is not null
                     ? CompatchTexts.HiddenVanillaAndMod(side.Name, hidden.Count, other.Name)
                     : CompatchTexts.HiddenVanilla(side.Name, hidden.Count));

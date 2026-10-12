@@ -9,9 +9,9 @@ public static class SettingsPages
     public static SettingsPage Create(SettingsCategory category, ISettingsHost host) => category switch
     {
         SettingsCategory.General => new GeneralPage(host),
-        SettingsCategory.Toolbar => new ToolbarPage(host),
+        SettingsCategory.Tiles => new TilesPage(host),
+        SettingsCategory.Toolbars => new ToolbarsPage(host),
         SettingsCategory.Workspace => new WorkspacePage(host),
-        SettingsCategory.WorkspaceToolbar => new WorkspaceToolbarPage(host),
         SettingsCategory.NotesPanel => new NotesPanelPage(host),
         SettingsCategory.Explorer => new ExplorerPage(host),
         SettingsCategory.Compatch => new CompatchPage(host),

@@ -34,7 +34,8 @@ public sealed class GuiBlockModifierTests
                 window.Loaded += (_, _) => fields.AddRange(WpfWindows.Descendants<FreeTextChoice>(window));
                 WpfWindows.AssertKeepsItsSizeWhenChoicesAreUsed(window);
 
-                Assert.True(watch.ElapsedMilliseconds < 5000, $"{watch.ElapsedMilliseconds} ms");
+                // Auffanggrenze gegen grobe Rückschritte: das Release-Werkzeug und test.bat fahren alle Testprojekte gleichzeitig, dann dauert dasselbe mehrfach so lang.
+                Assert.True(watch.ElapsedMilliseconds < 30000, $"{watch.ElapsedMilliseconds} ms");
                 Assert.Equal(4, fields.Count);
                 Assert.All(fields, f => Assert.Equal(2500, f.Suggestions.Choice.Items.Count));
                 // Die Größenprüfung wählt in jeder Auswahl den letzten Eintrag: die Wahl landet im Wert.

@@ -1,0 +1,6 @@
+{
+  "cities": [
+    { "tag": "HAM", "label": "Hamburg", "arms": [ { "id": "ham_ship", "title": "Hanseatic cog" }, { "id": "ham_gate", "title": "Harbour gate" } ] },
+    { "tag": "LUB", "label": "Lübeck", "arms": [ { "id": "lub_eagle", "title": "Imperial eagle" } ] }
+  ]
+}

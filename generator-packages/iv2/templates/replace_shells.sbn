@@ -1,0 +1,5 @@
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+iv2_historic_idea_see_{{ tag }}_{{ i.number }} = {}
+{{~ end ~}}
+{{~ end ~}}

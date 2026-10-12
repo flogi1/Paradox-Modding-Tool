@@ -143,6 +143,15 @@
       "fixes": [ "jump", "suppress" ]
     },
     {
+      "code": "SVL-003",
+      "name": { "de": "Wert vom falschen Typ", "en": "Value of wrong type" },
+      "severity": "error",
+      "pattern": "^Value of wrong type in '(?<file>.+?):(?<line>\\d+)'\\. Got value of type '(?<detail>[^']+)'",
+      "explain": { "de": "Während des Spiels hat ein Wert an dieser Stelle keinen Zahlenwert geliefert (Typ in der Meldung, z.B. none). Häufig liest er eine Variable oder einen Skriptwert, der im aktuellen Scope nicht gesetzt ist. Das Spiel meldet das bei jeder Auswertung, daher oft tausendfach.", "en": "During the game a value at this location did not yield a number (type in the message, e.g. none). Often it reads a variable or script value that is not set in the current scope. The game reports this on every evaluation, so often thousands of times." },
+      "tips": { "de": [ "Die Variable vor dem Lesen mit has_variable prüfen oder einen Ersatzwert vorsehen." ], "en": [ "Check the variable with has_variable before reading it, or provide a fallback value." ] },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
       "code": "SAV-002",
       "name": { "de": "Spielstand nicht lesbar", "en": "Save game not readable" },
       "severity": "info",

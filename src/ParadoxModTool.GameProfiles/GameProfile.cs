@@ -73,6 +73,12 @@ public sealed class OverrideRuleEntry
 
     /// <summary>Feld im Block, das den Schlüssel liefert (EU IV: <c>id</c> bei Events, <c>name</c> bei GUI-Typen). Leer = der Blockname.</summary>
     public string? KeyField { get; set; }
+
+    /// <summary>
+    /// Präfixe, die in diesem Ordner wirken (Victoria 3: INJECT/REPLACE nur in den Ordnern der Wiki-Liste, in vier Ordnern nur REPLACE).
+    /// Null = die Präfixe des Spiels (<see cref="GameProfile.KeyOperators"/>), leer = keine.
+    /// </summary>
+    public List<string>? Operators { get; set; }
 }
 
 /// <summary>
@@ -85,6 +91,11 @@ public sealed class GameProfile
 {
     public string Id { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
+
+    /// <summary>Kurzname für enge Stellen wie das Menü "Meine {Kürzel} Mods" (z. B. "EU V"); ohne Angabe gilt <see cref="DisplayName"/>.</summary>
+    public string? ShortName { get; set; }
+
+    public string EffectiveShortName => string.IsNullOrWhiteSpace(ShortName) ? DisplayName : ShortName;
 
     /// <summary>Erscheinungsdatum des Spiels (ISO, z. B. <c>2013-08-13</c>); bestimmt die Reihenfolge in der Spielauswahl.</summary>
     public DateOnly? ReleaseDate { get; set; }
@@ -126,6 +137,18 @@ public sealed class GameProfile
     /// </summary>
     public List<string> KeyOperators { get; set; } = new();
 
+    /// <summary>
+    /// INJECT hängt die Einträge hinten an den vorhandenen Block an (Victoria 3, laut Wiki), statt vorhandene Teilschlüssel an ihrer Stelle
+    /// zu überschreiben (EU V, gemessen 2026-10-02). Ohne Angabe gilt das Verhalten von EU V.
+    /// </summary>
+    public bool InjectAppends { get; set; }
+
+    /// <summary>
+    /// Bei "zuerst geladen gewinnt" (GUI-Typen, Events) zählen Vanilla und Mods gemeinsam in Ladereihenfolge (<see cref="GameLoadOrder"/>), die
+    /// Playset-Reihenfolge nicht (Victoria 3: für GUI gemessen 2026-10-11, für Events laut Wiki). Ohne Angabe: Playset-Rang, dann Dateiname (bisheriges Verhalten).
+    /// </summary>
+    public bool FirstWinsInLoadOrder { get; set; }
+
     /// <summary>Steam-AppID des Spiels (für den Workshop-Upload); ohne Angabe ist das Veröffentlichen auf Steam für dieses Spiel gesperrt.</summary>
     public string? SteamAppId { get; set; }
 
@@ -145,8 +168,8 @@ public sealed class GameProfile
     public string? DefaultEventType { get; set; }
 
     /// <summary>
-    /// <c>replace_path</c> einer Mod blendet auch die Dateien der Mods aus, die im Playset vor ihr laden, nicht nur Vanilla (Crusader Kings III und
-    /// Europa Universalis V, gemessen 2026-09-30 mit zwei Test-Mods). <see langword="false"/> = nur Vanilla (Europa Universalis IV, gemessen) oder
+    /// <c>replace_path</c> einer Mod blendet auch die Dateien der Mods aus, die im Playset vor ihr laden, nicht nur Vanilla (Crusader Kings III,
+    /// Europa Universalis V, gemessen 2026-09-30, und Victoria 3, gemessen 2026-10-11, je mit zwei Test-Mods). <see langword="false"/> = nur Vanilla (Europa Universalis IV, gemessen) oder
     /// nicht gemessen.
     /// </summary>
     public bool ReplacePathHidesEarlierMods { get; set; }
@@ -162,6 +185,12 @@ public sealed class GameProfile
     /// <c>interface</c>; das Spiel sucht die Dateien ohne den Unterordner, gemessen 2026-09-30). Die Mod-Kompatibilität warnt davor.
     /// </summary>
     public List<string> ReplacePathGuiCrashRoots { get; set; } = new();
+
+    /// <summary>
+    /// Sprachen der Lokalisierung des Spiels (Ordnernamen unter <c>localization</c>, z. B. <c>english</c>, <c>braz_por</c>), in der Reihenfolge des Spiels.
+    /// Die Generator-Pakete schreiben ihre Lokalisierung in diese Sprachen. Leer = nur Englisch.
+    /// </summary>
+    public List<string> LocalizationLanguages { get; set; } = new();
 
     /// <summary>Bei ScriptDocsSourceKind="wiki": Pfad relativ zum profiles-Ordner (z. B. "scriptdocs/eu4.json").</summary>
     public string? ScriptDocsWikiFile { get; set; }
@@ -315,4 +344,10 @@ public sealed class GuiProfileSettings
 
     /// <summary>Welche Definition eines Typs oder Templates gilt: <c>lastWins</c> (EU V, Standard) oder <c>firstWins</c> (CK III, zuerst geladene Datei).</summary>
     public string TypeOverride { get; set; } = "lastWins";
+
+    /// <summary>
+    /// Bei <c>firstWins</c>: Mods gehen vor Vanilla (CK III, gemessen 2026-09-30, Standard). <see langword="false"/> = Vanilla und Mods zählen gemeinsam
+    /// in Ladereihenfolge (Victoria 3, gemessen 2026-10-11: ein Mod-Typ in gui/shared/zz_… verliert gegen Vanilla in gui/shared/button_icons.gui).
+    /// </summary>
+    public bool ModsBeforeVanilla { get; set; } = true;
 }

@@ -16,6 +16,9 @@ public sealed partial class CompatchWindow
     private readonly Controls.ListBox _issueList = new() { MaxHeight = 140 };
     private readonly Controls.CheckBox _hideUnchanged = new() { Content = new Controls.TextBlock { Text = CompatchTexts.HideUnchanged }, IsChecked = true, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
     private PreparedWrite? _prepared;
+
+    /// <summary>Vorschau des Schreibens für die Ansicht "Ganze Datei zeigen"; nach jeder Änderung verworfen.</summary>
+    private PreparedWrite? _viewPrepared;
     private bool _filesStale = true;
 
     private sealed record FileRow(FileChange Change, string Text)
@@ -67,6 +70,7 @@ public sealed partial class CompatchWindow
     partial void OnSessionChanged()
     {
         _filesStale = true;
+        _viewPrepared = null;
         if (_tabs.SelectedIndex == 1)
         {
             RefreshFiles();
@@ -77,6 +81,38 @@ public sealed partial class CompatchWindow
     {
         var normalized = _session?.Run.Plan.Files.Any(f => f.Normalized && string.Equals(f.RelativePath.Replace('\\', '/'), change.RelativePath, StringComparison.OrdinalIgnoreCase)) == true;
         return (normalized ? "# " + CompatchTexts.NormalizedNote + "\n\n" : string.Empty) + change.PreviewText;
+    }
+
+    /// <summary>
+    /// Was das Schreiben jetzt ergäbe (für die Ergebnisspalte von "Ganze Datei zeigen"), gemerkt bis zur nächsten Änderung; <see langword="null"/>, wenn es sich
+    /// nicht berechnen lässt (dann zeigt die Spalte die Datei ohne Patch).
+    /// </summary>
+    internal PreparedWrite? PreviewWrite()
+    {
+        if (_viewPrepared is null && _session is not null)
+        {
+            try
+            {
+                _viewPrepared = _session.PrepareWrite(TargetLockedPaths(), _host.EncodingFor);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CompatchInputException)
+            {
+                _status.Text = ex.Message;
+            }
+        }
+
+        return _viewPrepared;
+    }
+
+    /// <summary>Ein Schlüssel, den der Patch als ganze Datei schreibt (gewählte Form oder die einzige; im Update-Modus immer).</summary>
+    internal bool IsWholeFileForm(ParadoxModTool.Compatch.MergeAction action)
+    {
+        if (_session is null || action.Address.Kind != AddressKind.Key || !_session.Run.Plan.AvailableForms.TryGetValue(action.Address, out var forms) || forms.Count == 0)
+        {
+            return false;
+        }
+
+        return IsUpdate || (_session.FormOf(action.Address) is { } chosen && forms.Contains(chosen) ? chosen : forms[0]) == PatchForm.WholeFile;
     }
 
     private IReadOnlyCollection<string> TargetLockedPaths() =>

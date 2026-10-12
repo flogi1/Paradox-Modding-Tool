@@ -50,11 +50,23 @@ public static class ModsTexts
 
     public static string NoValidVersion => T("mods.noValidVersion", "metadata.json enthält keine gültige Version.");
 
+    /// <summary>Wie <see cref="NoReadableMetadata"/>, für Spiele mit klassischer <c>.mod</c>-Datei (EU IV, CK III).</summary>
+    public static string NoReadableMetadataClassic => T("mods.noReadableMetadataClassic", "Keine lesbare .mod-Datei gefunden.");
+
+    /// <summary>Wie <see cref="NoValidVersion"/>, für Spiele mit klassischer <c>.mod</c>-Datei.</summary>
+    public static string NoValidVersionClassic => T("mods.noValidVersionClassic", "Die .mod-Datei enthält keine gültige Version.");
+
+    public static string NoReadableMetadataFor(bool classic) => classic ? NoReadableMetadataClassic : NoReadableMetadata;
+
+    public static string NoValidVersionFor(bool classic) => classic ? NoValidVersionClassic : NoValidVersion;
+
     public static string StatusNoBanners => T("mods.status.noBanners", "Der Changelog enthält keine Versions-Banner.");
 
     public static string StatusMissingSection(string version) => F("mods.status.missingSection", "Im Changelog fehlt ein Abschnitt für Version {0}.", version);
 
     public static string StatusMismatch(string metadataVersion, string? top) => F("mods.status.mismatch", "metadata.json steht auf {0}, der Changelog beginnt mit {1}.", metadataVersion, top);
+
+    public static string StatusMismatchClassic(string metadataVersion, string? top) => F("mods.status.mismatchClassic", "Die .mod-Datei steht auf {0}, der Changelog beginnt mit {1}.", metadataVersion, top);
 
     public static string StatusNotReleased(string version) => F("mods.status.notReleased", "Version {0} ist noch nicht als Release erfasst.", version);
 
@@ -62,6 +74,8 @@ public static class ModsTexts
     public static string PublishNoAppId => T("mods.publish.noAppId", "Das Spielprofil enthält keine Steam-AppID.");
 
     public static string PublishUnsaved => T("mods.publish.unsaved", "metadata.json hat ungespeicherte Änderungen. Speichere sie vor dem Veröffentlichen.");
+
+    public static string PublishUnsavedClassic => T("mods.publish.unsavedClassic", "Die .mod-Datei hat ungespeicherte Änderungen. Speichere sie vor dem Veröffentlichen.");
 
     public static string PublishWorkshopIdNumber => T("mods.publish.workshopIdNumber", "Die Workshop-ID muss eine Zahl sein.");
 
@@ -75,9 +89,13 @@ public static class ModsTexts
 
     public static string PublishNoPreview => T("mods.publish.noPreview", "Das Vorschaubild fehlt. Beim ersten Veröffentlichen braucht die Workshop-Seite eines (Feld picture in der metadata.json).");
 
+    public static string PublishNoPreviewClassic => T("mods.publish.noPreviewClassic", "Das Vorschaubild fehlt. Beim ersten Veröffentlichen braucht die Workshop-Seite eines (Feld picture in der .mod-Datei).");
+
     public static string PublishAlreadyPublished(string version) => F("mods.publish.alreadyPublished", "Version {0} ist schon auf Steam veröffentlicht. Ein erneuter Upload überschreibt den Inhalt.", version);
 
     public static string PublishNoFiles => T("mods.publish.noFiles", "Der Mod-Ordner enthält nach dem Ausschluss keine Dateien.");
+
+    public static string PublishDescriptorMissing => T("mods.publish.descriptorMissing", "Im Mod-Ordner fehlt descriptor.mod. Steam lädt nur den Ordner hoch; ohne descriptor.mod erkennt der Launcher die Mod nicht.");
 
     // Metadaten-Datei.
     public static string MetadataNotObject => T("mods.metadata.notObject", "Die Datei muss ein JSON-Objekt sein.");
@@ -93,6 +111,19 @@ public static class ModsTexts
     public static string MetadataFileInvalidJson => T("mods.metadata.fileInvalidJson", "Die Datei ist kein gültiges JSON.");
 
     public static string MetadataFileNotObject => T("mods.metadata.fileNotObject", "Die Datei ist kein JSON-Objekt.");
+
+    // Klassische .mod-Datei (EU IV, CK III).
+    public static string ClassicModUnexpectedBrace(int line) => F("mods.classicMod.unexpectedBrace", "Zeile {0}: Diese schließende Klammer hat keine öffnende.", line);
+
+    public static string ClassicModUnclosedBrace(int line) => F("mods.classicMod.unclosedBrace", "Zeile {0}: Diese Klammer wird nie geschlossen.", line);
+
+    public static string ClassicModUnclosedQuote(int line) => F("mods.classicMod.unclosedQuote", "Zeile {0}: Dieses Anführungszeichen wird nie geschlossen.", line);
+
+    public static string ClassicModVersionNotOnOwnLine => T("mods.classicMod.versionNotOnOwnLine", "Das Feld version steht nicht am Anfang einer eigenen Zeile. Ändere die Version direkt im Text.");
+
+    public static string ClassicModRemoteFileIdNotOnOwnLine => T("mods.classicMod.remoteFileIdNotOnOwnLine", "Das Feld remote_file_id steht nicht am Anfang einer eigenen Zeile. Trage die Workshop-ID direkt im Text ein.");
+
+    public static string ClassicModInvalidRemoteFileId => T("mods.classicMod.invalidRemoteFileId", "Die Workshop-ID darf nur aus Ziffern bestehen.");
 
     public static string TextFileNotUtf8 => T("mods.textFile.notUtf8", "Die Datei ist nicht UTF-8-kodiert und wird deshalb nicht bearbeitet.");
 

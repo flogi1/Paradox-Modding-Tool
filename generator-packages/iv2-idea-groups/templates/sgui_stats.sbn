@@ -1,0 +1,303 @@
+########################################################
+########################################################
+####### Ideagroup {{ g }} Start
+########################################################
+
+iv2_gui_stat_name_{{ g }} = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_variable = iv2_ideagroup_select_{{ g }}_1 
+			
+			has_variable = iv2_var_show_all_ig_statistics_yes
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_variable = iv2_ideagroup_select_{{ g }}_1 
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_ideagroup_select_{{ g }}_1 
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+	}
+}
+
+iv2_gui_stat_hide_{{ g }} = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_1 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			OR = {
+				AND = {
+					has_variable = iv2_stat_hide_{{ g }}
+					has_variable = iv2_var_show_all_ig_statistics_no
+				}	
+				AND = {
+					has_variable = iv2_stat_hide_{{ g }}
+					has_variable = iv2_var_show_all_ig_statistics_yes
+				}
+			}			
+		}
+	}
+	effect = {
+		remove_variable = iv2_stat_show_{{ g }}
+		set_variable = {
+			name = iv2_stat_hide_{{ g }}
+			value = 1
+		}
+	}	
+}
+
+iv2_gui_stat_show_{{ g }} = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_1 
+			has_variable = iv2_var_show_all_ig_statistics_yes
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}	
+		NOT = {
+			OR = {
+				AND = {
+					has_variable = iv2_stat_show_{{ g }}
+					has_variable = iv2_var_show_all_ig_statistics_no
+				}
+				AND = {
+					has_variable = iv2_stat_show_{{ g }}
+					has_variable = iv2_var_show_all_ig_statistics_yes
+				}
+			}
+		}
+	}
+	effect = {
+		remove_variable = iv2_stat_hide_{{ g }}
+		set_variable = {
+			name = iv2_stat_show_{{ g }}
+			value = 1
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_1 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_1 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_1 
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_2 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_2 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_2 
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_3 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_3 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_3 
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_4 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_4
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_4
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_5 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_5 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_5
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_6 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_6 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_6
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+iv2_gui_stat_{{ g }}_7 = {
+	scope = country 		
+	is_valid = {  
+		OR = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_7 
+			AND = {
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_yes
+			}
+			AND = {
+				has_country_modifier = ideagroup_modifier_{{ g }}_7
+				has_variable = iv2_stat_show_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}
+		}		
+		NOT = {
+			AND = {
+				has_variable = iv2_stat_hide_{{ g }}
+				has_variable = iv2_var_show_all_ig_statistics_no
+			}		
+		}
+	}	
+}
+
+########################################################
+####### Ideagroup {{ g }} End
+########################################################
+########################################################

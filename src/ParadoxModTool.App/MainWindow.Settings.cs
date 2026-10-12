@@ -15,11 +15,13 @@ namespace ParadoxModTool.App;
 /// </summary>
 public partial class MainWindow
 {
-    private readonly AppSettings _settings = new();
+    // Interface-Rework 2: alte Sitzungen ohne WindowLayout blenden die vier Kachel-Werkzeuge aus der kleinen Leiste aus (sie sind Kacheln).
+    private readonly AppSettings _settings = new(migrateTileTools: true);
 
     /// <summary>Reihenfolge beim Anwenden aller Werte nach dem Laden (Panel-Sichtbarkeit hängt von zwei Werten ab, daher zuletzt).</summary>
     private static readonly string[] ApplyOrder =
     {
+        nameof(AppSettings.WindowLayout),
         nameof(AppSettings.SplitViewEnabled),
         nameof(AppSettings.ExplorerVisible),
         nameof(AppSettings.ResultsPanelOnTop),
@@ -29,6 +31,13 @@ public partial class MainWindow
         nameof(AppSettings.DocumentBarVisible),
         nameof(AppSettings.WorkspaceFilterButtonVisible),
         nameof(AppSettings.NotesPanelVisible),
+        nameof(AppSettings.TileBarVisible),
+        nameof(AppSettings.WorkspaceCategoryButtonVisible),
+        nameof(AppSettings.WorkspaceSortButtonVisible),
+        nameof(AppSettings.WorkspaceMarkButtonsVisible),
+        nameof(AppSettings.ToolbarPosition),
+        nameof(AppSettings.ToolbarOrder),
+        nameof(AppSettings.ToolbarLabelsVisible),
         nameof(AppSettings.HiddenToolbarItems),
         nameof(AppSettings.IconColorsByTheme),
         nameof(AppSettings.CompatchResultRight),
@@ -122,13 +131,18 @@ public partial class MainWindow
             case nameof(AppSettings.DocumentBarVisible):
                 ApplyDocumentBarVisible(_settings.DocumentBarVisible);
                 break;
+            case nameof(AppSettings.WorkspaceCategoryButtonVisible):
             case nameof(AppSettings.WorkspaceFilterButtonVisible):
             case nameof(AppSettings.WorkspaceIconButtonVisible):
-                foreach (var pane in AllPanes)
-                {
-                    pane.SetToolbarButtonsVisible(_settings.WorkspaceFilterButtonVisible, _settings.WorkspaceIconButtonVisible);
-                }
-
+            case nameof(AppSettings.WorkspaceSortButtonVisible):
+            case nameof(AppSettings.WorkspaceMarkButtonsVisible):
+                ApplyPaneToolbarLayout();
+                break;
+            case nameof(AppSettings.WindowLayout):
+                ApplyWindowLayout();
+                break;
+            case nameof(AppSettings.TileBarVisible):
+                ApplyTileBar();
                 break;
             case nameof(AppSettings.NotesPanelVisible):
             case nameof(AppSettings.NotesPanelAlwaysVisible):
@@ -136,7 +150,12 @@ public partial class MainWindow
                 UpdateNotesPanelVisibility();
                 break;
             case nameof(AppSettings.HiddenToolbarItems):
-                ApplyToolbarVisibility();
+            case nameof(AppSettings.ToolbarOrder):
+            case nameof(AppSettings.ToolbarLabelsVisible):
+                RebuildToolbar();
+                break;
+            case nameof(AppSettings.ToolbarPosition):
+                ApplyToolbarPosition();
                 break;
             case nameof(AppSettings.ExplorerButtonsOnLeft):
             case nameof(AppSettings.ExplorerShowErrorMarks):
@@ -159,6 +178,12 @@ public partial class MainWindow
     /// <summary>Die Elemente der allgemeinen Werkzeugleiste zu ihren Kennungen (<see cref="ToolbarItemIds"/>).</summary>
     private IReadOnlyDictionary<string, FrameworkElement> ToolbarElements() => new Dictionary<string, FrameworkElement>
     {
+        [ToolbarItemIds.New] = ToolbarNewButton,
+        [ToolbarItemIds.Open] = ToolbarOpenButton,
+        [ToolbarItemIds.Save] = ToolbarSaveButton,
+        [ToolbarItemIds.SaveAll] = ToolbarSaveAllButton,
+        [ToolbarItemIds.Close] = ToolbarCloseButton,
+        [ToolbarItemIds.Move] = ToolbarMoveButton,
         [ToolbarItemIds.Undo] = UndoButton,
         [ToolbarItemIds.Redo] = RedoButton,
         [ToolbarItemIds.Search] = ToolbarSearchButton,
@@ -182,25 +207,6 @@ public partial class MainWindow
         [ToolbarItemIds.Playset] = PlaysetsCombo,
         [ToolbarItemIds.LaunchGame] = LaunchGameButton,
     };
-
-    /// <summary>
-    /// Blendet die Einträge der allgemeinen Werkzeugleiste nach dem Modell ein oder aus. Eine Trennlinie steht nur zwischen zwei Gruppen mit
-    /// je mindestens einem sichtbaren Eintrag (<see cref="ToolbarSeparators"/>).
-    /// </summary>
-    private void ApplyToolbarVisibility()
-    {
-        foreach (var (id, element) in ToolbarElements())
-        {
-            // Der GUI-Daten-Helfer gehört zu den GUI-Werkzeugen: bei ausgeschalteten GUI-Werkzeugen ist er nie zu sehen.
-            var offered = id != ToolbarItemIds.GuiDataHelper || GuiSettings.ToolsEnabled;
-            element.Visibility = offered && _settings.IsToolbarItemVisible(id) ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        var separators = ToolbarSeparators.VisibleBefore(_settings.IsToolbarItemVisible);
-        ToolbarToolsSeparator.Visibility = separators.Contains(ToolbarGroup.Tools) ? Visibility.Visible : Visibility.Collapsed;
-        ToolbarTogglesSeparator.Visibility = separators.Contains(ToolbarGroup.Toggles) ? Visibility.Visible : Visibility.Collapsed;
-        ToolbarLaunchSeparator.Visibility = separators.Contains(ToolbarGroup.Launch) ? Visibility.Visible : Visibility.Collapsed;
-    }
 
     /// <summary>Setzt die Symbolfarben für das aktuelle Theme: eigene Farbe, sonst Standard (Lesezeichen/Bug aus dem Theme).</summary>
     private void ApplyIconColors()

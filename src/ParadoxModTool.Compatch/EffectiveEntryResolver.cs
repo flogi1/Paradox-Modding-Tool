@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using ParadoxModTool.GameProfiles;
 using ParadoxModTool.ModCompat;
 using ParadoxModTool.Mods;
 using Files = System.Collections.Generic.Dictionary<string, ParadoxModTool.Compatch.FileParts>;
@@ -97,10 +98,11 @@ public static class EffectiveEntryResolver
                     Address = address,
                     Behavior = rule.Behavior,
                     Certain = rule.Certain,
-                    Vanilla = KeyEffective(address, indexV, rule),
-                    A = KeyEffective(address, indexA, rule),
-                    B = KeyEffective(address, indexB, rule),
-                    NoPatch = KeyEffective(address, indexN, rule),
+                    Operators = rule.Operators,
+                    Vanilla = KeyEffective(address, indexV, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
+                    A = KeyEffective(address, indexA, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
+                    B = KeyEffective(address, indexB, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
+                    NoPatch = KeyEffective(address, indexN, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
                 };
                 continue;
             }
@@ -111,6 +113,7 @@ public static class EffectiveEntryResolver
                 Address = address,
                 Behavior = fileRule.Behavior,
                 Certain = fileRule.Certain,
+                Operators = fileRule.Operators,
                 Note = notes.GetValueOrDefault(address),
                 Vanilla = FileEffective(address, viewV),
                 A = FileEffective(address, viewA),
@@ -297,20 +300,24 @@ public static class EffectiveEntryResolver
         return index;
     }
 
-    private static Effective KeyEffective(EntryAddress address, Dictionary<EntryAddress, List<(KeyPart Part, int Rank)>> index, RuleMatch rule)
+    private static Effective KeyEffective(EntryAddress address, Dictionary<EntryAddress, List<(KeyPart Part, int Rank)>> index, RuleMatch rule, bool injectAppends, bool firstWinsInLoadOrder)
     {
         if (!index.TryGetValue(address, out var list))
         {
             return Effective.Absent;
         }
 
-        // GUI-Typen/Templates (LastWins): laut Wiki zählt nur die Mod-Ladereihenfolge, Dateinamen nicht. Sonst zuerst der Dateiname.
-        var ordered = (rule.Behavior == OverrideBehavior.LastWins
+        // Victoria 3: Bei "zuerst geladen gewinnt" zählt die Ladereihenfolge der Pfade über Vanilla und Mods, nicht der Playset-Rang (gemessen
+        // 2026-10-11); gleicher Pfad = die später geladene Mod ersetzt die Datei. GUI-Typen/Templates (LastWins, EU V): laut Wiki zählt nur die
+        // Mod-Ladereihenfolge, Dateinamen nicht. Sonst zuerst der Dateiname.
+        var ordered = (rule.Behavior == OverrideBehavior.FirstWins && firstWinsInLoadOrder
+                ? list.OrderBy(x => x.Part.RelativePath, GameLoadOrder.Instance).ThenByDescending(x => x.Rank)
+                : rule.Behavior == OverrideBehavior.LastWins
                 ? list.OrderBy(x => x.Rank).ThenBy(x => Path.GetFileName(x.Part.RelativePath), StringComparer.Ordinal)
                 : list.OrderBy(x => Path.GetFileName(x.Part.RelativePath), StringComparer.Ordinal).ThenBy(x => x.Rank))
             .Select(x => x.Part)
             .ToList();
-        return EffectiveCombiner.Combine(ordered, rule.Behavior, rule.Certain);
+        return EffectiveCombiner.Combine(ordered, rule.Behavior, rule.Certain, injectAppends);
     }
 
     private static Effective FileEffective(EntryAddress address, Dictionary<string, Placed> view)

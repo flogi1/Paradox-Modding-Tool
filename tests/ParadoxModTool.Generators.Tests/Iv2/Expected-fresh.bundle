@@ -1,0 +1,5784 @@
+##FILE in_game/common/generic_action_ai_lists/03_iv2_gal_nat_idea_TST.txt
+###############################################################
+#### Dynamic National Ideas GA List TST
+###############################################################
+
+
+iv2_ga_list_nat_ideas_progress_cost_TST = {
+	potential = {
+		NOT = { has_game_rule = iv2_rule_national_ideas_3 }
+		has_or_had_tag = TST
+		trigger_if = {
+			limit = {
+				has_variable = iv2_var_progress_points_adm
+			}
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			
+		}
+	}
+	actions = {
+		iv2_ga_select_historic_TST_1
+		iv2_ga_select_historic_TST_2
+		iv2_ga_select_historic_TST_3
+		iv2_ga_select_historic_TST_11
+		iv2_ga_select_historic_TST_31
+		iv2_ga_select_historic_TST_32
+	}
+}
+
+iv2_ga_list_nat_ideas_innovation_cost_TST = {
+	potential = {
+		NOT = { has_game_rule = iv2_rule_national_ideas_3 }
+		has_or_had_tag = TST
+		trigger_if = {
+			limit = {
+				has_variable = iv2_var_innovation_points_adm
+			}
+			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+		}
+	}
+	actions = {
+		# All TST Level Selects
+		iv2_ga_select_historic_TST_2_1
+		iv2_ga_select_historic_TST_3_1	
+		iv2_ga_select_historic_TST_3_2	
+		iv2_ga_select_historic_TST_3_3
+		iv2_ga_select_historic_TST_11_1	
+		iv2_ga_select_historic_TST_11_2	
+		iv2_ga_select_historic_TST_11_3
+	}
+}
+
+# IV2 AI chooser: the AI picks historic ideas only through iv2_ga_ai_choose_historic_TST
+iv2_ga_list_ai_choose_historic_TST = {
+	potential = {
+		is_ai = yes
+		iv2_scripted_trigger_use_historic_ideas = yes
+		has_or_had_tag = TST
+	}
+	actions = {
+		iv2_ga_ai_choose_historic_TST
+	}
+}
+##FILE in_game/common/generic_actions/iv2_GA_ideas_TST.txt
+###################################################
+###################################################
+###### Idea Variation 2 GA Idea Groups Admin
+###################################################
+###################################################
+
+###############################################################
+#### Select National Idea TST_1
+###############################################################
+
+iv2_ga_select_historic_TST_1 = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_1 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_1 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_adm_1
+					value = flag:iv2_picked_historic_idea_TST_1
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_1
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_adm
+				change_variable = {
+					name = iv2_var_progress_points_adm
+					subtract = var:iv2_var_national_idea_cost_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_cost_adm
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_adm
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Deselect National Idea adm_1
+###############################################################
+
+
+iv2_ga_deselect_historic_TST_1 = {
+	type = owncountry	
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+			OR = {
+				has_country_modifier = national_idea_modifier_TST_1
+			}		
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_adm
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_1
+					}
+					remove_country_modifier = national_idea_modifier_TST_1
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+				}			
+			}
+			hidden_effect = {
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_historic_idea_TST_1
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Select National Idea TST_2
+###############################################################
+
+iv2_ga_select_historic_TST_2 = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_2_1 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_2 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_adm_1
+					value = flag:iv2_picked_historic_idea_TST_2
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_2
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_adm
+				change_variable = {
+					name = iv2_var_progress_points_adm
+					subtract = var:iv2_var_national_idea_cost_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_cost_adm
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_adm
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 2 adm_1_1
+###############################################################
+
+iv2_ga_select_historic_TST_2_1 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_expensive_adm
+			has_country_modifier = national_idea_modifier_TST_2
+			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm
+			}
+			iv2_sct_nat_idea_TST_1_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_2_1 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_2
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_expensive_adm
+				change_variable = {
+					name = iv2_var_innovation_points_adm
+					subtract = var:iv2_var_national_idea_innovation_cost_expensive_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_adm
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Deselect National Idea adm_1
+###############################################################
+
+
+iv2_ga_deselect_historic_TST_2 = {
+	type = owncountry	
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+			OR = {
+				has_country_modifier = national_idea_modifier_TST_2
+				has_country_modifier = national_idea_modifier_TST_2_1
+			}		
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_adm
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_2
+					}
+					remove_country_modifier = national_idea_modifier_TST_2
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_2_1
+					}
+					remove_country_modifier = national_idea_modifier_TST_2_1
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_adm
+						subtract = iv2_innovation_cost_increase
+					}
+				}			
+			}
+			hidden_effect = {
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_historic_idea_TST_2
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Select National Idea TST_3
+###############################################################
+
+iv2_ga_select_historic_TST_3 = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_3 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_1 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_3 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_expensive_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_3 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_adm_1
+					value = flag:iv2_picked_historic_idea_TST_3
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_3
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_expensive_adm
+				change_variable = {
+					name = iv2_var_progress_points_adm
+					subtract = var:iv2_var_national_idea_cost_expensive_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_cost_adm
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_adm
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 2 adm_1_1
+###############################################################
+
+iv2_ga_select_historic_TST_3_1 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_adm
+			has_country_modifier = national_idea_modifier_TST_3
+			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+			}
+			iv2_sct_nat_idea_TST_1_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_3_1 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_3
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_adm
+				change_variable = {
+					name = iv2_var_innovation_points_adm
+					subtract = var:iv2_var_national_idea_innovation_cost_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_adm
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 3 adm_1_2
+###############################################################
+
+iv2_ga_select_historic_TST_3_2 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_adm
+			has_country_modifier = national_idea_modifier_TST_3_1
+			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+			}
+			iv2_sct_nat_idea_TST_1_2 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_3_2 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_3_1
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_adm
+				change_variable = {
+					name = iv2_var_innovation_points_adm
+					subtract = var:iv2_var_national_idea_innovation_cost_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_adm
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 4 adm_1_3
+###############################################################
+
+iv2_ga_select_historic_TST_3_3 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_expensive_adm
+			has_country_modifier = national_idea_modifier_TST_3_2
+			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm
+			}
+			iv2_sct_nat_idea_TST_1_3 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_3_3 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_3_2
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_expensive_adm
+				change_variable = {
+					name = iv2_var_innovation_points_adm
+					subtract = var:iv2_var_national_idea_innovation_cost_expensive_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_adm
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Deselect National Idea adm_1
+###############################################################
+
+
+iv2_ga_deselect_historic_TST_3 = {
+	type = owncountry	
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+			OR = {
+				has_country_modifier = national_idea_modifier_TST_3
+				has_country_modifier = national_idea_modifier_TST_3_1
+				has_country_modifier = national_idea_modifier_TST_3_2
+				has_country_modifier = national_idea_modifier_TST_3_3
+			}		
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_adm
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_3
+					}
+					remove_country_modifier = national_idea_modifier_TST_3
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_3_1
+					}
+					remove_country_modifier = national_idea_modifier_TST_3_1
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_adm
+						subtract = iv2_innovation_cost_increase
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_3_2
+					}
+					remove_country_modifier = national_idea_modifier_TST_3_2
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_adm
+						subtract = iv2_innovation_cost_decrease_x2
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_3_3
+					}
+					remove_country_modifier = national_idea_modifier_TST_3_3
+					change_variable = {
+						name = iv2_var_national_idea_cost_adm
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_adm
+						subtract = iv2_innovation_cost_decrease_x3
+					}
+				}			
+			}
+			hidden_effect = {
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_historic_idea_TST_3
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Select National Idea TST_11
+###############################################################
+
+iv2_ga_select_historic_TST_11 = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_11 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_1 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_3 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_dip
+			var:iv2_var_progress_points_dip >= var:iv2_var_national_idea_cost_dip
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_dip_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_11 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_dip_1
+					value = flag:iv2_picked_historic_idea_TST_11
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_11
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_dip
+				change_variable = {
+					name = iv2_var_progress_points_dip
+					subtract = var:iv2_var_national_idea_cost_dip
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_dip
+				change_variable = {
+					name = iv2_var_national_idea_cost_dip
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_dip
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 2 dip_1_1
+###############################################################
+
+iv2_ga_select_historic_TST_11_1 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_dip
+			has_country_modifier = national_idea_modifier_TST_11
+			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
+			}
+			iv2_sct_dnat_idea_dip_1_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_11_1 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_11
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_dip
+				change_variable = {
+					name = iv2_var_innovation_points_dip
+					subtract = var:iv2_var_national_idea_innovation_cost_dip
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_dip
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_dip
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_dip
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 3 dip_1_2
+###############################################################
+
+iv2_ga_select_historic_TST_11_2 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_dip
+			has_country_modifier = national_idea_modifier_TST_11_1
+			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
+			}
+			iv2_sct_dnat_idea_dip_1_2 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_11_2 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_11_1
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_dip
+				change_variable = {
+					name = iv2_var_innovation_points_dip
+					subtract = var:iv2_var_national_idea_innovation_cost_dip
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_dip
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_dip
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_dip
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### National Idea Level 4 dip_1_3
+###############################################################
+
+iv2_ga_select_historic_TST_11_3 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea_dip
+			has_country_modifier = national_idea_modifier_TST_11_2
+			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
+			}
+			iv2_sct_dnat_idea_dip_1_3 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_11_3 
+					years = -1 
+				}
+				remove_country_modifier = national_idea_modifier_TST_11_2
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation_dip
+				change_variable = {
+					name = iv2_var_innovation_points_dip
+					subtract = var:iv2_var_national_idea_innovation_cost_dip
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_dip
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_dip
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_dip
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Deselect National Idea dip_1
+###############################################################
+
+
+iv2_ga_deselect_historic_TST_11 = {
+	type = owncountry	
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+			OR = {
+				has_country_modifier = national_idea_modifier_TST_11
+				has_country_modifier = national_idea_modifier_TST_11_1
+				has_country_modifier = national_idea_modifier_TST_11_2
+				has_country_modifier = national_idea_modifier_TST_11_3
+			}		
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_dip
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_11
+					}
+					remove_country_modifier = national_idea_modifier_TST_11
+					change_variable = {
+						name = iv2_var_national_idea_cost_dip
+						subtract = iv2_progress_cost_increase
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_11_1
+					}
+					remove_country_modifier = national_idea_modifier_TST_11_1
+					change_variable = {
+						name = iv2_var_national_idea_cost_dip
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_dip
+						subtract = iv2_innovation_cost_increase
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_11_2
+					}
+					remove_country_modifier = national_idea_modifier_TST_11_2
+					change_variable = {
+						name = iv2_var_national_idea_cost_dip
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_dip
+						subtract = iv2_innovation_cost_decrease_x2
+					}
+				}
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_11_3
+					}
+					remove_country_modifier = national_idea_modifier_TST_11_3
+					change_variable = {
+						name = iv2_var_national_idea_cost_dip
+						subtract = iv2_progress_cost_increase
+					}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_dip
+						subtract = iv2_innovation_cost_decrease_x3
+					}
+				}			
+			}
+			hidden_effect = {
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_historic_idea_TST_11
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Select National Idea TST_31
+###############################################################
+
+iv2_ga_select_historic_TST_31 = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_31 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_navy
+			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_navy_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_31 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_navy_1
+					value = flag:iv2_picked_historic_idea_TST_31
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_31
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_navy
+				change_variable = {
+					name = iv2_var_progress_points_navy
+					subtract = var:iv2_var_national_idea_cost_navy
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_navy
+				change_variable = {
+					name = iv2_var_national_idea_cost_navy
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_navy
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Deselect National Idea navy_1
+###############################################################
+
+
+iv2_ga_deselect_historic_TST_31 = {
+	type = owncountry	
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+			OR = {
+				has_country_modifier = national_idea_modifier_TST_31
+			}		
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_navy
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_31
+					}
+					remove_country_modifier = national_idea_modifier_TST_31
+					change_variable = {
+						name = iv2_var_national_idea_cost_navy
+						subtract = iv2_progress_cost_increase
+					}
+				}			
+			}
+			hidden_effect = {
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_historic_idea_TST_31
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Select National Idea TST_32
+###############################################################
+
+iv2_ga_select_historic_TST_32 = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_32 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_navy
+			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_navy_1 = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_32 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_navy_1
+					value = flag:iv2_picked_historic_idea_TST_32
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_32
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_navy
+				change_variable = {
+					name = iv2_var_progress_points_navy
+					subtract = var:iv2_var_national_idea_cost_navy
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_navy
+				change_variable = {
+					name = iv2_var_national_idea_cost_navy
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_navy
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+
+###############################################################
+#### Deselect National Idea navy_1
+###############################################################
+
+
+iv2_ga_deselect_historic_TST_32 = {
+	type = owncountry	
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+			OR = {
+				has_country_modifier = national_idea_modifier_TST_32
+			}		
+		}
+	}
+	
+	effect = {
+		scope:actor = {								
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_navy
+				
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_TST_32
+					}
+					remove_country_modifier = national_idea_modifier_TST_32
+					change_variable = {
+						name = iv2_var_national_idea_cost_navy
+						subtract = iv2_progress_cost_increase
+					}
+				}			
+			}
+			hidden_effect = {
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_historic_idea_TST_32
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}
+
+##FILE in_game/common/generic_actions/iv2_ga_ai_choose_historic_TST.txt
+# GENERATED by PMT package iv2 - historic AI chooser
+iv2_ga_ai_choose_historic_TST = {
+	type = owncountry
+	ai_tick = monthly
+	ai_tick_frequency = 6
+	automation_tick = never
+	potential = { scope:actor = { is_ai = yes has_or_had_tag = TST } }
+	allow = {
+		scope:actor = {
+			iv2_scripted_trigger_use_historic_ideas = yes
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			OR = {
+				AND = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_1 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+				AND = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_2_1 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+				AND = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_3 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_1 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_3 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_expensive_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+				AND = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_11 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_1 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_3 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_dip
+			var:iv2_var_progress_points_dip >= var:iv2_var_national_idea_cost_dip
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_dip_1 = yes
+		}
+	}
+				AND = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_31 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_navy
+			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_navy_1 = yes
+		}
+	}
+				AND = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_32 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_navy
+			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_navy_1 = yes
+		}
+	}
+			}
+		}
+	}
+	ai_will_do = { add = { value = 1000 } }
+	effect = {
+		scope:actor = {
+			random_list = {
+				82 = {  # TST_1
+					trigger = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_1 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_1 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_adm_1
+					value = flag:iv2_picked_historic_idea_TST_1
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_1
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_adm
+				change_variable = {
+					name = iv2_var_progress_points_adm
+					subtract = var:iv2_var_national_idea_cost_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_cost_adm
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_adm
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	
+				}
+				49 = {  # TST_2
+					trigger = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_2_1 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_2 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_adm_1
+					value = flag:iv2_picked_historic_idea_TST_2
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_2
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_adm
+				change_variable = {
+					name = iv2_var_progress_points_adm
+					subtract = var:iv2_var_national_idea_cost_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_cost_adm
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_adm
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	
+				}
+				29 = {  # TST_3
+					trigger = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_3 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_1 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_3_3 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_expensive_adm
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_nat_idea_TST_1 = yes
+		}
+	}
+
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_3 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_adm_1
+					value = flag:iv2_picked_historic_idea_TST_3
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_3
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_expensive_adm
+				change_variable = {
+					name = iv2_var_progress_points_adm
+					subtract = var:iv2_var_national_idea_cost_expensive_adm
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_adm
+				change_variable = {
+					name = iv2_var_national_idea_cost_adm
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_adm
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	
+				}
+				141 = {  # TST_11
+					trigger = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_11 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_1 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_2 }
+				NOT = { has_country_modifier = national_idea_modifier_TST_11_3 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_dip
+			var:iv2_var_progress_points_dip >= var:iv2_var_national_idea_cost_dip
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_dip_1 = yes
+		}
+	}
+
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_11 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_dip_1
+					value = flag:iv2_picked_historic_idea_TST_11
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_11
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_dip
+				change_variable = {
+					name = iv2_var_progress_points_dip
+					subtract = var:iv2_var_national_idea_cost_dip
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_dip
+				change_variable = {
+					name = iv2_var_national_idea_cost_dip
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_dip
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	
+				}
+				100 = {  # TST_31
+					trigger = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_31 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_navy
+			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_navy_1 = yes
+		}
+	}
+
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_31 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_navy_1
+					value = flag:iv2_picked_historic_idea_TST_31
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_31
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_navy
+				change_variable = {
+					name = iv2_var_progress_points_navy
+					subtract = var:iv2_var_national_idea_cost_navy
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_navy
+				change_variable = {
+					name = iv2_var_national_idea_cost_navy
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_navy
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	
+				}
+				60 = {  # TST_32
+					trigger = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = national_idea_modifier_TST_32 }
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea_navy
+			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_navy_1 = yes
+		}
+	}
+
+		scope:actor = {								
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = national_idea_modifier_TST_32 
+					years = -1 
+				}
+				set_variable = { 
+					name = iv2_var_nat_navy_1
+					value = flag:iv2_picked_historic_idea_TST_32
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_historic_idea_TST_32
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}	
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_navy
+				change_variable = {
+					name = iv2_var_progress_points_navy
+					subtract = var:iv2_var_national_idea_cost_navy
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_navy
+				change_variable = {
+					name = iv2_var_national_idea_cost_navy
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_navy
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	
+				}
+			}
+		}
+	}
+}
+##FILE in_game/common/scripted_effects/01_iv2_scripted_effect_historic_idea_setup.txt
+iv2_historic_ideas_list_setup_effect = {
+	# === IV2Generator:TST:START ===
+	if = {
+		limit = { has_or_had_tag = TST }
+		set_variable = { 
+			name = iv2_nat_TST_1
+			value = flag:iv2_nat_TST_1
+		}	
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_adm
+				target = flag:iv2_nat_TST_1
+		}
+		set_variable = { 
+			name = iv2_nat_TST_2
+			value = flag:iv2_nat_TST_2
+		}	
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_adm
+				target = flag:iv2_nat_TST_2
+		}
+		set_variable = { 
+			name = iv2_nat_TST_3
+			value = flag:iv2_nat_TST_3
+		}	
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_adm
+				target = flag:iv2_nat_TST_3
+		}
+		
+		set_variable = { 
+			name = iv2_nat_TST_11
+			value = flag:iv2_nat_TST_11
+		}	
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_dip
+				target = flag:iv2_nat_TST_11
+		}
+		
+		set_variable = { 
+			name = iv2_nat_TST_31
+			value = flag:iv2_nat_TST_31
+		}	
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_navy
+				target = flag:iv2_nat_TST_31
+		}
+		set_variable = { 
+			name = iv2_nat_TST_32
+			value = flag:iv2_nat_TST_32
+		}	
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_navy
+				target = flag:iv2_nat_TST_32
+		}
+		
+	}
+	# === IV2Generator:TST:END ===
+}
+##FILE in_game/common/scripted_effects/03_log_purger_TST.txt
+######################################################
+# TST log purger
+######################################################
+
+log_purger_TST = {
+	cmf_suppress = { v = iv2_nat_TST_1 }
+	cmf_suppress = { v = iv2_nat_TST_2 }
+	cmf_suppress = { v = iv2_nat_TST_3 }
+	cmf_suppress = { v = iv2_nat_TST_11 }
+	cmf_suppress = { v = iv2_nat_TST_31 }
+	cmf_suppress = { v = iv2_nat_TST_32 }
+}
+##FILE in_game/common/scripted_guis/02_IV2_sgui_TST.txt
+###################################################
+###### Historic Ideas TST Adm
+###################################################
+
+iv2_sgui_historic_TST_1 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_1
+	}
+}
+
+iv2_sgui_historic_TST_2 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_2
+	}
+}
+
+iv2_sgui_historic_TST_2_1 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_2_1
+	}
+}
+
+iv2_sgui_historic_TST_3 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_3
+	}
+}
+
+iv2_sgui_historic_TST_3_1 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_3_1
+	}
+}
+
+iv2_sgui_historic_TST_3_2 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_3_2
+	}
+}
+
+iv2_sgui_historic_TST_3_3 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_3_3
+	}
+}
+
+###################################################
+###### Historic Ideas TST Dip
+###################################################
+
+iv2_sgui_historic_TST_11 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_11
+	}
+}
+
+iv2_sgui_historic_TST_11_1 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_11_1
+	}
+}
+
+iv2_sgui_historic_TST_11_2 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_11_2
+	}
+}
+
+iv2_sgui_historic_TST_11_3 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_11_3
+	}
+}
+
+###################################################
+###### Historic Ideas TST Navy
+###################################################
+
+iv2_sgui_historic_TST_31 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_31
+	}
+}
+
+iv2_sgui_historic_TST_32 = {
+    scope = country
+	
+	is_valid = {  
+		has_country_modifier = national_idea_modifier_TST_32
+	}
+}
+
+##FILE in_game/common/scripted_triggers/02_iv2_scr_nat_idea_TST.txt
+###################################################
+###### Dynamic Nat Idea scripted Triggers TST
+###################################################
+
+iv2_sct_nat_idea_TST_1 = {
+	
+}
+
+iv2_sct_nat_idea_TST_2 = {
+	
+}
+
+iv2_sct_nat_idea_TST_2_1 = {
+	
+}
+
+iv2_sct_nat_idea_TST_3 = {
+	
+}
+
+iv2_sct_nat_idea_TST_3_1 = {
+	
+}
+
+iv2_sct_nat_idea_TST_3_2 = {
+	
+}
+
+iv2_sct_nat_idea_TST_3_3 = {
+	
+}
+
+iv2_sct_nat_idea_TST_11 = {
+	
+}
+
+iv2_sct_nat_idea_TST_11_1 = {
+	
+}
+
+iv2_sct_nat_idea_TST_11_2 = {
+	
+}
+
+iv2_sct_nat_idea_TST_11_3 = {
+	
+}
+
+iv2_sct_nat_idea_TST_31 = {
+	
+}
+
+iv2_sct_nat_idea_TST_32 = {
+	
+}
+
+##FILE in_game/common/scripted_triggers/iv2_scripted_triggers_national_ideas_setup.txt
+iv2_scripted_trigger_has_unique_national_idea_set = {
+	OR = {
+		has_or_had_tag = TST
+	}
+}
+##FILE in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/TST/IV2_historic_remove_TT_TST.gui
+##########################################################################################################################
+##########################################################################################################################
+####### TST National Ideas Remove TT
+##########################################################################################################################
+##########################################################################################################################
+
+##########################################
+##########################################
+####### Adm Part
+##########################################
+##########################################
+
+template iv2_historic_idea_remove_TST_1 {
+	
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_TST_1').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_TST_1"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_1').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_adm"
+				}
+			}					
+		}	
+	}
+}
+
+template iv2_historic_idea_remove_TST_2 {
+	
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_TST_2').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_TST_2"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_2').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_adm"
+				}
+			}					
+		}	
+	}
+}
+
+template iv2_historic_idea_remove_TST_3 {
+	
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_TST_3').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_TST_3"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_adm"
+				}
+			}					
+		}	
+	}
+}
+
+##########################################
+##########################################
+####### Dip Part
+##########################################
+##########################################
+
+template iv2_historic_idea_remove_TST_11 {
+	
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_TST_11').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_TST_11"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_dip"
+				}
+			}					
+		}	
+	}
+}
+
+##########################################
+##########################################
+####### Navy Part
+##########################################
+##########################################
+
+template iv2_historic_idea_remove_TST_31 {
+	
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_TST_31').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_TST_31"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_31').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_navy"
+				}
+			}					
+		}	
+	}
+}
+
+template iv2_historic_idea_remove_TST_32 {
+	
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_TST_32').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_TST_32"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_32').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_navy"
+				}
+			}					
+		}	
+	}
+}
+##FILE in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/TST/IV2_historic_see_TST.gui
+##########################################################################################################################
+##########################################################################################################################
+####### TST National Ideas - See
+##########################################################################################################################
+##########################################################################################################################
+
+types iv2_historic_idea_TST_see { 
+	
+	type iv2_historic_idea_see_TST_1 = widget { 	
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_TST_1')]"
+		size = { 200 250 }
+		position = { 0 0 }
+		
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+		
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+			
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+		
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+			
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_historic_TST_1"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_TST_1
+			}			
+			
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			
+			}
+		}
+		
+		# Level 1 Start
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_1').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_1
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}	
+		}
+	
+		# Level 1 End
+	}
+	
+	type iv2_historic_idea_see_TST_2 = widget { 	
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_TST_2')]"
+		size = { 200 250 }
+		position = { 0 0 }
+		
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+		
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+			
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+		
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+			
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_historic_TST_2"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_TST_2
+			}			
+			
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			
+			}
+		}
+		
+		# Level 1 Start
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_2').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_2
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}	
+		}
+	
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_2_1"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_2_1
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		# Level 1 End
+		# Level 2 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_2_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_2_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_2.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_2
+			}	
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_2_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_2_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 100 100 }
+			parentanchor = center
+			position = { 0 -20 }
+			texture = "[GetModifier('national_idea_modifier_TST_2_1').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_2_1
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_2_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_2_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 40 40 }
+			position = { 0 95 }
+			parentanchor = center
+			texture = "gfx/interface/icons/iv2_upgrade_no.dds"
+			
+			using = button_panel_tab_icon_effect
+			
+			modify_texture = {
+				using = color_new_gold_texture
+				blend_mode = add
+			}
+			
+			tooltipwidget = {
+				using = iv2_upgrade_no_tt
+			}
+
+			glow = {
+				name = "drop_shadow"
+				glow_radius = 3
+				color = {50.0 0.0 0.0 1.0}
+				alpha = 0.8
+			}
+		}
+		# Level 2 End	
+	}
+	
+	type iv2_historic_idea_see_TST_3 = widget { 	
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_TST_3')]"
+		size = { 200 250 }
+		position = { 0 0 }
+		
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+		
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+			
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+		
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+			
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_historic_TST_3"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_TST_3
+			}			
+			
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			
+			}
+		}
+		
+		# Level 1 Start
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_3').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}	
+		}
+	
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_3_1"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3_1
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		# Level 1 End
+		# Level 2 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"			
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_3_1').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3_1
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_2.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_2
+			}	
+		}
+		
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_3_2"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3_2
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		
+		# Level 2 End
+		# Level 3 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"			
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_3_2').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3_2
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_3.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_3
+			}	
+		}
+		
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_3_3"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3_3
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		
+		# Level 3 End
+		# Level 4 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_4.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_4
+			}	
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 100 100 }
+			parentanchor = center
+			position = { 0 -20 }
+			texture = "[GetModifier('national_idea_modifier_TST_3_3').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_3_3
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_3_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_3_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 40 40 }
+			position = { 0 95 }
+			parentanchor = center
+			texture = "gfx/interface/icons/iv2_upgrade_no.dds"
+			
+			using = button_panel_tab_icon_effect
+			
+			modify_texture = {
+				using = color_new_gold_texture
+				blend_mode = add
+			}
+			
+			tooltipwidget = {
+				using = iv2_upgrade_no_tt
+			}
+
+			glow = {
+				name = "drop_shadow"
+				glow_radius = 3
+				color = {50.0 0.0 0.0 1.0}
+				alpha = 0.8
+			}
+		}
+		# Level 4 End	
+	}
+	
+	type iv2_historic_idea_see_TST_11 = widget { 	
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_TST_11')]"
+		size = { 200 250 }
+		position = { 0 0 }
+		
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+		
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+			
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+		
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+			
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_historic_TST_11"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_TST_11
+			}			
+			
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			
+			}
+		}
+		
+		# Level 1 Start
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_11').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}	
+		}
+	
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_11_1"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11_1
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		# Level 1 End
+		# Level 2 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"			
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_11_1').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11_1
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_2.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_2
+			}	
+		}
+		
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_1')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_11_2"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11_2
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		
+		# Level 2 End
+		# Level 3 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"			
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_11_2').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11_2
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_3.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_3
+			}	
+		}
+		
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_2')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_historic_TST_11_3"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11_3
+			}
+			
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+				
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}		
+		}
+		
+		# Level 3 End
+		# Level 4 Start
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_4.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_4
+			}	
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 100 100 }
+			parentanchor = center
+			position = { 0 -20 }
+			texture = "[GetModifier('national_idea_modifier_TST_11_3').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_11_3
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_11_3')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_11_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 40 40 }
+			position = { 0 95 }
+			parentanchor = center
+			texture = "gfx/interface/icons/iv2_upgrade_no.dds"
+			
+			using = button_panel_tab_icon_effect
+			
+			modify_texture = {
+				using = color_new_gold_texture
+				blend_mode = add
+			}
+			
+			tooltipwidget = {
+				using = iv2_upgrade_no_tt
+			}
+
+			glow = {
+				name = "drop_shadow"
+				glow_radius = 3
+				color = {50.0 0.0 0.0 1.0}
+				alpha = 0.8
+			}
+		}
+		# Level 4 End	
+	}
+	
+	type iv2_historic_idea_see_TST_31 = widget { 	
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_TST_31')]"
+		size = { 200 250 }
+		position = { 0 0 }
+		
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+		
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+			
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+		
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+			
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_historic_TST_31"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_TST_31
+			}			
+			
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			
+			}
+		}
+		
+		# Level 1 Start
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_31')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_31').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_31').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_31
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_31')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_31').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}	
+		}
+	
+		# Level 1 End
+	}
+	
+	type iv2_historic_idea_see_TST_32 = widget { 	
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_TST_32')]"
+		size = { 200 250 }
+		position = { 0 0 }
+		
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+		
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+			
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+		
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+			
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_historic_TST_32"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_TST_32
+			}			
+			
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+				
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			
+			}
+		}
+		
+		# Level 1 Start
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_32')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_32').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_TST_32').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_TST_32
+			}
+		}
+		
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_historic_TST_32')]"
+			visible = "[GetScriptedGui('iv2_sgui_historic_TST_32').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}	
+		}
+	
+		# Level 1 End
+	}
+	
+} # Close types
+	
+##FILE in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/TST/IV2_historic_select_TST.gui
+##########################################################################################################################
+##########################################################################################################################
+####### TST National Ideas - Select
+##########################################################################################################################
+##########################################################################################################################
+
+types iv2_historic_idea_TST_select_adm { 
+	
+	type iv2_historic_idea_select_TST_1 = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_TST_1')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+		
+		icon = {			
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_adm'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_adm'))), StringContains(GetModifier('national_idea_modifier_TST_1').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_adm')))]"
+        }
+		
+		
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_historic_TST_1"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+				
+				tooltipwidget = {
+						using = iv_2_historic_idea_select_tt_TST_1
+				}
+				
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+				
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+				
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_TST_1').GetName]"
+							}	
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_TST_1').GetDesc]"
+						}				
+					}
+				}
+			}		
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+	
+	type iv2_historic_idea_select_TST_2 = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_TST_2')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+		
+		icon = {			
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_adm'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_adm'))), StringContains(GetModifier('national_idea_modifier_TST_2').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_adm')))]"
+        }
+		
+		
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_historic_TST_2"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+				
+				tooltipwidget = {
+						using = iv_2_historic_idea_select_tt_TST_2
+				}
+				
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+				
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+				
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_TST_2').GetName]"
+							}	
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_TST_2').GetDesc]"
+						}				
+					}
+				}
+			}		
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+	
+	type iv2_historic_idea_select_TST_3 = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_TST_3')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+		
+		icon = {			
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_adm'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_adm'))), StringContains(GetModifier('national_idea_modifier_TST_3').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_adm')))]"
+        }
+		
+		
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_historic_TST_3"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+				
+				tooltipwidget = {
+						using = iv_2_historic_idea_select_tt_TST_3
+				}
+				
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+				
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+				
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_TST_3').GetName]"
+							}	
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_TST_3').GetDesc]"
+						}				
+					}
+				}
+			}		
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+	
+	type iv2_historic_idea_select_TST_11 = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_TST_11')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+		
+		icon = {			
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_dip'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_dip'))), StringContains(GetModifier('national_idea_modifier_TST_11').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_dip')))]"
+        }
+		
+		
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_historic_TST_11"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+				
+				tooltipwidget = {
+						using = iv_2_historic_idea_select_tt_TST_11
+				}
+				
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+				
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+				
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_TST_11').GetName]"
+							}	
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_TST_11').GetDesc]"
+						}				
+					}
+				}
+			}		
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+	
+	type iv2_historic_idea_select_TST_31 = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_TST_31')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+		
+		icon = {			
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_navy'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_navy'))), StringContains(GetModifier('national_idea_modifier_TST_31').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_navy')))]"
+        }
+		
+		
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_historic_TST_31"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+				
+				tooltipwidget = {
+						using = iv_2_historic_idea_select_tt_TST_31
+				}
+				
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+				
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+				
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_TST_31').GetName]"
+							}	
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_TST_31').GetDesc]"
+						}				
+					}
+				}
+			}		
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+	
+	type iv2_historic_idea_select_TST_32 = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_TST_32')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+		
+		icon = {			
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_navy'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_navy'))), StringContains(GetModifier('national_idea_modifier_TST_32').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_navy')))]"
+        }
+		
+		
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_historic_TST_32"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+				
+				tooltipwidget = {
+						using = iv_2_historic_idea_select_tt_TST_32
+				}
+				
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+				
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+				
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_TST_32').GetName]"
+							}	
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_TST_32').GetDesc]"
+						}				
+					}
+				}
+			}		
+		}
+		
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_TST_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+	
+} # Close types
+##FILE in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/TST/IV2_historic_select_tt_TST.gui
+##########################################################################################################################
+##########################################################################################################################
+####### TST National Ideas - Select Tooltips
+##########################################################################################################################
+##########################################################################################################################
+
+template iv_2_historic_idea_select_tt_TST_1 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_1"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_1').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_1_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_1').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_1').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_2 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_2"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_2').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_2_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_2').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_2').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_2_1 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_2_1"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_2_1').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_2_1_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_2_1').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_2_1').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_3 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_3"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_3_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_3').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_3_1 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_1"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3_1').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_3_1_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3_1').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_3_1').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_3_2 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_2"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3_2').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_3_2_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3_2').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_3_2').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_3_3 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_adm.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_3"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3_3').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_3_3_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_3_3').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_3_3').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_11 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_dip.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_11"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_11_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_11').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_11_1 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_dip.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_1"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11_1').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_11_1_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11_1').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_11_1').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_11_2 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_dip.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_2"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11_2').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_11_2_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11_2').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_11_2').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_11_3 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_dip.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_3"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11_3').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_11_3_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_11_3').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_11_3').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_31 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_navy.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_31"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_31').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_31_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_31').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_31').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+
+template iv_2_historic_idea_select_tt_TST_32 {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/icon_idea_navy.dds"
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_TST_32"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_32').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_TST_32_desc"
+				}
+			}
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_TST_32').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_TST_32').GetDesc]"
+				}
+			}
+			
+		}
+	}
+}	
+##FILE in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/TST/IV2_historic_setup_TST.gui
+##########################################################################################################################
+##########################################################################################################################
+####### TST National Ideas Setup
+##########################################################################################################################
+##########################################################################################################################
+
+template iv2_TST_flag_tt {
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+			size = { 48 48 }
+			texture = "gfx/interface/coa/TST.dds"
+			texture_density = 2
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_hist_idea_flag_tt_title_TST"
+		}
+		
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				blockoverride "text" {
+					text = "iv2_hist_idea_flag_tt_desc_TST"
+				}
+			}
+		}
+	}
+}
+##FILE in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui
+types iv2_historic_idea_dynamic_national_ideas_setup {
+
+	type iv2_picked_national_ideas_shell = widget {
+		parentanchor = left
+	
+		# === IV2Generator:TST:START ===
+		iv2_historic_idea_see_TST_1 = {}
+		iv2_historic_idea_see_TST_2 = {}
+		iv2_historic_idea_see_TST_3 = {}
+		iv2_historic_idea_see_TST_11 = {}
+		iv2_historic_idea_see_TST_31 = {}
+		iv2_historic_idea_see_TST_32 = {}
+		# === IV2Generator:TST:END ===
+}
+}
+##FILE in_game/gui/Idea Variation 2 National Ideas/IV2_historic_national_ideas_setup.gui
+types iv2_historic_national_ideas_setup {
+
+	type iv2_historic_shell_adm = widget {
+		parentanchor = left
+	
+		# === IV2Generator:TST:START ===
+		iv2_historic_idea_select_TST_1 = {}
+		iv2_historic_idea_select_TST_2 = {}
+		iv2_historic_idea_select_TST_3 = {}
+		# === IV2Generator:TST:END ===
+}
+
+	type iv2_historic_shell_dip = widget {
+		parentanchor = left
+	
+		# === IV2Generator:TST:START ===
+		iv2_historic_idea_select_TST_11 = {}
+		# === IV2Generator:TST:END ===
+}
+
+	type iv2_historic_shell_army = widget {
+		parentanchor = left
+	}
+
+	type iv2_historic_shell_navy = widget {
+		parentanchor = left
+	
+		# === IV2Generator:TST:START ===
+		iv2_historic_idea_select_TST_31 = {}
+		iv2_historic_idea_select_TST_32 = {}
+		# === IV2Generator:TST:END ===
+}
+}
+##FILE main_menu/common/static_modifiers/02_IV2_TST.txt
+#############################################################################
+#############################################################################
+###### Idea Variation 2 Historic National Idea Modifiers TST
+#############################################################################
+#############################################################################
+
+# ADM Category
+
+national_idea_modifier_TST_1 = {
+	game_data = {
+	    category = country
+    }
+	monthly_legitimacy = 0.1
+}
+
+national_idea_modifier_TST_2 = {
+	game_data = {
+	    category = country
+    }
+	a = 1
+	b = 2
+}
+
+national_idea_modifier_TST_2_1 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+national_idea_modifier_TST_3 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+national_idea_modifier_TST_3_1 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+national_idea_modifier_TST_3_2 = {
+	game_data = {
+	    category = country
+    }
+	c = 3
+}
+
+national_idea_modifier_TST_3_3 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+# DIP Category
+
+national_idea_modifier_TST_11 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+national_idea_modifier_TST_11_1 = {
+	game_data = {
+	    category = country
+    }
+	d = 4
+}
+
+national_idea_modifier_TST_11_2 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+national_idea_modifier_TST_11_3 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+# Navy Category
+
+national_idea_modifier_TST_31 = {
+	game_data = {
+	    category = country
+    }
+	
+}
+
+national_idea_modifier_TST_32 = {
+	game_data = {
+	    category = country
+    }
+	e = 5
+}
+
+##FILE main_menu/gui/messagetypes.txt
+# This file has no immediate game effect and its content needs to be copied to Idea Variation main after replacing
+
+# === IV2Generator:TST:START ===
+WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+# === IV2Generator:TST:END ===
+##FILE main_menu/localization/english/04_IV2_TST_l_english.yml
+l_english:
+ iv2_hist_idea_flag_tt_title_TST: "Historic National Idea of $TST$"
+ iv2_hist_idea_flag_tt_desc_TST: "This is a Historic National Idea of $TST$."
+ iv2_ga_ai_choose_historic_TST: "AI: choose a historic national idea"
+ iv2_ga_ai_choose_historic_TST_desc: "Only used by the AI: picks a historic national idea of $TST$ by weighted chance."
+ 
+ iv2_historic_idea_TST_1: "Iron 'Will'"
+ iv2_ga_select_historic_TST_1_desc: "First line second line"
+ iv2_historic_idea_TST_2: "Second Idea"
+ iv2_ga_select_historic_TST_2_desc: "Desc two"
+ iv2_historic_idea_TST_3: "Third"
+ iv2_ga_select_historic_TST_3_desc: ""
+ iv2_historic_idea_TST_11: "Diplomacy"
+ iv2_ga_select_historic_TST_11_desc: "Dip desc"
+ iv2_historic_idea_TST_31: "Navy One"
+ iv2_ga_select_historic_TST_31_desc: "Sea"
+ iv2_historic_idea_TST_32: "Navy Two"
+ iv2_ga_select_historic_TST_32_desc: "More sea"
+ 
+ # After this you dont need to manually localize anything unless you change the structure of how the ideas are working
+ 
+ iv2_ga_select_historic_TST_1: "$iv2_historic_idea_TST_1$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_1: "$iv2_remove$ $iv2_historic_idea_TST_1$"
+ iv2_ga_deselect_historic_TST_1_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_1$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_1: "$iv2_ga_select_historic_TST_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_1: "$iv2_ga_select_historic_TST_1_desc$"
+ 
+ iv2_ga_select_historic_TST_2: "$iv2_historic_idea_TST_2$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_2_1: "$iv2_historic_idea_TST_2$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_2_1_desc: "$iv2_ga_select_historic_TST_2_desc$"
+ 
+ iv2_ga_deselect_historic_TST_2: "$iv2_remove$ $iv2_historic_idea_TST_2$"
+ iv2_ga_deselect_historic_TST_2_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_2$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_2: "$iv2_ga_select_historic_TST_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_2: "$iv2_ga_select_historic_TST_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_2_1: "$iv2_ga_select_historic_TST_2_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_2_1: "$iv2_ga_select_historic_TST_2_1_desc$"
+ 
+ iv2_ga_select_historic_TST_3: "$iv2_historic_idea_TST_3$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_3_1: "$iv2_historic_idea_TST_3$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_3_1_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ iv2_ga_select_historic_TST_3_2: "$iv2_historic_idea_TST_3$ $iv2_level_3$"
+ iv2_ga_select_historic_TST_3_2_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ iv2_ga_select_historic_TST_3_3: "$iv2_historic_idea_TST_3$ $iv2_level_4$"
+ iv2_ga_select_historic_TST_3_3_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ 
+ iv2_ga_deselect_historic_TST_3: "$iv2_remove$ $iv2_historic_idea_TST_3$"
+ iv2_ga_deselect_historic_TST_3_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_3$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3: "$iv2_ga_select_historic_TST_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3: "$iv2_ga_select_historic_TST_3_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_1: "$iv2_ga_select_historic_TST_3_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_1: "$iv2_ga_select_historic_TST_3_1_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_2: "$iv2_ga_select_historic_TST_3_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_2: "$iv2_ga_select_historic_TST_3_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_3: "$iv2_ga_select_historic_TST_3_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_3: "$iv2_ga_select_historic_TST_3_3_desc$"
+ 
+ iv2_ga_select_historic_TST_11: "$iv2_historic_idea_TST_11$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_11_1: "$iv2_historic_idea_TST_11$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_11_1_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ iv2_ga_select_historic_TST_11_2: "$iv2_historic_idea_TST_11$ $iv2_level_3$"
+ iv2_ga_select_historic_TST_11_2_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ iv2_ga_select_historic_TST_11_3: "$iv2_historic_idea_TST_11$ $iv2_level_4$"
+ iv2_ga_select_historic_TST_11_3_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ 
+ iv2_ga_deselect_historic_TST_11: "$iv2_remove$ $iv2_historic_idea_TST_11$"
+ iv2_ga_deselect_historic_TST_11_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_11$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11: "$iv2_ga_select_historic_TST_11$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11: "$iv2_ga_select_historic_TST_11_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_1: "$iv2_ga_select_historic_TST_11_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_1: "$iv2_ga_select_historic_TST_11_1_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_2: "$iv2_ga_select_historic_TST_11_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_2: "$iv2_ga_select_historic_TST_11_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_3: "$iv2_ga_select_historic_TST_11_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_3: "$iv2_ga_select_historic_TST_11_3_desc$"
+ 
+ iv2_ga_select_historic_TST_31: "$iv2_historic_idea_TST_31$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_31: "$iv2_remove$ $iv2_historic_idea_TST_31$"
+ iv2_ga_deselect_historic_TST_31_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_31$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_31: "$iv2_ga_select_historic_TST_31$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_31: "$iv2_ga_select_historic_TST_31_desc$"
+ 
+ iv2_ga_select_historic_TST_32: "$iv2_historic_idea_TST_32$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_32: "$iv2_remove$ $iv2_historic_idea_TST_32$"
+ iv2_ga_deselect_historic_TST_32_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_32$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_32: "$iv2_ga_select_historic_TST_32$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_32: "$iv2_ga_select_historic_TST_32_desc$"
+ 
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
+##FILE main_menu/localization/french/04_IV2_TST_l_french.yml
+l_french:
+ iv2_hist_idea_flag_tt_title_TST: "Historic National Idea of $TST$"
+ iv2_hist_idea_flag_tt_desc_TST: "This is a Historic National Idea of $TST$."
+ iv2_ga_ai_choose_historic_TST: "AI: choose a historic national idea"
+ iv2_ga_ai_choose_historic_TST_desc: "Only used by the AI: picks a historic national idea of $TST$ by weighted chance."
+ 
+ iv2_historic_idea_TST_1: "Iron 'Will'"
+ iv2_ga_select_historic_TST_1_desc: "First line second line"
+ iv2_historic_idea_TST_2: ""
+ iv2_ga_select_historic_TST_2_desc: ""
+ iv2_historic_idea_TST_3: ""
+ iv2_ga_select_historic_TST_3_desc: ""
+ iv2_historic_idea_TST_11: "Diplomatie"
+ iv2_ga_select_historic_TST_11_desc: "Desc fr"
+ iv2_historic_idea_TST_31: ""
+ iv2_ga_select_historic_TST_31_desc: ""
+ iv2_historic_idea_TST_32: ""
+ iv2_ga_select_historic_TST_32_desc: ""
+ 
+ # After this you dont need to manually localize anything unless you change the structure of how the ideas are working
+ 
+ iv2_ga_select_historic_TST_1: "$iv2_historic_idea_TST_1$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_1: "$iv2_remove$ $iv2_historic_idea_TST_1$"
+ iv2_ga_deselect_historic_TST_1_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_1$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_1: "$iv2_ga_select_historic_TST_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_1: "$iv2_ga_select_historic_TST_1_desc$"
+ 
+ iv2_ga_select_historic_TST_2: "$iv2_historic_idea_TST_2$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_2_1: "$iv2_historic_idea_TST_2$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_2_1_desc: "$iv2_ga_select_historic_TST_2_desc$"
+ 
+ iv2_ga_deselect_historic_TST_2: "$iv2_remove$ $iv2_historic_idea_TST_2$"
+ iv2_ga_deselect_historic_TST_2_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_2$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_2: "$iv2_ga_select_historic_TST_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_2: "$iv2_ga_select_historic_TST_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_2_1: "$iv2_ga_select_historic_TST_2_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_2_1: "$iv2_ga_select_historic_TST_2_1_desc$"
+ 
+ iv2_ga_select_historic_TST_3: "$iv2_historic_idea_TST_3$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_3_1: "$iv2_historic_idea_TST_3$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_3_1_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ iv2_ga_select_historic_TST_3_2: "$iv2_historic_idea_TST_3$ $iv2_level_3$"
+ iv2_ga_select_historic_TST_3_2_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ iv2_ga_select_historic_TST_3_3: "$iv2_historic_idea_TST_3$ $iv2_level_4$"
+ iv2_ga_select_historic_TST_3_3_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ 
+ iv2_ga_deselect_historic_TST_3: "$iv2_remove$ $iv2_historic_idea_TST_3$"
+ iv2_ga_deselect_historic_TST_3_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_3$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3: "$iv2_ga_select_historic_TST_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3: "$iv2_ga_select_historic_TST_3_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_1: "$iv2_ga_select_historic_TST_3_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_1: "$iv2_ga_select_historic_TST_3_1_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_2: "$iv2_ga_select_historic_TST_3_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_2: "$iv2_ga_select_historic_TST_3_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_3: "$iv2_ga_select_historic_TST_3_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_3: "$iv2_ga_select_historic_TST_3_3_desc$"
+ 
+ iv2_ga_select_historic_TST_11: "$iv2_historic_idea_TST_11$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_11_1: "$iv2_historic_idea_TST_11$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_11_1_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ iv2_ga_select_historic_TST_11_2: "$iv2_historic_idea_TST_11$ $iv2_level_3$"
+ iv2_ga_select_historic_TST_11_2_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ iv2_ga_select_historic_TST_11_3: "$iv2_historic_idea_TST_11$ $iv2_level_4$"
+ iv2_ga_select_historic_TST_11_3_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ 
+ iv2_ga_deselect_historic_TST_11: "$iv2_remove$ $iv2_historic_idea_TST_11$"
+ iv2_ga_deselect_historic_TST_11_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_11$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11: "$iv2_ga_select_historic_TST_11$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11: "$iv2_ga_select_historic_TST_11_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_1: "$iv2_ga_select_historic_TST_11_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_1: "$iv2_ga_select_historic_TST_11_1_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_2: "$iv2_ga_select_historic_TST_11_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_2: "$iv2_ga_select_historic_TST_11_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_3: "$iv2_ga_select_historic_TST_11_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_3: "$iv2_ga_select_historic_TST_11_3_desc$"
+ 
+ iv2_ga_select_historic_TST_31: "$iv2_historic_idea_TST_31$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_31: "$iv2_remove$ $iv2_historic_idea_TST_31$"
+ iv2_ga_deselect_historic_TST_31_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_31$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_31: "$iv2_ga_select_historic_TST_31$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_31: "$iv2_ga_select_historic_TST_31_desc$"
+ 
+ iv2_ga_select_historic_TST_32: "$iv2_historic_idea_TST_32$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_32: "$iv2_remove$ $iv2_historic_idea_TST_32$"
+ iv2_ga_deselect_historic_TST_32_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_32$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_32: "$iv2_ga_select_historic_TST_32$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_32: "$iv2_ga_select_historic_TST_32_desc$"
+ 
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
+##FILE main_menu/localization/german/04_IV2_TST_l_german.yml
+l_german:
+ iv2_hist_idea_flag_tt_title_TST: "Historic National Idea of $TST$"
+ iv2_hist_idea_flag_tt_desc_TST: "This is a Historic National Idea of $TST$."
+ iv2_ga_ai_choose_historic_TST: "KI: historische Nationalidee wählen"
+ iv2_ga_ai_choose_historic_TST_desc: "Nur für die KI: wählt eine historische Nationalidee von $TST$ per gewichtetem Zufall."
+ 
+ iv2_historic_idea_TST_1: "Eiserner Wille"
+ iv2_ga_select_historic_TST_1_desc: "Erste Zeile zweite 'Zeile'"
+ iv2_historic_idea_TST_2: ""
+ iv2_ga_select_historic_TST_2_desc: ""
+ iv2_historic_idea_TST_3: ""
+ iv2_ga_select_historic_TST_3_desc: ""
+ iv2_historic_idea_TST_11: "Diplomacy"
+ iv2_ga_select_historic_TST_11_desc: "Dip desc"
+ iv2_historic_idea_TST_31: ""
+ iv2_ga_select_historic_TST_31_desc: ""
+ iv2_historic_idea_TST_32: ""
+ iv2_ga_select_historic_TST_32_desc: ""
+ 
+ # After this you dont need to manually localize anything unless you change the structure of how the ideas are working
+ 
+ iv2_ga_select_historic_TST_1: "$iv2_historic_idea_TST_1$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_1: "$iv2_remove$ $iv2_historic_idea_TST_1$"
+ iv2_ga_deselect_historic_TST_1_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_1$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_1: "$iv2_ga_select_historic_TST_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_1: "$iv2_ga_select_historic_TST_1_desc$"
+ 
+ iv2_ga_select_historic_TST_2: "$iv2_historic_idea_TST_2$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_2_1: "$iv2_historic_idea_TST_2$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_2_1_desc: "$iv2_ga_select_historic_TST_2_desc$"
+ 
+ iv2_ga_deselect_historic_TST_2: "$iv2_remove$ $iv2_historic_idea_TST_2$"
+ iv2_ga_deselect_historic_TST_2_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_2$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_2: "$iv2_ga_select_historic_TST_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_2: "$iv2_ga_select_historic_TST_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_2_1: "$iv2_ga_select_historic_TST_2_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_2_1: "$iv2_ga_select_historic_TST_2_1_desc$"
+ 
+ iv2_ga_select_historic_TST_3: "$iv2_historic_idea_TST_3$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_3_1: "$iv2_historic_idea_TST_3$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_3_1_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ iv2_ga_select_historic_TST_3_2: "$iv2_historic_idea_TST_3$ $iv2_level_3$"
+ iv2_ga_select_historic_TST_3_2_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ iv2_ga_select_historic_TST_3_3: "$iv2_historic_idea_TST_3$ $iv2_level_4$"
+ iv2_ga_select_historic_TST_3_3_desc: "$iv2_ga_select_historic_TST_3_desc$"
+ 
+ iv2_ga_deselect_historic_TST_3: "$iv2_remove$ $iv2_historic_idea_TST_3$"
+ iv2_ga_deselect_historic_TST_3_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_3$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3: "$iv2_ga_select_historic_TST_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3: "$iv2_ga_select_historic_TST_3_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_1: "$iv2_ga_select_historic_TST_3_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_1: "$iv2_ga_select_historic_TST_3_1_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_2: "$iv2_ga_select_historic_TST_3_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_2: "$iv2_ga_select_historic_TST_3_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_3_3: "$iv2_ga_select_historic_TST_3_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_3_3: "$iv2_ga_select_historic_TST_3_3_desc$"
+ 
+ iv2_ga_select_historic_TST_11: "$iv2_historic_idea_TST_11$ $iv2_level_1$"
+ iv2_ga_select_historic_TST_11_1: "$iv2_historic_idea_TST_11$ $iv2_level_2$"
+ iv2_ga_select_historic_TST_11_1_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ iv2_ga_select_historic_TST_11_2: "$iv2_historic_idea_TST_11$ $iv2_level_3$"
+ iv2_ga_select_historic_TST_11_2_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ iv2_ga_select_historic_TST_11_3: "$iv2_historic_idea_TST_11$ $iv2_level_4$"
+ iv2_ga_select_historic_TST_11_3_desc: "$iv2_ga_select_historic_TST_11_desc$"
+ 
+ iv2_ga_deselect_historic_TST_11: "$iv2_remove$ $iv2_historic_idea_TST_11$"
+ iv2_ga_deselect_historic_TST_11_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_11$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11: "$iv2_ga_select_historic_TST_11$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11: "$iv2_ga_select_historic_TST_11_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_1: "$iv2_ga_select_historic_TST_11_1$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_1: "$iv2_ga_select_historic_TST_11_1_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_2: "$iv2_ga_select_historic_TST_11_2$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_2: "$iv2_ga_select_historic_TST_11_2_desc$"
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_11_3: "$iv2_ga_select_historic_TST_11_3$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_11_3: "$iv2_ga_select_historic_TST_11_3_desc$"
+ 
+ iv2_ga_select_historic_TST_31: "$iv2_historic_idea_TST_31$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_31: "$iv2_remove$ $iv2_historic_idea_TST_31$"
+ iv2_ga_deselect_historic_TST_31_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_31$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_31: "$iv2_ga_select_historic_TST_31$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_31: "$iv2_ga_select_historic_TST_31_desc$"
+ 
+ iv2_ga_select_historic_TST_32: "$iv2_historic_idea_TST_32$ $iv2_level_1$"
+ 
+ iv2_ga_deselect_historic_TST_32: "$iv2_remove$ $iv2_historic_idea_TST_32$"
+ iv2_ga_deselect_historic_TST_32_desc: "$iv2_remove_desc$ $iv2_historic_idea_TST_32$ $iv2_remove_2_desc$"
+ 
+ STATIC_MODIFIER_NAME_national_idea_modifier_TST_32: "$iv2_ga_select_historic_TST_32$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_TST_32: "$iv2_ga_select_historic_TST_32_desc$"
+ 
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_MAP: ""
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""

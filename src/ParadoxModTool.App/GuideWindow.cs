@@ -20,8 +20,8 @@ public enum GuideBlockKind
     Example,
 }
 
-/// <summary>Ein Block einer Anleitung: Titel, Überschrift, Absatz oder Beispielkasten (Consolas).</summary>
-public sealed record GuideBlock(GuideBlockKind Kind, string Text);
+/// <summary>Ein Block einer Anleitung: Titel, Überschrift, Absatz oder Beispielkasten (Consolas). <see cref="Key"/> bei Überschriften: Sprungziel für <see cref="GuideWindow.ShowSection"/>.</summary>
+public sealed record GuideBlock(GuideBlockKind Kind, string Text, string? Key = null);
 
 /// <summary>
 /// Gemeinsamer Aufbau der Anleitungsfenster: Titel, Überschriften, Absätze und Beispielkästen untereinander.
@@ -35,6 +35,7 @@ public class GuideWindow : Window
     {
         public required string Label { get; init; }
         public required FrameworkElement Heading { get; init; }
+        public string? Key { get; init; }
         public List<TextBlock> Texts { get; } = new();
         public override string ToString() => Label;
     }
@@ -65,7 +66,7 @@ public class GuideWindow : Window
             _allTexts.Add(text);
             if (block.Kind == GuideBlockKind.Heading)
             {
-                current = new Section { Label = $"{_sections.Count + 1}  {block.Text}", Heading = element };
+                current = new Section { Label = $"{_sections.Count + 1}  {block.Text}", Heading = element, Key = block.Key };
                 _sections.Add(current);
             }
 
@@ -134,6 +135,37 @@ public class GuideWindow : Window
     }
 
     private double OffsetOf(FrameworkElement element) => element.TranslatePoint(new Point(0, 0), _panel).Y;
+
+    /// <summary>Springt zur Überschrift mit diesem Schlüssel (F1 mit Kontext); vor dem Laden erst danach. Ein unbekannter Schlüssel ändert nichts.</summary>
+    public void ShowSection(string key)
+    {
+        if (_sections.FirstOrDefault(s => s.Key == key) is not { } section)
+        {
+            return;
+        }
+
+        void Jump()
+        {
+            UpdateLayout();
+            _scroll.ScrollToVerticalOffset(Math.Max(0, OffsetOf(section.Heading) - 8));
+            if (_toc is not null && _toc.Items.Contains(section))
+            {
+                _syncing = true;
+                _toc.SelectedItem = section;
+                _toc.ScrollIntoView(section);
+                _syncing = false;
+            }
+        }
+
+        if (IsLoaded)
+        {
+            Jump();
+        }
+        else
+        {
+            Loaded += (_, _) => Jump();
+        }
+    }
 
     private void JumpToSelected()
     {

@@ -1,0 +1,31 @@
+# block: Suchfeld
+# group: Bedienelemente
+# description: Eingabefeld mit Lupe im Aussehen der Suchleiste des Spiels (editbox mit text_edit_bg). Die fertige Art search_bar braucht den Datenkontext SearchBar, den nur Panels des Spiels liefern (z. B. BuildingBrowserPanel.GetSearchBar), daher fehlen hier Platzhaltertext und Löschknopf. Den eingegebenen Text werten in Vanilla nur Funktionen des Spiels aus (ontextedited), nicht GetVariableSystem. Vorbild: gui/shared/search_bar.gui, gui/building_browser_panel.gui
+# param: name | Name | my_search
+# param: width | Breite | 250
+# requires: text_edit_bg
+
+hbox = {
+	margin = { 8 4 }
+	spacing = 5
+
+	icon = {
+		size = { 40 40 }
+		texture = "gfx/interface/buttons/button_icons/search.dds"
+		alpha = 0.6
+	}
+
+	editbox = {
+		name = "$name$"
+		size = { $width$ 32 }
+		margin = { 12 0 }
+		alwaystransparent = no
+		focuspolicy = all
+		align = nobaseline
+		# ontextedited = "[...]"
+
+		background = {
+			using = text_edit_bg
+		}
+	}
+}

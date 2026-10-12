@@ -92,6 +92,8 @@ public partial class GitHubPublishWindow : Window
 
     private bool VersionValid => VersionNumber.TryParse(Version, out _);
 
+    private bool Classic => ModMetadata.IsClassic(_metadataFile);
+
     private Brush Danger => TryFindResource("Theme.Danger") as Brush ?? Brushes.Firebrick;
 
     private Brush Muted => TryFindResource("Theme.TextMuted") as Brush ?? Brushes.Gray;
@@ -110,8 +112,8 @@ public partial class GitHubPublishWindow : Window
         _metadata = ModMetadata.Find(_mod, _metadataFile);
         LoadChangelog();
         VersionText.Text = _metadata is null
-            ? PublishTexts.NoMetadata
-            : VersionValid ? $"Version {Version}" : GitTexts.CheckVersionInvalid;
+            ? ModsTexts.NoReadableMetadataFor(Classic)
+            : VersionValid ? $"Version {Version}" : ModsTexts.NoValidVersionFor(Classic);
         if (string.IsNullOrWhiteSpace(CommitMessageBox.Text))
         {
             CommitMessageBox.Text = VersionValid ? $"Release {Version}" : string.Empty;
@@ -707,7 +709,7 @@ public partial class GitHubPublishWindow : Window
     {
         if (ModFolder is not { } folder || !VersionValid)
         {
-            Report(PublishTexts.ZipNeedsVersion);
+            Report(PublishTexts.ZipNeedsVersionFor(Classic));
             return;
         }
 
@@ -819,7 +821,8 @@ public partial class GitHubPublishWindow : Window
             Checks: checks,
             UpdateExisting: UpdateCheck.IsChecked == true,
             ZipProblems: _zipProblems,
-            GitWarnings: GitWarnings.From(_gitState)));
+            GitWarnings: GitWarnings.From(_gitState),
+            ClassicMetadata: Classic));
         HintList.ItemsSource = _readiness.Hints.Select(h => new HintRow(h.Text, h.Blocking ? Danger : Muted)).ToList();
         PublishButton.IsEnabled = _readiness.CanPublish && !_publishing;
     }

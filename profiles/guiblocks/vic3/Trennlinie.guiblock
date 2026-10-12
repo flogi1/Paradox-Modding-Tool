@@ -1,0 +1,8 @@
+# block: Trennlinie
+# group: Anzeige
+# description: Waagrechte Linie über die volle Breite, zu den Enden ausgeblendet (divider_clean, die häufigste Trennlinie des Spiels). Mit Verzierung in der Mitte: divider_decorative. Senkrecht: vertical_divider = { layoutpolicy_vertical = expanding }. Vorbild: gui/window_component_library.gui, gui/shared/dividers.gui, gui/tooltip.gui
+# requires: divider_clean
+
+divider_clean = {
+	layoutpolicy_horizontal = expanding
+}

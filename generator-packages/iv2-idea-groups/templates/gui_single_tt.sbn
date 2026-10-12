@@ -1,0 +1,289 @@
+###################################################
+###### {{ g }} Idea Start
+###################################################
+
+template iv2_idea_tt_template_{{ g }}_1 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_1').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_1"
+				}
+			}
+		
+	}
+
+	
+}
+
+template iv2_idea_tt_template_{{ g }}_2 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_2').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_2"
+				}
+			}
+		
+	}
+
+	
+}
+
+template iv2_idea_tt_template_{{ g }}_3 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_3').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_3"
+				}
+			}
+		
+	}
+
+	
+}
+
+template iv2_idea_tt_template_{{ g }}_4 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_4').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_4"
+				}
+			}
+		
+	}
+
+	
+}
+
+template iv2_idea_tt_template_{{ g }}_5 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_5').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_5"
+				}
+			}
+		
+	}
+
+	
+}
+
+template iv2_idea_tt_template_{{ g }}_6 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_6').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_6"
+				}
+			}
+		
+	}
+
+	
+}
+
+template iv2_idea_tt_template_{{ g }}_7 {
+	block "description" {
+		TooltipTextBlock = {
+			name = "DescriptionTest"
+			visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+			blockoverride "text" { text = "[UIAction.GetDescription]" }
+		}
+	}
+
+	# block "acceptance_list" {
+		TooltipScrolledBlockList = {
+			blockoverride "block_title" {
+				text = "BREAKDOWN_REASONS_GENERIC_TITLE"
+			}
+			name = "Acceptance"
+			visible = "[Not(StringIsEmpty(UIAction.GetAcceptance))]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+			textcontext = "[UIAction.GetAcceptance]"
+		}
+	# }
+
+	block "effects_list" {
+		TooltipConditionList = {
+			blockoverride "block_title" {
+				text = "game_concept_effects"
+			}
+			name = "Effect"
+			visible = "[ConditionList.HasItems]"
+			datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+		}
+		TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_7').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_idea_tt_{{ g }}_7"
+				}
+			}
+		
+	}
+
+	
+}
+
+###################################################
+###### {{ g }} Idea End
+###################################################

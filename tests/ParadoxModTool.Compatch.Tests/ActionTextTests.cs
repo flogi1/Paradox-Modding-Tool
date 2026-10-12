@@ -86,23 +86,10 @@ public class ActionTextTests
     }
 
     [Fact]
-    public void Side_names_and_whole_file_rows()
+    public void Side_names()
     {
         Assert.Equal("A", ActionText.SideName(DecisionKind.TakeA));
         Assert.Equal("B", ActionText.SideName(DecisionKind.TakeB));
         Assert.Equal(CompatchTexts.ColumnVanilla, ActionText.SideName(DecisionKind.TakeVanilla));
-
-        var info = new AddressInfo
-        {
-            Address = EntryAddress.ForWholeFile("gfx/x.txt"),
-            Behavior = ParadoxModTool.ModCompat.OverrideBehavior.WholeFile,
-            Certain = true,
-            A = new Effective { RelativePath = "gfx/x.txt", FileHash = "1" },
-            B = new Effective { RelativePath = "gfx/x.txt", FileHash = "2" },
-        };
-        var rows = ActionText.WholeFileRows(info, new MergeDecision(DecisionKind.TakeB));
-
-        Assert.Contains(rows, r => r.Result == CompatchTexts.WholeFileChoice("B"));
-        Assert.Contains(rows, r => r.A == "gfx/x.txt" && r.B == "gfx/x.txt");
     }
 }

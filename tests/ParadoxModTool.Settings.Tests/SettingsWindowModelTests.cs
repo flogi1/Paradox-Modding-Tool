@@ -25,11 +25,28 @@ public sealed class SettingsWindowModelTests
     {
         Assert.Equal(SettingsCategory.Hotkeys, SettingsCategories.Parse("Hotkeys"));
         Assert.Equal(16, SettingsCategories.All.Count);
+        Assert.Equal(SettingsCategory.Workspace, SettingsCategories.All[4]);
         Assert.Equal(SettingsCategory.SaveExplorer, SettingsCategories.All[SettingsCategories.All.ToList().IndexOf(SettingsCategory.ErrorLog) + 1]);
-        Assert.Equal(SettingsCategory.BugTracker, SettingsCategories.All[^2]);
+        Assert.Equal(SettingsCategory.BugTracker, SettingsCategories.All[^5]);
         Assert.Contains(SettingsCategory.ErrorLog, SettingsCategories.All);
         Assert.Equal(SettingsCategory.General, SettingsCategories.All[0]);
         Assert.Equal(SettingsCategory.Update, SettingsCategories.All[^1]);
+    }
+
+    [Theory]
+    [InlineData("Toolbar")]
+    [InlineData("WorkspaceToolbar")]
+    public void OldToolbarCategoriesMapToToolbars(string stored) =>
+        Assert.Equal(SettingsCategory.Toolbars, SettingsCategories.Parse(stored));
+
+    [Fact]
+    public void LayoutTilesAndToolbarsFollowGeneral()
+    {
+        Assert.Equal(SettingsCategory.Layout, SettingsCategories.All[1]);
+        Assert.Equal(SettingsCategory.Tiles, SettingsCategories.All[2]);
+        Assert.Equal(SettingsCategory.Toolbars, SettingsCategories.All[3]);
+        Assert.Equal("Kachelleiste", SettingsTexts.CategoryLabel(SettingsCategory.Tiles));
+        Assert.Equal("Werkzeugleisten", SettingsTexts.CategoryLabel(SettingsCategory.Toolbars));
     }
 
     [Theory]

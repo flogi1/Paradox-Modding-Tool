@@ -180,6 +180,17 @@ public class OverrideRulesTests : TempDirTests
     }
 
     [Fact]
+    public void Eu5_profile_lists_11_localization_languages()
+    {
+        var languages = GameProfileLoader.LoadFromFile(RepoFile("profiles/eu5.json")).LocalizationLanguages;
+
+        Assert.Equal(11, languages.Count);
+        Assert.Equal("english", languages[0]);
+        Assert.Contains("braz_por", languages);
+        Assert.Contains("simp_chinese", languages);
+    }
+
+    [Fact]
     public void Profile_without_script_docs_source_defaults_to_log()
     {
         var profile = new GameProfile { Id = "x" };
@@ -194,5 +205,66 @@ public class OverrideRulesTests : TempDirTests
         var match = rules.Match("common/foo/a.txt");
         Assert.False(match.Certain);
         Assert.False(match.Known);
+    }
+
+    [Fact]
+    public void Rule_operators_come_from_the_profile_and_reach_the_match()
+    {
+        var profile = new GameProfile
+        {
+            Id = "x",
+            InjectAppends = true,
+            OverrideRules =
+            {
+                new OverrideRuleEntry { Folder = "common", Behavior = "LastWins", Operators = new() },
+                new OverrideRuleEntry { Folder = "common/scripted_effects", Behavior = "PerKey", Operators = new() { "REPLACE" } },
+                new OverrideRuleEntry { Folder = "common/buildings", Behavior = "PerKey" },
+            },
+        };
+        var rules = OverrideRules.FromProfile(profile);
+
+        Assert.True(rules.InjectAppends);
+        Assert.Empty(rules.Match("common/history/x.txt").Operators!);
+        Assert.Equal(new[] { "REPLACE" }, rules.Match("common/scripted_effects/x.txt").Operators);
+        Assert.Null(rules.Match("common/buildings/x.txt").Operators);
+        Assert.True(rules.Match("common/buildings/x.txt").Allows("INJECT", new[] { "INJECT" }));
+        Assert.False(rules.Match("common/scripted_effects/x.txt").Allows("INJECT", new[] { "INJECT", "REPLACE" }));
+    }
+
+    [Fact]
+    public void Vic3_unlisted_common_folder_is_its_own_scope_without_operators()
+    {
+        var rules = OverrideRules.FromProfile(GameProfileLoader.LoadFromFile(RepoFile("profiles/vic3.json")));
+
+        var unlisted = rules.Match("common/opinion_modifiers/x.txt");
+        Assert.Equal("common/opinion_modifiers", unlisted.Scope);
+        Assert.Equal(OverrideBehavior.LastWins, unlisted.Behavior);
+        Assert.Empty(unlisted.Operators!);
+        Assert.Equal(OverrideBehavior.PerKey, rules.Match("common/buildings/x.txt").Behavior);
+        Assert.Equal("common/buildings", rules.Match("common/buildings/x.txt").Scope);
+        Assert.Equal(OverrideBehavior.AppendOnly, rules.Match("common/history/states/x.txt").Behavior);
+        Assert.True(rules.FirstWinsInLoadOrder);
+    }
+
+    [Fact]
+    public void User_rule_for_an_unlisted_folder_inherits_the_operators_of_its_shipped_parent()
+    {
+        var rules = new OverrideRules(
+            new[] { new OverrideRule("common", OverrideBehavior.LastWins, Operators: Array.Empty<string>()) },
+            new[] { new OverrideRule("common/coat_of_arms", OverrideBehavior.PerKey) });
+
+        Assert.Empty(rules.Match("common/coat_of_arms/x.txt").Operators!);
+    }
+
+    [Fact]
+    public void User_rule_keeps_the_shipped_operators()
+    {
+        var rules = new OverrideRules(
+            new[] { new OverrideRule("common/scripted_effects", OverrideBehavior.PerKey, Operators: new[] { "REPLACE" }) },
+            new[] { new OverrideRule("common/scripted_effects", OverrideBehavior.LastWins) });
+
+        var match = rules.Match("common/scripted_effects/x.txt");
+        Assert.Equal(OverrideBehavior.LastWins, match.Behavior);
+        Assert.Equal(new[] { "REPLACE" }, match.Operators);
     }
 }

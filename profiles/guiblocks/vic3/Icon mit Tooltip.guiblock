@@ -1,0 +1,16 @@
+# block: Icon mit Tooltip
+# group: Anzeige
+# description: Icon mit einfachem Tooltip aus einem Lokalisierungsschlüssel, Tooltip unten rechts (tooltip_se); Icons liegen in gfx/interface/icons. Vorbild: gui/country_panel.gui, gui/window_component_library.gui
+# param: name | Name | my_icon
+# param: texture | Icon (Texturpfad) | gfx/interface/icons/generic_icons/gdp.dds
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_ICON_TT
+# param: size | Größe | 32
+# requires: tooltip_se
+
+icon = {
+	name = "$name$"
+	size = { $size$ $size$ }
+	texture = "$texture$"
+	tooltip = "$tooltip$"
+	using = tooltip_se
+}

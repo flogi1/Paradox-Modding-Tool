@@ -54,6 +54,39 @@ public readonly record struct OverrideKey(OverrideOperator Operator, string Key)
         return new OverrideKey(OverrideOperator.None, raw);
     }
 
+    /// <summary>
+    /// Liest das Präfix nach den Präfixen eines Ordners (<paramref name="folderOperators"/>, siehe <c>OverrideRule.Operators</c>). Ein Präfix, das
+    /// der Ordner nicht kennt, bleibt Teil des Schlüssels; nur INJECT-Formen in einem Ordner, der REPLACE kennt, wirken wie die passende
+    /// REPLACE-Form (Victoria 3, Wiki: INJECT in scripted_effects und scripted_triggers überschreibt wie REPLACE).
+    /// </summary>
+    public static OverrideKey ParseInFolder(string raw, IReadOnlyCollection<string> folderOperators)
+    {
+        var parsed = Parse(raw);
+        if (parsed.Operator == OverrideOperator.None)
+        {
+            return parsed;
+        }
+
+        var name = Prefixes.First(p => p.Operator == parsed.Operator).Prefix.TrimEnd(':');
+        if (folderOperators.Contains(name, StringComparer.OrdinalIgnoreCase))
+        {
+            return parsed;
+        }
+
+        if (parsed.IsInject && folderOperators.Contains("REPLACE", StringComparer.OrdinalIgnoreCase))
+        {
+            var replace = parsed.Operator switch
+            {
+                OverrideOperator.TryInject => OverrideOperator.TryReplace,
+                OverrideOperator.InjectOrCreate => OverrideOperator.ReplaceOrCreate,
+                _ => OverrideOperator.Replace,
+            };
+            return new OverrideKey(replace, parsed.Key);
+        }
+
+        return new OverrideKey(OverrideOperator.None, raw);
+    }
+
     /// <summary>Verarbeitungsreihenfolge laut Wiki (kleiner = früher). Eine einfache Definition ohne Präfix hat -1 und kommt vor allen Operatoren.</summary>
     public int Order => Operator switch
     {

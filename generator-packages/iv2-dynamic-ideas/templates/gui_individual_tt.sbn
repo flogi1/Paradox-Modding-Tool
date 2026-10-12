@@ -1,0 +1,58 @@
+{{~ for i in 1..4 ~}}
+{{~ s = sfx i ~}}
+template iv2_individual_nat_idea_{{ id }}{{ s }} {
+{{~ if i == 1 ~}}
+
+{{~ end ~}}
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_{{ id }}{{ s }}').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_national_idea_modifier_{{ id }}{{ s }}"
+		}
+
+		blockoverride "tooltip_content" {
+
+			TooltipTextBlock = {
+			name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_{{ id }}').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_national_idea_{{ id }}{{ s }}_desc"
+				}
+			}
+{{~ if i == 1 ~}}
+
+{{~ end ~}}
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_{{ id }}{{ s }}').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('national_idea_modifier_{{ id }}{{ s }}').GetDesc]"
+				}
+			}
+{{~ if i == 1 ~}}
+
+{{~ end ~}}
+		}
+{{~ if i == 1 ~}}
+
+
+
+{{~ end ~}}
+	}
+}
+{{~ if i < 4 ~}}
+
+{{~ end ~}}
+{{~ end ~}}

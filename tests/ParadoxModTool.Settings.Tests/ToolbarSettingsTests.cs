@@ -13,16 +13,49 @@ public sealed class ToolbarSettingsTests
     }
 
     [Fact]
-    public void CatalogHasTwentyUniqueItemsInGroupOrder()
+    public void CatalogHasTwentyEightUniqueItemsInGroupOrder()
     {
         var ids = ToolbarCatalog.All.Select(i => i.Id).ToList();
 
-        Assert.Equal(22, ids.Count);
+        Assert.Equal(28, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct().Count());
         var groups = ToolbarCatalog.All.Select(i => (int)i.Group).ToList();
         Assert.Equal(groups.OrderBy(g => g), groups);
-        Assert.Equal(ToolbarItemIds.Undo, ids[0]);
+        Assert.Equal(ToolbarItemIds.New, ids[0]);
+        Assert.Equal(ToolbarItemIds.Move, ids[5]);
+        Assert.Equal(ToolbarItemIds.Undo, ids[6]);
         Assert.Equal(ToolbarItemIds.LaunchGame, ids[^1]);
+    }
+
+    [Fact]
+    public void DefaultOrderContainsEveryItemOnceAndFiveSeparators()
+    {
+        var order = ToolbarCatalog.DefaultOrder;
+
+        Assert.Equal(ToolbarCatalog.All.Select(i => i.Id), order.Where(id => !ToolbarCatalog.IsSeparator(id)));
+        Assert.Equal(new[] { "sep:1", "sep:2", "sep:3", "sep:4", "sep:5" }, order.Where(ToolbarCatalog.IsSeparator));
+        Assert.Equal(ToolbarItemIds.Move, order[5]);
+        Assert.Equal("sep:1", order[6]);
+        Assert.Equal(ToolbarItemIds.Format, order[16]);
+    }
+
+    [Fact]
+    public void TileToolsAreHiddenByDefaultInTheTilesLayout() =>
+        Assert.Equal(
+            new[] { ToolbarItemIds.ScopeFinder, ToolbarItemIds.GuiDataHelper, ToolbarItemIds.Templates, ToolbarItemIds.BugTracker },
+            ToolbarCatalog.DefaultHiddenInTilesLayout);
+
+    [Fact]
+    public void SeparatorHelpers()
+    {
+        Assert.Equal("sep:7", ToolbarCatalog.Separator(7));
+        Assert.True(ToolbarCatalog.IsSeparator("sep:7"));
+        Assert.False(ToolbarCatalog.IsSeparator("separator"));
+        Assert.False(ToolbarCatalog.IsSeparator("sep:"));
+        Assert.False(ToolbarCatalog.IsSeparator("sep:0"));
+        Assert.False(ToolbarCatalog.IsSeparator("sep:x"));
+        Assert.False(ToolbarCatalog.IsSeparator("sep:-1"));
+        Assert.False(ToolbarCatalog.IsKnown("sep:1"));
     }
 
     [Fact]
@@ -48,7 +81,7 @@ public sealed class ToolbarSettingsTests
     [Fact]
     public void OldSessionWithVisibleHintButtonsHidesNothing()
     {
-        var settings = Loaded(new AppSessionState { ScriptHintButtonsVisible = true, HiddenToolbarItems = null });
+        var settings = Loaded(new AppSessionState { ScriptHintButtonsVisible = true, HiddenToolbarItems = null, WindowLayout = "Tiles" });
 
         Assert.Empty(settings.HiddenToolbarItems);
     }
@@ -60,6 +93,7 @@ public sealed class ToolbarSettingsTests
         {
             ScriptHintButtonsVisible = false,
             HiddenToolbarItems = new List<string> { ToolbarItemIds.Bug, "gibtsnicht" },
+            WindowLayout = "Tiles",
         });
 
         Assert.Equal(new[] { ToolbarItemIds.Bug }, settings.HiddenToolbarItems);
@@ -69,7 +103,7 @@ public sealed class ToolbarSettingsTests
     [Fact]
     public void MigrationHappensOnlyOnce()
     {
-        var first = Loaded(new AppSessionState { ScriptHintButtonsVisible = false, HiddenToolbarItems = null });
+        var first = Loaded(new AppSessionState { ScriptHintButtonsVisible = false, HiddenToolbarItems = null, WindowLayout = "Tiles" });
         first.SetToolbarItemVisible(ToolbarItemIds.AutoComplete, true);
         first.SetToolbarItemVisible(ToolbarItemIds.Hover, true);
         var saved = new AppSessionState();
@@ -85,7 +119,7 @@ public sealed class ToolbarSettingsTests
     [Fact]
     public void WriteToStoresSortedListAndKeepsTheOldFlagMeaningful()
     {
-        var settings = Loaded(new AppSessionState { HiddenToolbarItems = new List<string>() });
+        var settings = Loaded(new AppSessionState { HiddenToolbarItems = new List<string>(), WindowLayout = "Tiles" });
         settings.SetToolbarItemVisible(ToolbarItemIds.Hover, false);
         settings.SetToolbarItemVisible(ToolbarItemIds.Bug, false);
         var target = new AppSessionState();

@@ -1,0 +1,14 @@
+{{~ # Nach einem Wechsel der Regierungsform bzw. des Rangs die passende Gruppe wieder wählen ~}}
+{{~ if (groupType == "gov" || groupType == "rank") && condition_lines.size > 0 ~}}
+		if = {
+			limit = {
+				iv2_scripted_trigger_has_{{ govrank_file_word }}_ig_selected = yes
+{{ condition_block "\t\t\t\t" }}
+			}
+			fire_generic_action = {
+				type = iv2_ga_select_ideagroup_{{ g }}
+				actor = root
+				recipient = root
+			}
+		}
+{{~ end ~}}

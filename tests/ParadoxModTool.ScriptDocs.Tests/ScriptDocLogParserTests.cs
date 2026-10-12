@@ -118,6 +118,85 @@ public class ScriptDocLogParserTests
         Assert.Equal(new[] { "Location", "Country", "Unit" }, entries[2].Scopes);
     }
 
+    // Auszug aus dem modifiers.log von Victoria 3 (deutsche Spieloberfläche, 2026-10-10): Blöcke statt Tag-Zeilen, drei Abschnitte.
+    private const string Vic3Modifiers =
+        "--- Static modifier types ---\n" +
+        "battle_casualties_mult:\n" +
+        "  Mask: battle\n" +
+        "  Name: Erlittene Verluste\n" +
+        "  Description: Ein Bonus oder Abzug auf die Zahl der Verluste\n" +
+        "unit_command_limit_mult:\n" +
+        "  Mask: unit\n" +
+        "  Name: Kommando-Schwelle\n" +
+        "  Description: Erste Zeile.\n" +
+        "Zweite Zeile ohne Einrückung.\n" +
+        "\n" +
+        "--- Dynamic modifier types ---\n" +
+        "building_academics_mortality_mult:\n" +
+        "  Mask: building\n" +
+        "  Name: Sterblichkeit\n" +
+        "  Description: Eine Erhöhung\n" +
+        "odd_modifier_add:\n" +
+        "  Mask: \n" +
+        "  Name: Ohne Maske\n" +
+        "\n" +
+        "--- Potential dynamic modifier types ---\n" +
+        "building_academics_fertility_mult:\n" +
+        "  Mask: building\n" +
+        "building_aristocrats_mortality_mult:\n" +
+        "  Mask: building\n";
+
+    [Fact]
+    public void Vic3_block_format_reads_all_sections()
+    {
+        var entries = ScriptDocLogParser.Parse(ScriptDocKind.Modifier, Vic3Modifiers);
+
+        Assert.Equal(new[] { "battle_casualties_mult", "unit_command_limit_mult", "building_academics_mortality_mult", "odd_modifier_add", "building_academics_fertility_mult", "building_aristocrats_mortality_mult" },
+            entries.Select(e => e.Name));
+        Assert.Equal(new[] { "battle" }, entries[0].Scopes);
+        Assert.Equal("Erlittene Verluste", entries[0].Extra["Name"]);
+        Assert.Equal("Static", entries[0].Extra["Section"]);
+        Assert.Equal("Erste Zeile.\nZweite Zeile ohne Einrückung.", entries[1].Description);
+        Assert.Equal("Dynamic", entries[2].Extra["Section"]);
+        Assert.Empty(entries[3].Scopes);
+        Assert.Equal("Potential dynamic", entries[5].Extra["Section"]);
+        Assert.Equal(string.Empty, entries[5].Description);
+        Assert.False(entries[5].Extra.ContainsKey("Name"));
+    }
+
+    [Fact]
+    public void Vic3_description_with_several_paragraphs_is_kept_whole()
+    {
+        const string Log =
+            "--- Static modifier types ---\n" +
+            "character_command_limit_add:\n" +
+            "  Mask: character\n" +
+            "  Name: Kommando-Schwelle\n" +
+            "  Description: Erster Absatz.\n" +
+            "\n" +
+            "Zweiter Absatz.\n" +
+            "-50% Täglicher Organisations-Zugewinn\n" +
+            "next_modifier_add:\n" +
+            "  Mask: country\n";
+
+        var entries = ScriptDocLogParser.Parse(ScriptDocKind.Modifier, Log);
+
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("Erster Absatz.\n\nZweiter Absatz.\n-50% Täglicher Organisations-Zugewinn", entries[0].Description);
+    }
+
+    [Fact]
+    public void Vic3_blank_line_before_the_next_modifier_does_not_split_its_description()
+    {
+        const string Log =
+            "first_add:\n  Mask: country\n  Description: Eins.\n\n" +
+            "second_add:\n  Mask: country\n  Description: Zwei.\nweiter\n";
+
+        var entries = ScriptDocLogParser.Parse(ScriptDocKind.Modifier, Log);
+
+        Assert.Equal("Zwei.\nweiter", entries[1].Description);
+    }
+
     [Fact]
     public void Triggers_ReadDescriptionScopesAndTargets()
     {

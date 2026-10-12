@@ -1,0 +1,9 @@
+# block: Flagge
+# group: Anzeige
+# description: Flagge eines Landes (66×44) mit Rangrahmen, Klick öffnet das Länderpanel, Rechtsklick das Menü, Tooltip zeigt das Land; mit der Vorgabe die Flagge des eigenen Landes. Andere Größen: large_flag, small_flag, tiny_flag; ohne Klick und Tooltip: tiny_flag_no_interact. Flaggen erscheinen nur im laufenden Spiel. Vorbild: gui/window_component_library.gui, gui/shared/flags.gui
+# param: country | Land (Datenkontext) | GetPlayer
+# requires: flag
+
+flag = {
+	datacontext = "[$country$]"
+}

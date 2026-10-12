@@ -1,0 +1,65 @@
+l_{{ lang }}:
+ iv2_hist_idea_flag_tt_title_{{ tag }}: "Historic National Idea of ${{ tag }}$"
+ iv2_hist_idea_flag_tt_desc_{{ tag }}: "This is a Historic National Idea of ${{ tag }}$."
+ iv2_ga_ai_choose_historic_{{ tag }}: "{{ if lang == "german" }}KI: historische Nationalidee wählen{{ else }}AI: choose a historic national idea{{ end }}"
+ iv2_ga_ai_choose_historic_{{ tag }}_desc: "{{ if lang == "german" }}Nur für die KI: wählt eine historische Nationalidee von ${{ tag }}$ per gewichtetem Zufall.{{ else }}Only used by the AI: picks a historic national idea of ${{ tag }}$ by weighted chance.{{ end }}"
+
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+ iv2_historic_idea_{{ tag }}_{{ i.number }}: "{{ i.name }}"
+ iv2_ga_select_historic_{{ tag }}_{{ i.number }}_desc: "{{ i.desc }}"
+{{~ end ~}}
+{{~ end ~}}
+
+ # After this you dont need to manually localize anything unless you change the structure of how the ideas are working
+
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ base = tag + "_" + i.number ~}}
+ iv2_ga_select_historic_{{ base }}: "$iv2_historic_idea_{{ base }}$ $iv2_level_1$"
+{{~ for l in i.levels ~}}
+{{~ if !l.first ~}}
+ iv2_ga_select_historic_{{ base }}{{ l.suffix }}: "$iv2_historic_idea_{{ base }}$ $iv2_level_{{ l.index }}$"
+ iv2_ga_select_historic_{{ base }}{{ l.suffix }}_desc: "$iv2_ga_select_historic_{{ base }}_desc$"
+{{~ end ~}}
+{{~ end ~}}
+
+ iv2_ga_deselect_historic_{{ base }}: "$iv2_remove$ $iv2_historic_idea_{{ base }}$"
+ iv2_ga_deselect_historic_{{ base }}_desc: "$iv2_remove_desc$ $iv2_historic_idea_{{ base }}$ $iv2_remove_2_desc$"
+
+{{~ for l in i.levels ~}}
+ STATIC_MODIFIER_NAME_national_idea_modifier_{{ base }}{{ l.suffix }}: "$iv2_ga_select_historic_{{ base }}{{ l.suffix }}$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_{{ base }}{{ l.suffix }}: "$iv2_ga_select_historic_{{ base }}{{ l.suffix }}_desc$"
+{{~ end ~}}
+
+{{~ end ~}}
+{{~ end ~}}
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ base = tag + "_" + i.number ~}}
+{{~ for l in i.levels ~}}
+{{~ action = "WE_PERFORM_iv2_ga_select_historic_" + base + l.suffix + "_ACTION" ~}}
+{{~ body = "$iv2_dynamic_nat_idea_" + c.key + "_" + i.number + l.suffix + "$" ~}}
+ {{ action }}_SETUP: "$iv2_message_selected_ig$ {{ body }}"
+ {{ action }}_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ {{ action }}_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ {{ action }}_EFFECTS: "$iv2_message_selected_ig$ {{ body }}"
+ {{ action }}_LOG: "$iv2_message_selected_ig$ {{ body }}"
+ {{ action }}_BTN1: "OK"
+ {{ action }}_BTN2: "OK"
+ {{ action }}_BTN3: "$common_string_go_to$"
+ {{ action }}_MAP: ""
+{{~ end ~}}
+{{~ action = "WE_PERFORM_iv2_ga_deselect_historic_" + base + "_ACTION" ~}}
+{{~ body = "$iv2_dynamic_nat_idea_" + c.key + "_" + i.number + "$" ~}}
+ {{ action }}_SETUP: "$iv2_message_deselected_ig$ {{ body }}"
+ {{ action }}_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ {{ action }}_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ {{ action }}_EFFECTS: "$iv2_message_deselected_ig$ {{ body }}"
+ {{ action }}_LOG: "$iv2_message_deselected_ig$ {{ body }}"
+ {{ action }}_BTN1: "OK"
+ {{ action }}_BTN2: "OK"
+ {{ action }}_BTN3: "$common_string_go_to$"
+ {{ action }}_MAP: ""
+{{~ end ~}}
+{{~ end ~}}

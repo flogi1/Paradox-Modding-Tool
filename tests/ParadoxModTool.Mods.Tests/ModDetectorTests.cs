@@ -112,6 +112,36 @@ public class ModDetectorTests : TempDirTests
     }
 
     [Fact]
+    public void A_subscribed_workshop_mod_is_not_offered_and_does_not_fall_back_to_another_mod()
+    {
+        var registry = NewRegistry();
+        var workshop = Make("steamapps", "workshop", "content", "236850", "1703319446");
+        File.WriteAllText(Path.Combine(workshop, "descriptor.mod"), "name=\"Abo\"");
+        var known = ModFolder("bekannt");
+        registry.Add("Bekannt", known);
+
+        var result = ModDetector.Detect(registry, new[] { TouchFile(workshop, "common", "ideas", "x.txt"), known }, ModMetadata.ClassicSiblingMetadataFile);
+
+        Assert.Equal(ModDetectionKind.Ignored, result.Kind);
+        Assert.Equal(workshop, result.Folder);
+        Assert.False(registry.IsIgnored(workshop));
+    }
+
+    [Fact]
+    public void A_registered_workshop_mod_is_still_known()
+    {
+        var registry = NewRegistry();
+        var workshop = Make("steamapps", "workshop", "content", "3450310", "3400000001");
+        Directory.CreateDirectory(Path.Combine(workshop, ".metadata"));
+        File.WriteAllText(Path.Combine(workshop, ".metadata", "metadata.json"), "{ \"name\": \"Abo\" }");
+        var mod = registry.Add("Abo", workshop);
+
+        var result = ModDetector.Detect(registry, new[] { TouchFile(workshop, "x.txt") }, Meta);
+
+        Assert.Same(mod, result.Mod);
+    }
+
+    [Fact]
     public void A_file_outside_any_mod_folder_still_falls_back_to_a_lower_candidate()
     {
         var registry = NewRegistry();
@@ -155,5 +185,26 @@ public class ModDetectorTests : TempDirTests
 
         Assert.Equal(ModDetectionKind.None, ModDetector.Detect(registry, new[] { file }, Meta).Kind);
         Assert.Equal(ModDetectionKind.None, ModDetector.Detect(registry, new[] { file }, string.Empty).Kind);
+    }
+
+    [Fact]
+    public void Classic_format_finds_the_folder_by_sibling_mod_file_or_descriptor()
+    {
+        var registry = NewRegistry();
+        var withSibling = Make("mod", "Idea Variation BT Addon");
+        File.WriteAllText(Path.Combine(Dir, "mod", "Idea Variation BT Addon.mod"), "name=\"BT\"");
+        var withDescriptor = Make("mod", "AGOT Flogis Buildings");
+        File.WriteAllText(Path.Combine(withDescriptor, "descriptor.mod"), "name=\"AGOT\"");
+        var without = Make("mod", "Nur Ordner");
+
+        var bySibling = ModDetector.Detect(registry, new[] { TouchFile(withSibling, "common", "ideas", "x.txt") }, ModMetadata.ClassicSiblingMetadataFile);
+        var byDescriptor = ModDetector.Detect(registry, new[] { TouchFile(withDescriptor, "events", "x.txt") }, ModMetadata.ClassicSiblingMetadataFile);
+        var none = ModDetector.Detect(registry, new[] { TouchFile(without, "x.txt") }, ModMetadata.ClassicSiblingMetadataFile);
+
+        Assert.Equal(ModDetectionKind.Unknown, bySibling.Kind);
+        Assert.Equal(withSibling, bySibling.Folder);
+        Assert.Equal(ModDetectionKind.Unknown, byDescriptor.Kind);
+        Assert.Equal(withDescriptor, byDescriptor.Folder);
+        Assert.Equal(ModDetectionKind.None, none.Kind);
     }
 }

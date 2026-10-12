@@ -1,0 +1,3 @@
+{{~ for i in 2..4 ~}}
+			{{ i <= levels.size ? "" : "#" }}iv2_ga_select_national_idea_{{ id }}{{ sfx i }}
+{{~ end ~}}

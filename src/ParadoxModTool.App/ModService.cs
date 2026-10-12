@@ -23,8 +23,17 @@ internal sealed class ModService
     /// <summary>Pfad der Metadaten-Datei relativ zum Mod-Ordner (aus dem Spielprofil).</summary>
     public string MetadataFile { get; }
 
-    /// <summary>Die erkannte Mod; <see langword="null"/>, wenn keine erkannt ist.</summary>
+    /// <summary>Die aktive Mod: die fest gewählte (<see cref="Choice"/>) oder bei "Automatisch" die erkannte; <see langword="null"/>, wenn keine.</summary>
     public ModInfo? ActiveMod { get; private set; }
+
+    /// <summary>Gespeicherte Wahl: Mod-Id oder <see cref="ActiveModChoice.Automatic"/>; <see langword="null"/> vor dem ersten Start mit fester Wahl.</summary>
+    public string? Choice { get; set; }
+
+    /// <summary>Die aktive Mod kommt aus der offenen Datei (Automatisch oder Rückfall).</summary>
+    public bool IsAutomatic { get; private set; } = true;
+
+    /// <summary>Die fest gewählte Mod ist nicht mehr angelegt oder ihr Ordner fehlt; es gilt die erkannte.</summary>
+    public bool ChoiceLost { get; private set; }
 
     /// <summary>Der Mod-Ordner der offenen Datei, wenn er (noch) nicht als Mod geführt wird; sonst <see langword="null"/>. Dann ist <see cref="ActiveMod"/> leer.</summary>
     public string? UnmanagedFolder { get; private set; }
@@ -33,7 +42,10 @@ internal sealed class ModService
     public string? Refresh(IEnumerable<string?> candidates, IEnumerable<string> vanillaRoots)
     {
         var detection = ModDetector.Detect(Registry, candidates, MetadataFile, vanillaRoots);
-        ActiveMod = detection.Kind == ModDetectionKind.Known ? detection.Mod : null;
+        var result = ActiveModChoice.Resolve(Registry, Choice, detection.Kind == ModDetectionKind.Known ? detection.Mod : null);
+        ActiveMod = result.Mod;
+        IsAutomatic = result.IsAutomatic;
+        ChoiceLost = result.ChoiceLost;
         UnmanagedFolder = detection.Kind is ModDetectionKind.Unknown or ModDetectionKind.Ignored ? detection.Folder : null;
         return detection.Kind == ModDetectionKind.Unknown ? detection.Folder : null;
     }

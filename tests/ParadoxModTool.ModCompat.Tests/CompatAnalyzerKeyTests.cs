@@ -66,6 +66,24 @@ public class CompatAnalyzerKeyTests : CompatTestBase
     }
 
     [Fact]
+    public void Appending_injects_of_the_same_child_key_name_no_winner()
+    {
+        // Victoria 3: INJECT hängt an, danach stehen beide Werte im Eintrag; welcher gilt, ist nicht gemessen.
+        var a = Mod("A", 1);
+        var b = Mod("B", 2);
+        Put(a, "common/buildings/a.txt", "INJECT:farm = { a = 1 }\n");
+        Put(b, "common/buildings/b.txt", "INJECT:farm = { a = 2 }\n");
+        var rules = new OverrideRules(new[] { new OverrideRule("common/buildings", OverrideBehavior.PerKey) }) { InjectAppends = true };
+
+        var finding = One(CompatAnalyzer.Analyze(new CompatRequest { Participants = new[] { a, b }, Rules = rules }), "farm");
+
+        Assert.Equal(CompatKind.KeyConflict, finding.Kind);
+        Assert.True(finding.Uncertain);
+        Assert.Null(finding.Winner);
+        Assert.Contains("hängt", finding.Message);
+    }
+
+    [Fact]
     public void Injects_of_the_same_child_block_with_different_values_stay_uncertain()
     {
         var a = Mod("A", 1);

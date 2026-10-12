@@ -1,0 +1,13 @@
+	if = {
+		limit = { 
+			NOT = { has_variable = iv2_ideagroup_select_{{ g }}_1 }
+		}
+		set_variable = { 
+				name = iv2_var_stat_{{ g }}
+				value = flag:iv2_stat_{{ g }}
+			}
+		add_to_variable_list = {
+				name = iv2_statistics_list_{{ category }}
+				target = flag:iv2_stat_{{ g }}
+		}
+	}

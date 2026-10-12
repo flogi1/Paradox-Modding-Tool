@@ -37,6 +37,9 @@ public sealed class AddressInfo
 
     public required bool Certain { get; init; }
 
+    /// <summary>Präfixe, die im Ordner wirken (aus der Regel); null = die des Spiels (<see cref="CompatchInput.KeyOperators"/>).</summary>
+    public IReadOnlyList<string>? Operators { get; init; }
+
     /// <summary>Hinweis für die Anzeige, z. B. "nicht lesbar" oder "keine Skriptdatei".</summary>
     public string? Note { get; init; }
 

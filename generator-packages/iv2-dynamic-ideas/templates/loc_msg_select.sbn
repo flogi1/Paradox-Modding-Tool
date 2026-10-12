@@ -1,0 +1,18 @@
+{{~
+# Meldungen der vier Wahlen (Ort 18, Abschnitt der Wahlen), wie army_1 der Mod: immer 36 Schlüssel. Stufe 1 nennt den Namen, die Stufen 2-4
+# Name und Stufe ($iv2_ga_select_national_idea_<id>_<k>$, seit 2026-10-10).
+~}}
+{{~ for i in 1..4
+  p = " WE_PERFORM_iv2_ga_select_national_idea_" + id + (sfx i) + "_ACTION_"
+  name_ref = i == 1 ? "$iv2_dynamic_nat_idea_" + id + "$" : "$iv2_ga_select_national_idea_" + id + (sfx i) + "$"
+~}}
+{{ p }}SETUP: "$iv2_message_selected_ig$ {{ name_ref }}"
+{{ p }}HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+{{ p }}TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+{{ p }}EFFECTS: "$iv2_message_selected_ig$ {{ name_ref }}"
+{{ p }}LOG: "$iv2_message_selected_ig$ {{ name_ref }}"
+{{ p }}BTN1: "OK"
+{{ p }}BTN2: "OK"
+{{ p }}BTN3: "$common_string_go_to$"
+{{ p }}MAP: ""
+{{~ end ~}}

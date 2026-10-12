@@ -1,0 +1,21 @@
+# block: Fortschrittsbalken
+# group: Anzeige
+# description: Balken mit einem Wert zwischen Minimum und Maximum; min, max und value gehören in blockoverride "values", direkt am Baustein wirken sie nicht. Für Spielwerte "[...]" eintragen, Festkommazahlen mit FixedPointToFloat. Andere Farben: green_progressbar_horizontal, gold_progressbar_horizontal, bad_progressbar_horizontal. Vorbild: gui/window_component_library.gui, gui/shared/progressbars.gui, gui/building_browser_panel.gui
+# param: name | Name | my_progress
+# param: width | Breite | 200
+# param: height | Höhe | 20
+# param: min | Minimum | 0
+# param: max | Maximum | 100
+# param: value | Wert | 50
+# requires: default_progressbar_horizontal
+
+default_progressbar_horizontal = {
+	name = "$name$"
+	size = { $width$ $height$ }
+
+	blockoverride "values" {
+		min = $min$
+		max = $max$
+		value = $value$
+	}
+}

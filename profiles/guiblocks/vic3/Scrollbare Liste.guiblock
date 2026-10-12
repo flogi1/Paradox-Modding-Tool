@@ -1,0 +1,36 @@
+# block: Scrollbare Liste
+# group: Fenster
+# description: Scrollbereich (scrollarea mit der Bildlaufleiste vertical_scrollbar) mit festen Einträgen, je Eintrag eine Textzeile; scrollwidget darf nur ein Kind haben. Für Listen aus Spieldaten statt der Einträge ein datamodel mit item nehmen. Vorbild: gui/message_settings.gui, gui/core.gui
+# param: name | Name | my_list
+# param: width | Breite | 400
+# param: height | Höhe | 300
+# repeat: items | Einträge | 5
+# param: items.text | Text (Lokalisierungsschlüssel) | ITEM_$index$
+# requires: vertical_scrollbar
+
+scrollarea = {
+	name = "$name$"
+	size = { $width$ $height$ }
+	scrollbarpolicy_horizontal = always_off
+
+	scrollbar_vertical = {
+		using = vertical_scrollbar
+	}
+
+	scrollwidget = {
+		flowcontainer = {
+			direction = vertical
+			spacing = 5
+			margin = { 10 5 }
+
+			$repeat items$
+			textbox = {
+				text = "$items.text$"
+				autoresize = yes
+				align = nobaseline
+			}
+
+			$end items$
+		}
+	}
+}

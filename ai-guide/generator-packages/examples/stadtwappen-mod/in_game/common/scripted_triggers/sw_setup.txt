@@ -1,0 +1,5 @@
+﻿sw_tags = {
+	# PMT-Generator stadtwappen/setup/HAM begin
+	has_or_had_tag = HAM
+	# PMT-Generator stadtwappen/setup/HAM end
+}

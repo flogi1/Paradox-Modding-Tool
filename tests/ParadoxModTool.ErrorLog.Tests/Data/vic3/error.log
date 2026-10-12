@@ -1,0 +1,113 @@
+[22:10:14][pdx_localize.cpp:199]: Duplicate localization key. Key 'pmt_probe.2.a' is defined in both 'localization/english/pmt_probe_l_english.yml' and 'localization/english/pmt_probe_l_english.yml'.
+[22:10:14][localization_reader.cpp:451]: Missing colon (:) separator at line 6 and column 22 in localization/english/pmt_probe_l_english.yml
+[22:10:14][localize.cpp:1974]: Localization file 'localization/english/pmt_probe_no_bom_l_english.yml' should be in in utf-8-bom encoding
+[22:10:14][localization_reader.cpp:402]: Missing UTF8 BOM in 'localization/english/pmt_probe_no_bom_l_english.yml'
+[22:10:16][pdx_gui_localize.cpp:182]: Unlocalized text '#v [State.GetName]#!' at gui/custom_tooltip.gui:8801, either localize it or use the raw_text property instead of text
+[22:10:16][pdx_gui_localize.cpp:182]: Unlocalized text 'INTEREST_TIER_MARKER_STRATEGIC_REGION' at gui/map_markers.gui:1008, either localize it or use the raw_text property instead of text
+[22:10:16][pdx_gui_localize.cpp:182]: Unlocalized text 'FLEET_NO_INTERCEPT_TARGETS' at gui/military_formation_panel.gui:2286, either localize it or use the raw_text property instead of text
+[22:10:17][pdx_gui_widget_desc.h:79]: gui/pmt_probe.gui:5 - Duplicate property 'size'(47)
+[22:10:17][pdx_gui_factory.cpp:275]: failed reading property, at gui/pmt_probe.gui:5
+[22:10:17][virtualfilesystem.cpp:569]: Could not find texture due to 'VFSOpen Error: gfx/interface/pmt_probe_missing_texture.dds not found'
+[22:10:17][pdx_gui_texture.cpp:61]: gui/pmt_probe.gui:9 - Missing file 'gfx/interface/pmt_probe_missing_texture.dds' for texture property
+[22:10:17][pdx_gui_localize.cpp:182]: Unlocalized text 'PMT_PROBE_UNLOCALIZED' at gui/pmt_probe.gui:18, either localize it or use the raw_text property instead of text
+[22:10:17][pdx_data_factory.cpp:1462]: Could not find data system function 'PmtProbeUnknownFunction'
+[22:10:17][pdx_data_factory.cpp:1092]: Failed converting statement for 'PmtProbeUnknownFunction'
+[22:10:17][pdx_gui_factory.cpp:268]: failed reading callback, at gui/pmt_probe.gui:25
+[22:10:18][pdx_gui_factory.cpp:611]: gui/pmt_probe.gui:30 - 'pmt_probe_unknown_base_type' is not a valid widget/type/property
+[22:10:18][pdx_gui_factory.cpp:611]: gui/pmt_probe.gui:6 - 'pmt_probe_invalid_property' is not a valid widget/type/property
+[22:10:18][pdx_gui_factory.cpp:611]: gui/pmt_probe.gui:13 - 'pmt_probe_unknown_widget' is not a valid widget/type/property
+[22:10:19][pdx_gui_factory.cpp:909]: gui/pmt_probe.gui:30 - pmt_probe_unknown_base_type is not a valid type
+[22:10:19][pdx_gui_factory.cpp:909]: gui/pmt_probe.gui:13 - pmt_probe_unknown_widget is not a valid type
+[22:10:19][pdx_gui_factory.cpp:909]: gui/pmt_probe.gui:6 - pmt_probe_invalid_property is not a valid type
+[22:10:27][pdx_persistent_reader.cpp:268]: Error: "Unknown modifier type: pmt_probe_unknown_modifier_add. It is either invalid, or a potential dynamic modifier type definition missing from the database.: pmt_probe_unknown_modifier_add, near line: 4" in file: "common/static_modifiers/pmt_probe_modifiers.txt" near line: 4
+[22:10:27][pdx_persistent_reader.cpp:268]: Error: "Trigger section already read earlier: is_visible, near line: 3" in file: "common/laws/pmt_probe_laws.txt" near line: 5
+[22:10:28][gamedatabase.h:395]: You are trying to inject/replace to a non-existing entry: building_pmt_probe_missing:Inject in the file common/buildings/pmt_probe_buildings.txt:2
+[22:10:28][gamedatabase.h:395]: You are trying to inject/replace to a non-existing entry: building_pmt_probe_missing_two:Replace in the file common/buildings/pmt_probe_buildings.txt:6
+[22:10:28][jomini_eventtarget.cpp:694]: Failed to find a valid event target link 'pmt_probe_nonexistent_value' at common/script_values/pmt_probe_values.txt:3
+[22:10:28][jomini_scriptvalue.h:617]: Cannot read [pmt_probe_nonexistent_value] as a script value
+[22:10:28][jomini_scriptvalue.h:391]: Badly read script value pmt_probe_nonexistent_value at common/script_values/pmt_probe_values.txt:3
+[22:10:28][jomini_effect.cpp:542]: Unknown effect pmt_probe_unknown_effect_in_scripted at common/scripted_effects/pmt_probe_effects.txt:4
+[22:10:28][pdx_persistent_reader.cpp:268]: Error: "Unknown trigger type: pmt_probe_unknown_trigger_in_scripted, near line: 6" in file: "common/scripted_effects/pmt_probe_effects.txt" near line: 6
+[22:10:29][jomini_effect.cpp:542]: Unknown effect pmt_probe_unknown_effect at events/pmt_probe_events.txt:13
+[22:10:29][pdx_persistent_reader.cpp:268]: Error: "Unknown trigger type: pmt_probe_unknown_trigger, near line: 15" in file: "events/pmt_probe_events.txt" near line: 15
+[22:10:29][jomini_eventtarget.cpp:694]: Failed to find a valid event target link 'pmt_probe_missing_value' at events/pmt_probe_events.txt:27
+[22:10:29][jomini_scriptvalue.h:617]: Cannot read [pmt_probe_missing_value] as a script value
+[22:10:29][jomini_scriptvalue.h:391]: Badly read script value pmt_probe_missing_value at events/pmt_probe_events.txt:27
+[22:10:29][jomini_effect.cpp:753]: Inconsistent effect scopes (state vs. country) inevents/pmt_probe_events.txt:36
+[22:10:29][jomini_dynamicdescription.cpp:67]: Unrecognized loc key pmt_probe.2.t. events/pmt_probe_events.txt:48
+[22:10:29][jomini_dynamicdescription.cpp:67]: Unrecognized loc key pmt_probe.2.desc. events/pmt_probe_events.txt:49
+[22:10:29][jomini_dynamicdescription.cpp:67]: Unrecognized loc key pmt_probe.2.f. events/pmt_probe_events.txt:50
+[22:10:29][virtualfilesystem.cpp:569]: Could not find texture due to 'VFSOpen Error: gfx/interface/icons/event_icons/pmt_probe_missing_icon.dds not found'
+[22:10:29][jomini_dynamicdescription.cpp:67]: Unrecognized loc key pmt_probe.2.a. CEventOptionDesc:139
+[22:10:29][jomini_eventmanager.cpp:572]: Namespace 'REPLACE:pmt_probe' used in event 'REPLACE:pmt_probe.5' (file: events/pmt_probe_events.txt) is not defined in this file - it might not load properly.
+[22:10:29][jomini_eventmanager.cpp:118]: 'REPLACE:pmt_probe.5' does not have a valid namespace
+[22:10:29][jomini_eventmanager.cpp:440]: Duplicated event ID 'pmt_probe.3' found. New Location: 'events/pmt_probe_events.txt:63', Previous Location: 'events/pmt_probe_events.txt:68'
+[22:10:32][eventtargetlinks.cpp:137]: Invalid database object key 'law_pmt_probe_missing' file location: events/pmt_probe_events.txt:29
+[22:10:32][jomini_script_system.cpp:247]: Script system error!
+  Error: add_modifier effect [ name: Not found in database class NJominiModifier::CStaticModifierDatabase ]
+  Script location: events/pmt_probe_events.txt:32
+
+[22:10:32][jomini_effect.cpp:141]: PostValidate of effect 'add_modifier' returned false at events/pmt_probe_events.txt:32
+[22:10:32][jomini_effect.cpp:1139]: Variable 'pmt_probe_var_never_set' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[22:10:32][jomini_effect.cpp:1135]: Variable 'pmt_probe_var_unused' is set but is never used. Note that use in localization doesn't count due to technical limitations. Use in unused scripted triggers and effects also does not count
+[22:10:32][jomini_effect.cpp:1135]: Variable 'pmt_probe_history_var' is set but is never used. Note that use in localization doesn't count due to technical limitations. Use in unused scripted triggers and effects also does not count
+[22:10:32][jomini_effect.cpp:1139]: Event target 'pmt_probe_unset' is used but is never set. Setting it in an unused scripted trigger or effect does not count
+[22:10:32][jomini_eventmanager.cpp:376]: Event REPLACE:pmt_probe.5 is orphaned
+[22:10:32][jomini_eventmanager.cpp:376]: Event pmt_probe_broken.1 is orphaned
+[22:10:32][jomini_eventmanager.cpp:376]: Event pmt_probe.3 is orphaned
+[22:10:32][jomini_eventmanager.cpp:376]: Event pmt_probe.4 is orphaned
+[22:10:34][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:10:35][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:10:35][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:10:35][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:10:35][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:10:35][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:10:35][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:11:26][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:11:27][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:11:27][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:11:27][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:11:27][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:11:27][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:11:27][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:11:38][jomini_script_system.cpp:247]: Script system error!
+  Error: Undefined event target 'pmt_probe_unset'
+  Script location: common/on_actions/pmt_probe_on_actions.txt:26
+
+[22:11:38][jomini_script_system.cpp:247]: Script system error!
+  Error: Event target link 'scope' returned an unset scope
+  Script location: common/on_actions/pmt_probe_on_actions.txt:26
+
+[22:11:38][jomini_script_system.cpp:247]: Script system error!
+  Error: add_treasury effect [ Wrong scope for effect: none, expected country ]
+  Script location: common/on_actions/pmt_probe_on_actions.txt:26
+
+[22:11:38][jomini_scriptvalue.cpp:1659]: Value of wrong type in 'common/on_actions/pmt_probe_on_actions.txt:28'. Got value of type 'none'
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: : , near line: 1
+Failed to read key reference: : , near line: 1" in file: "" near line: 1
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1
+[22:13:22][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: rs_default: rs_default, near line: 1
+Failed to read key reference: ec_allow_autobuild: ec_allow_autobuild, near line: 1" in file: "" near line: 1

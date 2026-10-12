@@ -9,5 +9,5 @@ namespace ParadoxModTool.Compatch;
 public static class UpdateModRules
 {
     public static OverrideRules From(OverrideRules rules) =>
-        new(rules.Rules.Select(r => r.Behavior == OverrideBehavior.AppendOnly ? r with { Behavior = OverrideBehavior.PerKey } : r));
+        new(rules.Rules.Select(r => r.Behavior == OverrideBehavior.AppendOnly ? r with { Behavior = OverrideBehavior.PerKey } : r)) { InjectAppends = rules.InjectAppends, FirstWinsInLoadOrder = rules.FirstWinsInLoadOrder };
 }

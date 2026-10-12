@@ -1,0 +1,12 @@
+{{~ for i in 1..4 ~}}
+iv2_sct_dnat_idea_{{ id }}{{ sfx i }} = {
+{{~ if (condition | string.strip) == "" ~}}
+	
+{{~ else ~}}
+{{ indent condition "\t" }}
+{{~ end ~}}
+}
+{{~ if i < 4 ~}}
+
+{{~ end ~}}
+{{~ end ~}}

@@ -43,6 +43,10 @@ public static class ModCompatTexts
 
     public static string KindReplacePathGuiCrash => T("modcompat.kind.replacePathGuiCrash", "replace_path: Absturz");
 
+    public static string KindPrefixNoEffect => T("modcompat.kind.prefixNoEffect", "Präfix wirkt nicht");
+
+    public static string KindPrefixActsAsReplace => T("modcompat.kind.prefixActsAsReplace", "INJECT wirkt wie REPLACE");
+
     public static string SuggestionNeedsCompatch => T("modcompat.suggestion.needsCompatch", "Kompatibilitätspatch nötig");
 
     public static string SuggestionReviewBothSides => T("modcompat.suggestion.reviewBothSides", "Beide Seiten prüfen");
@@ -93,6 +97,18 @@ public static class ModCompatTexts
 
     public static string FindingReplacePathNoEffect(string mod, string entry, string root, string rest) => F("modcompat.finding.replacePathNoEffect", "Der replace_path-Eintrag {1} der Mod \"{0}\" wirkt im Spiel nicht, weil replace_path die Ordner ohne {2}/ davor nennt. Schreibe {3}.", mod, entry, root, rest);
 
+    public static string FindingPrefix(string mod, string message) => F("modcompat.finding.prefix", "Mod \"{0}\": {1}", mod, message);
+
+    public static string PrefixNoEffect(string prefix, string folder, string key) => F("modcompat.prefix.noEffect", "{0} wirkt im Ordner {1} nicht: Das Spiel kennt dort keine Präfixe und liest \"{2}\" als eigenen Schlüssel.", prefix, folder, key);
+
+    public static string PrefixActsAsReplace(string prefix, string folder, string replace) => F("modcompat.prefix.actsAsReplace", "{0} fügt im Ordner {1} nichts ein, sondern ersetzt den ganzen Eintrag wie {2}. Schreibe den vollständigen Eintrag mit {2}.", prefix, folder, replace);
+
+    public static string PrefixTipLater => T("modcompat.prefix.tipLater", "Schreibe den vollständigen Eintrag ohne Präfix in eine Datei, die später lädt (z. B. zz_…); die letzte Definition gewinnt.");
+
+    public static string PrefixTipEarlier => T("modcompat.prefix.tipEarlier", "Schreibe den vollständigen Eintrag ohne Präfix in eine Datei, die früher lädt (z. B. 00_…); die erste Definition gewinnt.");
+
+    public static string PrefixTipPlain => T("modcompat.prefix.tipPlain", "Schreibe den Eintrag ohne Präfix.");
+
     public static string FindingReplacePathGuiCrash(string mod, string entry, string mods) => F("modcompat.finding.replacePathGuiCrash", "Die Mod \"{0}\" nennt {1} als replace_path, und dort liegen .gui-Dateien ({2}). Das Spiel stürzt dann beim Start ab, weil es diese Dateien ohne den Unterordner sucht. Nimm den Eintrag heraus oder lege die .gui-Dateien in einen anderen Ordner.", mod, entry, mods);
 
     public static string FindingUnreadable(string file, string mod, string? error) => F("modcompat.finding.unreadable", "Die Datei {0} in \"{1}\" ist nicht lesbar ({2}). Sie zählt nur als Dateikonflikt.", file, mod, error);
@@ -120,6 +136,8 @@ public static class ModCompatTexts
     public static string FindingPlainConflict(string names, string key, string winner) => F("modcompat.finding.plainConflict", "{0} definieren \"{1}\" jeweils vollständig. Nur die Fassung von \"{2}\" gilt.", names, key, winner);
 
     public static string FindingChildOverwrite(string names, string clashes, string key, string winner) => F("modcompat.finding.childOverwrite", "{0} setzen die Teilschlüssel {1} von \"{2}\" verschieden. INJECT überschreibt vorhandene Teilschlüssel, es gilt der Wert von \"{3}\".", names, clashes, key, winner);
+
+    public static string FindingChildAppend(string names, string clashes, string key) => F("modcompat.finding.childAppend", "{0} setzen die Teilschlüssel {1} von \"{2}\" verschieden. INJECT hängt in diesem Spiel an, danach stehen alle Werte im Eintrag; welcher gilt, ist nicht gemessen, und ein Trigger- oder Effektblock lässt sich so nicht doppelt einfügen.", names, clashes, key);
 
     public static string FindingChildCombine(string names, string key) => F("modcompat.finding.childCombine", "{0} ändern \"{1}\" an verschiedenen Teilschlüsseln. INJECT kombiniert sie.", names, key);
 

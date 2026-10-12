@@ -1,0 +1,26 @@
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ for l in i.levels ~}}
+WE_PERFORM_iv2_ga_select_historic_{{ tag }}_{{ i.number }}{{ l.suffix }}_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+{{~ end ~}}
+WE_PERFORM_iv2_ga_deselect_historic_{{ tag }}_{{ i.number }}_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+{{~ end ~}}
+{{~ end ~}}

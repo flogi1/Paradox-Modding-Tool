@@ -1,0 +1,187 @@
+###################################################
+###################################################
+###### Ideagroup {{ g }} Start
+###################################################
+###################################################	
+						
+		container = {
+				datacontext = "[GetScriptedGui('iv2_ideagroup_select_{{ g }}_1')]"
+				visible = "[ScriptedGui.IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End)]"	
+				
+
+				card_header_button_04 = {
+				size = { 324 70 }
+						position = { 0 0 }
+						scripted_action_tooltip = {
+							click_type = left
+							click_mode = confirm
+							action_name = "iv2_ga_select_ideagroup_{{ g }}"
+							actor = "[Player]"
+							parameter = {
+								parameter_name = "target"
+								parameter_value = "[Country.MakeScope]"
+							}
+						}
+						enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						
+						tooltipwidget = {
+								using = iv_2_tooltip_template_idea_{{ g }}
+						}
+						
+						#onclick = "[ExecuteConsoleCommand('GUI.ClearWidgets ideas_selection_window_{{ category }}')]"
+							
+				icon = {
+							size = { 332 86 }
+							position = { 0 6 }
+							parentanchor = center
+							texture = "gfx/interface/iv2_idea_group_template.dds"
+						}		
+				}		
+						
+				text_single = {
+					text = "iv2_ideagroup_title_{{ g }}"
+					position = { 110 5 }
+					minimumsize = { 115 20 }
+					maximumsize = { 150 20 }
+                    default_format = "#overview_text"
+                    align = left|nobaseline
+					
+					tooltipwidget = {
+								using = iv2_ideagroup_tt_{{ g }}
+							}
+				}
+{{~ if exclusive_numbers.size > 0 ~}}
+
+				icon = {
+								size = { 28 28 }
+								position = { 145 -18 }
+								parentanchor = center
+								texture = "gfx/interface/{{ category }}_exclusive.dds"
+
+								modify_texture = {
+									using = color_dark_green_texture
+									blend_mode = add
+								}
+
+						tooltipwidget = {
+							using = iv_2_tooltip_template_mut_idea_{{ g }}_1
+						}
+					}
+{{~ end ~}}
+
+						icon = {
+								size = { 44 44 }
+								position = { -125 7 }
+								parentanchor = center
+								texture = "gfx/interface/icons/ideagroups/ig_icon_{{ g }}.dds"
+								
+								tooltipwidget = {
+										using = iv2_ideagroup_tt_{{ g }}
+								}
+						}		
+							
+						icon = {
+							size = { 24 24 }
+							position = { -70 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_1
+							}
+								
+						
+						}
+						
+						icon = {
+							size = { 24 24 }
+							position = { -38 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_2
+							}
+						
+						}
+
+						icon = {
+							size = { 24 24 }
+							position = { -6 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_3
+							}
+						}
+					
+						icon = {
+							size = { 24 24 }
+							position = { 28 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_4
+							}
+						}
+					
+						icon = {
+							size = { 24 24 }
+							position = { 62 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_5
+							}
+						}
+					
+						icon = {
+							size = { 24 24 }
+							position = { 96 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_6
+							}
+						}
+					
+						icon = {
+							size = { 24 24 }
+							position = { 130 11 }
+							parentanchor = center
+							texture = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetIcon]"
+							texture_density = 2
+
+							using = button_panel_tab_icon_effect
+							tooltipwidget = {
+									using = iv2_individual_idea_{{ g }}_7
+							}
+						}
+					
+				}
+
+###################################################
+###################################################
+###### Ideagroup {{ g }} End
+###################################################
+###################################################	

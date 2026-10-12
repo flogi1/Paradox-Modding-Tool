@@ -62,9 +62,35 @@ public static class ActionText
     public static IReadOnlyList<AlignedRow> Rows(MergeAction action, MergeDecision decision, bool withVanilla, bool hideComments = false) =>
         EntryAligner.Align(action.A, ResultEntries(action, decision), action.B, withVanilla ? action.Vanilla : null, hideComments);
 
-    /// <summary>Zeilen für eine ganze Datei: Pfad in A | gewählte Seite | Pfad in B.</summary>
-    public static IReadOnlyList<AlignedRow> WholeFileRows(AddressInfo info, MergeDecision decision) =>
-        ColumnAligner.Align(info.A.RelativePath ?? string.Empty, CompatchTexts.WholeFileChoice(SideName(decision.Kind)), info.B.RelativePath ?? string.Empty, null);
+    /// <summary>
+    /// Zeilen für eine ganze Datei: Inhalt in A | Inhalt der gewählten Seite | Inhalt in B (| Vanilla), zeilenweise ausgerichtet (siehe <see cref="WholeFileText"/>).
+    /// </summary>
+    public static IReadOnlyList<AlignedRow> WholeFileRows(AddressInfo info, MergeDecision decision, bool withVanilla)
+    {
+        var a = WholeFileText.Of(info.A);
+        var b = WholeFileText.Of(info.B);
+        var vanilla = WholeFileText.Of(info.Vanilla);
+        var result = decision.Kind switch
+        {
+            DecisionKind.TakeA => a,
+            DecisionKind.TakeB => b,
+            DecisionKind.TakeVanilla => vanilla,
+            _ => string.Empty,
+        };
+        return ColumnAligner.Align(a, result, b, withVanilla ? vanilla : null);
+    }
+
+    /// <summary>
+    /// Zeilen für einen Schlüssel mit Form "Ganze Datei": die Datei des Schlüssels in A | die Patch-Datei, wie sie geschrieben wird (aus <paramref name="prepared"/>;
+    /// ohne Vorschau die Datei, die das Spiel ohne Patch lädt) | die Datei in B (| Vanilla).
+    /// </summary>
+    public static IReadOnlyList<AlignedRow> KeyFileRows(AddressInfo info, PreparedWrite? prepared, bool withVanilla)
+    {
+        var path = PatchWriter.Norm(PatchPlanner.WholeFilePath(info));
+        var change = prepared?.Changes.FirstOrDefault(c => c.Kind != FileChangeKind.Delete && PatchWriter.Norm(c.RelativePath) == path);
+        var result = change?.PreviewText ?? WholeFileText.Of(info.NoPatch);
+        return ColumnAligner.Align(WholeFileText.Of(info.A), result, WholeFileText.Of(info.B), withVanilla ? WholeFileText.Of(info.Vanilla) : null);
+    }
 
     /// <summary>Mini-Diff für Karten: höchstens <paramref name="max"/> Zeilen, dazu die Zahl der weggelassenen.</summary>
     public static (IReadOnlyList<AlignedRow> Rows, int Hidden) MiniRows(MergeAction action, MergeDecision decision, int max, bool hideComments = false)

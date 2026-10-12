@@ -240,19 +240,18 @@ public partial class MainWindow
         UpdateBugTrackerButton();
     }
 
+    /// <summary>Zahl ungesehener Meldungen des aktiven Projekts (Beschriftung des Bugtracker-Knopfs und Abzeichen der Kachel).</summary>
+    private int BugTrackerUnseenCount() => BugQueries.UnseenCount(BugReportStore.Load(BugsPath), ActiveBugProjectId, CurrentBugProjects);
+
     /// <summary>
-    /// Beschriftung des Bugtracker-Knopfs mit der Zahl ungesehener Meldungen des aktiven Projekts ("📋 Bugtracker (3 neu)") und einem Warnzeichen,
-    /// wenn der letzte Abruf dieses Projekts Fehler hatte.
+    /// Bugtracker-Knopf mit Zahl und Warnzeichen neu beschriften (MainWindow.Layout.cs, ToolbarLabelFor), ebenso die Kachel: Abzeichen mit
+    /// der Zahl und ⚠ samt Tooltip-Zeile, solange der letzte Abruf des aktiven Projekts fehlgeschlagen ist.
     /// </summary>
     private void UpdateBugTrackerButton()
     {
-        var projectId = ActiveBugProjectId;
-        var count = BugQueries.UnseenCount(BugReportStore.Load(BugsPath), projectId, CurrentBugProjects);
-        var label = MenuTexts.ToolbarLabel(ToolbarItemIds.BugTracker);
-        var failed = BugRefreshError(projectId) is not null;
-        ToolbarBugTrackerButton.Content = (count > 0 ? $"{label} ({BugTexts.NewCount(count)})" : label) + (failed ? " ⚠" : string.Empty);
-        ToolbarBugTrackerButton.ToolTip = failed
-            ? MenuTexts.ToolbarTip(ToolbarItemIds.BugTracker) + "\n" + BugTexts.RefreshFailedTip
-            : MenuTexts.ToolbarTip(ToolbarItemIds.BugTracker);
+        _bugTrackerUnseen = BugTrackerUnseenCount();
+        UpdateBugTrackerToolbarItem();
+        TileBarControl.SetBadge(TileIds.BugTracker, _bugTrackerUnseen);
+        TileBarControl.SetWarning(TileIds.BugTracker, BugRefreshError(ActiveBugProjectId) is not null ? BugTexts.RefreshFailedTip : null);
     }
 }

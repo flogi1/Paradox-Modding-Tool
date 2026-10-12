@@ -393,6 +393,10 @@ public static class CompatchTexts
 
     public static string WholeKey => T("compatch.detail.wholeKey", "Ganzer Schlüssel");
 
+    public static string ShowWholeFile => T("compatch.detail.showWholeFile", "Ganze Datei zeigen");
+
+    public static string ShowWholeFileTip => T("compatch.detail.showWholeFile.tip", "Der Patch schreibt hier die ganze Datei. Zeigt die Dateien von A, B (und Vanilla) und in der Mitte die Patch-Datei, wie sie geschrieben wird. Nur zum Ansehen.");
+
     public static string VanillaColumn => T("compatch.detail.vanillaColumn", "Vanilla-Spalte");
 
     public static string HideComments => T("compatch.detail.hideComments", "Kommentarzeilen ausblenden");
@@ -406,6 +410,9 @@ public static class CompatchTexts
     public static string UndoLabel => T("compatch.detail.undo", "↶ Rückgängig");
 
     public static string Reset => T("compatch.detail.reset", "Zurücksetzen");
+
+    /// <summary>Tooltip der Entscheidungsknöpfe in Ansicht A: zugehörige Taste.</summary>
+    public static string HotkeyTip(string key) => F("compatch.detail.hotkeyTip", "Taste: {0}", key);
 
     public static string ApplyToEqual(int count) => F("compatch.detail.applyToEqual", "Für alle gleichen übernehmen ({0})", count);
 
@@ -428,6 +435,10 @@ public static class CompatchTexts
     public static string ExplicitMark => T("compatch.detail.explicit", "(von dir)");
 
     public static string WholeFileChoice(string side) => F("compatch.detail.wholeFile", "Ganze Datei aus {0}", side);
+
+    public static string WholeFileNotText(string size, string changed) => F("compatch.detail.wholeFileNotText", "(nicht als Text anzeigbar: {0}, geändert {1})", size, changed);
+
+    public static string WholeFileUnreadable(string error) => F("compatch.detail.wholeFileUnreadable", "(nicht lesbar: {0})", error);
 
     public static string ManualParseError(string message) => F("compatch.detail.parseError", "Eigener Text nicht lesbar: {0}", message);
 

@@ -65,7 +65,7 @@ public static class PatchPlanner
                         : formChoices is not null && formChoices.TryGetValue(address, out var wanted) && forms.Contains(wanted) ? wanted : forms[0];
                     if (form == PatchForm.WholeFile)
                     {
-                        Collect(info.NoPatch.RelativePath ?? info.A.RelativePath ?? info.B.RelativePath ?? info.Vanilla.RelativePath ?? address.Scope, address);
+                        Collect(WholeFilePath(info), address);
                         break;
                     }
 
@@ -82,17 +82,22 @@ public static class PatchPlanner
         return plan;
     }
 
+    /// <summary>Die Datei, in die ein Schlüssel mit Form <see cref="PatchForm.WholeFile"/> geschrieben wird: die, die das Spiel ohne Patch lädt, sonst die erste vorhandene.</summary>
+    public static string WholeFilePath(AddressInfo info) =>
+        info.NoPatch.RelativePath ?? info.A.RelativePath ?? info.B.RelativePath ?? info.Vanilla.RelativePath ?? info.Address.Scope;
+
     public static IReadOnlyList<PatchForm> AvailableForms(AddressInfo info, IReadOnlyList<ScriptEntry> desired, CompatchInput input)
     {
         var forms = new List<PatchForm>();
-        bool Has(string op) => input.KeyOperators.Contains(op, StringComparer.OrdinalIgnoreCase);
+        // Präfixe des Ordners (Victoria 3: nur Ordner der Wiki-Liste, manche nur REPLACE), ohne eigene die des Spiels.
+        bool Has(string op) => (info.Operators ?? input.KeyOperators).Contains(op, StringComparer.OrdinalIgnoreCase);
         if (info.Address.Kind == AddressKind.Key && desired.Count > 0)
         {
             switch (info.Behavior)
             {
                 case OverrideBehavior.PerKey:
                     // Ein REPLACE: läuft nach jedem INJECT: und würde die Ergänzung des Kompatchs wieder löschen (Prüfbefund C1).
-                    if (Has("INJECT") && !info.NoPatch.Operators.Contains(OverrideOperator.Replace) && InjectEntries(info.NoPatch.Entries, desired) is not null)
+                    if (Has("INJECT") && !info.NoPatch.Operators.Contains(OverrideOperator.Replace) && InjectEntries(info.NoPatch.Entries, desired, input.Rules.InjectAppends) is not null)
                     {
                         forms.Add(PatchForm.Inject);
                     }
@@ -122,7 +127,8 @@ public static class PatchPlanner
     }
 
     /// <summary>Der Inhalt von <c>INJECT:</c> für den Block ohne Patch und den gewünschten Block, siehe <see cref="InjectShape.Of"/>; sonst <see langword="null"/>.</summary>
-    internal static IReadOnlyList<ScriptEntry>? InjectEntries(IReadOnlyList<ScriptEntry> noPatch, IReadOnlyList<ScriptEntry> desired)
+    /// <param name="injectAppends">INJECT hängt nur an (Victoria 3): dann nur reine Ergänzungen, kein geänderter Teilschlüssel.</param>
+    internal static IReadOnlyList<ScriptEntry>? InjectEntries(IReadOnlyList<ScriptEntry> noPatch, IReadOnlyList<ScriptEntry> desired, bool injectAppends = false)
     {
         if (noPatch.Count != 1 || desired.Count != 1
             || noPatch[0] is not ScriptStatement { Value: ScriptBlock have } before
@@ -132,7 +138,8 @@ public static class PatchPlanner
             return null;
         }
 
-        return InjectShape.Of(have.Entries, want.Entries, StructuralEquality.EntryEqual)?.Entries;
+        var shape = InjectShape.Of(have.Entries, want.Entries, StructuralEquality.EntryEqual);
+        return injectAppends && shape is { Changed: > 0 } ? null : shape?.Entries;
     }
 
     /// <summary>

@@ -287,7 +287,7 @@ public sealed partial class CompatchWindow
         _docSourceHeader.Text = $"{action.DisplayPath}   [{TreePath.FileOf(action)}]\n" + Summary(_session, action, _state.ModAName, _state.ModBName);
         _docSeen.IsChecked = _session.IsSeen(action.Id);
         var open = IsOpenConflict(_session, action);
-        var rows = action.Address.Kind == AddressKind.WholeFile ? ActionText.WholeFileRows(info, decision) : ActionText.Rows(action, decision, withVanilla: false, HideComments);
+        var rows = action.Address.Kind == AddressKind.WholeFile ? ActionText.WholeFileRows(info, decision, withVanilla: false) : ActionText.Rows(action, decision, withVanilla: false, HideComments);
         foreach (var row in rows.Take(MaxRows))
         {
             _docSourceRows.Children.Add(RowGrid(row, showVanilla: false, open));

@@ -1,0 +1,259 @@
+##########################################################################################################################
+####### {{ tag }} National Ideas - See
+##########################################################################################################################
+
+types iv2_historic_idea_{{ tag }}_see {
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ base = tag + "_" + i.number ~}}
+	type iv2_historic_idea_see_{{ base }} = widget {
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_historic_idea_{{ base }}')]"
+		size = { 200 250 }
+		position = { 0 0 }
+
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/coa/{{ tag }}.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_{{ tag }}_flag_tt
+			}
+		}
+
+		icon = {
+			size = { 36 24 }
+			parentanchor = center
+			position = { 0 -85 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+
+{{ action_tooltip "\t\t\t" ("iv2_ga_deselect_historic_" + base) }}
+
+			tooltipwidget = {
+				using = iv2_historic_idea_remove_{{ base }}
+			}
+
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}
+		}
+
+{{~ for l in i.levels ~}}
+{{~ gui = "iv2_sgui_historic_" + base + l.suffix ~}}
+{{~ context = "datacontext = \"[GetScriptedGui('" + gui + "')]\"" ~}}
+{{~ visible = "visible = \"[GetScriptedGui('" + gui + "').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"" ~}}
+		# Level {{ l.index }} Start
+{{~ if l.first ~}}
+		icon = {
+			{{ context }}
+			{{ visible }}
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_{{ base }}').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_{{ base }}
+			}
+		}
+
+		icon = {
+			{{ context }}
+			{{ visible }}
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_1.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_1
+			}
+		}
+
+{{~ if !l.last ~}}
+		card_header_button_04 = {
+			{{ context }}
+			{{ visible }}
+			size = { 120 40 }
+			position = { 40 200 }
+{{ action_tooltip "\t\t\t" ("iv2_ga_select_historic_" + base + "_1") }}
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_{{ base }}_1
+			}
+
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+
+				using = button_panel_tab_icon_effect
+
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}
+		}
+{{~ end ~}}
+{{~ else if !l.last ~}}
+{{~ next_suffix = level_suffix(l.index) ~}}
+		icon = {
+			{{ context }}
+			{{ visible }}
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_{{ base }}{{ l.suffix }}').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_{{ base }}{{ l.suffix }}
+			}
+		}
+
+		icon = {
+			{{ context }}
+			{{ visible }}
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_{{ l.index }}.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_{{ l.index }}
+			}
+		}
+
+		card_header_button_04 = {
+			{{ context }}
+			{{ visible }}
+			size = { 120 40 }
+			position = { 40 200 }
+{{ action_tooltip "\t\t\t" ("iv2_ga_select_historic_" + base + next_suffix) }}
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_{{ base }}{{ next_suffix }}
+			}
+
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+
+				using = button_panel_tab_icon_effect
+
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}
+		}
+
+{{~ else ~}}
+		icon = {
+			{{ context }}
+			{{ visible }}
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_{{ l.index }}.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_{{ l.index }}
+			}
+		}
+
+		icon = {
+			{{ context }}
+			{{ visible }}
+			size = { 100 100 }
+			parentanchor = center
+			position = { 0 -20 }
+			texture = "[GetModifier('national_idea_modifier_{{ base }}{{ l.suffix }}').GetIcon]"
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_{{ base }}{{ l.suffix }}
+			}
+		}
+
+		icon = {
+			{{ context }}
+			{{ visible }}
+			size = { 40 40 }
+			position = { 0 95 }
+			parentanchor = center
+			texture = "gfx/interface/icons/iv2_upgrade_no.dds"
+
+			using = button_panel_tab_icon_effect
+
+			modify_texture = {
+				using = color_new_gold_texture
+				blend_mode = add
+			}
+
+			tooltipwidget = {
+				using = iv2_upgrade_no_tt
+			}
+
+			glow = {
+				name = "drop_shadow"
+				glow_radius = 3
+				color = {50.0 0.0 0.0 1.0}
+				alpha = 0.8
+			}
+		}
+{{~ end ~}}
+		# Level {{ l.index }} End
+{{~ end ~}}
+	}
+
+{{~ end ~}}
+{{~ end ~}}
+} # Close types

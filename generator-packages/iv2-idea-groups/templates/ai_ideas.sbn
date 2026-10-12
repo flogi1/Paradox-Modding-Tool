@@ -1,0 +1,9 @@
+{{~ if aiList ~}}
+		iv2_ga_ideagroup_{{ g }}_1
+		iv2_ga_ideagroup_{{ g }}_2
+		iv2_ga_ideagroup_{{ g }}_3
+		iv2_ga_ideagroup_{{ g }}_4
+		iv2_ga_ideagroup_{{ g }}_5
+		iv2_ga_ideagroup_{{ g }}_6
+		iv2_ga_ideagroup_{{ g }}_7
+{{~ end ~}}

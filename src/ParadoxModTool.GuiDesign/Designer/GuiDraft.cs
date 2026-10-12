@@ -103,6 +103,12 @@ public static class GuiDraft
     public static GuiDefinition? ModDefinition(GuiIndex index, GuiNode definition)
     {
         var all = index.FindAll(definition.Name, KindOf(definition));
+        if (index.Layout is { FirstWins: true, ModsBeforeVanilla: false })
+        {
+            // Victoria 3: Vanilla und Mods in einer Ladereihenfolge; gewinnt Vanilla, gibt es keine wirksame Mod-Definition.
+            return GuiIndex.FirstLoaded(all, modsBeforeVanilla: false) is { } winner && winner.File.Layer != GuiLayer.Vanilla ? winner : null;
+        }
+
         if (index.Layout.FirstWins)
         {
             // Eigene Mod und Abhängigkeiten zählen gemeinsam nach Pfad (siehe GuiIndex.FirstLoaded).

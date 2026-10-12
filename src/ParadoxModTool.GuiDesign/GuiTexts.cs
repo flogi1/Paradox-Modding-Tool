@@ -543,6 +543,7 @@ public static class GuiTexts
     {
         GuiPlanBlockerKind.DraftErrors => T("gui.takeOver.blocker.errors", "Der Entwurf hat Syntaxfehler. Zuerst beheben."),
         GuiPlanBlockerKind.DuplicateInMod => F("gui.takeOver.blocker.duplicate", "\"{0}\" ist in der Mod mehrfach definiert: {1}", blocker.Name, string.Join(", ", blocker.Places)),
+        GuiPlanBlockerKind.ModLoadsAfterVanilla => F("gui.takeOver.blocker.loadsLater", "\"{0}\" ist in der Mod in {1} definiert, aber {2} lädt vorher und gewinnt; eine Änderung in der Mod-Datei wirkte nicht. Verschiebe die Definition in eine Datei, die früher lädt (z. B. gui/00_…), dann erneut übernehmen.", blocker.Name, blocker.Places[0], blocker.Places[1]),
         GuiPlanBlockerKind.NameTaken => F("gui.takeOver.blocker.nameTaken", "Den Namen \"{0}\" gibt es schon: {1}", blocker.Name, string.Join(", ", blocker.Places)),
         GuiPlanBlockerKind.ModChangedSince => F("gui.takeOver.blocker.modChanged", "\"{0}\" hat sich in der Mod geändert, seit der Entwurf begonnen hat ({1}). Entwurf verwerfen und neu beginnen, damit die neue Mod-Fassung die Grundlage ist.", blocker.Name, string.Join(", ", blocker.Places)),
         _ => F("gui.takeOver.blocker.copy", "Die ganze Datei müsste kopiert werden, sie stammt aber aus dem Spielordner \"{1}\" ({0}). Ob eine Mod solche Dateien ersetzen kann, ist ungeklärt. Ändere hier nur type- und template-Definitionen.", blocker.Name, string.Join(", ", blocker.Places)),
@@ -580,6 +581,12 @@ public static class GuiTexts
     public static string ModSettingsOverrideFileFlat => T("gui.modSettings.overrideFileFlat", "Überschreibdatei (liegt in gui/):");
 
     public static string ModSettingsFirstWinsHint => T("gui.modSettings.firstWinsHint", "In diesem Spiel gewinnt die zuerst geladene Datei: Die Standardnamen beginnen deshalb mit 00_, damit sie vor den anderen Dateien der Mod laden.");
+
+    public static string ModSettingsFirstWinsVanillaHint => T("gui.modSettings.firstWinsVanillaHint", "In diesem Spiel gewinnt die zuerst geladene Datei, und Vanilla und Mods laden gemeinsam nach Pfad: Die Standardnamen beginnen deshalb mit 00_ und liegen direkt in gui/, damit sie vor den Vanilla-Dateien laden. Ein eigener Name, der später sortiert, verliert gegen Vanilla.");
+
+    /// <summary>Der Hinweis zu den Dateinamen je nach Ladereihenfolge des Spiels (Victoria 3: auch vor Vanilla).</summary>
+    public static string ModSettingsFirstWinsHintFor(ParadoxModTool.GuiDesign.Index.GuiLayout layout) =>
+        layout.ModsBeforeVanilla ? ModSettingsFirstWinsHint : ModSettingsFirstWinsVanillaHint;
 
     public static string ModSettingsDependencies => T("gui.modSettings.dependencies", "Abhängigkeits-Mods (ihre Typen und Templates kommen in den GUI-Index):");
 

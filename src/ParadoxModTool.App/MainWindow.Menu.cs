@@ -6,7 +6,7 @@ using MenuItem = System.Windows.Controls.MenuItem;
 
 namespace ParadoxModTool.App;
 
-/// <summary>Texte der Menüleiste und der allgemeinen Werkzeugleiste (<see cref="MenuTexts"/>) und "Alle speichern".</summary>
+/// <summary>Texte der Menüleiste (<see cref="MenuTexts"/>) und "Alle speichern"; die kleine Werkzeugleiste beschriftet MainWindow.Layout.cs.</summary>
 public partial class MainWindow
 {
     /// <summary>Einmal im Konstruktor. Tooltips, die sich zur Laufzeit ändern (Rückgängig, Hilfe), setzen ihre eigenen Methoden auch aus <see cref="MenuTexts"/>.</summary>
@@ -14,7 +14,8 @@ public partial class MainWindow
     {
         WindowMenuItem.Header = MenuTexts.Games;
         SetMenuText(ModsMenuItem, MenuTexts.Mods, MenuTexts.ModsTip);
-        SetMenuText(MyModsMenuItem, MenuTexts.MyMods, MenuTexts.MyModsTip);
+        // Interface-Rework 2: in beiden Layouts "Mod-Übersicht"; das Fenster selbst heißt weiter "Meine Mods".
+        SetMenuText(MyModsMenuItem, MenuTexts.Overview, MenuTexts.OverviewTip);
         SetMenuText(ProjectMenuItem, MenuTexts.Project, MenuTexts.ProjectTip);
         ProjectCopyMenuItem.Header = MenuTexts.ProjectCopy;
         ProjectMoveMenuItem.Header = MenuTexts.ProjectMove;
@@ -23,6 +24,8 @@ public partial class MainWindow
         SetMenuText(SettingsMenuItem, SettingsTexts.MenuSettings, SettingsTexts.MenuSettingsTip);
         SetMenuText(CuToolMenuItem, MenuTexts.CuTool, MenuTexts.CuToolTip);
         SetMenuText(PatchRecipesMenuItem, MenuTexts.PatchRecipes, MenuTexts.PatchRecipesTip);
+        SetMenuText(GeneratorPackagesMenuItem, MenuTexts.GeneratorPackages, MenuTexts.GeneratorPackagesTip);
+        SetMenuText(PackageEditorMenuItem, MenuTexts.PackageEditor, MenuTexts.PackageEditorTip);
         SetMenuText(ModCompatMenuItem, MenuTexts.ModCompat, MenuTexts.ModCompatTip);
         SetMenuText(ErrorLogMenuItem, ParadoxModTool.ErrorLog.ErrorLogTexts.Menu, ParadoxModTool.ErrorLog.ErrorLogTexts.MenuTip);
         SetMenuText(DesyncMenuItem, ParadoxModTool.Desync.DesyncTexts.Menu, ParadoxModTool.Desync.DesyncTexts.MenuTip);
@@ -38,20 +41,15 @@ public partial class MainWindow
         SetMenuText(SupportMenuItem, MenuTexts.Support, MenuTexts.SupportTip);
         SetMenuText(SponsorMenuItem, MenuTexts.SupportGitHub, MenuTexts.SupportGitHubTip);
         SetMenuText(KofiMenuItem, MenuTexts.SupportKofi, MenuTexts.SupportKofiTip);
+        HelpSupportHeader.Header = MenuTexts.Support;
+        HelpSupportHeader.ToolTip = MenuTexts.SupportTip;
+        SetMenuText(HelpSponsorMenuItem, MenuTexts.SupportGitHub, MenuTexts.SupportGitHubTip);
+        SetMenuText(HelpKofiMenuItem, MenuTexts.SupportKofi, MenuTexts.SupportKofiTip);
         ApplyRepositoryAvailability();
         InitializeUpdateBarTexts();
 
-        foreach (var (id, element) in ToolbarElements())
-        {
-            if (element is ContentControl control)
-            {
-                control.Content = MenuTexts.ToolbarLabel(id);
-            }
-
-            element.ToolTip = MenuTexts.ToolbarTip(id);
-        }
-
         UpdateBugTrackerButton();
+        ApplyWindowLayout();
     }
 
     private static void SetMenuText(MenuItem item, string header, string tip)

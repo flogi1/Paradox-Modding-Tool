@@ -28,6 +28,12 @@
     <None Include="..\..\profiles\errorlog\ck3.json" Link="profiles\errorlog\ck3.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\profiles\errorlog\vic3.json" Link="profiles\errorlog\vic3.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\vic3\*.log">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Data\ck3\*.log">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

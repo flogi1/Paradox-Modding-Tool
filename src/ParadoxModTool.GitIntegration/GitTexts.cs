@@ -88,8 +88,6 @@ public static class GitTexts
 
     public static string CheckNotLoggedIn => T("git.check.notLoggedIn", "Bei GitHub ist keine Anmeldung aktiv.");
 
-    public static string CheckVersionInvalid => T("git.check.versionInvalid", "metadata.json enthält keine gültige Version.");
-
     public static string CheckNoRepo => T("git.check.noRepo", "Es ist kein Repository angehakt.");
 
     public static string CheckTitleMissing => T("git.check.titleMissing", "Der Titel des Releases fehlt.");

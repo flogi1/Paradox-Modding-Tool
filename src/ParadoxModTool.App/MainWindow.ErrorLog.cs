@@ -151,6 +151,7 @@ public partial class MainWindow
     {
         var count = _errorLog?.LiveNewCount ?? 0;
         ErrorLogMenuItem.Header = count > 0 ? ErrorLogTexts.MenuWithCount(count) : ErrorLogTexts.Menu;
+        TileBarControl.SetBadge(ParadoxModTool.Settings.TileIds.ErrorLog, count);
     }
 
     /// <summary>Jede Änderung der Sitzung zieht Tabs, Explorer und Notizbereich nach; mehrere Änderungen hintereinander nur einmal.</summary>

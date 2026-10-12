@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bausteine des Hauptfensters (Interface-Rework 2): Vektor-Icons, Kachelleiste, kleine Werkzeugleiste und Drag-and-drop-Hülle.
+       Nur abhängig von Settings, damit die Steuerelemente ohne App-Projekt testbar sind. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.Shell</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

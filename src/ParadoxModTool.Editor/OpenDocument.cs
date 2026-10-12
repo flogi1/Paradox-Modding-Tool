@@ -373,6 +373,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
         Origin = FileOriginTracker.Classify(path);
         RaiseCategoryChanged();
         RaiseOriginChanged();
+        OnPropertyChanged(nameof(DisplayName));
         RefreshLock();
         RefreshErrorMark();
     }

@@ -1,0 +1,68 @@
+# block: Tab-Leiste
+# group: Fenster
+# description: Tab-Leiste mit Inhaltsbereich für ein vorhandenes Fenster; Umschaltung über GetVariableSystem, der Start-Tab wird beim Einblenden gesetzt. Je Tab ein tab_button (nicht gewählt) und ein Feld mit selected_tabs (gewählt) wie in der Kartenmodus-Leiste; die fertige Leiste tab_buttons hat feste fünf Plätze und taugt nicht für eine beliebige Anzahl. Vorbild: gui/lens_toolbar.gui, gui/shared/tab_bars.gui, gui/message_settings.gui
+# param: var | Variable für den aktiven Tab | my_tabs
+# param: start_tab | Start-Tab (Kennung) | tab_1
+# repeat: tabs | Tabs | 3
+# param: tabs.id | Kennung | tab_$index$
+# param: tabs.title | Titel (Lokalisierungsschlüssel) | TAB_$index$
+# requires: tab_button, selected_tabs, tab_text_properties
+
+vbox = {
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	state = {
+		name = _show
+		on_start = "[GetVariableSystem.Set( '$var$', '$start_tab$' )]"
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+
+		$repeat tabs$
+		tab_button = {
+			layoutpolicy_horizontal = expanding
+			size = { 0 44 }
+			visible = "[Not( GetVariableSystem.HasValue( '$var$', '$tabs.id$' ) )]"
+			onclick = "[GetVariableSystem.Set( '$var$', '$tabs.id$' )]"
+
+			textbox = {
+				text = "$tabs.title$"
+				default_format = "#title"
+				using = tab_text_properties
+			}
+		}
+
+		icon = {
+			layoutpolicy_horizontal = expanding
+			size = { 0 44 }
+			using = selected_tabs
+			visible = "[GetVariableSystem.HasValue( '$var$', '$tabs.id$' )]"
+
+			textbox = {
+				text = "$tabs.title$"
+				default_format = "#variable"
+				using = tab_text_properties
+			}
+		}
+
+		$end tabs$
+	}
+
+	vbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+
+		$repeat tabs$
+		vbox = {
+			visible = "[GetVariableSystem.HasValue( '$var$', '$tabs.id$' )]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			margin = { 10 10 }
+			# Inhalt von $tabs.id$
+		}
+
+		$end tabs$
+	}
+}

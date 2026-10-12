@@ -1,0 +1,192 @@
+{
+  "id": "iv2",
+  "name": {
+    "de": "IV2 Nationale Ideen",
+    "en": "IV2 National Ideas",
+    "fr": "IV2 Idées nationales",
+    "es": "IV2 Ideas nacionales",
+    "ru": "IV2 Национальные идеи",
+    "pl": "IV2 Idee narodowe",
+    "pt-br": "IV2 Ideias nacionais",
+    "zh-hans": "IV2 国家理念"
+  },
+  "gameId": "eu5",
+  "keyField": "tag",
+  "head": [
+    {
+      "id": "tag", "type": "text", "required": true, "pattern": "^[A-Z0-9]{2,5}$",
+      "label": { "de": "Tag", "en": "Tag", "fr": "Tag", "es": "Tag", "ru": "Тег", "pl": "Tag", "pt-br": "Tag", "zh-hans": "标签" }
+    },
+    {
+      "id": "coa", "type": "image", "asset": "coa",
+      "label": { "de": "Wappen", "en": "Coat of arms", "fr": "Armoiries", "es": "Escudo", "ru": "Герб", "pl": "Herb", "pt-br": "Brasão", "zh-hans": "纹章" }
+    }
+  ],
+  "root": {
+    "id": "categories", "constantsTable": "categories",
+    "label": { "de": "Kategorien", "en": "Categories", "fr": "Catégories", "es": "Categorías", "ru": "Категории", "pl": "Kategorie", "pt-br": "Categorias", "zh-hans": "类别" },
+    "child": {
+      "id": "ideas", "min": 0, "max": 9, "initial": 3, "numberBaseField": "base",
+      "label": { "de": "Ideen", "en": "Ideas", "fr": "Idées", "es": "Ideas", "ru": "Идеи", "pl": "Idee", "pt-br": "Ideias", "zh-hans": "理念" },
+      "fields": [
+        {
+          "id": "name", "type": "text", "required": true, "multilingual": true,
+          "label": { "de": "Name", "en": "Name", "fr": "Nom", "es": "Nombre", "ru": "Название", "pl": "Nazwa", "pt-br": "Nome", "zh-hans": "名称" },
+          "lookup": { "sources": [ "nations", "advances", "reforms", "laws" ], "fills": { "name": "name", "desc": "desc" } }
+        },
+        {
+          "id": "desc", "type": "multilineText", "multilingual": true,
+          "label": { "de": "Beschreibung", "en": "Description", "fr": "Description", "es": "Descripción", "ru": "Описание", "pl": "Opis", "pt-br": "Descrição", "zh-hans": "描述" }
+        }
+      ],
+      "child": {
+        "id": "levels", "min": 1, "max": 4, "initial": 4,
+        "label": { "de": "Stufen", "en": "Levels", "fr": "Niveaux", "es": "Niveles", "ru": "Уровни", "pl": "Poziomy", "pt-br": "Níveis", "zh-hans": "等级" },
+        "fields": [
+          {
+            "id": "modifiers", "type": "modifiers",
+            "label": { "de": "Modifikatoren", "en": "Modifiers", "fr": "Modificateurs", "es": "Modificadores", "ru": "Модификаторы", "pl": "Modyfikatory", "pt-br": "Modificadores", "zh-hans": "修正" }
+          },
+          {
+            "id": "expensive", "type": "bool", "default": "no",
+            "label": { "de": "teuer", "en": "expensive", "fr": "coûteux", "es": "caro", "ru": "дорогой", "pl": "drogi", "pt-br": "caro", "zh-hans": "高价" }
+          }
+        ]
+      }
+    }
+  },
+  "constants": {
+    "categories": [
+      {
+        "key": "adm", "base": 0, "icon": "adm", "header": "Adm", "modheader": "ADM",
+        "label": { "de": "Verwaltung", "en": "Administrative", "fr": "Administrative", "es": "Administrativa", "ru": "Административные", "pl": "Administracyjne", "pt-br": "Administrativa", "zh-hans": "行政" }
+      },
+      {
+        "key": "dip", "base": 10, "icon": "dip", "header": "Dip", "modheader": "DIP",
+        "label": { "de": "Diplomatie", "en": "Diplomatic", "fr": "Diplomatique", "es": "Diplomática", "ru": "Дипломатические", "pl": "Dyplomatyczne", "pt-br": "Diplomática", "zh-hans": "外交" }
+      },
+      {
+        "key": "army", "base": 20, "icon": "army", "header": "Army", "modheader": "Army",
+        "label": { "de": "Armee / Militär", "en": "Army / Military", "fr": "Armée / Militaire", "es": "Ejército / Militar", "ru": "Армия / Военные", "pl": "Armia / Wojsko", "pt-br": "Exército / Militar", "zh-hans": "陆军 / 军事" }
+      },
+      {
+        "key": "navy", "base": 30, "icon": "navy", "header": "Navy", "modheader": "Navy",
+        "label": { "de": "Marine", "en": "Navy", "fr": "Marine", "es": "Armada", "ru": "Флот", "pl": "Marynarka", "pt-br": "Marinha", "zh-hans": "海军" }
+      }
+    ]
+  },
+  "assets": {
+    "coa": { "path": "assets/coa.zip", "origin": "game" },
+    "ideaDatabase": { "path": "assets/idea_database.json", "origin": "game" }
+  },
+  "lookups": [
+    {
+      "id": "advances", "kind": "gameKeys", "folder": "in_game/common/advances", "depth": 1,
+      "tagFromFile": "^country_([A-Za-z]{2,5})\\.txt$", "tagInBlock": [ "has_or_had_tag", "tag" ],
+      "label": { "de": "Advance", "en": "Advance", "fr": "Avancée", "es": "Avance", "ru": "Достижение", "pl": "Postęp", "pt-br": "Avanço", "zh-hans": "进步" }
+    },
+    {
+      "id": "reforms", "kind": "gameKeys", "folder": "in_game/common/government_reforms", "depth": 1,
+      "label": { "de": "Reform", "en": "Reform", "fr": "Réforme", "es": "Reforma", "ru": "Реформа", "pl": "Reforma", "pt-br": "Reforma", "zh-hans": "改革" }
+    },
+    {
+      "id": "laws", "kind": "gameKeys", "folder": "in_game/common/laws", "depth": 2, "namedOnly": true,
+      "label": { "de": "Gesetz", "en": "Law", "fr": "Loi", "es": "Ley", "ru": "Закон", "pl": "Prawo", "pt-br": "Lei", "zh-hans": "法律" }
+    },
+    {
+      "id": "nations", "kind": "json", "asset": "ideaDatabase", "items": "nations[].ideas[]",
+      "fields": { "key": "key", "name": "name", "desc": "desc", "tag": "../tag", "nation": "../label" },
+      "label": { "de": "Idee", "en": "Idea", "fr": "Idée", "es": "Idea", "ru": "Идея", "pl": "Idea", "pt-br": "Ideia", "zh-hans": "理念" }
+    }
+  ],
+  "languages": { "extendEnglish": false, "copyEnglish": true, "englishForMissing": true },
+  "targets": [ "mod", "output" ],
+  "outputs": [
+    { "id": "genericActions", "kind": "ownFile", "path": "in_game/common/generic_actions/iv2_GA_ideas_{{ tag }}.txt", "template": "generic_actions.sbn" },
+    { "id": "aiChooser", "kind": "ownFile", "path": "in_game/common/generic_actions/iv2_ga_ai_choose_historic_{{ tag }}.txt", "template": "ai_chooser.sbn" },
+    { "id": "aiLists", "kind": "ownFile", "path": "in_game/common/generic_action_ai_lists/03_iv2_gal_nat_idea_{{ tag }}.txt", "template": "ai_lists.sbn" },
+    { "id": "logPurger", "kind": "ownFile", "path": "in_game/common/scripted_effects/03_log_purger_{{ tag }}.txt", "template": "log_purger.sbn" },
+    { "id": "scriptedGuis", "kind": "ownFile", "path": "in_game/common/scripted_guis/02_IV2_sgui_{{ tag }}.txt", "template": "scripted_guis.sbn" },
+    { "id": "scriptedTriggers", "kind": "ownFile", "path": "in_game/common/scripted_triggers/02_iv2_scr_nat_idea_{{ tag }}.txt", "template": "scripted_triggers.sbn" },
+    { "id": "guiSetup", "kind": "ownFile", "path": "in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/{{ tag }}/IV2_historic_setup_{{ tag }}.gui", "template": "gui_setup.sbn" },
+    { "id": "guiSelect", "kind": "ownFile", "path": "in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/{{ tag }}/IV2_historic_select_{{ tag }}.gui", "template": "gui_select.sbn" },
+    { "id": "guiSelectTt", "kind": "ownFile", "path": "in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/{{ tag }}/IV2_historic_select_tt_{{ tag }}.gui", "template": "gui_select_tt.sbn" },
+    { "id": "guiSee", "kind": "ownFile", "path": "in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/{{ tag }}/IV2_historic_see_{{ tag }}.gui", "template": "gui_see.sbn" },
+    { "id": "guiRemoveTt", "kind": "ownFile", "path": "in_game/gui/Idea Variation 2 National Ideas/Historic National Ideas/{{ tag }}/IV2_historic_remove_TT_{{ tag }}.gui", "template": "gui_remove_tt.sbn" },
+    {
+      "id": "staticModifiers", "kind": "syncBlocks", "path": "main_menu/common/static_modifiers/02_IV2_{{ tag }}.txt",
+      "keyPattern": "national_idea_modifier_{{ tag }}_*", "template": "static_modifiers.sbn", "keep": [ "game_data" ], "checkUnreferenced": true
+    },
+    { "id": "localization", "kind": "localization", "path": "main_menu/localization/{{ lang }}/04_IV2_{{ tag }}_l_{{ lang }}.yml", "template": "localization.sbn" },
+    { "id": "coa", "kind": "copyBinary", "path": "main_menu/gfx/interface/coa/{{ tag }}.dds", "source": "coa:{{ coa }}" },
+    {
+      "id": "replaceShells", "kind": "insertSection", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type iv2_picked_national_ideas_shell", "template": "replace_shells.sbn", "skeleton": "replace_shells_skeleton.sbn",
+      "legacyBegin": "# === IV2Generator:{{ tag }}:START ===", "legacyEnd": "# === IV2Generator:{{ tag }}:END ===",
+      "legacyPatterns": [ "iv2_historic_idea_see_{{ tag }}_\\d+\\s*=\\s*\\{\\}" ]
+    },
+    {
+      "id": "historicShells", "kind": "insertSection", "forEach": "categories", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_historic_national_ideas_setup.gui",
+      "block": "type iv2_historic_shell_{{ item.key }}", "template": "historic_shells.sbn", "skeleton": "historic_shells_skeleton.sbn",
+      "legacyBegin": "# === IV2Generator:{{ tag }}:START ===", "legacyEnd": "# === IV2Generator:{{ tag }}:END ===",
+      "legacyPatterns": [ "iv2_historic_idea_select_{{ tag }}_\\d+\\s*=\\s*\\{\\}" ]
+    },
+    {
+      "id": "inject", "kind": "insertSection", "path": "in_game/common/scripted_effects/01_iv2_scripted_effect_historic_idea_setup.txt",
+      "block": "iv2_historic_ideas_list_setup_effect", "template": "inject.sbn", "skeleton": "inject_skeleton.sbn",
+      "legacyBegin": "# === IV2Generator:{{ tag }}:START ===", "legacyEnd": "# === IV2Generator:{{ tag }}:END ===",
+      "legacyPatterns": [ "if\\s*=\\s*\\{\\s*\\n\\s*limit\\s*=\\s*\\{\\s*has_or_had_tag\\s*=\\s*{{ tag }}\\s*\\}" ]
+    },
+    {
+      "id": "messagetypes", "kind": "insertSection", "path": "main_menu/gui/messagetypes.txt",
+      "template": "messagetypes.sbn", "skeleton": "messagetypes_skeleton.sbn",
+      "legacyBegin": "# === IV2Generator:{{ tag }}:START ===", "legacyEnd": "# === IV2Generator:{{ tag }}:END ===",
+      "legacyPatterns": [ "WE_PERFORM_iv2_ga_(?:select|deselect)_historic_{{ tag }}_\\d+\\w*_ACTION\\s*=\\s*\\{" ]
+    },
+    {
+      "id": "uniqueTrigger", "kind": "ensureLine", "path": "in_game/common/scripted_triggers/iv2_scripted_triggers_national_ideas_setup.txt",
+      "block": "iv2_scripted_trigger_has_unique_national_idea_set.OR", "line": "has_or_had_tag = {{ tag }}", "skeleton": "unique_trigger_skeleton.sbn"
+    }
+  ],
+  "read": {
+    "keys": "^main_menu/common/static_modifiers/[^/]*IV2_(?<key>[A-Z0-9]{2,5})\\.txt$",
+    "elements": {
+      "file": "main_menu/common/static_modifiers/02_IV2_{{ tag }}.txt",
+      "block": "national_idea_modifier_{{ tag }}_(?<number>\\d+)(?<suffix>_\\d)?",
+      "level": "levels",
+      "fields": { "modifiers": { "body": true, "except": [ "game_data" ] } }
+    },
+    "localization": [
+      { "key": "iv2_historic_idea_{{ tag }}_(?<number>\\d+)", "field": "ideas.name" },
+      { "key": "iv2_ga_select_historic_{{ tag }}_(?<number>\\d+)_desc", "field": "ideas.desc" }
+    ],
+    "flags": [
+      {
+        "file": "in_game/common/generic_actions/iv2_GA_ideas_{{ tag }}.txt",
+        "block": "iv2_ga_select_historic_{{ tag }}_(?<number>\\d+)(?<suffix>_\\d)?",
+        "contains": "for_nat_idea_expensive_", "field": "levels.expensive"
+      }
+    ],
+    "assets": [ { "field": "coa", "file": "main_menu/gfx/interface/coa/{{ tag }}.dds" } ]
+  },
+  "errors": [
+    {
+      "when": "total_ideas == 0",
+      "message": { "de": "Keine Idee angelegt.", "en": "No idea has been added.", "fr": "Aucune idée n'a été ajoutée.", "es": "No se ha añadido ninguna idea.", "ru": "Не добавлено ни одной идеи.", "pl": "Nie dodano żadnej idei.", "pt-br": "Nenhuma ideia foi adicionada.", "zh-hans": "尚未添加任何理念。" }
+    }
+  ],
+  "warnings": [
+    {
+      "when": "total_ideas < 10",
+      "message": { "de": "Weniger als 10 Ideen.", "en": "Fewer than 10 ideas.", "fr": "Moins de 10 idées.", "es": "Menos de 10 ideas.", "ru": "Меньше 10 идей.", "pl": "Mniej niż 10 idei.", "pt-br": "Menos de 10 ideias.", "zh-hans": "理念少于 10 个。" }
+    },
+    {
+      "when": "!(languages | array.contains \"english\")",
+      "message": { "de": "Englisch ist nicht als Lokalisierungssprache gewählt.", "en": "English is not selected as a localization language.", "fr": "L'anglais n'est pas sélectionné comme langue de localisation.", "es": "El inglés no está seleccionado como idioma de localización.", "ru": "Английский не выбран языком локализации.", "pl": "Angielski nie jest wybrany jako język lokalizacji.", "pt-br": "O inglês não está selecionado como idioma de localização.", "zh-hans": "未选择英语作为本地化语言。" }
+    },
+    {
+      "when": "language_rules.extend_english && incomplete_ideas > 0",
+      "message": { "de": "Ideen ohne Name oder Beschreibung; diese Texte gehen in alle Sprachen.", "en": "Ideas without name or description; these texts go into all languages.", "fr": "Idées sans nom ou description ; ces textes vont dans toutes les langues.", "es": "Ideas sin nombre o descripción; estos textos van a todos los idiomas.", "ru": "Идеи без названия или описания; эти тексты попадут во все языки.", "pl": "Idee bez nazwy lub opisu; te teksty trafią do wszystkich języków.", "pt-br": "Ideias sem nome ou descrição; esses textos vão para todos os idiomas.", "zh-hans": "有理念缺少名称或描述；这些文本会写入所有语言。" }
+    }
+  ]
+}

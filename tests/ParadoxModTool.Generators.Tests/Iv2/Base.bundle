@@ -1,0 +1,203 @@
+##FILE in_game/common/scripted_effects/01_iv2_scripted_effect_historic_idea_setup.txt
+######################################################
+# Test fixture in the shape of the real IV2 file (invented entries)
+######################################################
+
+iv2_historic_ideas_list_setup_effect = {
+	if = {
+		limit = { has_or_had_tag = TS }
+		set_variable = {
+			name = iv2_nat_TS_1
+			value = flag:iv2_nat_TS_1
+		}
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_adm
+				target = flag:iv2_nat_TS_1
+		}
+	}
+
+	if = {
+		limit = { has_or_had_tag = TST }
+		set_variable = {
+			name = iv2_nat_TST_1
+			value = flag:iv2_nat_TST_1
+		}
+		add_to_variable_list = {
+				name = iv2_historic_ideas_list_adm
+				target = flag:iv2_nat_TST_1
+		}
+	}
+}
+
+iv2_other_effect = {
+	if = {
+		limit = { has_or_had_tag = TST }
+		x = 1
+	}
+}
+##FILE in_game/common/scripted_triggers/iv2_scripted_triggers_national_ideas_setup.txt
+###############################################################
+#### Test fixture in the shape of the real IV2 file (invented entries)
+###############################################################
+
+
+iv2_scripted_trigger_has_unique_national_idea_set = {
+	OR = {
+		has_or_had_tag = TS
+		has_or_had_tag = ARA
+	}
+}
+
+
+iv2_scripted_trigger_use_historic_ideas = {
+	iv2_scripted_trigger_has_unique_national_idea_set = yes
+	has_game_rule = iv2_rule_national_ideas_1
+}
+##FILE in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui
+##########################################################################################################################
+####### Test fixture in the shape of the real IV2 file (invented entries)
+##########################################################################################################################
+
+types iv2_nat_ideas_setup {
+	type iv2_some_other_shell = widget {
+		parentanchor = left
+		iv2_historic_idea_see_TST_99 = {}
+	}
+
+	type iv2_picked_national_ideas_shell = widget {
+		parentanchor = left
+		iv2_historic_idea_see_TS_1 = {}
+		iv2_historic_idea_see_TS_2 = {}
+
+		iv2_historic_idea_see_TST_1 = {}
+		iv2_historic_idea_see_TST_2 = {}
+		iv2_historic_idea_see_TST_7 = {}
+
+		# === IV2Generator:ARA:START ===
+		iv2_historic_idea_see_ARA_1 = {}
+		# === IV2Generator:ARA:END ===
+		# PMT-Generator iv2/replaceShells/FRA begin
+		iv2_historic_idea_see_FRA_1 = {}
+		# PMT-Generator iv2/replaceShells/FRA end
+	}
+}
+##FILE in_game/gui/Idea Variation 2 National Ideas/IV2_historic_national_ideas_setup.gui
+##########################################################################################################################
+####### Test fixture in the shape of the real IV2 file (invented entries)
+##########################################################################################################################
+
+types iv2_historic_ideas_setup {
+	type iv2_historic_shell_adm = widget {
+		parentanchor = left
+		iv2_historic_idea_select_TS_1 = {}
+
+		iv2_historic_idea_select_TST_1 = {}
+		iv2_historic_idea_select_TST_2 = {}
+
+
+		# === IV2Generator:ARA:START ===
+		iv2_historic_idea_select_ARA_1 = {}
+		# === IV2Generator:ARA:END ===
+}
+
+	type iv2_historic_shell_dip = widget {
+		parentanchor = left
+		iv2_historic_idea_select_TS_11 = {}
+		# === IV2Generator:TST:START ===
+		iv2_historic_idea_select_TST_11 = {}
+		iv2_historic_idea_select_TST_12 = {}
+		# === IV2Generator:TST:END ===
+	}
+
+	type iv2_historic_shell_army = widget {
+		parentanchor = left
+		iv2_historic_idea_select_TS_21 = {}
+	}
+
+	type iv2_historic_shell_navy = widget {
+		parentanchor = left
+		iv2_historic_idea_select_TST_31 = {}
+		iv2_historic_idea_select_TS_31 = {}
+		# PMT-Generator iv2/historicShells/FRA/navy begin
+		iv2_historic_idea_select_FRA_31 = {}
+		# PMT-Generator iv2/historicShells/FRA/navy end
+	}
+}
+##FILE main_menu/common/static_modifiers/02_IV2_TST.txt
+#############################################################################
+###### Idea Variation 2 Historic National Idea Modifiers TST (test fixture)
+#############################################################################
+
+# ADM Category
+
+national_idea_modifier_TST_1 = {
+	game_data = {
+	    category = country
+    }
+	old_value = 5
+}
+
+national_idea_modifier_TST_2 = {
+	game_data = {
+		category = country
+		custom_setting = yes
+	}
+	old_a = 1
+	old_b = 2
+}
+
+national_idea_modifier_TST_2_1 = {
+	game_data = {
+	    category = country
+    }
+	hand_written = 1
+}
+
+national_idea_modifier_TST_5 = {
+	game_data = {
+	    category = country
+    }
+	obsolete = 1
+}
+##FILE main_menu/gui/messagetypes.txt
+# Test fixture in the shape of the real IV2 file (invented entries)
+WE_PERFORM_iv2_ga_select_historic_TS_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+WE_PERFORM_iv2_ga_deselect_historic_TS_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}

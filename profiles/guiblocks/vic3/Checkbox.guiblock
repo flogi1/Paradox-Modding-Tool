@@ -1,0 +1,23 @@
+# block: Checkbox
+# group: Bedienelemente
+# description: Umschalter mit Beschriftung (checkbutton mit check_button); der Zustand liegt in einer Variablen (GetVariableSystem.Toggle), abfragen mit GetVariableSystem.Exists. Vorbild: gui/window_component_library.gui, gui/message_settings.gui
+# param: var | Variable | my_option
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_OPTION
+# requires: checkbutton, check_button
+
+hbox = {
+	spacing = 10
+
+	checkbutton = {
+		using = check_button
+		size = { 30 30 }
+		onclick = "[GetVariableSystem.Toggle( '$var$' )]"
+		checked = "[GetVariableSystem.Exists( '$var$' )]"
+	}
+
+	textbox = {
+		text = "$text$"
+		autoresize = yes
+		align = nobaseline
+	}
+}

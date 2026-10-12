@@ -66,6 +66,47 @@ public sealed class MenuTextsTests
     }
 
     [Fact]
+    public void OverviewAndGameModsTexts()
+    {
+        Assert.Equal("Mod-Übersicht", MenuTexts.Overview);
+        Assert.Equal(MenuTexts.MyModsTip, MenuTexts.OverviewTip);
+        Assert.Equal("Meine EU V Mods", MenuTexts.MyGameMods("EU V"));
+    }
+
+    [Fact]
+    public void TileLabelsReuseMenuTexts()
+    {
+        Assert.Equal("Projekt verwalten", MenuTexts.TileLabel(TileIds.Project));
+        Assert.Equal(MenuTexts.ProjectTip, MenuTexts.TileTip(TileIds.Project));
+        Assert.Equal(MenuTexts.CuTool, MenuTexts.TileLabel(TileIds.CuTool));
+        Assert.Equal(MenuTexts.CompatchTip, MenuTexts.TileTip(TileIds.Compatch));
+        Assert.Equal(SettingsTexts.ToolbarItemLabel(ToolbarItemIds.ScopeFinder), MenuTexts.TileLabel(TileIds.ScopeFinder));
+        Assert.Equal("GUI", MenuTexts.TileLabel(TileIds.Gui));
+        Assert.Equal("Fehlerprotokoll", MenuTexts.TileLabel(TileIds.ErrorLog, id => id == TileIds.ErrorLog ? "Fehlerprotokoll" : null));
+        Assert.Equal(TileIds.Desync, MenuTexts.TileLabel(TileIds.Desync));
+    }
+
+    [Fact]
+    public void EveryTileHasALabelAndATip()
+    {
+        foreach (var tile in TileCatalog.All)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(MenuTexts.TileLabel(tile.Id, _ => "x")), tile.Id);
+            Assert.False(string.IsNullOrWhiteSpace(MenuTexts.TileTip(tile.Id, _ => "x")), tile.Id);
+        }
+    }
+
+    [Fact]
+    public void WorkspaceItemsReuseTheWorkspaceTexts()
+    {
+        Assert.Equal(MenuTexts.WorkspaceSaveAll, SettingsTexts.ToolbarItemLabel(ToolbarItemIds.SaveAll));
+        Assert.Equal("In anderen Arbeitsbereich", SettingsTexts.ToolbarItemLabel(ToolbarItemIds.Move));
+        Assert.Equal(MenuTexts.WorkspaceMoveTip, MenuTexts.ToolbarTip(ToolbarItemIds.Move));
+        Assert.Equal(MenuTexts.WorkspaceNewTip, MenuTexts.ToolbarTip(ToolbarItemIds.New));
+        Assert.Equal("Dateien", SettingsTexts.ToolbarGroupLabel(ToolbarGroup.Files));
+    }
+
+    [Fact]
     public void EveryToolbarItemHasItsOwnTip()
     {
         var tips = ToolbarCatalog.All.Select(item => MenuTexts.ToolbarTip(item.Id)).ToList();

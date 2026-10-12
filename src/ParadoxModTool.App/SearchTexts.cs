@@ -111,6 +111,8 @@ public static class SearchTexts
 
     public static string ReplaceLabel => T("searchWindow.replace.label", "Ersetzen durch:");
 
+    public static string SwapTip => T("searchWindow.swap.tip", "Suchen- und Ersetzen-Text tauschen");
+
     public static string MatchCase => T("searchWindow.matchCase", "Groß-/Kleinschreibung beachten");
 
     public static string WholeWord => T("searchWindow.wholeWord", "Nur ganzes Wort");

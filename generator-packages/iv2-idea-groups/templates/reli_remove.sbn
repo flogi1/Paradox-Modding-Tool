@@ -1,0 +1,9 @@
+{{~ if groupType == "reli" ~}}
+		iv2_ideagroup_select_{{ g }}_1 = {
+			fire_generic_action = {
+				type = iv2_ga_deselect_ideagroup_{{ g }}
+				actor = root
+				recipient = root
+			}
+		}
+{{~ end ~}}

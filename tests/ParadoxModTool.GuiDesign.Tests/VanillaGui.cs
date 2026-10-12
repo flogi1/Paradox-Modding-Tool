@@ -22,11 +22,12 @@ internal static class VanillaGui
             ? Directory.EnumerateFiles(InstallDirectory, "*.gui", SearchOption.AllDirectories).OrderBy(p => p, StringComparer.OrdinalIgnoreCase).ToList()
             : Array.Empty<string>();
 
-    /// <summary>Die echte Installation eines Spiels für Prüfungen der mitgelieferten Bausteine ("eu5" oder "ck3").</summary>
+    /// <summary>Die echte Installation eines Spiels für Prüfungen der mitgelieferten Bausteine ("eu5", "ck3" oder "vic3").</summary>
     public static VanillaGame For(string game) => game switch
     {
         "eu5" => new VanillaGame(InstallDirectory, new[] { "", "in_game", "main_menu", "loading_screen", "jomini" }),
         "ck3" => new VanillaGame(@"D:\SteamLibrary\steamapps\common\Crusader Kings III", new[] { "" }),
+        "vic3" => new VanillaGame(@"C:\Program Files (x86)\Steam\steamapps\common\Victoria 3", new[] { "" }),
         _ => throw new ArgumentOutOfRangeException(nameof(game)),
     };
 }

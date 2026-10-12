@@ -1,0 +1,42 @@
+	type iv2_cv_nat_dyn_{{ id }} = widget {
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_nat_idea_{{ id }}')]"
+		size = { 40 40 }
+		icon = {
+			size = { 40 40 }
+			texture = "[GetModifier('national_idea_modifier_{{ id }}').GetIcon]"
+		}
+{{~ for l in levels ~}}
+		text_single = {
+			using = iv2_cv_level_label
+			visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ sfx l.index }}').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+			raw_text = "{{ level_label l.index }}"
+		}
+{{~ end ~}}
+		tooltipwidget = {
+			ContextualTooltipType = {
+				blockoverride "title_icon" {
+					icon = {
+						using = tooltip_title_icon_size
+						texture = "[GetModifier('national_idea_modifier_{{ id }}').GetIcon]"
+					}
+				}
+				blockoverride "title_text" {
+					text = "iv2_dynamic_nat_idea_{{ id }}"
+				}
+				blockoverride "concept_link" {
+					text = "IV2_CV_CAT_{{ category | string.upcase }}"
+				}
+				blockoverride "tooltip_content" {
+					vbox = {
+						layoutpolicy_horizontal = expanding
+{{~ for l in levels ~}}
+						TooltipRowList = {
+							visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ sfx l.index }}').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+							textcontext = "[GetModifier('national_idea_modifier_{{ id }}{{ sfx l.index }}').GetDesc]"
+						}
+{{~ end ~}}
+					}
+				}
+			}
+		}
+	}

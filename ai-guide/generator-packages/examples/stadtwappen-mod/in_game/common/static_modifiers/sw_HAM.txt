@@ -1,0 +1,7 @@
+﻿sw_modifier_HAM_1 = {
+	global_trade_efficiency = 0.1
+	naval_morale = 0.05
+}
+sw_modifier_HAM_2 = {
+	fort_defense = 0.1
+}

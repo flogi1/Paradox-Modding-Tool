@@ -27,6 +27,8 @@ public static class CompatText
         CompatKind.MissingFolder => ModCompatTexts.KindMissingFolder,
         CompatKind.ReplacePathNoEffect => ModCompatTexts.KindReplacePathNoEffect,
         CompatKind.ReplacePathGuiCrash => ModCompatTexts.KindReplacePathGuiCrash,
+        CompatKind.PrefixNoEffect => ModCompatTexts.KindPrefixNoEffect,
+        CompatKind.PrefixActsAsReplace => ModCompatTexts.KindPrefixActsAsReplace,
         _ => kind.ToString(),
     };
 

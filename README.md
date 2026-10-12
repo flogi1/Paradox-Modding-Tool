@@ -1,6 +1,6 @@
 # Paradox Modding Tool (PMT)
 
-A Windows tool for modders of **Europa Universalis V**, **Crusader Kings III** and **Europa Universalis IV**. It combines a script editor with game knowledge, search and replace across whole mods, compatibility patches between mods, an error log analyzer, and tools for publishing.
+A Windows tool for modders of **Europa Universalis V**, **Crusader Kings III**, **Victoria 3** and **Europa Universalis IV**. It combines a script editor with game knowledge, search and replace across whole mods, compatibility patches between mods, an error log analyzer, and tools for publishing.
 
 PMT is not affiliated with Paradox Interactive. It reads the game files and your mods; it only writes into a mod folder when you save a file or run an action, and most actions can be undone.
 
@@ -12,6 +12,10 @@ PMT is not affiliated with Paradox Interactive. It reads the game files and your
 - Scope tracking: PMT shows the scope at the cursor and the path that leads there, and warns about scope mistakes. The Scope Finder builds a chain link by link or searches a path from a start scope to a target, with conditions and a final value.
 - Whitespace cleanup and script formatting, folder filters, a session that restores your open files, and a start button for the game.
 - A template generator that turns an existing game object into a template: you fill in the variable parts, and PMT writes the new objects (for example a series of buildings) together with their localization keys, using counting rules for numbered names and localization profiles learned from the game files.
+
+### Generator packages
+- A package turns a form into many mod files at once, for example a whole national idea set: own files, localization in every language, sections in shared files and single entries inside existing blocks. A preview shows every change side by side before anything is written, and existing sets can be read back from a mod and edited.
+- Packages are built in a package editor with masks instead of JSON, or handed to an AI of your choice with "Create with AI". Packages for The Idea Variation 2 (national ideas, idea groups, dynamic ideas) ship with PMT.
 
 ### Find & Replace
 - Find in the current document or in whole folders, with whole-word, case, multi-line and format-insensitive search. Replacing a multi-line block works the same way as replacing a word.
@@ -49,15 +53,15 @@ PMT is not affiliated with Paradox Interactive. It reads the game files and your
 - Bug tracker for your mods with GitHub issues as a source.
 
 ### Games and languages
-- Europa Universalis V, Crusader Kings III and Europa Universalis IV. Each game is described by a profile file, so further games can be added without changing the program.
-- Planned: compatibility for more Paradox games, namely Victoria 3, Stellaris and Hearts of Iron IV.
+- Europa Universalis V, Crusader Kings III, Victoria 3 and Europa Universalis IV. Each game is described by a profile file, so further games can be added without changing the program. Victoria 3 does not have the save explorer yet.
+- Planned: compatibility for more Paradox games, namely Stellaris and Hearts of Iron IV.
 - The interface is English by default and available in German, French, Spanish, Russian, Polish, Brazilian Portuguese and Simplified Chinese. See `TRANSLATING.md` if you want to help translate.
 
 ## Installation
 
 ### Requirements
 - Windows 10 or 11, 64-bit.
-- At least one supported game installed: Europa Universalis V, Crusader Kings III or Europa Universalis IV.
+- At least one supported game installed: Europa Universalis V, Crusader Kings III, Victoria 3 or Europa Universalis IV.
 - Nothing else. The download includes everything PMT needs, so you do not have to install .NET.
 
 ### Install

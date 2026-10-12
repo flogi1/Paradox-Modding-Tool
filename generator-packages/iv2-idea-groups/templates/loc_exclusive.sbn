@@ -1,0 +1,4 @@
+{{~ if exclusive_numbers.size > 0 ~}}
+ iv2_ideagroup_title_text_mut_{{ g }}_1: "{{ exclusiveTitle }}"
+ iv2_ideagroup_desc_text_mut_{{ g }}_1: "{{ exclusiveDesc }}"
+{{~ end ~}}

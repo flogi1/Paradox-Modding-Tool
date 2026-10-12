@@ -140,10 +140,27 @@ public sealed class ModifierFormatIndexTests : IDisposable
         Assert.True(index.Find("monthly_prestige_gain_mult")!.Percent);
     }
 
+    [Fact]
+    public void Vic3_profile_reads_modifier_type_definitions()
+    {
+        var settings = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", "vic3.json")).ModifierFormats!;
+        var dir = Path.Combine(Game, "common", "modifier_type_definitions");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "00_modifier_types.txt"),
+            "battle_casualties_mult={\n\tdecimals=0\n\tcolor=bad\n\tpercent=yes\n\tgame_data={\n\t\tai_value=0\n\t}\n}\n");
+
+        var format = Build(settings).Find("battle_casualties_mult")!;
+
+        Assert.Equal("definitions", settings.Source);
+        Assert.True(format.Percent);
+        Assert.Equal(0, format.Decimals);
+    }
+
     [Theory]
     [InlineData("ck3", "MOD_{name}")]
     [InlineData("eu5", "MODIFIER_TYPE_NAME_{name}")]
     [InlineData("eu4", "MODIFIER_{name}")]
+    [InlineData("vic3", "{name}")]
     public void RealProfilesHaveNameLocalization(string game, string expectedKey)
     {
         var settings = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", game + ".json")).ModifierFormats!;

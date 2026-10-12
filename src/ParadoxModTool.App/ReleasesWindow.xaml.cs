@@ -93,8 +93,12 @@ public partial class ReleasesWindow : Window
             ? PublishTexts.NoChangelogSet
             : ChangelogPath is null ? PublishTexts.ChangelogFileMissing(_mod.ChangelogFile) : _mod.ChangelogFile;
 
-        var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases);
-        StatusText.Text = PublishTexts.StatusLine(status.MetadataVersion ?? "—", status.ChangelogTop ?? "—", status.LatestRelease ?? "—");
+        // Steam lädt nur den Mod-Ordner hoch: die descriptor.mod muss darin liegen, die Geschwisterdatei daneben reicht nicht.
+        var descriptorMissing = _metadata is not null && !File.Exists(Path.Combine(_metadata.Folder, ModMetadata.ClassicWorkshopDescriptorFile));
+        var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases, ModMetadata.IsClassic(_metadataFile), descriptorMissing);
+        StatusText.Text = ModMetadata.IsClassic(_metadataFile)
+            ? PublishTexts.StatusLineClassic(status.MetadataVersion ?? "—", status.ChangelogTop ?? "—", status.LatestRelease ?? "—")
+            : PublishTexts.StatusLine(status.MetadataVersion ?? "—", status.ChangelogTop ?? "—", status.LatestRelease ?? "—");
         var hints = status.Hints.ToList();
         if (problem is not null)
         {
@@ -313,7 +317,7 @@ public partial class ReleasesWindow : Window
             return;
         }
 
-        var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases);
+        var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases, ModMetadata.IsClassic(_metadataFile));
         if (status.MetadataVersion is null)
         {
             Report(PublishTexts.MetadataNoVersion);
@@ -375,7 +379,7 @@ public partial class ReleasesWindow : Window
             return;
         }
 
-        var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases);
+        var status = ReleaseStatus.Evaluate(_metadata, _entries, _log.Releases, ModMetadata.IsClassic(_metadataFile));
         var proposal = NextVersion(status);
         if (TextPromptWindow.Ask(this, PublishTexts.NewVersion, PublishTexts.NewVersionPrompt, proposal) is not { } text)
         {

@@ -85,7 +85,8 @@ public partial class EditorPane : UserControl
             }
         };
 
-        // Ändert sich bei einem Dokument HasNote/HasBookmark, muss ein aktiver Eigenschaftsfilter neu bewertet werden.
+        // Ändert sich bei einem Dokument HasNote/HasBookmark, muss ein aktiver Eigenschaftsfilter neu bewertet werden;
+        // ändert sich Name, Kategorie oder Herkunft, rückt der Tab an seine sortierte Stelle (EditorPane.Sort.cs).
         _documents.CollectionChanged += (_, e) =>
         {
             if (e.OldItems is not null)
@@ -93,6 +94,7 @@ public partial class EditorPane : UserControl
                 foreach (OpenDocument old in e.OldItems)
                 {
                     old.PropertyChanged -= Document_PropertyChangedForFilter;
+                    old.PropertyChanged -= Document_PropertyChangedForSort;
                 }
             }
 
@@ -101,6 +103,7 @@ public partial class EditorPane : UserControl
                 foreach (OpenDocument added in e.NewItems)
                 {
                     added.PropertyChanged += Document_PropertyChangedForFilter;
+                    added.PropertyChanged += Document_PropertyChangedForSort;
                 }
             }
         };
@@ -319,13 +322,6 @@ public partial class EditorPane : UserControl
     /// <summary>"Alle speichern": Das Hauptfenster speichert alle geänderten Dokumente beider Arbeitsbereiche (wie Strg+Umschalt+S).</summary>
     public event EventHandler? SaveAllRequested;
 
-    /// <summary>Blendet "Filter ▾" und "Symbole ▾" in der Werkzeugleiste ein oder aus (Einstellungen, Kategorie 4).</summary>
-    public void SetToolbarButtonsVisible(bool filterButton, bool iconButton)
-    {
-        FilterBarButton.Visibility = filterButton ? Visibility.Visible : Visibility.Collapsed;
-        TabIconsButton.Visibility = iconButton ? Visibility.Visible : Visibility.Collapsed;
-    }
-
     /// <summary>Texte und Tooltips der Werkzeugleiste aus <see cref="MenuTexts"/>.</summary>
     private void ApplyToolbarTexts()
     {
@@ -338,6 +334,8 @@ public partial class EditorPane : UserControl
         SetText(CategoryButton, MenuTexts.WorkspaceCategory, MenuTexts.WorkspaceCategoryTip);
         SetText(FilterBarButton, MenuTexts.WorkspaceFilter, MenuTexts.WorkspaceFilterTip);
         SetText(TabIconsButton, MenuTexts.WorkspaceIcons, MenuTexts.WorkspaceIconsTip);
+        SetText(SortButton, MenuTexts.WorkspaceSort, MenuTexts.WorkspaceSortTip);
+        ApplyMarkButtonTexts();
     }
 
     private static void SetText(Button button, string text, string tip)
@@ -378,7 +376,7 @@ public partial class EditorPane : UserControl
         }
 
         var document = OpenDocument.LoadFromFile(path, highlighting);
-        _documents.Add(document);
+        InsertDocument(document, null);
         Tabs.SelectedItem = document;
         UpdatePathDisplay();
         return document;
@@ -388,7 +386,7 @@ public partial class EditorPane : UserControl
     public OpenDocument NewDocument(IHighlightingDefinition? highlighting = null)
     {
         var document = OpenDocument.NewEmpty(highlighting);
-        _documents.Add(document);
+        InsertDocument(document, null);
         Tabs.SelectedItem = document;
         UpdatePathDisplay();
         return document;
@@ -531,9 +529,11 @@ public partial class EditorPane : UserControl
     /// </summary>
     public void SetCurrentFilePath(string path)
     {
-        ActiveDocument?.SetFilePath(path);
-        ActiveDocument?.MarkSaved();
-        ActiveDocument?.RefreshDiskStamp();
+        // Einmal festhalten: der neue Name kann den Tab umsortieren.
+        var document = ActiveDocument;
+        document?.SetFilePath(path);
+        document?.MarkSaved();
+        document?.RefreshDiskStamp();
         Tabs.Items.Refresh();
         UpdatePathDisplay();
     }
@@ -547,15 +547,7 @@ public partial class EditorPane : UserControl
     {
         if (!_documents.Contains(document))
         {
-            var index = insertBefore is null ? -1 : _documents.IndexOf(insertBefore);
-            if (index >= 0)
-            {
-                _documents.Insert(index, document);
-            }
-            else
-            {
-                _documents.Add(document);
-            }
+            InsertDocument(document, insertBefore);
         }
 
         Tabs.SelectedItem = document;
@@ -680,7 +672,7 @@ public partial class EditorPane : UserControl
     /// <summary>Fügt ein bereits erzeugtes Dokument hinzu (Wiederherstellung); wählt es nur auf Wunsch als aktiven Tab.</summary>
     public void AddDocument(OpenDocument document, bool select)
     {
-        _documents.Add(document);
+        InsertDocument(document, null);
         if (select)
         {
             Tabs.SelectedItem = document;
@@ -690,9 +682,9 @@ public partial class EditorPane : UserControl
     }
 
     /// <summary>
-    /// Wählt den Tab am angegebenen Index aus, sofern vorhanden — genutzt von der
-    /// Session-Wiederherstellung (Abschnitt 12), um den zuletzt aktiven Tab wiederherzustellen,
-    /// nachdem alle Dokumente dieses Arbeitsbereichs neu geladen wurden.
+    /// Wählt den Tab am angegebenen Index aus, sofern vorhanden (Index in <see cref="Documents"/>).
+    /// Die Session-Wiederherstellung wählt den zuletzt aktiven Tab über sein Dokument
+    /// (<see cref="ActivateDocument"/>), weil die Sortierung die Indizes verschieben kann.
     /// </summary>
     public void SelectDocumentAt(int index)
     {
@@ -866,7 +858,7 @@ public partial class EditorPane : UserControl
                 VerticalAlignment = VerticalAlignment.Center,
                 Background = FileCategoryClassifier.ColorFor(category.Id),
             });
-            content.Children.Add(new TextBlock { Text = category.Name });
+            content.Children.Add(new TextBlock { Text = CategoryDefaults.DisplayName(category) });
 
             var checkBox = new CheckBox
             {
@@ -874,7 +866,7 @@ public partial class EditorPane : UserControl
                 Tag = category.Id,
                 IsChecked = !_hiddenCategories.Contains(category.Id),
                 Margin = new Thickness(0, 0, 8, 0),
-                ToolTip = EditorTexts.FilterCategoryTip(category.Name),
+                ToolTip = EditorTexts.FilterCategoryTip(CategoryDefaults.DisplayName(category)),
             };
             checkBox.Click += CategoryFilterCheckBox_Click;
             checkBox.ContextMenu = CreateHideFromBarMenu(FilterEntryKeys.ForCategory(category.Id));
@@ -968,7 +960,7 @@ public partial class EditorPane : UserControl
             AddFilterMenuItem(
                 menu,
                 FilterEntryKeys.ForCategory(category.Id),
-                category.Name.Replace("_", "__"),
+                CategoryDefaults.DisplayName(category).Replace("_", "__"),
                 new Border { Width = 10, Height = 10, Background = FileCategoryClassifier.ColorFor(category.Id) });
         }
 
@@ -1071,13 +1063,28 @@ public partial class EditorPane : UserControl
     /// <summary>Ermittelt die Herkunft aller Dokumente dieses Arbeitsbereichs neu (nach Änderung der Wurzelordner) und wendet den Filter an.</summary>
     public void RefreshOrigins()
     {
-        foreach (var document in _documents)
+        SortAfterwards(() =>
         {
-            document.RefreshOrigin();
-        }
+            foreach (var document in _documents)
+            {
+                document.RefreshOrigin();
+            }
+        });
 
         CollectionViewSource.GetDefaultView(_documents).Refresh();
     }
+
+    /// <summary>
+    /// Ermittelt die automatische Kategorie aller Dokumente dieses Arbeitsbereichs neu (nach Änderung der Kategorie-Regeln);
+    /// eine Kategorie-Sortierung wird danach einmal angewendet.
+    /// </summary>
+    public void RefreshAutoCategories() => SortAfterwards(() =>
+    {
+        foreach (var document in _documents)
+        {
+            document.RefreshAutoCategory();
+        }
+    });
 
     /// <summary>Fragt für alle offenen Dokumente den Sperrzustand neu ab (nach Sperren, Entsperren und Änderungen an Mods).</summary>
     public void RefreshLocks()
@@ -1172,7 +1179,7 @@ public partial class EditorPane : UserControl
             var id = category.Id;
             var item = new MenuItem
             {
-                Header = category.Name.Replace("_", "__"),
+                Header = CategoryDefaults.DisplayName(category).Replace("_", "__"),
                 IsCheckable = true,
                 IsChecked = document.ManualCategory == id,
                 Icon = new Border { Width = 10, Height = 10, Background = FileCategoryClassifier.ColorFor(id) },
@@ -1398,14 +1405,7 @@ public partial class EditorPane : UserControl
             return;
         }
 
-        var oldIndex = _documents.IndexOf(dragged);
-        var newIndex = target is null ? _documents.Count - 1 : _documents.IndexOf(target);
-
-        if (newIndex >= 0 && newIndex != oldIndex)
-        {
-            _documents.Move(oldIndex, newIndex);
-        }
-
+        MoveDocument(dragged, target);
         e.Handled = true;
     }
 

@@ -5,13 +5,16 @@ namespace ParadoxModTool.ErrorLog;
 
 /// <summary>
 /// Ein Scope, wie <c>debug_log_scopes</c> ihn schreibt. EU V: <c>Country 'England' (ENG)</c>, <c>Character 'Name' (97)</c>. Crusader Kings III:
-/// <c>Name (Internal ID: 32769 - Historical ID 522) weak (Character - 32769)!</c>.
+/// <c>Name (Internal ID: 32769 - Historical ID 522) weak (Character - 32769)!</c>. Victoria 3: <c>Land: Belgien (25)</c>.
 /// </summary>
 public sealed record TraceScope(string Kind, string Name, string Id)
 {
     private static readonly Regex Pattern = new(@"^(?<kind>[A-Za-z_][A-Za-z_ ]*) '(?<name>.*)' \((?<id>[^()]*)\)$", RegexOptions.CultureInvariant);
 
     private static readonly Regex Ck3Pattern = new(@"^(?<name>.*?)\s*\([^()]*\)\s+(?:[a-z]+\s+)?\((?<kind>[A-Za-z_]+) - (?<id>[^()]*)\)!$", RegexOptions.CultureInvariant);
+
+    /// <summary>Victoria 3: <c>Land: Belgien (25)</c>, die Art in der Sprache der Spieloberfläche.</summary>
+    private static readonly Regex Vic3Pattern = new(@"^(?<kind>[^:'()]+): (?<name>.+?) \((?<id>[^()]*)\)$", RegexOptions.CultureInvariant);
 
     public static TraceScope? Parse(string text)
     {
@@ -23,7 +26,13 @@ public sealed record TraceScope(string Kind, string Name, string Id)
         }
 
         match = Ck3Pattern.Match(trimmed);
-        return match.Success ? new TraceScope(match.Groups["kind"].Value, match.Groups["name"].Value.Trim(), match.Groups["id"].Value) : null;
+        if (match.Success)
+        {
+            return new TraceScope(match.Groups["kind"].Value, match.Groups["name"].Value.Trim(), match.Groups["id"].Value);
+        }
+
+        match = Vic3Pattern.Match(trimmed);
+        return match.Success ? new TraceScope(match.Groups["kind"].Value.Trim(), match.Groups["name"].Value.Trim(), match.Groups["id"].Value) : null;
     }
 
     public override string ToString() => $"{Kind} '{Name}' ({Id})";

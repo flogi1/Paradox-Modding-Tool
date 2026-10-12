@@ -1,0 +1,47 @@
+##########################################################################################################################
+####### {{ tag }} National Ideas - Select Tooltips
+##########################################################################################################################
+
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ for l in i.levels ~}}
+{{~ modifier = "national_idea_modifier_" + tag + "_" + i.number + l.suffix ~}}
+template iv_2_historic_idea_select_tt_{{ tag }}_{{ i.number }}{{ l.suffix }} {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				size = { 48 48 }
+				texture = "gfx/interface/icon_idea_{{ c.icon }}.dds"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_{{ modifier }}"
+		}
+
+		blockoverride "concept_link" {
+			text = "[iv2_gc_national_ideas|e]"
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('{{ modifier }}').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_ga_select_historic_{{ tag }}_{{ i.number }}{{ l.suffix }}_desc"
+				}
+			}
+
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('{{ modifier }}').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('{{ modifier }}').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}

@@ -72,6 +72,9 @@ public static class EditorTexts
 
     public static string UntitledNotSaved => T("editor.path.untitledNotSaved", "Unbenannt (noch nicht gespeichert)");
 
+    // Leiste des Arbeitsbereichs (Interface-Rework 2)
+    public static string WorkspaceName(string letter) => F("editor.workspace.name", "Arbeitsbereich {0}", letter);
+
     // Dokument (Tab-Name und Tooltips)
     public static string Untitled => T("editor.document.untitled", "Unbenannt");
 

@@ -29,6 +29,11 @@ public sealed class CompatchCompareWindow : Window
     private readonly Controls.ScrollViewer _scroll;
     private IReadOnlyList<AlignedRow> _shown = Array.Empty<AlignedRow>();
     private IReadOnlyList<int> _stops = Array.Empty<int>();
+
+    /// <summary>"Ganze Datei zeigen" ist an (nur bei einem Schlüssel mit Form "Ganze Datei"); dann ist Zeilen-Übernehmen aus.</summary>
+    private bool _keyFile;
+
+    private readonly Controls.CheckBox _showWholeFile = new() { Content = new Controls.TextBlock { Text = CompatchTexts.ShowWholeFile }, ToolTip = CompatchTexts.ShowWholeFileTip, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private int _current = -1;
     private bool _jumped;
     private bool _showVanilla;
@@ -51,6 +56,8 @@ public sealed class CompatchCompareWindow : Window
         var bar = new Controls.WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
         bar.Children.Add(NavButton(CompatchTexts.PreviousDifference, CompatchTexts.PreviousDifferenceTip, () => Jump(forward: false)));
         bar.Children.Add(NavButton(CompatchTexts.NextDifference, CompatchTexts.NextDifferenceTip, () => Jump(forward: true)));
+        bar.Children.Add(_showWholeFile);
+        _showWholeFile.Click += (_, _) => Refresh();
         bar.Children.Add(_vanilla);
         bar.Children.Add(_hideComments);
         _hideComments.Click += (_, _) => _owner.SetHideComments(_hideComments.IsChecked == true);
@@ -77,7 +84,7 @@ public sealed class CompatchCompareWindow : Window
         _selection = new CompatchRowSelection(
             _rows,
             () => _shown,
-            () => _action.Address.Kind != AddressKind.WholeFile,
+            () => _action.Address.Kind != AddressKind.WholeFile && !_keyFile,
             () => _showVanilla,
             column => owner.SourceName(column),
             (column, from, to) => _owner.TakeBlockText(_action.Address, CompareNavigation.TakeRows(_shown, from, to, column), column),
@@ -106,9 +113,11 @@ public sealed class CompatchCompareWindow : Window
         var current = session.Actions.FirstOrDefault(a => a.Id == _action.Id) ?? _action;
         _summary.Text = $"{current.DisplayPath}   [{TreePath.FileOf(current)}]\n" + CompatchWindow.Summary(session, current, _owner.ModAName, _owner.ModBName);
         var wholeFile = _action.Address.Kind == AddressKind.WholeFile;
+        _showWholeFile.Visibility = _owner.IsWholeFileForm(current) ? Visibility.Visible : Visibility.Collapsed;
+        _keyFile = _showWholeFile.Visibility == Visibility.Visible && _showWholeFile.IsChecked == true;
         // In A und B entfernt: der Text steht nur noch in Vanilla, also diese Spalte zeigen.
         var removed = CompatchWindow.RemovedInBoth(current);
-        var showVanilla = (_vanilla.IsChecked == true || removed) && !wholeFile;
+        var showVanilla = _vanilla.IsChecked == true || removed;
         if (removed)
         {
             _summary.Text += "\n" + CompatchTexts.RemovedInBoth(_owner.BaseColumnTitle);
@@ -120,7 +129,9 @@ public sealed class CompatchCompareWindow : Window
         session.Run.Applied.Desired.TryGetValue(_action.Address, out var desired);
         var open = desired?.OpenConflicts.Count > 0;
         var rows = wholeFile
-            ? ActionText.WholeFileRows(info, session.EffectiveDecision(current))
+            ? ActionText.WholeFileRows(info, session.EffectiveDecision(current), showVanilla)
+            : _keyFile
+                ? ActionText.KeyFileRows(info, _owner.PreviewWrite(), showVanilla)
             : EntryAligner.Align(
                 info.A.Entries,
                 desired?.Entries ?? info.NoPatch.Entries,
@@ -140,10 +151,13 @@ public sealed class CompatchCompareWindow : Window
 
         _overview.Update(_shown, open);
         _status.Text = CompatchTexts.DifferenceCount(_stops.Count);
-        if (!_jumped && !wholeFile)
+        if (!_jumped)
         {
             _jumped = true;
-            var target = CompareNavigation.RowOf(_shown, ActionText.Rows(current, session.EffectiveDecision(current), withVanilla: false, hide));
+            // Eine ganze Datei hat keine eigene Stelle: zur ersten Abweichung.
+            var target = wholeFile
+                ? _stops.Count > 0 ? _stops[0] : (int?)null
+                : CompareNavigation.RowOf(_shown, ActionText.Rows(current, session.EffectiveDecision(current), withVanilla: false, hide));
             if (target is { } index)
             {
                 Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () => ScrollTo(index));

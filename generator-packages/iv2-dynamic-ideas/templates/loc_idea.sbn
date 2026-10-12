@@ -1,0 +1,21 @@
+{{~
+# Ideen-Lokalisierung (Ort 16), wie army_1 der Mod: immer alle 19 Schlüssel in drei Gruppen (Name und Wahlen, Abwahl, Statische Modifikatoren),
+# vor jeder Gruppe eine Leerzeile. Die Namen der Stufen 2-4 bauen auf dem Namen auf, ihre Beschreibungen auf der von Stufe 1; jeder
+# STATIC_MODIFIER_NAME/DESC zeigt auf seine eigene Stufe.
+~}}
+
+ iv2_dynamic_nat_idea_{{ id }}: "{{ name }}"
+ iv2_ga_select_national_idea_{{ id }}: "$iv2_dynamic_nat_idea_{{ id }}$ $iv2_level_1$"
+ iv2_ga_select_national_idea_{{ id }}_desc: "{{ desc }}"
+{{~ for k in 1..3 ~}}
+ iv2_ga_select_national_idea_{{ id }}_{{ k }}: "$iv2_dynamic_nat_idea_{{ id }}$ $iv2_level_{{ k + 1 }}$"
+ iv2_ga_select_national_idea_{{ id }}_{{ k }}_desc: "$iv2_ga_select_national_idea_{{ id }}_desc$"
+{{~ end ~}}
+
+ iv2_ga_deselect_nat_idea_{{ id }}: "$iv2_remove$ $iv2_dynamic_nat_idea_{{ id }}$"
+ iv2_ga_deselect_nat_idea_{{ id }}_desc: "$iv2_remove_desc$ $iv2_dynamic_nat_idea_{{ id }}$ $iv2_remove_2_desc$"
+
+{{~ for i in 1..4 ~}}
+ STATIC_MODIFIER_NAME_national_idea_modifier_{{ id }}{{ sfx i }}: "$iv2_ga_select_national_idea_{{ id }}{{ sfx i }}$"
+ STATIC_MODIFIER_DESC_national_idea_modifier_{{ id }}{{ sfx i }}: "$iv2_ga_select_national_idea_{{ id }}{{ sfx i }}_desc$"
+{{~ end ~}}

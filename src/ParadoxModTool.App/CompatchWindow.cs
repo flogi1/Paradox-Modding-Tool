@@ -566,7 +566,7 @@ public sealed partial class CompatchWindow : Window
             Rules = rules,
             KeyOperators = _host.Profile?.KeyOperators ?? new List<string>(),
             HiddenVanillaFolders = ReplacePaths.Of(new[] { _state.ModAFolder, _state.ModBFolder }, metadataFile, roots),
-            // CK III und EU V: replace_path der später ladenden Mod blendet auch die Dateien der früheren aus.
+            // CK III, EU V und Victoria 3: replace_path der später ladenden Mod blendet auch die Dateien der früheren aus.
             HiddenFoldersOfA = hidesEarlier && _state.BLoadsAfterA ? ReplacePaths.Of(new[] { _state.ModBFolder }, metadataFile, roots) : Array.Empty<string>(),
             HiddenFoldersOfB = hidesEarlier && !_state.BLoadsAfterA ? ReplacePaths.Of(new[] { _state.ModAFolder }, metadataFile, roots) : Array.Empty<string>(),
             ReplacePathRoots = roots,

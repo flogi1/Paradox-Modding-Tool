@@ -168,7 +168,7 @@ public abstract class SettingsPage : IDisposable
     protected CheckBox AddToolbarCheckBox(string id, Panel? parent = null) => AddCheckBox(
         SettingsTexts.ToolbarItemLabel(id),
         null,
-        () => Host.Settings.IsToolbarItemVisible(id),
+        () => Host.Settings.IsToolbarItemVisibleInClassic(id),
         visible => Host.Settings.SetToolbarItemVisible(id, visible),
         parent);
 

@@ -1,0 +1,215 @@
+{{~
+# Karte der gewählten Idee (Ort 10): Stufen 1..gui_levels mit Symbol, Zahl und Knopf zur nächsten Stufe; die letzte gezeigte Stufe trägt statt
+# des Knopfs das Symbol iv2_upgrade_no. Stufe 4 als letzte Stufe hat die Form der vollen Karte (Zahl vor dem Symbol, army_1), eine frühere
+# letzte Stufe die Form der gekappten Karte (Symbol vor der Zahl, army_28/army_43).
+# Höchstens so viele Stufen, wie die Idee hat (ein größeres guiLevels meldet die Warnung des Pakets)
+g = gui_levels
+n = g < levels.size ? g : levels.size
+
+func idea_icon(s)
+~}}
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}')]"
+			visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			parentanchor = center
+			position = { 0 -20 }
+			size = { 100 100 }
+			texture = "[GetModifier('national_idea_modifier_{{ id }}{{ s }}').GetIcon]"
+
+			tooltipwidget = {
+				using = iv2_individual_nat_idea_{{ id }}{{ s }}
+			}
+		}
+{{~ end
+
+func number_icon(k, s)
+~}}
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}')]"
+			visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			position = { 15 208 }
+			size = { 25 25 }
+			texture = "gfx/interface/icons/iv2_number_{{ k }}.dds"
+			tooltipwidget = {
+				using = iv2_level_number_tooltip_{{ k }}
+			}
+		}
+{{~ end
+
+func no_upgrade_icon(s)
+~}}
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}')]"
+			visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 40 40 }
+			position = { 0 95 }
+			parentanchor = center
+			texture = "gfx/interface/icons/iv2_upgrade_no.dds"
+
+			using = button_panel_tab_icon_effect
+
+			modify_texture = {
+				using = color_new_gold_texture
+				blend_mode = add
+			}
+
+			tooltipwidget = {
+				using = iv2_upgrade_no_tt
+			}
+
+			glow = {
+				name = "drop_shadow"
+				glow_radius = 3
+				color = {50.0 0.0 0.0 1.0}
+				alpha = 0.8
+			}
+		}
+{{~ end ~}}
+	type iv2_nat_idea_see_{{ id }} = widget {
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_picked_nat_idea_{{ id }}')]"
+		size = { 200 250 }
+		position = { 0 0 }
+
+		icon = {
+			position = { 2 0 }
+			size = { 200 200 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_frame_2.dds"
+		}
+
+		icon = {
+			position = { 0 195 }
+			size = { 188 50 }
+			parentanchor = top|hcenter
+			texture = "gfx/interface/iv2_national_idea_down_frame.dds"
+		}
+
+		# Remove button
+		card_header_button_04 = {
+			size = { 25 25 }
+			position = { 160 208 }
+
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_deselect_nat_idea_{{ id }}"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+			tooltipwidget = {
+				using = iv2_individual_nat_idea_remove_{{ id }}
+			}
+
+
+
+			icon = {
+				size = { 25 25 }
+				parentanchor = center
+				texture = "gfx/interface/buttons/flats/close_button.dds"
+				texture_density = 2
+
+				using = button_panel_tab_icon_effect
+
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+
+			}
+		}
+
+{{~ for k in 1..n ~}}
+{{~ s = sfx k ~}}
+		# Level {{ k }} Start
+{{~ if k > 1 ~}}
+
+{{~ end ~}}
+{{~ if k < n ~}}
+{{ idea_icon s ~}}
+
+{{ number_icon k s ~}}
+
+		card_header_button_04 = {
+			datacontext = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}')]"
+			visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 120 40 }
+			position = { 40 200 }
+			scripted_action_tooltip = {
+				click_type = left
+				click_mode = confirm
+				action_name = "iv2_ga_select_national_idea_{{ id }}_{{ k }}"
+				actor = "[Player]"
+				parameter = {
+					parameter_name = "target"
+					parameter_value = "[Country.MakeScope]"
+				}
+			}
+			enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+
+			tooltipwidget = {
+				using = iv2_individual_nat_idea_{{ id }}_{{ k }}
+			}
+
+			icon = {
+				size = { 40 40 }
+				parentanchor = center
+				texture = "gfx/interface/icons/unit_actions/upgrade_army.dds"
+
+				using = button_panel_tab_icon_effect
+
+				modify_texture = {
+					using = color_new_gold_texture
+					blend_mode = add
+				}
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {50.0 0.0 0.0 1.0}
+					alpha = 0.8
+				}
+			}
+		}
+{{~ if k > 1 ~}}
+
+{{~ end ~}}
+{{~ else if k == 4 ~}}
+{{ number_icon k s ~}}
+
+		icon = {
+			datacontext = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}')]"
+			visible = "[GetScriptedGui('iv2_sgui_dynamic_nat_{{ id }}{{ s }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			size = { 100 100 }
+			parentanchor = center
+			position = { 0 -20 }
+			texture = "[GetModifier('national_idea_modifier_{{ id }}{{ s }}').GetIcon]"
+
+			tooltipwidget = {
+				using = iv2_individual_nat_idea_{{ id }}{{ s }}
+			}
+		}
+
+{{ no_upgrade_icon s ~}}
+{{~ else ~}}
+{{ idea_icon s ~}}
+
+{{ number_icon k s ~}}
+
+{{ no_upgrade_icon s ~}}
+{{~ end ~}}
+		# Level {{ k }} End
+{{~ end ~}}
+	}

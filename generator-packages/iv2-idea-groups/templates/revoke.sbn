@@ -1,0 +1,87 @@
+###############################################################
+#### Idea Group {{ g }} 
+###############################################################
+
+iv2_scripted_effect_ig_revoke_{{ g }} = {
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_1
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_1
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+	}
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_2
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_2
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+	}
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_3
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_3
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+	}
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_4
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_4
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+	}
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_5
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_5
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+	}
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_6
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_6
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+	}
+	if = {
+		limit = { 
+			has_country_modifier = ideagroup_modifier_{{ g }}_7
+		}
+		
+		remove_country_modifier = ideagroup_modifier_{{ g }}_7
+		change_variable = {
+			name = iv2_var_innovation_points_{{ category }}
+			add = iv2_idea_cost_refund_{{ category }}
+		}
+		change_variable = {
+			name = iv2_var_finished_idea_group_{{ category }}
+			subtract = 1
+		}	
+	}
+}

@@ -14,12 +14,14 @@
     <StartupObject>ParadoxModTool.App.Program</StartupObject>
     <!-- Versionsnummer des Programms: erscheint im Startbild, im Über-Fenster, im Update-Vergleich und im
          Fehlerbericht. Bei jedem veröffentlichten Release hier hochzählen (und den Git-Tag "v<Version>" setzen). -->
-    <Version>0.9.2</Version>
+    <Version>0.10.0</Version>
     <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ParadoxModTool.Compatch\ParadoxModTool.Compatch.csproj" />
+    <!-- pmt-generator.exe soll neben ParadoxModTool.exe liegen. -->
+    <ProjectReference Include="..\ParadoxModTool.GeneratorCli\ParadoxModTool.GeneratorCli.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Desync\ParadoxModTool.Desync.csproj" />
     <ProjectReference Include="..\ParadoxModTool.BugTracking\ParadoxModTool.BugTracking.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Editor\ParadoxModTool.Editor.csproj" />
@@ -42,8 +44,10 @@
     <ProjectReference Include="..\ParadoxModTool.Session\ParadoxModTool.Session.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
     <ProjectReference Include="..\ParadoxModTool.SettingsUi\ParadoxModTool.SettingsUi.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Shell\ParadoxModTool.Shell.csproj" />
     <ProjectReference Include="..\ParadoxModTool.SteamIntegration\ParadoxModTool.SteamIntegration.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Patches\ParadoxModTool.Patches.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Generators\ParadoxModTool.Generators.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Syntax\ParadoxModTool.Syntax.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Templates\ParadoxModTool.Templates.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Tools\ParadoxModTool.Tools.csproj" />
@@ -80,6 +84,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\profiles\guiblocks\**\*.guiblock" Link="profiles\guiblocks\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Mitgelieferte Generator-Pakete (Vorlagen werden aus dem Programmordner gelesen). -->
+    <None Include="..\..\generator-packages\**\*" Link="generator-packages\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- KI-Anleitung für Generator-Pakete (Fenster "Paket mit KI erstellen", auch für Modder zum Weitergeben). -->
+    <None Include="..\..\ai-guide\**\*" Link="ai-guide\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\syntax-templates\jomini-script.xshd" Link="syntax-templates\jomini-script.xshd">

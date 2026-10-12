@@ -1,0 +1,904 @@
+{
+  "version": 1,
+  "trace": {
+    "source": "Block names counted in vanilla Victoria 3 common/ and events/ 2026-10-10; debug.log format from the PMT Error Probe run of Victoria 3, 2026-10-10 (debug_log and debug_log_scopes both from jomini_effect_impl.cpp; debug_log in an on_action effect wrote no line in that run)",
+    "effectBlocks": [
+      "effect",
+      "immediate",
+      "option",
+      "after",
+      "hidden_effect",
+      "when_taken",
+      "on_*",
+      "every_*",
+      "random_*",
+      "ordered_*"
+    ],
+    "triggerBlocks": [
+      "trigger",
+      "limit",
+      "potential",
+      "possible",
+      "allow",
+      "is_shown",
+      "is_valid",
+      "is_visible",
+      "visible",
+      "valid",
+      "complete",
+      "fail",
+      "can_*",
+      "ai_will_do",
+      "ai_chance",
+      "weight",
+      "modifier",
+      "trigger_if",
+      "any_*"
+    ],
+    "effectFolders": [
+      "common/scripted_effects"
+    ],
+    "ifChain": [
+      "if",
+      "else_if",
+      "else"
+    ],
+    "debugLogSource": "jomini_effect_impl.cpp"
+  },
+  "entries": [
+    {
+      "code": "SUG-000",
+      "name": {
+        "de": "Möglicher Treffer",
+        "en": "Possible match"
+      },
+      "severity": "info",
+      "pattern": "^Possible match: '(?<candidate>[^']+)'",
+      "explain": {
+        "de": "Vorschlag des Spiels zur vorherigen Meldung.",
+        "en": "The game's suggestion for the previous message."
+      },
+      "fixes": [],
+      "attachToPrevious": true
+    },
+    {
+      "code": "LOC-006",
+      "name": {
+        "de": "Doppelter Lokalisierungsschlüssel",
+        "en": "Duplicate localization key"
+      },
+      "severity": "warning",
+      "pattern": "^Duplicate localization key\\. Key '(?<name>[^']+)' is defined in both '(?<file>[^']+)' and '(?<detail>[^']+)'",
+      "explain": {
+        "de": "Derselbe Schlüssel steht zweimal in den Lokalisierungsdateien. Nur einer der beiden Texte wird angezeigt; ein später geladener Schlüssel überschreibt in Victoria 3 keinen früheren. Überschreiben geht nur über den Unterordner localization/<Sprache>/replace.",
+        "en": "The same key appears twice in the localization files. Only one of the two texts is shown; in Victoria 3 a key loaded later does not overwrite an earlier one. Overriding only works through the subfolder localization/<language>/replace."
+      },
+      "tips": {
+        "de": [
+          "Einen der beiden Einträge löschen oder umbenennen.",
+          "Soll ein Vanilla-Text ersetzt werden, die Datei nach localization/<Sprache>/replace legen."
+        ],
+        "en": [
+          "Delete or rename one of the two entries.",
+          "To replace a vanilla text, put the file into localization/<language>/replace."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-009",
+      "name": {
+        "de": "Doppelpunkt fehlt in Lokalisierung",
+        "en": "Missing colon in localization"
+      },
+      "severity": "error",
+      "pattern": "^Missing colon \\(:\\) separator at line (?<line>\\d+) and column \\d+ in (?<file>\\S+?\\.yml)",
+      "explain": {
+        "de": "In dieser Zeile der Lokalisierungsdatei fehlt der Doppelpunkt zwischen Schlüssel und Text (richtig: schlüssel: \"Text\"). Das Spiel überspringt die Zeile.",
+        "en": "This line of the localization file lacks the colon between key and text (correct: key: \"Text\"). The game skips the line."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-010",
+      "name": {
+        "de": "Lokalisierungsdatei ohne BOM",
+        "en": "Localization file without BOM"
+      },
+      "severity": "error",
+      "pattern": "^(?:Localization file '(?<file>[^']+)' should be in in utf-8-bom encoding|Missing UTF8 BOM in '(?<file>[^']+)')",
+      "explain": {
+        "de": "Lokalisierungsdateien müssen in UTF-8 mit BOM gespeichert sein. Ohne BOM meldet Victoria 3 die Datei zweimal und liest sie nicht richtig.",
+        "en": "Localization files must be saved as UTF-8 with BOM. Without a BOM Victoria 3 reports the file twice and does not read it properly."
+      },
+      "tips": {
+        "de": [
+          "Die Datei in PMT öffnen und mit der Kodierung UTF-8 mit BOM speichern."
+        ],
+        "en": [
+          "Open the file in PMT and save it with the encoding UTF-8 with BOM."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-007",
+      "name": {
+        "de": "Unlokalisierter Text in GUI",
+        "en": "Unlocalized text in GUI"
+      },
+      "severity": "warning",
+      "pattern": "^Unlocalized text '(?<name>.+?)' at (?<file>[^']+?\\.gui):(?<line>\\d+)",
+      "explain": {
+        "de": "Ein Widget setzt text auf einen Schlüssel, der in keiner geladenen Lokalisierung steht. Das Spiel zeigt dann den Schlüssel selbst. Entweder den Schlüssel lokalisieren oder raw_text statt text verwenden. Einige solche Meldungen kommen auch aus Vanilla-Dateien.",
+        "en": "A widget sets text to a key that is in no loaded localization. The game then shows the key itself. Either localize the key or use raw_text instead of text. Some such messages also come from vanilla files."
+      },
+      "fixes": [
+        "jump",
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-003",
+      "name": {
+        "de": "Unbekannte Datenfunktion",
+        "en": "Unknown data function"
+      },
+      "severity": "error",
+      "pattern": "^Could not find (?:data system function|promote for) '(?<name>[^']+)'(?: in '(?<detail>[^']+)')?",
+      "explain": {
+        "de": "Ein Ausdruck in eckigen Klammern (z. B. [ROOT.GetName] in Lokalisierung oder ein onclick in einer .gui-Datei) nutzt eine Funktion oder einen Verweis (promote), den es an dieser Stelle im Spiel nicht gibt.",
+        "en": "An expression in square brackets (e.g. [ROOT.GetName] in localization or an onclick in a .gui file) uses a function or link (promote) the game does not have at this point."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise und Scope prüfen; die Datentypen stehen in logs/data_types (Konsolenbefehl dump_data_types)."
+        ],
+        "en": [
+          "Check spelling and scope; the data types are listed in logs/data_types (console command dump_data_types)."
+        ]
+      },
+      "fixes": [
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-004",
+      "name": {
+        "de": "Datenausdruck nicht auswertbar",
+        "en": "Data expression failed"
+      },
+      "severity": "warning",
+      "pattern": "^(?:(?:Failed converting statement for|FetchData failed for|Promote '[^']*' returned nullptr, in) '(?<name>[^']+)'|Failed to convert statement for argument '\\d+' for call '[^']+' in '(?<name>.*)')",
+      "explain": {
+        "de": "Ein Ausdruck in eckigen Klammern ließ sich nicht umsetzen oder auswerten, z. B. weil eine Funktion fehlt oder ein Scope leer ist. Meist Folge einer Meldung davor.",
+        "en": "An expression in square brackets could not be converted or evaluated, e.g. because a function is missing or a scope is empty. Usually a follow-up of a message before it."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-008",
+      "name": {
+        "de": "Unbekannter Lokalisierungsschlüssel",
+        "en": "Unrecognized localization key"
+      },
+      "severity": "warning",
+      "pattern": "^Unrecognized loc key (?<name>.+?)\\. (?:(?<file>\\S+?\\.txt):(?<line>\\d+)|\\S+)",
+      "explain": {
+        "de": "Ein Text im Skript, z. B. Titel, Beschreibung oder Option eines Events, nutzt einen Lokalisierungsschlüssel, der in keiner geladenen Lokalisierung steht. Das Spiel zeigt dann den Schlüssel selbst. Steht statt einer Datei ein interner Name (z. B. CEventOptionDesc), nennt das Log nur die Art des Textes.",
+        "en": "A text in script, e.g. title, description or option of an event, uses a localization key that is in no loaded localization. The game then shows the key itself. If an internal name (e.g. CEventOptionDesc) stands in place of a file, the log only names the kind of text."
+      },
+      "fixes": [
+        "jump",
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GUI-002",
+      "name": {
+        "de": "Doppelte GUI-Eigenschaft",
+        "en": "Duplicate GUI property"
+      },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Duplicate property '(?<name>[^']+)'",
+      "explain": {
+        "de": "Eine Eigenschaft steht in einem Widget zweimal.",
+        "en": "A property appears twice in one widget."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GUI-003",
+      "name": {
+        "de": "GUI-Eigenschaft nicht lesbar",
+        "en": "GUI property not readable"
+      },
+      "severity": "error",
+      "pattern": "^failed reading (?<detail>property|callback), at (?<file>.+?\\.gui):(?<line>\\d+)",
+      "explain": {
+        "de": "Das Spiel konnte eine Eigenschaft oder einen Aufruf (z. B. onclick) an dieser Stelle nicht lesen. Meist nennt die Meldung davor den Grund.",
+        "en": "The game could not read a property or callback (e.g. onclick) at this location. Usually the message before it states the reason."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GUI-001",
+      "name": {
+        "de": "Ungültiges Widget, Typ oder Eigenschaft",
+        "en": "Invalid widget, type or property"
+      },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - '?(?<name>[^' ]+)'? is not a valid",
+      "explain": {
+        "de": "Der Name ist weder ein Widget noch ein bekannter Typ noch eine Eigenschaft.",
+        "en": "The name is neither a widget nor a known type nor a property."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen.",
+          "Kommt der Typ aus einer anderen Mod, muss sie im Playset sein."
+        ],
+        "en": [
+          "Check the spelling.",
+          "If the type comes from another mod, it must be in the playset."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GUI-005",
+      "name": {
+        "de": "Textur fehlt (GUI)",
+        "en": "Missing texture (GUI)"
+      },
+      "severity": "error",
+      "pattern": "^(?<file>.+?\\.gui):(?<line>\\d+) - Missing file '(?<name>[^']+)'",
+      "explain": {
+        "de": "Die angegebene Texturdatei existiert nicht.",
+        "en": "The given texture file does not exist."
+      },
+      "tips": {
+        "de": [
+          "Pfad und Dateiname prüfen."
+        ],
+        "en": [
+          "Check path and file name."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TEX-001",
+      "name": {
+        "de": "Textur nicht gefunden",
+        "en": "Texture not found"
+      },
+      "severity": "error",
+      "pattern": "^Could not find texture due to 'VFSOpen Error: (?<name>\\S+) not found'",
+      "explain": {
+        "de": "Eine referenzierte Texturdatei existiert nicht.",
+        "en": "A referenced texture file does not exist."
+      },
+      "tips": {
+        "de": [
+          "Nach dem Pfad in Mod-Dateien suchen und Schreibweise prüfen."
+        ],
+        "en": [
+          "Search the mod files for the path and check the spelling."
+        ]
+      },
+      "fixes": [
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "INJ-001",
+      "name": {
+        "de": "INJECT/REPLACE ohne vorhandenen Eintrag",
+        "en": "INJECT/REPLACE without existing entry"
+      },
+      "severity": "error",
+      "pattern": "^You are trying to inject/replace to a non-existing entry: (?<name>[^:\\s]+):(?<detail>\\w+) in the file (?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "INJECT: und REPLACE: brauchen einen Eintrag, den Vanilla oder eine früher ladende Mod schon definiert. Diesen Schlüssel gibt es (noch) nicht, die Änderung wird verworfen.",
+        "en": "INJECT: and REPLACE: need an entry that vanilla or an earlier loading mod already defines. This key does not exist (yet), so the change is dropped."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise des Schlüssels prüfen.",
+          "Stammt der Eintrag aus einer anderen Mod, muss sie im Playset vor dieser Mod laden.",
+          "Soll der Eintrag fehlen dürfen: TRY_INJECT: oder TRY_REPLACE:; soll er sonst neu entstehen: INJECT_OR_CREATE: oder REPLACE_OR_CREATE:."
+        ],
+        "en": [
+          "Check the spelling of the key.",
+          "If the entry comes from another mod, that mod must load before this mod in the playset.",
+          "If the entry may be missing: TRY_INJECT: or TRY_REPLACE:; if it should be created otherwise: INJECT_OR_CREATE: or REPLACE_OR_CREATE:."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "INJ-002",
+      "name": {
+        "de": "Trigger-Block doppelt",
+        "en": "Trigger block read twice"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Trigger section already read earlier: (?<name>[^,\\s]+), near line: \\d+[\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Der Eintrag hat diesen Trigger-Block (z. B. is_visible) doppelt; der zweite wird verworfen. Zwei Ursachen: Der Block steht im Eintrag selbst zweimal, oder er kommt über INJECT: dazu, obwohl der Eintrag ihn schon hat. INJECT: hängt in Victoria 3 nur an und kann einen vorhandenen Trigger- oder Effektblock nicht ersetzen.",
+        "en": "The entry has this trigger block (e.g. is_visible) twice; the second one is dropped. Two causes: the block appears twice in the entry itself, or it comes in through INJECT: although the entry already has it. In Victoria 3 INJECT: only appends and cannot replace an existing trigger or effect block."
+      },
+      "tips": {
+        "de": [
+          "Steht der Block im Eintrag zweimal, einen davon löschen oder beide zusammenführen.",
+          "Kommt er über INJECT:, den ganzen Eintrag mit REPLACE: schreiben."
+        ],
+        "en": [
+          "If the block appears twice in the entry, delete one or merge both.",
+          "If it comes in through INJECT:, write the whole entry with REPLACE:."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "MDF-001",
+      "name": {
+        "de": "Unbekannter Modifier-Typ",
+        "en": "Unknown modifier type"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unknown modifier type: (?<name>[^.\\s]+)\\.[\\s\\S]*?near line: \\d+\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Den Modifier-Typ gibt es nicht: Er ist weder ein festes Modifier noch ein dynamisches, das sich aus der Datenbank ergibt (z. B. building_<Gebäude>_throughput_add). Das Spiel ignoriert die Zeile.",
+        "en": "The modifier type does not exist: it is neither a static modifier nor a dynamic one built from the database (e.g. building_<building>_throughput_add). The game ignores the line."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen; die gültigen Namen stehen in docs/modifiers.log (PMT: Script-Datenbank)."
+        ],
+        "en": [
+          "Check the spelling; the valid names are listed in docs/modifiers.log (PMT: script database)."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TRG-001",
+      "name": {
+        "de": "Unbekannter Trigger",
+        "en": "Unknown trigger"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unknown trigger type: (?<name>[^,\\s]+), near line: (?<line>\\d+)[\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: \\d+",
+      "explain": {
+        "de": "Der Trigger ist weder ein Engine-Trigger noch ein bekannter scripted_trigger. Victoria 3 meldet das beim Lesen der Datei.",
+        "en": "The trigger is neither an engine trigger nor a known scripted_trigger. Victoria 3 reports this while reading the file."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen.",
+          "Stammt der Trigger aus einer anderen Mod, muss diese Mod im Playset sein."
+        ],
+        "en": [
+          "Check the spelling.",
+          "If the trigger comes from another mod, that mod must be in the playset."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "addModToPlayset",
+        "suppress"
+      ]
+    },
+    {
+      "code": "REF-001",
+      "name": {
+        "de": "Leerer Schlüsselverweis ohne Datei",
+        "en": "Empty key reference without file"
+      },
+      "severity": "info",
+      "pattern": "^Error: \\\"Failed to read key reference: [^\\n]*(?:\\nFailed to read key reference: [^\\n]*)*\\\" in file: \\\"\\\" near line: \\d+",
+      "explain": {
+        "de": "Das Spiel konnte beim Start oder beim Laden einen Verweis aus dem Speicher nicht lesen (z. B. Spielregeln oder Voreinstellungen). Die Meldung erscheint auch ohne Mods und nennt keine Datei; die Mod ist nicht betroffen.",
+        "en": "The game could not read a reference from memory at startup or while loading (e.g. game rules or presets). The message also appears without mods and names no file; the mod is not affected."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "EFF-001",
+      "name": {
+        "de": "Unbekannter Effekt",
+        "en": "Unknown effect"
+      },
+      "severity": "error",
+      "pattern": "^Unknown effect (?<name>\\S+) at (?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "Der Effekt ist weder ein Engine-Effekt noch ein bekannter scripted_effect. Der Aufruf wird ignoriert.",
+        "en": "The effect is neither an engine effect nor a known scripted_effect. The call is ignored."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen.",
+          "Stammt der Effekt aus einer anderen Mod, muss diese Mod im Playset sein und vor dieser Mod laden."
+        ],
+        "en": [
+          "Check the spelling.",
+          "If the effect comes from another mod, that mod must be in the playset and load before this mod."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "addModToPlayset",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-002",
+      "name": {
+        "de": "Unbekannter Event-Target-Link",
+        "en": "Unknown event target link"
+      },
+      "severity": "error",
+      "pattern": "^Failed to find a valid event target link '(?<name>[^']+)' at (?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "Der Name ist weder ein Event-Target (z. B. capital) noch ein Skriptwert oder gespeicherter Scope. Oft steht ein Wort, wo eine Zahl oder ein Skriptwert erwartet wird.",
+        "en": "The name is neither an event target (e.g. capital) nor a script value or saved scope. Often a word stands where a number or script value is expected."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen.",
+          "Ist ein Skriptwert gemeint, muss er in common/script_values definiert sein."
+        ],
+        "en": [
+          "Check the spelling.",
+          "If a script value is meant, it must be defined in common/script_values."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SVL-001",
+      "name": {
+        "de": "Kein gültiger Skriptwert",
+        "en": "Not a valid script value"
+      },
+      "severity": "error",
+      "pattern": "^Cannot read \\[(?<name>[^\\]]*)\\] as a script value",
+      "explain": {
+        "de": "An dieser Stelle erwartet das Spiel eine Zahl oder einen Skriptwert. Victoria 3 nennt die Stelle in der folgenden Meldung \"Badly read script value\".",
+        "en": "The game expects a number or script value here. Victoria 3 names the place in the following \"Badly read script value\" message."
+      },
+      "tips": {
+        "de": [
+          "Leere Klammern oder Tippfehler im Wert prüfen."
+        ],
+        "en": [
+          "Check for empty brackets or typos in the value."
+        ]
+      },
+      "fixes": [
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SVL-002",
+      "name": {
+        "de": "Skriptwert falsch gelesen",
+        "en": "Badly read script value"
+      },
+      "severity": "error",
+      "pattern": "^Badly read script value\\s+(?:(?<detail>\\S+)\\s+)?at (?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "Das Spiel konnte den Skriptwert an dieser Stelle nicht lesen. Meist Folgefehler der Meldung davor (unbekannter Name statt Zahl oder Skriptwert).",
+        "en": "The game could not read the script value at this location. Usually a follow-up of the message before it (unknown name instead of a number or script value)."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SVL-003",
+      "name": {
+        "de": "Wert vom falschen Typ",
+        "en": "Value of wrong type"
+      },
+      "severity": "error",
+      "pattern": "^Value of wrong type in '(?<file>.+?):(?<line>\\d+)'\\. Got value of type '(?<detail>[^']+)'",
+      "explain": {
+        "de": "Während des Spiels hat ein Skriptwert an dieser Stelle keinen Zahlenwert geliefert (Typ in der Meldung, z. B. none). Häufig liest er eine Variable oder einen Wert, der nicht gesetzt ist.",
+        "en": "During the game a script value at this location did not yield a number (type in the message, e.g. none). Often it reads a variable or value that is not set."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SCP-001",
+      "name": {
+        "de": "Effekt oder Trigger im falschen Scope",
+        "en": "Effect or trigger in the wrong scope"
+      },
+      "severity": "error",
+      "pattern": "^Inconsistent (?:effect|trigger) scopes \\((?<detail>[^)]*)\\) in ?(?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "Beim Lesen erkennt das Spiel, dass der Effekt oder Trigger im aktuellen Scope nicht gilt. In Klammern stehen der Scope an der Stelle und der Scope, den der Effekt oder Trigger braucht.",
+        "en": "While reading, the game sees that the effect or trigger does not work in the current scope. The brackets give the scope at that place and the scope the effect or trigger needs."
+      },
+      "tips": {
+        "de": [
+          "Mit einem Scope-Wechsel (z. B. owner, capital) in den passenden Scope gehen."
+        ],
+        "en": [
+          "Switch to the right scope first (e.g. owner, capital)."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "DBK-001",
+      "name": {
+        "de": "Unbekannter Datenbank-Schlüssel",
+        "en": "Invalid database key"
+      },
+      "severity": "error",
+      "pattern": "^Invalid database object key '(?<name>[^']+)' file location: (?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "Ein Verweis wie law_type:x oder c:TAG nennt einen Schlüssel, den es in der Datenbank nicht gibt. Der Trigger oder Effekt wirkt dann nicht.",
+        "en": "A reference such as law_type:x or c:TAG names a key that does not exist in the database. The trigger or effect then has no effect."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen.",
+          "Stammt der Schlüssel aus einer anderen Mod, muss diese Mod im Playset sein."
+        ],
+        "en": [
+          "Check the spelling.",
+          "If the key comes from another mod, that mod must be in the playset."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TRG-002",
+      "name": {
+        "de": "Skriptprüfung fehlgeschlagen",
+        "en": "Script validation failed"
+      },
+      "severity": "warning",
+      "pattern": "^PostValidate of (?<detail>trigger|effect) '(?<name>[^']+)' returned false at (?<file>.+?):(?<line>\\d+)",
+      "explain": {
+        "de": "Beim Laden prüft das Spiel Trigger und Effekte ein zweites Mal (PostValidate) und konnte diesen Aufruf nicht bestätigen, z. B. weil ein genannter Modifier oder Schlüssel fehlt. Die Meldung \"Script system error\" davor nennt den Grund. Der Aufruf bleibt wirkungslos.",
+        "en": "When loading, the game checks triggers and effects a second time (PostValidate) and could not confirm this call, e.g. because a named modifier or key is missing. The \"Script system error\" message before it names the reason. The call has no effect."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "RUN-001",
+      "name": {
+        "de": "Laufzeitfehler im Skript",
+        "en": "Script runtime error"
+      },
+      "severity": "error",
+      "pattern": "^Script system error!(?:\\s*\\nError:\\s*(?<detail>[^\\n]*))?(?:\\s*\\nScript location:\\s*(?<file>[^\\n]+?):(?<line>\\d+))?",
+      "explain": {
+        "de": "Ein Skript ist gescheitert, z. B. weil ein Scope nicht gesetzt war, ein Effekt im falschen Scope stand oder ein genannter Eintrag fehlt.",
+        "en": "A script failed, e.g. because a scope was not set, an effect stood in the wrong scope or a named entry is missing."
+      },
+      "tips": {
+        "de": [
+          "Die Zeile nach \"Error:\" nennt den Grund."
+        ],
+        "en": [
+          "The line after \"Error:\" states the reason."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "traceScope",
+        "suppress"
+      ],
+      "traceGuards": [
+        {
+          "detail": "^Undefined event target '(?<name>[^']+)'",
+          "limit": "NOT = { exists = scope:{name} }"
+        }
+      ]
+    },
+    {
+      "code": "VAR-001",
+      "name": {
+        "de": "Variable gesetzt, nie benutzt",
+        "en": "Variable set but never used"
+      },
+      "severity": "warning",
+      "pattern": "^Variable '(?<name>[^']+)' is set but is never used",
+      "explain": {
+        "de": "Die Variable wird gesetzt, aber nirgends gelesen. Verwendung in Lokalisierung und in ungenutzten scripted triggers/effects zählt das Spiel nicht mit.",
+        "en": "The variable is set but never read. The game does not count use in localization or in unused scripted triggers/effects."
+      },
+      "tips": {
+        "de": [
+          "Auf Tippfehler prüfen (siehe Vorschläge).",
+          "Wird die Variable nur in Lokalisierung benutzt, ist die Meldung harmlos."
+        ],
+        "en": [
+          "Check for typos (see suggestions).",
+          "If the variable is only used in localization, the message is harmless."
+        ]
+      },
+      "fixes": [
+        "showUsages",
+        "locCheck",
+        "replaceWithCandidate",
+        "renameEverywhere",
+        "suppress",
+        "commentOutSet"
+      ],
+      "setEffects": [
+        "set_variable",
+        "set_global_variable"
+      ]
+    },
+    {
+      "code": "VAR-002",
+      "name": {
+        "de": "Variable benutzt, nie gesetzt",
+        "en": "Variable used but never set"
+      },
+      "severity": "error",
+      "pattern": "^Variable '(?<name>[^']+)' is used but is never set",
+      "explain": {
+        "de": "Die Variable wird gelesen, aber nirgends gesetzt. Setzen in ungenutzten scripted triggers/effects zählt nicht.",
+        "en": "The variable is read but never set. Setting it in unused scripted triggers/effects does not count."
+      },
+      "tips": {
+        "de": [
+          "Auf Tippfehler prüfen (siehe Vorschläge).",
+          "Prüfen, ob der setzende Effekt überhaupt aufgerufen wird."
+        ],
+        "en": [
+          "Check for typos (see suggestions).",
+          "Check whether the effect that sets it is called at all."
+        ]
+      },
+      "fixes": [
+        "showUsages",
+        "replaceWithCandidate",
+        "renameEverywhere",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-001",
+      "name": {
+        "de": "Event-Target benutzt, nie gesetzt",
+        "en": "Event target used but never set"
+      },
+      "severity": "error",
+      "pattern": "^Event target '(?<name>[^']+)' is used but is never set",
+      "explain": {
+        "de": "Ein gespeicherter Scope (scope:name) wird benutzt, aber nirgends mit save_scope_as oder save_temporary_scope_as gesetzt. Setzen in ungenutzten scripted triggers/effects zählt nicht.",
+        "en": "A saved scope (scope:name) is used but never set with save_scope_as or save_temporary_scope_as. Setting it in unused scripted triggers/effects does not count."
+      },
+      "tips": {
+        "de": [
+          "Auf Tippfehler prüfen.",
+          "Prüfen, ob der setzende Effekt überhaupt aufgerufen wird."
+        ],
+        "en": [
+          "Check for typos.",
+          "Check whether the effect that sets it is called at all."
+        ]
+      },
+      "fixes": [
+        "showUsages",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-004",
+      "name": {
+        "de": "Event ohne gültigen Namespace",
+        "en": "Event without a valid namespace"
+      },
+      "severity": "error",
+      "pattern": "^(?:Namespace '(?<detail>[^']+)' used in event '(?<name>[^']+)' \\(file: (?<file>[^)]+)\\) is not defined in this file|'(?<name>[^']+)' does not have a valid namespace)",
+      "explain": {
+        "de": "Die Event-ID passt zu keinem namespace = … der Datei. Steht ein Präfix wie REPLACE: oder INJECT: vor der ID, gehört es zum Namen: Events kennen in Victoria 3 keine Präfixe, das zuerst geladene Event gewinnt.",
+        "en": "The event id matches no namespace = … of the file. If a prefix such as REPLACE: or INJECT: stands before the id, it becomes part of the name: events in Victoria 3 know no prefixes, the event loaded first wins."
+      },
+      "tips": {
+        "de": [
+          "namespace = … am Dateianfang prüfen.",
+          "Ein Vanilla-Event ersetzt man über eine gleichnamige Datei oder ein früher ladendes Event ohne Präfix."
+        ],
+        "en": [
+          "Check namespace = … at the top of the file.",
+          "A vanilla event is replaced through a file of the same name or an earlier loading event without prefix."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-005",
+      "name": {
+        "de": "Doppelte Event-ID",
+        "en": "Duplicate event id"
+      },
+      "severity": "error",
+      "pattern": "^Duplicated event ID '(?<name>[^']+)' found\\. New Location: '(?<file>.+?):(?<line>\\d+)'",
+      "explain": {
+        "de": "Dieselbe Event-ID ist zweimal definiert. In Victoria 3 gilt das zuerst geladene Event; das andere wird verworfen.",
+        "en": "The same event id is defined twice. In Victoria 3 the event loaded first counts; the other one is dropped."
+      },
+      "fixes": [
+        "jump",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-003",
+      "name": {
+        "de": "Event wird nie ausgelöst",
+        "en": "Event is never fired"
+      },
+      "severity": "warning",
+      "pattern": "^Event (?<name>\\S+) is orphaned",
+      "explain": {
+        "de": "Kein On-Action, keine Entscheidung, kein Journal-Eintrag und kein anderes Event löst dieses Event aus. Es kommt im Spiel nie vor.",
+        "en": "No on_action, decision, journal entry or other event fires this event. It never happens in the game."
+      },
+      "tips": {
+        "de": [
+          "Prüfen, ob trigger_event oder ein On-Action die richtige Event-ID nennt.",
+          "Auch eine fehlende schließende Klammer davor kann das Event aus seinem Zusammenhang lösen."
+        ],
+        "en": [
+          "Check whether trigger_event or an on_action names the right event id.",
+          "A missing closing brace before it can also cut the event off from its context."
+        ]
+      },
+      "fixes": [
+        "findDefinition",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SAV-002",
+      "name": {
+        "de": "Spielstand nicht lesbar",
+        "en": "Save game not readable"
+      },
+      "severity": "info",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]*)\\\" in file: \\\"(?<name>save games/[^\\\"]+)\\\"",
+      "explain": {
+        "de": "Ein Spielstand ließ sich nicht ganz lesen, meist weil er aus einer anderen Spielversion oder mit anderen Mods stammt. Die Mod selbst ist nicht betroffen.",
+        "en": "A save game could not be read completely, usually because it comes from another game version or other mods. The mod itself is not affected."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "PAR-001",
+      "name": {
+        "de": "Lesefehler in Datei",
+        "en": "Parsing error in file"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]*)\\\" in file: \\\"(?:(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)|\\\")",
+      "explain": {
+        "de": "Das Spiel konnte die Datei an dieser Stelle nicht lesen (Syntax, unbekannter Wert, falscher Typ).",
+        "en": "The game could not read the file at this location (syntax, unknown value, wrong type)."
+      },
+      "tips": {
+        "de": [
+          "Die Meldung in Anführungszeichen nennt den Grund."
+        ],
+        "en": [
+          "The quoted message states the reason."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "PAR-002",
+      "name": {
+        "de": "Lesefehler, Meldung unvollständig",
+        "en": "Parsing error, message incomplete"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]+)",
+      "explain": {
+        "de": "Lesefehler, zu dem im Log die Schlusszeile mit Datei und Zeile fehlt: Die Meldung ist abgeschnitten, oder eine andere Meldung wurde dazwischen geschrieben. Datei und Zeile sind daher unbekannt.",
+        "en": "Parsing error whose closing line with file and line is missing from the log: the message is cut off, or another message was written in between. File and line are therefore unknown."
+      },
+      "tips": {
+        "de": [
+          "Die Meldung in Anführungszeichen nennt den Grund.",
+          "Lief das Spiel beim Einlesen noch, kann erneutes Einlesen die vollständige Meldung zeigen."
+        ],
+        "en": [
+          "The quoted message states the reason.",
+          "If the game was still running when the log was read, reading it again may show the complete message."
+        ]
+      },
+      "fixes": [
+        "suppress"
+      ]
+    }
+  ]
+}

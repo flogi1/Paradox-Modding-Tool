@@ -1,0 +1,151 @@
+########################################################
+####### Ideagroup {{ g }} Start
+########################################################
+
+iv2_gui_ideagroup_{{ g }}_1 = {
+	scope = country 	
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		always = yes
+	}	
+
+}
+
+iv2_gui_ideagroup_{{ g }}_2 = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		has_country_modifier = ideagroup_modifier_{{ g }}_1 
+	}	
+}
+
+iv2_gui_ideagroup_{{ g }}_3 = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		has_country_modifier =  ideagroup_modifier_{{ g }}_2
+	}	
+}
+
+iv2_gui_ideagroup_{{ g }}_4 = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		has_country_modifier =  ideagroup_modifier_{{ g }}_3
+	}	
+}
+
+iv2_gui_ideagroup_{{ g }}_5 = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		has_country_modifier = ideagroup_modifier_{{ g }}_4
+	}	
+}
+
+iv2_gui_ideagroup_{{ g }}_6 = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		has_country_modifier =  ideagroup_modifier_{{ g }}_5
+	}	
+}
+
+iv2_gui_ideagroup_{{ g }}_7 = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		has_country_modifier =  ideagroup_modifier_{{ g }}_6
+	}	
+}
+
+iv2_gui_ideagroup_{{ g }}_no_scrollbar = {
+	scope = country 		
+	
+	is_shown = {  
+		always = yes
+	}		
+	is_valid = {  
+		NOT = {
+			AND = {
+			has_country_modifier = ideagroup_modifier_{{ g }}_1 
+			has_country_modifier = ideagroup_modifier_{{ g }}_2 
+			has_country_modifier = ideagroup_modifier_{{ g }}_3 
+			has_country_modifier = ideagroup_modifier_{{ g }}_4 
+			has_country_modifier = ideagroup_modifier_{{ g }}_5 
+			has_country_modifier = ideagroup_modifier_{{ g }}_6 
+			has_country_modifier = ideagroup_modifier_{{ g }}_7 
+			}
+		}
+	}	
+}
+
+
+iv2_ideagroup_select_{{ g }}_1 = {
+    scope = country
+
+	is_shown = {
+{{~ if groupType == "reli" ~}}
+{{~ for line in extras ~}}
+		{{ line }}
+{{~ end ~}}
+{{~ end ~}}
+		NOT = {
+{{~ if exclusive_numbers.size > 0 ~}}
+			OR = {
+{{~ for n in exclusive_set ~}}
+				has_variable = iv2_ideagroup_select_{{ category }}_{{ n }}_1
+{{~ end ~}}
+			}
+{{~ else ~}}
+			has_variable = iv2_ideagroup_select_{{ g }}_1
+{{~ end ~}}
+		}
+{{~ if groupType == "gov" || groupType == "rank" ~}}
+{{~ for line in extras ~}}
+		{{ line }}
+{{~ end ~}}
+{{~ end ~}}
+	}
+	is_valid = {  
+		NOT = {
+			has_variable = iv2_ideagroup_select_{{ g }}_1 
+		}
+	}		
+}
+
+iv2_ideagroup_shown_{{ g }}_1 = {
+    scope = country 
+	
+	is_shown = {  
+		has_variable = iv2_ideagroup_select_{{ g }}_1 
+	}		
+	is_valid = {  
+		has_variable = iv2_ideagroup_select_{{ g }}_1 
+	}	
+}
+
+########################################################
+####### Ideagroup {{ g }} End
+########################################################

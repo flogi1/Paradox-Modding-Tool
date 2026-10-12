@@ -1,0 +1,20 @@
+# block: Modifier-Tooltip
+# group: Anzeige
+# description: Modifikatoren des eigenen Landes, je Zeile Name mit Icon und Wert, Tooltip mit der Beschreibung. Victoria 3 liefert wie EU V einen Wert je Modifier-Typ über Country.GetModifier: GetFullEntryDescFor formatiert Name und Wert nach der Typdefinition (Prozent, Nachkommastellen), steht in Vanilla aber nur in einer Debug-Zeile des Marktpanels; die Panels des Spiels zeigen sonst die reine Zahl mit GetValueFor und einem Format wie |+=v0%, als Tooltip GetDescFor; Schlüssel sind daher Modifier-Typen aus common/modifier_type_definitions, keine statischen Modifier. Ein eigenes Icon je Typ gibt es in der GUI nicht, es steckt in der Lokalisierung des Typs (z. B. @bur! bei country_bureaucracy_add, die Bürokratie aus den Verwaltungsgebäuden). Vorbild: gui/budget_panel.gui, gui/market_panel.gui, gui/ship_panel.gui
+# repeat: mods | Modifikatoren | 1
+# param: mods.key | Modifikator | country_bureaucracy_add | modifier
+
+vbox = {
+	spacing = 5
+
+	$repeat mods$
+	textbox = {
+		layoutpolicy_horizontal = expanding
+		autoresize = yes
+		align = nobaseline
+		text = "[GetPlayer.GetModifier.GetFullEntryDescFor('$mods.key$')]"
+		tooltip = "[GetPlayer.GetModifier.GetDescFor('$mods.key$')]"
+	}
+
+	$end mods$
+}

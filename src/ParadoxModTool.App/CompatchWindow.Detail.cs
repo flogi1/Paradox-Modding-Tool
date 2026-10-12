@@ -30,6 +30,8 @@ public sealed partial class CompatchWindow
     /// <summary>"Form" mit Auswahl; nur sichtbar, wenn die Stelle mehr als eine Form erlaubt und nicht im Update-Modus.</summary>
     private readonly Controls.StackPanel _formPanel = new() { Orientation = Controls.Orientation.Horizontal, Visibility = Visibility.Collapsed };
     private readonly Controls.CheckBox _wholeKey = new() { Content = new Controls.TextBlock { Text = CompatchTexts.WholeKey }, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+    /// <summary>Nur bei einem Schlüssel mit Form "Ganze Datei": die ganzen Dateien statt des Schlüssels zeigen (Nutzerwunsch 2026-10-12).</summary>
+    private readonly Controls.CheckBox _showWholeFile = new() { Content = new Controls.TextBlock { Text = CompatchTexts.ShowWholeFile }, ToolTip = CompatchTexts.ShowWholeFileTip, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private readonly Controls.CheckBox _vanillaColumn = new() { Content = new Controls.TextBlock { Text = CompatchTexts.VanillaColumn }, VerticalAlignment = System.Windows.VerticalAlignment.Center };
     private readonly Controls.CheckBox _hideCommentsBox = new() { Content = new Controls.TextBlock { Text = CompatchTexts.HideComments }, ToolTip = CompatchTexts.HideCommentsTip, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
     /// <summary>Überschrift über der Spaltenvorschau (Nutzerwunsch 2026-10-01): Tooltip sagt, dass hier nichts bearbeitet wird und wo es geht.</summary>
@@ -66,6 +68,7 @@ public sealed partial class CompatchWindow
         _formPanel.Children.Add(_form);
         options.Children.Add(_formPanel);
         options.Children.Add(_wholeKey);
+        options.Children.Add(_showWholeFile);
         options.Children.Add(_vanillaColumn);
         _hideCommentsBox.IsChecked = _host.Defaults.HideComments;
         _hideCommentsBox.Click += (_, _) => SetHideComments(_hideCommentsBox.IsChecked == true);
@@ -115,6 +118,7 @@ public sealed partial class CompatchWindow
         };
         PreviewKeyDown += OnDetailKeyDown;
         _wholeKey.Click += (_, _) => RefreshDetail();
+        _showWholeFile.Click += (_, _) => RefreshDetail();
         _vanillaColumn.Click += (_, _) => RefreshDetail();
         OnActionSelected(null);
     }
@@ -221,6 +225,7 @@ public sealed partial class CompatchWindow
     {
         ShowEditor(false);
         _detailButtons.Children.Clear();
+        _detailHotkeys.Clear();
         _rows.Children.Clear();
         _detailShown = Array.Empty<AlignedRow>();
         _detailTake = null;
@@ -244,8 +249,8 @@ public sealed partial class CompatchWindow
         _detailNote.Text = action.Stage == MergeStage.FromExistingPatch ? CompatchTexts.ExistingPatchNote : string.Empty;
 
         var wholeFile = action.Address.Kind == AddressKind.WholeFile;
-        _detailButtons.Children.Add(TintButton(DetailButton(CompatchTexts.TakeMod(_state.ModAName), () => Decide((s, a) => s.Decide(a.Id, new MergeDecision(DecisionKind.TakeA)))), "CompatchA"));
-        _detailButtons.Children.Add(TintButton(DetailButton(CompatchTexts.TakeMod(_state.ModBName), () => Decide((s, a) => s.Decide(a.Id, new MergeDecision(DecisionKind.TakeB)))), "CompatchB"));
+        _detailButtons.Children.Add(TintButton(DetailHotkeyButton(CompatchTexts.TakeMod(_state.ModAName), System.Windows.Input.Key.A, () => Decide((s, a) => s.Decide(a.Id, new MergeDecision(DecisionKind.TakeA)))), "CompatchA"));
+        _detailButtons.Children.Add(TintButton(DetailHotkeyButton(CompatchTexts.TakeMod(_state.ModBName), System.Windows.Input.Key.B, () => Decide((s, a) => s.Decide(a.Id, new MergeDecision(DecisionKind.TakeB)))), "CompatchB"));
         if (!(_state.MainReplacesVanilla && MainSide() is not null))
         {
             _detailButtons.Children.Add(DetailButton(CompatchTexts.Decision(DecisionKind.TakeVanilla), () => Decide((s, a) => s.Decide(a.Id, new MergeDecision(DecisionKind.TakeVanilla)))));
@@ -253,9 +258,11 @@ public sealed partial class CompatchWindow
         var edit = DetailButton(CompatchTexts.Edit, () => ShowEditor(true));
         edit.IsEnabled = !wholeFile;
         _detailButtons.Children.Add(edit);
-        _detailButtons.Children.Add(DetailButton(CompatchTexts.Confirm, () => Decide((s, a) => s.Confirm(a.Id))));
+        _detailButtons.Children.Add(DetailHotkeyButton(CompatchTexts.Confirm, System.Windows.Input.Key.O, () => Decide((s, a) => s.Confirm(a.Id))));
         _detailButtons.Children.Add(DetailButton(CompatchTexts.UndoLabel, () => Decide((s, a) => s.Undo(a.Id))));
-        _detailButtons.Children.Add(DetailButton(CompatchTexts.Reset, () => Decide((s, a) => s.ResetDecision(a.Id))));
+        _detailButtons.Children.Add(DetailHotkeyButton(CompatchTexts.Reset, System.Windows.Input.Key.R, () => Decide((s, a) => s.ResetDecision(a.Id))));
+        // Einzelne Stelle hat keinen Vergleich-Knopf; C öffnet das Fenster wie ein Doppelklick im Baum.
+        _detailHotkeys[System.Windows.Input.Key.C] = () => OpenCompare(action);
         if (_session.EqualPending(action.Id).Count is var equal and > 0)
         {
             var toEqual = DetailButton(CompatchTexts.ApplyToEqual(equal), () => Decide((s, a) => s.ApplyToEqual(a.Id)));
@@ -286,14 +293,18 @@ public sealed partial class CompatchWindow
             _detailNote.Text = (_detailNote.Text.Length > 0 ? _detailNote.Text + "\n" : string.Empty) + CompatchTexts.RemovedInBoth(BaseColumnTitle);
         }
 
+        _showWholeFile.Visibility = IsWholeFileForm(action) ? Visibility.Visible : Visibility.Collapsed;
+        var keyFile = _showWholeFile.Visibility == Visibility.Visible && _showWholeFile.IsChecked == true;
         var rows = wholeFile
-            ? ColumnAligner.Align(info.A.RelativePath ?? string.Empty, CompatchTexts.WholeFileChoice(SideName(decision.Kind)), info.B.RelativePath ?? string.Empty, showVanilla ? info.Vanilla.RelativePath ?? string.Empty : null)
+            ? ActionText.WholeFileRows(info, decision, showVanilla)
+            : keyFile
+                ? ActionText.KeyFileRows(info, PreviewWrite(), showVanilla)
             : _wholeKey.IsChecked == true || action.Stage == MergeStage.FromExistingPatch
                 ? EntryAligner.Align(info.A.Entries, _session.Run.Applied.Desired.TryGetValue(action.Address, out var desired) ? desired.Entries : info.NoPatch.Entries, info.B.Entries, showVanilla ? info.Vanilla.Entries : null, HideComments)
                 : EntryAligner.Align(action.A, ResultEntries(action, decision), action.B, showVanilla ? action.Vanilla : null, HideComments);
         BuildColumns(showVanilla);
         var wholeBlock = _wholeKey.IsChecked == true || action.Stage == MergeStage.FromExistingPatch;
-        ShowDetailRows(rows, showVanilla, open, wholeFile
+        ShowDetailRows(rows, showVanilla, open, wholeFile || keyFile
             ? null
             : wholeBlock
                 ? (column, from, to) => TakeBlockText(action.Address, CompareNavigation.TakeRows(_detailShown, from, to, column), column)
@@ -449,7 +460,9 @@ public sealed partial class CompatchWindow
 
     /// <summary>
     /// U übernimmt die markierten Zeilen der Spaltenvorschau (nur Ansicht A), Strg+Z nimmt die letzte Entscheidung oder Übernahme zurück (jede
-    /// Ansicht). Nicht beim Tippen in einem Eingabefeld (Suche, Bearbeiten), dort gelten U und Strg+Z wie gewohnt.
+    /// Ansicht). In Ansicht A entscheiden O ("Passt"), A, B und R ("Zurücksetzen") die gewählte Stelle bzw. den Block, C öffnet den Vergleich;
+    /// Pfeil hoch/runter in der Vorschau wechselt den Eintrag im Baum. Nicht beim Tippen in einem Eingabefeld (Suche, Bearbeiten), dort gelten die
+    /// Tasten wie gewohnt.
     /// </summary>
     private void OnDetailKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
@@ -459,15 +472,99 @@ public sealed partial class CompatchWindow
         }
 
         var modifiers = System.Windows.Input.Keyboard.Modifiers;
-        if (e.Key == System.Windows.Input.Key.U && modifiers == System.Windows.Input.ModifierKeys.None && _view == CompatchView.Actions)
+        var noModifier = modifiers == System.Windows.Input.ModifierKeys.None;
+        // Entscheidungstasten und Pfeiltasten nur in sichtbarer Ansicht A und nicht während "Bearbeiten" (Text ginge sonst verloren).
+        var listActive = _listView.IsVisible && _editPanel.Visibility != Visibility.Visible;
+        if (e.Key == System.Windows.Input.Key.U && noModifier && _view == CompatchView.Actions)
         {
             _detailSelection?.Take();
+            e.Handled = true;
+        }
+        else if (noModifier && listActive
+            && e.Key is System.Windows.Input.Key.O or System.Windows.Input.Key.A or System.Windows.Input.Key.B or System.Windows.Input.Key.R or System.Windows.Input.Key.C
+            && _detailHotkeys.TryGetValue(e.Key, out var hotkey))
+        {
+            hotkey();
+            e.Handled = true;
+        }
+        else if (noModifier && listActive && e.Key is System.Windows.Input.Key.Up or System.Windows.Input.Key.Down && FocusInPreview())
+        {
+            SelectNeighbourInTree(forward: e.Key == System.Windows.Input.Key.Down);
             e.Handled = true;
         }
         else if (e.Key == System.Windows.Input.Key.Z && modifiers == System.Windows.Input.ModifierKeys.Control)
         {
             _status.Text = UndoTake() ? CompatchTexts.TakeUndone : CompatchTexts.NothingToUndo;
             e.Handled = true;
+        }
+    }
+
+    /// <summary>Tasten O, A, B, R, C der gewählten Stelle bzw. des gewählten Blocks (Nutzerwunsch 2026-10-07); leer bei Datei, Ordner und ohne Auswahl.</summary>
+    private readonly Dictionary<System.Windows.Input.Key, Action> _detailHotkeys = new();
+
+    /// <summary>Knopf mit Taste: Tooltip nennt sie, die Taste löst dasselbe aus wie der Klick.</summary>
+    private Controls.Button DetailHotkeyButton(string text, System.Windows.Input.Key key, Action click)
+    {
+        var button = DetailButton(text, click);
+        button.ToolTip = CompatchTexts.HotkeyTip(key.ToString());
+        _detailHotkeys[key] = click;
+        return button;
+    }
+
+    /// <summary>
+    /// Fokus in der rechten Vorschau (Zeilen, Knöpfe, Häkchen) oder nirgends, z. B. nachdem ein Knopf beim Neuzeichnen verschwunden ist. Im Baum
+    /// gelten die Pfeiltasten ohnehin, im Feld "Form" wählen sie die Form.
+    /// </summary>
+    private bool FocusInPreview()
+    {
+        if (_form.IsKeyboardFocusWithin || _form.IsDropDownOpen)
+        {
+            return false;
+        }
+
+        var focused = System.Windows.Input.Keyboard.FocusedElement;
+        return _detailHost.IsKeyboardFocusWithin || focused is null || ReferenceEquals(focused, this);
+    }
+
+    /// <summary>
+    /// Pfeil hoch/runter in der Vorschau (Nutzerwunsch 2026-10-07): wählt den vorigen bzw. nächsten sichtbaren Eintrag im Baum, wie die Pfeiltasten
+    /// im Baum selbst. Der Fokus bleibt in der Vorschau, damit man mit den Pfeiltasten und den Entscheidungstasten weiter durchgehen kann.
+    /// </summary>
+    private void SelectNeighbourInTree(bool forward)
+    {
+        var visible = new List<Controls.TreeViewItem>();
+        void Collect(Controls.ItemCollection items)
+        {
+            foreach (var item in items.OfType<Controls.TreeViewItem>())
+            {
+                if (item.Visibility != Visibility.Visible || ReferenceEquals(item.Tag, TreePlaceholder))
+                {
+                    continue;
+                }
+
+                visible.Add(item);
+                if (item.IsExpanded)
+                {
+                    Collect(item.Items);
+                }
+            }
+        }
+
+        Collect(_tree.Items);
+        var index = _tree.SelectedItem is Controls.TreeViewItem selected ? visible.IndexOf(selected) : -1;
+        var next = index < 0 ? 0 : index + (forward ? 1 : -1);
+        if (next < 0 || next >= visible.Count)
+        {
+            return;
+        }
+
+        visible[next].IsSelected = true;
+        visible[next].BringIntoView();
+        if (!_detailHost.IsKeyboardFocusWithin)
+        {
+            _rowsScroll.FocusVisualStyle = null;
+            _rowsScroll.Focusable = true;
+            _rowsScroll.Focus();
         }
     }
 
@@ -531,6 +628,7 @@ public sealed partial class CompatchWindow
     {
         ShowEditor(false);
         _detailButtons.Children.Clear();
+        _detailHotkeys.Clear();
         _rows.Children.Clear();
         _detailShown = Array.Empty<AlignedRow>();
         _detailTake = null;
@@ -549,11 +647,11 @@ public sealed partial class CompatchWindow
 
         var open = block.Actions.Count(a => IsOpenConflict(session, a));
         _detailHeader.Text = $"{block.Actions[0].Address.Key}   [{TreePath.FileOf(block.Actions[0])}]\n" + CompatchTexts.BlockSummary(block.Actions.Count, open);
-        _detailButtons.Children.Add(TintButton(DetailButton(CompatchTexts.BlockTake(_state.ModAName), () => DecideAll(block.Actions, _ => new MergeDecision(DecisionKind.TakeA))), "CompatchA"));
-        _detailButtons.Children.Add(TintButton(DetailButton(CompatchTexts.BlockTake(_state.ModBName), () => DecideAll(block.Actions, _ => new MergeDecision(DecisionKind.TakeB))), "CompatchB"));
-        _detailButtons.Children.Add(DetailButton(CompatchTexts.BlockConfirm, () => DecideAll(block.Actions, null)));
-        _detailButtons.Children.Add(DetailButton(CompatchTexts.BlockReset, () => ResetAll(block.Address.Id, TreeNodeKind.Block)));
-        _detailButtons.Children.Add(DetailButton(CompatchTexts.Compare, () => OpenCompare(block.Actions[0])));
+        _detailButtons.Children.Add(TintButton(DetailHotkeyButton(CompatchTexts.BlockTake(_state.ModAName), System.Windows.Input.Key.A, () => DecideAll(block.Actions, _ => new MergeDecision(DecisionKind.TakeA))), "CompatchA"));
+        _detailButtons.Children.Add(TintButton(DetailHotkeyButton(CompatchTexts.BlockTake(_state.ModBName), System.Windows.Input.Key.B, () => DecideAll(block.Actions, _ => new MergeDecision(DecisionKind.TakeB))), "CompatchB"));
+        _detailButtons.Children.Add(DetailHotkeyButton(CompatchTexts.BlockConfirm, System.Windows.Input.Key.O, () => DecideAll(block.Actions, null)));
+        _detailButtons.Children.Add(DetailHotkeyButton(CompatchTexts.BlockReset, System.Windows.Input.Key.R, () => ResetAll(block.Address.Id, TreeNodeKind.Block)));
+        _detailButtons.Children.Add(DetailHotkeyButton(CompatchTexts.Compare, System.Windows.Input.Key.C, () => OpenCompare(block.Actions[0])));
 
         var showVanilla = _vanillaColumn.IsChecked == true;
         session.Run.Applied.Desired.TryGetValue(block.Address, out var desired);

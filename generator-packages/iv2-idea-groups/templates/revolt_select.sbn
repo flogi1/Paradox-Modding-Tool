@@ -1,0 +1,12 @@
+{{~ if groupType == "none" || groupType == "gov" ~}}
+	if = {
+			limit = {
+				root = { has_variable = iv2_ideagroup_select_{{ g }}_1 }
+			}
+			fire_generic_action = {
+				type = iv2_ga_select_ideagroup_{{ g }}
+				actor = scope:target
+				recipient = scope:target
+			}
+	}
+{{~ end ~}}

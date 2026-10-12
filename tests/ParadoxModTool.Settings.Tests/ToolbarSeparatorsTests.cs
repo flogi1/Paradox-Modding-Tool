@@ -12,20 +12,20 @@ public sealed class ToolbarSeparatorsTests
     private static string[] AllExcept(ToolbarGroup group) => ToolbarCatalog.All.Where(item => item.Group != group).Select(item => item.Id).ToArray();
 
     [Fact]
-    public void AllVisibleShowsThreeSeparators() =>
-        Assert.Equal(new[] { ToolbarGroup.Tools, ToolbarGroup.Toggles, ToolbarGroup.Launch }, SeparatorsWith());
+    public void AllVisibleShowsFourSeparators() =>
+        Assert.Equal(new[] { ToolbarGroup.History, ToolbarGroup.Tools, ToolbarGroup.Toggles, ToolbarGroup.Launch }, SeparatorsWith());
 
     [Fact]
     public void EmptyMiddleGroupLeavesExactlyOneSeparator() =>
-        Assert.Equal(new[] { ToolbarGroup.Tools, ToolbarGroup.Launch }, SeparatorsWith(Group(ToolbarGroup.Toggles)));
+        Assert.Equal(new[] { ToolbarGroup.History, ToolbarGroup.Tools, ToolbarGroup.Launch }, SeparatorsWith(Group(ToolbarGroup.Toggles)));
 
     [Fact]
     public void EmptyFirstGroupHidesTheSeparatorAfterIt() =>
-        Assert.Equal(new[] { ToolbarGroup.Toggles, ToolbarGroup.Launch }, SeparatorsWith(Group(ToolbarGroup.History)));
+        Assert.Equal(new[] { ToolbarGroup.Tools, ToolbarGroup.Toggles, ToolbarGroup.Launch }, SeparatorsWith(Group(ToolbarGroup.Files)));
 
     [Fact]
     public void EmptyLastGroupHidesItsSeparator() =>
-        Assert.Equal(new[] { ToolbarGroup.Tools, ToolbarGroup.Toggles }, SeparatorsWith(Group(ToolbarGroup.Launch)));
+        Assert.Equal(new[] { ToolbarGroup.History, ToolbarGroup.Tools, ToolbarGroup.Toggles }, SeparatorsWith(Group(ToolbarGroup.Launch)));
 
     [Fact]
     public void OnlyOneVisibleGroupShowsNoSeparator() => Assert.Empty(SeparatorsWith(AllExcept(ToolbarGroup.Launch)));
@@ -37,6 +37,6 @@ public sealed class ToolbarSeparatorsTests
     public void OneVisibleItemKeepsItsGroup()
     {
         var hidden = Group(ToolbarGroup.Tools).Where(id => id != ToolbarItemIds.Bug).ToArray();
-        Assert.Equal(new[] { ToolbarGroup.Tools, ToolbarGroup.Toggles, ToolbarGroup.Launch }, SeparatorsWith(hidden));
+        Assert.Equal(new[] { ToolbarGroup.History, ToolbarGroup.Tools, ToolbarGroup.Toggles, ToolbarGroup.Launch }, SeparatorsWith(hidden));
     }
 }

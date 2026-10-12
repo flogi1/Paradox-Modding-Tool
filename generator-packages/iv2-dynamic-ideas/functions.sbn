@@ -1,0 +1,164 @@
+{{~
+# Hilfen für die Vorlagen der IV2-Dynamischen Nationalideen.
+
+# Kennung der Idee, z. B. army_53.
+func id
+  ret category + "_" + number
+end
+
+# Kennung als regulärer Ausdruck mit Zahlgrenzen: army_1 trifft nicht army_10, Stufen-Endungen (army_1_2) bleiben erlaubt.
+func im
+  ret "(?<![0-9])" + id + "(?![0-9])"
+end
+
+# Treffer nur in der Kopfzeile einer Einheit oder in einem Kommentar (Abschnittsköpfe): Rümpfe anderer Ideen, die diese Idee nennen,
+# gehören nicht dazu.
+func hm
+  ret "\\A(?:#.*|[^{\\n]*)" + im
+end
+
+# Endung der Stufe i (ab 1): "", _1, _2, _3.
+func sfx(i)
+  ret i <= 1 ? "" : "_" + (i - 1)
+end
+
+# Im Fenster gezeigte Stufen: guiLevels, leer = Zahl der Stufen.
+func gui_levels
+  ret (guiLevels | object.typeof) == "number" ? guiLevels : levels.size
+end
+
+# Ordner der Fenster-Dateien der Kategorie (Orte 9-13), z. B. ".../Dynamic National Ideas Army".
+func gui_folder
+  ret "in_game/gui/Idea Variation 2 National Ideas/Dynamic National Ideas " + (category == "adm" ? "Admin" : category == "dip" ? "Diplomatic" : category == "army" ? "Army" : "Navy")
+end
+
+# Datei der Ideen-Lokalisierung (Ort 16) in der Sprache lang: die deutsche adm-Datei heißt in der Mod anders.
+func idea_loc_file
+  ret lang == "german" && category == "adm" ? "03_IV2_nat_adm_ideas_l_german.yml" : "03_IV2_dyn_nat_" + category + "_ideas_l_" + lang + ".yml"
+end
+
+# Teil der Kostennamen für teure Stufen: "_expensive" oder leer.
+func expensive_part(level)
+  ret level.expensive ? "_expensive" : ""
+end
+
+# Unter-Reiter der Liste und der Fenster-Hülle: subTab (adm/dip) oder die Kategorie (army/navy).
+func tab
+  ret (subTab | string.empty) ? category : subTab
+end
+
+# Liste im Setup-Effekt, z. B. iv2_nat_ideas_list_adm_1 oder iv2_nat_ideas_list_army.
+func list_name
+  ret "iv2_nat_ideas_list_" + tab
+end
+
+# Fenster-Hülle der Auswahlfelder, z. B. iv2_nat_shell_adm_1 oder iv2_nat_shell_army.
+func shell_name
+  ret "iv2_nat_shell_" + tab
+end
+
+# Fenster-Hülle k (1..6) der Kategorie: adm/dip haben sechs Unter-Reiter, army/navy nur ihre eine Hülle (dann ist jede k dieselbe).
+func shell_slot(k)
+  ret (category == "adm" || category == "dip") ? "iv2_nat_shell_" + category + "_" + k : shell_name
+end
+
+# Zeile der Idee in der Hülle k: nur in der Hülle ihres Unter-Reiters, in den anderen Hüllen der Kategorie leer (entfernt eine alte Zeile nach einem
+# Wechsel des Unter-Reiters).
+func shell_line(k)
+  if (shell_slot k) != shell_name
+    ret ""
+  end
+  ret disabled ? "\t\t#iv2_nat_idea_" + id + " = {} # " + disabled_mark : "\t\tiv2_nat_idea_" + id + " = {}"
+end
+
+# Kategorien bis zur eigenen in der Reihenfolge der Mod (adm, dip, army, navy), als Regex-Alternative.
+func categories_upto
+  ret category == "adm" ? "adm" : category == "dip" ? "adm|dip" : category == "army" ? "adm|dip|army" : "adm|dip|army|navy"
+end
+
+# Vermerk einer Deaktivierung in den Kommentaren: "disabled" oder "disabled: <Notiz>".
+func disabled_mark
+  note = (disabledNote ?? "") | string.strip
+  ret note == "" ? "disabled" : "disabled: " + note
+end
+
+# Zeilen eines Modifikatoren-Texts (ohne Leerraum am Anfang und Ende).
+func modifier_lines(text)
+  ret (text ?? "") | string.strip | string.replace "\r\n" "\n" | string.split "\n"
+end
+
+# Beginnt der Text mit einem Deaktivierungsvermerk ("# disabled …", vom Paket oder von Hand)?
+func has_note(text)
+  lines = modifier_lines text
+  ret lines.size > 0 && (lines[0] | regex.match `^#\s*disabled\b`).size > 0
+end
+
+# Modifikatoren ohne Deaktivierungsvermerk: nach einem Vermerk in der ersten Zeile fällt diese weg und jede übrige Zeile verliert ein
+# führendes "# ". Eingelesene deaktivierte Ideen kommen so beim Wiederaktivieren mit ihren Werten zurück und werden beim Neuschreiben nicht doppelt
+# kommentiert; die am 2026-10-10 von Hand deaktivierten Ideen haben nur den Vermerk und beginnen leer.
+func plain_modifiers(text)
+  if !(has_note text)
+    ret (text ?? "") | string.strip
+  end
+  out = []
+  for line in (modifier_lines text) offset:1
+    out = out | array.add (line | regex.replace `^#[ \t]?` "")
+  end
+  ret out | array.join "\n" | string.strip
+end
+
+# Vermerkzeile einer deaktivierten Stufe: ein von Hand geschriebener Vermerk ("# disabled 2026-10-10: …", nicht in der Form des Pakets
+# "# disabled: …") bleibt stehen, sonst der Vermerk aus der Notiz.
+func note_line(text)
+  lines = modifier_lines text
+  if (has_note text) && (lines[0] | regex.match `^#\s*disabled\b(?!:)`).size > 0
+    ret lines[0]
+  end
+  ret "# " + disabled_mark
+end
+
+# Beschriftung der Stufe i (ab 1) in der Länderansicht (Ort 14), wie LEVEL_LABELS in iv2_build_country_view.py: I, II, III, IV.
+func level_label(i)
+  labels = ["I", "II", "III", "IV"]
+  ret labels[i - 1]
+end
+
+# KI-Tags (Ort 21) als JSON-Array: je Zeile von aiTags eine Tag-Kennung, leere Zeilen fallen weg.
+func ai_tag_list
+  out = []
+  for line in (aiTags ?? "") | string.replace "\r\n" "\n" | string.split "\n"
+    tag = line | string.strip
+    if tag != ""
+      out = out | array.add (tag | object.to_json)
+    end
+  end
+  ret "[" + (out | array.join ", ") + "]"
+end
+
+# Hat die Idee KI-Tags? Ohne Tags schreibt Ort 21 nichts (ein vorhandener Eintrag bleibt, eine neue Idee bekommt keinen).
+func has_ai_tags
+  ret ai_tag_list != "[]"
+end
+
+# Name im Eintrag der KI-Tag-Datei (Ort 21): der deutsche Name nach den Sprachregeln, ohne deutschen Namen die Kennung (wie der Tag-Editor:
+# resolve(...) or nid).
+func ai_tag_name
+  german = (name_by_lang | object.has_key "german") ? name_by_lang.german : ""
+  german = (german ?? "") | string.strip
+  ret german == "" ? id : german
+end
+
+# Mehrzeiliger Text, jede Zeile mit dem Präfix eingerückt (leere Zeilen ohne Präfix).
+func indent(text, prefix)
+  lines = text | string.strip | string.replace "\r\n" "\n" | string.split "\n"
+  out = []
+  for line in lines
+    if (line | string.strip) == ""
+      out = out | array.add ""
+    else
+      out = out | array.add (prefix + line)
+    end
+  end
+  ret out | array.join "\n"
+end
+~}}

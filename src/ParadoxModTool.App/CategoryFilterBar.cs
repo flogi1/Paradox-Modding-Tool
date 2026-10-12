@@ -75,14 +75,14 @@ public sealed class CategoryFilterBar : WrapPanel
                 VerticalAlignment = VerticalAlignment.Center,
                 Background = FileCategoryClassifier.ColorFor(category.Id),
             });
-            content.Children.Add(new TextBlock { Text = category.Name });
+            content.Children.Add(new TextBlock { Text = CategoryDefaults.DisplayName(category) });
 
             var checkBox = new CheckBox
             {
                 Content = content,
                 IsChecked = !_unchecked.Contains(category.Id),
                 Margin = new Thickness(0, 0, 8, 0),
-                ToolTip = MiscWindowTexts.CategoryFilterToggleTip(category.Name),
+                ToolTip = MiscWindowTexts.CategoryFilterToggleTip(CategoryDefaults.DisplayName(category)),
             };
             var id = category.Id;
             checkBox.Click += (_, _) =>
@@ -120,7 +120,7 @@ public sealed class CategoryFilterBar : WrapPanel
             var key = FilterEntryKeys.ForCategory(category.Id);
             var item = new MenuItem
             {
-                Header = category.Name.Replace("_", "__"),
+                Header = CategoryDefaults.DisplayName(category).Replace("_", "__"),
                 Icon = new Border { Width = 10, Height = 10, Background = FileCategoryClassifier.ColorFor(category.Id) },
                 IsCheckable = true,
                 IsChecked = FilterBarSettings.IsShown(key),

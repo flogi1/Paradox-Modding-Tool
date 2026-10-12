@@ -269,9 +269,12 @@ public partial class DiffComparePane : UserControl
         }
     }
 
-    /// <summary>Zeigt zwei Texte, die nicht (so) auf der Platte stehen, z. B. die Vorschau einer Ersetzungsliste; beide Seiten schreibgeschützt.</summary>
-    public void LoadTexts(string leftText, string rightText, string leftLabel, string rightLabel, string path) =>
-        LoadCore(leftText, rightText, path, path, leftLabel, rightLabel, leftEditable: false, rightEditable: false);
+    /// <summary>
+    /// Zeigt zwei Texte, die nicht (so) auf der Platte stehen, z. B. die Vorschau einer Ersetzungsliste; beide Seiten schreibgeschützt.
+    /// <paramref name="rightPath"/>: eigener Pfad der rechten Seite, sonst <paramref name="path"/> für beide.
+    /// </summary>
+    public void LoadTexts(string leftText, string rightText, string leftLabel, string rightLabel, string path, string? rightPath = null) =>
+        LoadCore(leftText, rightText, path, rightPath ?? path, leftLabel, rightLabel, leftEditable: false, rightEditable: false);
 
     /// <summary>
     /// Vorschau eines geplanten Texts (Patch-Rezepte): links der aktuelle Stand schreibgeschützt, rechts der geplante Text bearbeitbar,

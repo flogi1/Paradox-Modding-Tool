@@ -1,0 +1,69 @@
+	type iv2_nat_idea_{{ id }} = widget {
+        visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_{{ id }}')]"
+	    position = { 5 5 }
+		size = { 335 78 }
+
+		icon = {
+			texture = "gfx/interface/iv2_glow_frame.dds"
+            size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_nat_idea_{{ category }}'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_nat_idea_{{ category }}'))), StringContains(GetModifier('national_idea_modifier_{{ id }}').GetDesc, GetVariableSystem.Get('iv2_search_nat_idea_{{ category }}')))]"
+        }
+
+		card_header_button_04 = {
+		size = { 325 78 }
+				position = { 0 0 }
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "iv2_ga_select_national_idea_{{ id }}"
+					actor = "[Player]"
+					parameter = {
+						parameter_name = "target"
+						parameter_value = "[Country.MakeScope]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+
+				tooltipwidget = {
+						using = iv_2_tooltip_template_nat_idea_{{ id }}
+				}
+
+				icon = {
+					size = { 335 86 }
+					parentanchor = center
+					texture = "gfx/interface/national_idea_selection_button.dds"
+				}
+
+				scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_{{ id }}').GetName]"
+							}
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_{{ id }}').GetDesc]"
+						}
+					}
+				}
+			}
+		}
+	}

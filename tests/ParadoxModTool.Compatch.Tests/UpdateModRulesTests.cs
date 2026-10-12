@@ -6,6 +6,14 @@ namespace ParadoxModTool.Compatch.Tests;
 public class UpdateModRulesTests : UpdateModTestBase
 {
     [Fact]
+    public void Update_rules_keep_inject_append_mode()
+    {
+        var rules = new ParadoxModTool.ModCompat.OverrideRules(new[] { new ParadoxModTool.ModCompat.OverrideRule("common/on_actions", ParadoxModTool.ModCompat.OverrideBehavior.AppendOnly) }) { InjectAppends = true };
+
+        Assert.True(UpdateModRules.From(rules).InjectAppends);
+    }
+
+    [Fact]
     public void Comments_and_namespace_stay_byte_identical()
     {
         const string Events = "in_game/events/test.txt";

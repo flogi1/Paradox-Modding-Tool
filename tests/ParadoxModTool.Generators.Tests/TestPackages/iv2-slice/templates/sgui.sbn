@@ -1,0 +1,12 @@
+{{ for c in categories -}}
+{{ for i in c.ideas -}}
+{{ for l in i.levels -}}
+iv2_sgui_historic_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
+	scope = country
+	is_valid = {
+		has_country_modifier = national_idea_modifier_{{ tag }}_{{ i.number }}{{ l.suffix }}
+	}
+}
+{{ end -}}
+{{ end -}}
+{{ end -}}

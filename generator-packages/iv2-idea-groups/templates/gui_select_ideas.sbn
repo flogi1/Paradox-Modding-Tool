@@ -1,0 +1,187 @@
+###################################################
+###### Idea {{ g }}
+###################################################
+
+template iv_2_tooltip_template_idea_{{ g }}_1 {
+	
+	
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_1"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}
+
+template iv_2_tooltip_template_idea_{{ g }}_2 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_2"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}
+
+template iv_2_tooltip_template_idea_{{ g }}_3 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_3"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}
+
+template iv_2_tooltip_template_idea_{{ g }}_4 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_4"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}
+
+template iv_2_tooltip_template_idea_{{ g }}_5 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_5"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}
+
+template iv_2_tooltip_template_idea_{{ g }}_6 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_6"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}
+
+template iv_2_tooltip_template_idea_{{ g }}_7 {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icon_idea_{{ category }}.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+		
+		blockoverride "title_text" {
+			text = "iv2_ideagroup_title_text_{{ g }}_7"
+		}
+		
+		blockoverride "concept_link" {
+			text = "iv2_ideagroup_concept_link_{{ g }}"
+		}
+	}
+}

@@ -9,6 +9,8 @@ public sealed record PublishHint(string Text, bool Blocking);
 /// <param name="ClientProblem">Warum der Steam-Client nicht benutzbar ist (Text für den Nutzer); <see langword="null"/>, wenn er bereit ist.</param>
 /// <param name="WorkshopIdOwner">Der Name einer anderen Mod der Verwaltung, der dieselbe Workshop-ID schon gehört; <see langword="null"/>, wenn keine andere Mod sie führt.</param>
 /// <param name="VersionForChangelog">Die Version, für die der Changelog-Abschnitt gesucht wurde (die aktuell im Feld stehende).</param>
+/// <param name="ClassicMetadata">Das Spiel nutzt die klassische <c>.mod</c>-Datei (EU IV, CK III); die Hinweise nennen dann sie statt der <c>metadata.json</c>.</param>
+/// <param name="ClassicDescriptorMissing">Beim klassischen Format fehlt die <c>descriptor.mod</c> im Mod-Ordner. Hochgeladen wird nur der Ordner, ohne sie erkennt der Launcher die Mod nicht.</param>
 public sealed record PublishReadinessInput(
     string? AppId,
     ModMetadata? Metadata,
@@ -25,7 +27,9 @@ public sealed record PublishReadinessInput(
     bool NothingToUpload,
     bool UseSteamClient = false,
     string? ClientProblem = null,
-    string? WorkshopIdOwner = null);
+    string? WorkshopIdOwner = null,
+    bool ClassicMetadata = false,
+    bool ClassicDescriptorMissing = false);
 
 /// <summary>Die Hinweise vor dem Veröffentlichen und ob der Upload erlaubt ist.</summary>
 public sealed record PublishReadiness(IReadOnlyList<PublishHint> Hints)
@@ -44,20 +48,26 @@ public sealed record PublishReadiness(IReadOnlyList<PublishHint> Hints)
         var versionValid = false;
         if (input.Metadata is null)
         {
-            hints.Add(new PublishHint(ModsTexts.NoReadableMetadata, true));
+            hints.Add(new PublishHint(ModsTexts.NoReadableMetadataFor(input.ClassicMetadata), true));
         }
         else if (!VersionNumber.TryParse(input.Metadata.Version, out _))
         {
-            hints.Add(new PublishHint(ModsTexts.NoValidVersion, true));
+            hints.Add(new PublishHint(ModsTexts.NoValidVersionFor(input.ClassicMetadata), true));
         }
         else
         {
             versionValid = true;
         }
 
+        // Ohne lesbare Metadaten steht schon der Hinweis oben; der Ordner ist dann ohnehin unklar.
+        if (input.ClassicMetadata && input.ClassicDescriptorMissing && input.Metadata is not null)
+        {
+            hints.Add(new PublishHint(ModsTexts.PublishDescriptorMissing, true));
+        }
+
         if (input.MetadataUnsaved)
         {
-            hints.Add(new PublishHint(ModsTexts.PublishUnsaved, true));
+            hints.Add(new PublishHint(input.ClassicMetadata ? ModsTexts.PublishUnsavedClassic : ModsTexts.PublishUnsaved, true));
         }
 
         var idText = input.WorkshopIdText?.Trim();
@@ -98,7 +108,7 @@ public sealed record PublishReadiness(IReadOnlyList<PublishHint> Hints)
 
         if (input.IsFirstPublish && !input.PreviewExists)
         {
-            hints.Add(new PublishHint(ModsTexts.PublishNoPreview, true));
+            hints.Add(new PublishHint(input.ClassicMetadata ? ModsTexts.PublishNoPreviewClassic : ModsTexts.PublishNoPreview, true));
         }
 
         if (versionValid && input.PublishedOnSteam)

@@ -9,10 +9,22 @@ namespace ParadoxModTool.Modifiers;
 public sealed class ModifierFormatIndex
 {
     private readonly Dictionary<string, ModifierFormat> _formats;
+    private readonly Dictionary<string, ModifierTraits> _traits;
 
-    private ModifierFormatIndex(Dictionary<string, ModifierFormat> formats) => _formats = formats;
+    private ModifierFormatIndex(Dictionary<string, ModifierFormat> formats, Dictionary<string, ModifierTraits>? traits = null)
+    {
+        _formats = formats;
+        _traits = traits ?? new Dictionary<string, ModifierTraits>(StringComparer.OrdinalIgnoreCase);
+        AllNames = _formats.Keys.Union(_traits.Keys, StringComparer.OrdinalIgnoreCase).ToList();
+    }
 
     public static ModifierFormatIndex Empty { get; } = new(new Dictionary<string, ModifierFormat>(StringComparer.OrdinalIgnoreCase));
+
+    /// <summary>Eigenschaften (ja/nein, schädlich, Kategorie) aller Modifier aus den Definitionsdateien, auch der Boolean-Modifier ohne Anzeigeformat.</summary>
+    public IReadOnlyDictionary<string, ModifierTraits> Traits => _traits;
+
+    /// <summary>Alle bekannten Modifier: die mit Anzeigeformat und die nur aus <see cref="Traits"/> (z. B. Boolean-Modifier).</summary>
+    public IReadOnlyCollection<string> AllNames { get; }
 
     public int Count => _formats.Count;
 
@@ -32,6 +44,7 @@ public sealed class ModifierFormatIndex
         IEnumerable<(string Name, string EffectType)> wikiModifiers)
     {
         var formats = new Dictionary<string, ModifierFormat>(StringComparer.OrdinalIgnoreCase);
+        var traits = new Dictionary<string, ModifierTraits>(StringComparer.OrdinalIgnoreCase);
         switch (settings?.Source)
         {
             case "definitions":
@@ -39,7 +52,7 @@ public sealed class ModifierFormatIndex
                 {
                     foreach (var folder in settings.Folders)
                     {
-                        ReadFolder(Path.Combine(root, folder.Replace('/', Path.DirectorySeparatorChar)), settings, formats);
+                        ReadFolder(Path.Combine(root, folder.Replace('/', Path.DirectorySeparatorChar)), settings, formats, traits);
                     }
                 }
 
@@ -62,10 +75,10 @@ public sealed class ModifierFormatIndex
                 break;
         }
 
-        return new ModifierFormatIndex(formats);
+        return new ModifierFormatIndex(formats, traits);
     }
 
-    private static void ReadFolder(string folder, ModifierFormatSettings settings, Dictionary<string, ModifierFormat> formats)
+    private static void ReadFolder(string folder, ModifierFormatSettings settings, Dictionary<string, ModifierFormat> formats, Dictionary<string, ModifierTraits> traits)
     {
         if (!Directory.Exists(folder))
         {
@@ -82,6 +95,11 @@ public sealed class ModifierFormatIndex
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 continue;
+            }
+
+            foreach (var (name, entry) in ModifierDefinitionReader.ReadTraits(text))
+            {
+                traits[name] = entry;
             }
 
             foreach (var (name, definition) in ModifierDefinitionReader.Read(text))

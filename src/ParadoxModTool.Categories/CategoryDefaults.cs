@@ -1,3 +1,5 @@
+using ParadoxModTool.Localization;
+
 namespace ParadoxModTool.Categories;
 
 /// <summary>Die sieben eingebauten Kategorien. Ihre Kennungen entsprechen den früheren Enum-Namen, damit gespeicherte Sessions und Theme-Farben weiter passen.</summary>
@@ -17,6 +19,40 @@ public static class CategoryDefaults
         [TextId, GuiId, LocalizationId, DefinesId, ImportantId, HelperFileId, OtherId];
 
     public static bool IsBuiltIn(string id) => BuiltInIds.Contains(id);
+
+    /// <summary>Der deutsche Standardname einer eingebauten Kategorie (der Rückfall und der gespeicherte Name, solange sie nicht umbenannt ist); sonst <see langword="null"/>.</summary>
+    private static string? GermanName(string id) => Create().FirstOrDefault(c => c.Id == id)?.Name;
+
+    /// <summary>Schlüssel des Namens einer eingebauten Kategorie in den Sprachdateien (<c>category.builtin.text</c>, <c>category.builtin.helperFile</c> ...).</summary>
+    public static string NameKey(string id) => "category.builtin." + char.ToLowerInvariant(id[0]) + id[1..];
+
+    /// <summary>
+    /// Der Name zum Anzeigen: eine eingebaute Kategorie, die nicht umbenannt wurde (Name leer oder der deutsche Standardname), erscheint in der
+    /// Oberflächensprache; ein umbenannter oder eigener Name bleibt, wie er ist.
+    /// </summary>
+    public static string DisplayName(CategoryDefinition category)
+    {
+        if (GermanName(category.Id) is { } german && (string.IsNullOrWhiteSpace(category.Name) || category.Name == german))
+        {
+            return UiText.Get(NameKey(category.Id), german);
+        }
+
+        return category.Name;
+    }
+
+    /// <summary>
+    /// Der Name zum Speichern, wenn der Nutzer <paramref name="typed"/> eingegeben hat: Der gezeigte Name einer eingebauten Kategorie wird wieder der
+    /// deutsche Standardname (damit sie bei einem Sprachwechsel mitwechselt); alles andere bleibt.
+    /// </summary>
+    public static string NameToStore(string id, string typed)
+    {
+        if (GermanName(id) is { } german && typed.Trim() == UiText.Get(NameKey(id), german))
+        {
+            return german;
+        }
+
+        return typed;
+    }
 
     public static List<CategoryDefinition> Create() =>
     [

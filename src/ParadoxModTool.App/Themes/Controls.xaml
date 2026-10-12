@@ -486,6 +486,68 @@
         </Setter>
     </Style>
 
+    <!-- DataGrid (Konstanten-Tabelle im Paket-Editor, Nachschlage-Vorschau): ohne eigene Stile malt WPF Spaltenkopf, Füllkopf und Ecke hell,
+         auch im dunklen Theme. Zeilenköpfe aus, damit die Ecke (Alles-auswählen-Knopf) entfällt. -->
+    <Style TargetType="DataGrid">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+        <Setter Property="Background" Value="{DynamicResource Theme.PanelBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Theme.ControlBorder}" />
+        <Setter Property="RowBackground" Value="{DynamicResource Theme.ControlBackground}" />
+        <Setter Property="AlternatingRowBackground" Value="{DynamicResource Theme.ControlBackground}" />
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Theme.ControlBorder}" />
+        <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource Theme.ControlBorder}" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+    </Style>
+
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+        <Setter Property="Background" Value="{DynamicResource Theme.ControlBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Theme.ControlBorder}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Grid SnapsToDevicePixels="True">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="0,0,1,1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-3,0" Width="6" Cursor="SizeWE">
+                            <Thumb.Template>
+                                <ControlTemplate TargetType="Thumb">
+                                    <Border Background="Transparent" />
+                                </ControlTemplate>
+                            </Thumb.Template>
+                        </Thumb>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Theme.ControlHover}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="DataGridRow">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+    </Style>
+
+    <Style TargetType="DataGridCell">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Theme.Selection}" />
+                <Setter Property="Foreground" Value="{DynamicResource Theme.SelectionText}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Theme.Selection}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Zeilen einer ListView mit GridView. Der Stil ist implizit: der Theme-Schlüssel GridViewItemContainerStyleKey wird in Anwendungsressourcen nicht gesucht. -->
     <Style TargetType="ListViewItem">
         <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />

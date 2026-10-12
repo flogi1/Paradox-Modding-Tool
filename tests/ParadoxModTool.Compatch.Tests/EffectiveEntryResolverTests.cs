@@ -46,6 +46,36 @@ public class EffectiveEntryResolverTests : CompatchTestBase
         Assert.False(info.NoPatch.Uncertain);
     }
 
+    // Victoria 3 (Wiki "Mod compatibility"): INJECT hängt die Einträge hinten an den vorhandenen Block an.
+    [Fact]
+    public void Inject_appends_when_the_game_appends()
+    {
+        PutVanilla("common/buildings/00_farm.txt", "farm = { cost = 10 }\n");
+        PutA("common/buildings/a.txt", "INJECT:farm = { upkeep = 2 }\n");
+        PutB("common/buildings/b.txt", "INJECT:farm = { other = 4 }\n");
+
+        var info = EffectiveEntryResolver.Resolve(Vic3Input()).Addresses[EntryAddress.ForKey("common/buildings", "farm")];
+        var text = Text(info.NoPatch.Entries);
+
+        Assert.True(text.IndexOf("cost = 10", StringComparison.Ordinal) < text.IndexOf("upkeep = 2", StringComparison.Ordinal));
+        Assert.False(info.NoPatch.Uncertain);
+    }
+
+    [Fact]
+    public void Appending_inject_of_an_existing_subkey_is_uncertain()
+    {
+        PutVanilla("common/buildings/00_farm.txt", "farm = { cost = 10 }\n");
+        PutA("common/buildings/a.txt", "INJECT:farm = { cost = 20 }\n");
+        PutB("common/buildings/b.txt", "INJECT:farm = { other = 4 }\n");
+
+        var info = EffectiveEntryResolver.Resolve(Vic3Input()).Addresses[EntryAddress.ForKey("common/buildings", "farm")];
+        var text = Text(info.NoPatch.Entries);
+
+        Assert.True(text.IndexOf("cost = 10", StringComparison.Ordinal) >= 0);
+        Assert.True(text.IndexOf("cost = 10", StringComparison.Ordinal) < text.IndexOf("cost = 20", StringComparison.Ordinal));
+        Assert.True(info.NoPatch.Uncertain);
+    }
+
     [Fact]
     public void Later_inject_of_the_same_subkey_wins()
     {
@@ -170,6 +200,40 @@ public class EffectiveEntryResolverTests : CompatchTestBase
 
         Assert.Equal(MergeSide.B, info.NoPatch.Side);
         Assert.Contains("3", Text(info.NoPatch.Entries));
+    }
+
+    private CompatchInput Vic3GuiInput() => new()
+    {
+        VanillaFolder = VanillaDir,
+        ModAFolder = ADir,
+        ModBFolder = BDir,
+        Rules = new OverrideRules(new[] { new OverrideRule("gui", OverrideBehavior.FirstWins) }) { FirstWinsInLoadOrder = true },
+        KeyOperators = EuVOps,
+    };
+
+    // Victoria 3 (gemessen 2026-10-11): Vanilla und Mods in einer Ladereihenfolge, Dateien vor Unterordnern, die erste Definition gilt.
+    [Fact]
+    public void Vic3_gui_type_from_the_first_loaded_file_wins_over_playset_order()
+    {
+        PutVanilla("gui/shared/button_icons.gui", "types T {\n type btn = button { size = { 1 1 } }\n}\n");
+        PutA("gui/shared/zz_a.gui", "types A {\n type btn = button { size = { 2 2 } }\n}\n");
+        PutB("gui/zz_b.gui", "types B {\n type btn = button { size = { 3 3 } }\n}\n");
+
+        var info = EffectiveEntryResolver.Resolve(Vic3GuiInput()).Addresses[EntryAddress.ForKey("gui", "type btn")];
+
+        Assert.Equal(MergeSide.B, info.NoPatch.Side);
+    }
+
+    [Fact]
+    public void Vic3_gui_type_in_vanilla_wins_when_it_loads_first()
+    {
+        PutVanilla("gui/shared/button_icons.gui", "types T {\n type btn = button { size = { 1 1 } }\n}\n");
+        PutA("gui/shared/zz_a.gui", "types A {\n type btn = button { size = { 2 2 } }\n}\n");
+        PutB("gui/shared/zzz_b.gui", "types B {\n type btn = button { size = { 3 3 } }\n}\n");
+
+        var info = EffectiveEntryResolver.Resolve(Vic3GuiInput()).Addresses[EntryAddress.ForKey("gui", "type btn")];
+
+        Assert.Equal(MergeSide.Vanilla, info.NoPatch.Side);
     }
 
     [Fact]

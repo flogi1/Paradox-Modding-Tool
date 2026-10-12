@@ -4,9 +4,10 @@ namespace ParadoxModTool.GuiDesign.Index;
 /// Wo ein Spiel seine .gui-Dateien hat und welche Definition gilt (Spielprofil, Abschnitt <c>gui</c>). <see cref="Contexts"/>: Kontextordner wie bei EU V
 /// (<c>in_game</c>, <c>main_menu</c>, <c>loading_screen</c>); leer = flach, die Dateien liegen direkt in <c>gui/</c> (Crusader Kings III).
 /// <see cref="FirstWins"/>: Bei Typen und Templates gewinnt innerhalb einer Ebene die zuerst geladene Datei (CK III, gemessen 2026-09-30), sonst die zuletzt
-/// geladene (EU V).
+/// geladene (EU V). <see cref="ModsBeforeVanilla"/>: Bei FirstWins gehen die Mods vor Vanilla (CK III); <see langword="false"/> = Vanilla und Mods zählen
+/// gemeinsam in Ladereihenfolge, Unterordner nach den Dateien des Ordners darüber (Victoria 3, gemessen 2026-10-11).
 /// </summary>
-public sealed record GuiLayout(IReadOnlyList<string> Contexts, bool FirstWins)
+public sealed record GuiLayout(IReadOnlyList<string> Contexts, bool FirstWins, bool ModsBeforeVanilla = true)
 {
     /// <summary>EU V: drei Kontextordner, zuletzt geladene Definition gewinnt. Gilt, wenn das Profil nichts angibt.</summary>
     public static GuiLayout Default { get; } = new(new[] { "in_game", "main_menu", "loading_screen" }, false);

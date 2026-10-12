@@ -1,0 +1,9 @@
+# block: Charakterporträt
+# group: Anzeige
+# description: Porträt (Kopf, 80×80) im Rahmen mit Interessengruppe, Tooltip, Klick zum Charakter und Rechtsklickmenü; mit der Vorgabe zeigt es das Staatsoberhaupt des eigenen Landes. Andere Größen: character_portrait_large, character_portrait_small, character_portrait_mini; mit Oberkörper: character_portrait_medium_torso, character_portrait_large_torso. Porträts erscheinen nur im laufenden Spiel. Vorbild: gui/window_component_library.gui, gui/shared/character.gui
+# param: character | Charakter (Datenkontext) | AccessPlayer.AccessRuler
+# requires: character_portrait_medium
+
+character_portrait_medium = {
+	datacontext = "[$character$]"
+}

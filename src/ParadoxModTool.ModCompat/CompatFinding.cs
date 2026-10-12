@@ -26,6 +26,8 @@ public enum CompatKind
     MissingFolder,
     ReplacePathNoEffect,
     ReplacePathGuiCrash,
+    PrefixNoEffect,
+    PrefixActsAsReplace,
 }
 
 public enum CompatSuggestion

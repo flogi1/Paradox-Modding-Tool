@@ -209,6 +209,18 @@ public class ModOverviewLoaderTests : TempDirTests
     }
 
     [Fact]
+    public void Load_WorkshopIdFromTheInnerDescriptorWhenTheSiblingFileHasNone()
+    {
+        var folder = ClassicMod("Inner Only");
+        File.WriteAllText(Path.Combine(folder, "descriptor.mod"), "name=\"Inner Only\"\nversion=\"1.0\"\nremote_file_id=\"666\"\n");
+        Registry("eu4").Add("Inner Only", folder);
+
+        var mod = Load().Mods.Single(m => m.Mod.Name == "Inner Only");
+
+        Assert.Equal("666", mod.WorkshopId);
+    }
+
+    [Fact]
     public void Load_WorkshopIdFromOverviewLinksAsLastResort()
     {
         var mod = Registry("eu5").Add("IV2", JsonMod("iv2", "The Idea Variation 2", "Idea_Variation_2"));

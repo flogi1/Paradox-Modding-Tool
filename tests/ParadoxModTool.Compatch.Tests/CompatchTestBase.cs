@@ -48,6 +48,25 @@ public abstract class CompatchTestBase : IDisposable
         new OverrideRule("localisation", OverrideBehavior.LocalizationKeys, false),
     });
 
+    /// <summary>Regeln nach Art von Victoria 3: Präfixe nur in Ordnern der Wiki-Liste, nur REPLACE in scripted_effects, INJECT hängt an.</summary>
+    protected static OverrideRules Vic3Rules() => new(new[]
+    {
+        new OverrideRule("common", OverrideBehavior.LastWins, Operators: Array.Empty<string>()),
+        new OverrideRule("common/buildings", OverrideBehavior.PerKey),
+        new OverrideRule("common/scripted_effects", OverrideBehavior.PerKey, Operators: new[] { "REPLACE", "TRY_REPLACE", "REPLACE_OR_CREATE" }),
+        new OverrideRule("common/history", OverrideBehavior.AppendOnly, false, Operators: Array.Empty<string>()),
+    })
+    { InjectAppends = true };
+
+    protected CompatchInput Vic3Input() => new()
+    {
+        VanillaFolder = VanillaDir,
+        ModAFolder = ADir,
+        ModBFolder = BDir,
+        Rules = Vic3Rules(),
+        KeyOperators = EuVOps,
+    };
+
     protected CompatchInput Input(bool euV = true, CompatchFileFilter? filter = null, bool bLoadsAfterA = true) => new()
     {
         VanillaFolder = VanillaDir,

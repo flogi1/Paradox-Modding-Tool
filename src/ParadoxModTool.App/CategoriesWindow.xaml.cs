@@ -42,7 +42,7 @@ public partial class CategoriesWindow : Window
         /// <summary>Wirksame Farbe im Dialog (Theme-Farbe bei eingebauten, Definitionsfarbe bei eigenen).</summary>
         public string ColorHex { get; set; }
 
-        public string Name => Definition.Name;
+        public string Name => CategoryDefaults.DisplayName(Definition);
 
         public Brush Brush => TryParse(ColorHex, out var c) ? new SolidColorBrush(c) : Brushes.Transparent;
 
@@ -98,7 +98,7 @@ public partial class CategoriesWindow : Window
             }
 
             var isOther = row.Definition.Id == CategoryDefaults.OtherId;
-            NameBox.Text = row.Definition.Name;
+            NameBox.Text = CategoryDefaults.DisplayName(row.Definition);
             ColorBox.Text = row.ColorHex;
             ExtensionsBox.Text = string.Join(", ", row.Definition.Extensions);
             PatternsBox.Text = string.Join(Environment.NewLine, row.Definition.Patterns);
@@ -110,7 +110,7 @@ public partial class CategoriesWindow : Window
                 : MiscWindowTexts.CategoriesColorHintCustom;
             if (isOther)
             {
-                ColorHint.Text += " " + MiscWindowTexts.CategoriesColorHintOther(row.Definition.Name);
+                ColorHint.Text += " " + MiscWindowTexts.CategoriesColorHintOther(CategoryDefaults.DisplayName(row.Definition));
             }
 
             DeleteButton.IsEnabled = !isOther;
@@ -131,7 +131,7 @@ public partial class CategoriesWindow : Window
             return;
         }
 
-        row.Definition.Name = NameBox.Text;
+        row.Definition.Name = CategoryDefaults.NameToStore(row.Definition.Id, NameBox.Text);
         row.Refresh();
     }
 
@@ -254,14 +254,14 @@ public partial class CategoriesWindow : Window
 
             if (!CategoryMatcher.IsValidHex(row.ColorHex))
             {
-                MessageBox.Show(MiscWindowTexts.CategoriesInvalidColor(row.Definition.Name, row.ColorHex), MiscWindowTexts.CategoriesInvalidColorTitle);
+                MessageBox.Show(MiscWindowTexts.CategoriesInvalidColor(CategoryDefaults.DisplayName(row.Definition), row.ColorHex), MiscWindowTexts.CategoriesInvalidColorTitle);
                 CategoryList.SelectedItem = row;
                 ColorBox.Focus();
                 return;
             }
         }
 
-        var names = _rows.GroupBy(r => r.Definition.Name.Trim(), StringComparer.CurrentCultureIgnoreCase).FirstOrDefault(g => g.Count() > 1);
+        var names = _rows.GroupBy(r => CategoryDefaults.DisplayName(r.Definition).Trim(), StringComparer.CurrentCultureIgnoreCase).FirstOrDefault(g => g.Count() > 1);
         if (names is not null)
         {
             MessageBox.Show(MiscWindowTexts.CategoriesDuplicateName(names.Key), MiscWindowTexts.CategoriesMessageTitle);

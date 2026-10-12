@@ -52,6 +52,19 @@ public sealed class AppSettingsTests
         nameof(AppSessionState.MyModsWindowBounds),
         nameof(AppSessionState.MyModsHiddenAlertKinds),
         nameof(AppSessionState.MyModsStartMaximized),
+        nameof(AppSessionState.WindowLayout),
+        nameof(AppSessionState.ToolbarPosition),
+        nameof(AppSessionState.ToolbarLabelsVisible),
+        nameof(AppSessionState.ToolbarOrder),
+        nameof(AppSessionState.TileBarVisible),
+        nameof(AppSessionState.TileSize),
+        nameof(AppSessionState.TileLabelsVisible),
+        nameof(AppSessionState.TileOrder),
+        nameof(AppSessionState.HiddenTiles),
+        nameof(AppSessionState.IconOnlyTiles),
+        nameof(AppSessionState.WorkspaceCategoryButtonVisible),
+        nameof(AppSessionState.WorkspaceSortButtonVisible),
+        nameof(AppSessionState.WorkspaceMarkButtonsVisible),
     };
 
     private static AppSessionState NonDefaultState() => new()
@@ -99,6 +112,19 @@ public sealed class AppSettingsTests
         MyModsWindowBounds = new WindowBoundsState { Left = 1, Top = 2, Width = 3, Height = 4 },
         MyModsHiddenAlertKinds = new List<string> { "ReleaseStatus" },
         MyModsStartMaximized = false,
+        WindowLayout = "Classic",
+        ToolbarPosition = "Right",
+        ToolbarLabelsVisible = false,
+        ToolbarOrder = ToolbarCatalog.DefaultOrder.Reverse().ToList(),
+        TileBarVisible = false,
+        TileSize = "Compact",
+        TileLabelsVisible = false,
+        TileOrder = TileCatalog.DefaultOrder.Reverse().ToList(),
+        HiddenTiles = new List<string> { TileIds.Gui },
+        IconOnlyTiles = new List<string> { TileIds.Compatch },
+        WorkspaceCategoryButtonVisible = false,
+        WorkspaceSortButtonVisible = false,
+        WorkspaceMarkButtonsVisible = false,
     };
 
     [Fact]

@@ -106,8 +106,6 @@ public static class PublishTexts
 
     public static string PublishRunning => T("publish.github.running", "Die Veröffentlichung läuft noch. Brich sie ab oder warte, bis sie fertig ist.");
 
-    public static string NoMetadata => T("publish.github.noMetadata", "Keine lesbare metadata.json gefunden.");
-
     public static string NotesCount(int length, int max) => F("publish.github.notesCount", "{0:N0} von {1:N0} Zeichen", length, max);
 
     public static string GhChecking => T("publish.github.ghChecking", "gh wird geprüft …");
@@ -159,6 +157,10 @@ public static class PublishTexts
     public static string VariantExcludedList(string lines) => F("publish.github.variant.excludedList", "Nicht im ZIP:\n\n{0}", lines);
 
     public static string ZipNeedsVersion => T("publish.github.zipNeedsVersion", "Ohne lesbare metadata.json mit gültiger Version kann ich keine ZIP-Dateien erstellen.");
+
+    public static string ZipNeedsVersionClassic => T("publish.github.zipNeedsVersionClassic", "Ohne lesbare .mod-Datei mit gültiger Version kann ich keine ZIP-Dateien erstellen.");
+
+    public static string ZipNeedsVersionFor(bool classic) => classic ? ZipNeedsVersionClassic : ZipNeedsVersion;
 
     public static string NoVariantChecked => T("publish.github.noVariantChecked", "Es ist keine ZIP-Variante angehakt.");
 
@@ -292,6 +294,8 @@ public static class PublishTexts
 
     public static string VersionTip => T("publish.steam.version.tip", "Ändert nur das Feld version der Datei (nicht das in relationships). Mit Enter übernehmen, danach speichern.");
 
+    public static string VersionTipClassic => T("publish.steam.version.tipClassic", "Ändert nur das Feld version der Datei. Mit Enter übernehmen, danach speichern.");
+
     public static string NextVersionTip => T("publish.steam.nextVersion.tip", "Den letzten Teil der Version um eins erhöhen (2.0.5 wird 2.0.6)");
 
     public static string MetaSaveTip => T("publish.steam.metaSave.tip", "Schreibt die Datei (Strg+S). Vorher wird eine Sicherung angelegt; ungültiges JSON wird nicht gespeichert.");
@@ -342,6 +346,8 @@ public static class PublishTexts
 
     public static string ListingTip => T("publish.steam.listing.tip", "Überschreibt Titel (name), Beschreibung (short_description) und Vorschaubild (picture) der Workshop-Seite mit den Werten aus der metadata.json. Beim ersten Veröffentlichen immer an.");
 
+    public static string ListingTipClassic => T("publish.steam.listing.tipClassic", "Überschreibt Titel (name) und Vorschaubild (picture) der Workshop-Seite mit den Werten aus der .mod-Datei; die Beschreibung bleibt. Beim ersten Veröffentlichen immer an.");
+
     public static string ScopeListTip => T("publish.steam.scopeList.tip", "Zeigt, was aus dem Upload ausgeschlossen wird");
 
     public static string UploadRunning => T("publish.steam.running", "Der Upload läuft noch. Brich ihn ab oder warte, bis er fertig ist.");
@@ -360,6 +366,27 @@ public static class PublishTexts
 
     public static string MetaUnsaved => T("publish.steam.metaUnsaved", "Die metadata.json hat ungespeicherte Änderungen.\nJetzt speichern?");
 
+    // Klassische .mod-Datei (EU IV, CK III): die Texte nennen die gezeigte Datei statt der metadata.json.
+    public static string MetaMissingClassic => T("publish.steam.metaMissingClassic", "Für diese Mod wurde keine lesbare .mod-Datei gefunden.");
+
+    public static string MetaReadFailedFile(string file, string error) => F("publish.steam.metaReadFailedFile", "{0} konnte nicht gelesen werden: {1}", file, error);
+
+    public static string MetaChangedOutsideFile(string file) => F("publish.steam.metaChangedOutsideFile", "{0} wurde von außen geändert.\nTrotzdem überschreiben?", file);
+
+    public static string MetaUnsavedFile(string file) => F("publish.steam.metaUnsavedFile", "{0} hat ungespeicherte Änderungen.\nJetzt speichern?", file);
+
+    public static string MetaSaveTipClassic => T("publish.steam.metaSave.tipClassic", "Schreibt die Datei (Strg+S). Vorher wird eine Sicherung angelegt; Text mit unausgeglichenen Klammern oder offenem Anführungszeichen wird nicht gespeichert.");
+
+    public static string MetaShownFile(string file) => F("publish.steam.metaShownFile", "Angezeigt: {0}", file);
+
+    public static string MetaShownFileSynced(string file, string other) => F("publish.steam.metaShownFileSynced", "Angezeigt: {0}. Eine Änderung der Version wird auch in {1} geschrieben; alle anderen Änderungen nur in die angezeigte Datei.", file, other);
+
+    public static string MetaSyncFailed(string file, string other, string error) => F("publish.steam.metaSyncFailed", "{0} wurde gespeichert, aber {1} konnte nicht angepasst werden: {2}", file, other, error);
+
+    public static string MetaSyncBeforeUploadFailed(string version, string other, string error) => F("publish.steam.metaSyncBeforeUploadFailed", "Vor dem Upload ließ sich {1} nicht auf Version {0} bringen, deshalb wurde nichts hochgeladen: {2}", version, other, error);
+
+    public static string WorkshopIdFromMod => T("publish.steam.workshopIdFromMod", "Workshop-ID aus remote_file_id der .mod-Datei übernommen.");
+
     public static string SteamBannerCreated(string version) => F("publish.steam.bannerCreated", "Das Banner für Version {0} steht jetzt oben im Changelog. Trage die Änderungen im Fenster \"Releases\" ein (Textfeld rechts).", version);
 
     public static string ScopeMore(int count) => F("publish.steam.scope.more", " … (+{0} weitere)", count);
@@ -375,6 +402,8 @@ public static class PublishTexts
     public static string NoteCount(int length, int max) => F("publish.steam.noteCount", "{0:N0} / {1:N0} Zeichen", length, max);
 
     public static string FindNeedsMetadata => T("publish.steam.find.needsMetadata", "Ohne lesbare metadata.json und ohne Steam-AppID im Spielprofil kann ich nicht suchen.");
+
+    public static string FindNeedsMetadataClassic => T("publish.steam.find.needsMetadataClassic", "Ohne lesbare .mod-Datei und ohne Steam-AppID im Spielprofil kann ich nicht suchen.");
 
     public static string FindSeveralLocal => T("publish.steam.find.severalLocal", "Mehrere abonnierte Workshop-Mods passen zu dieser Mod. Wähle die richtige:");
 
@@ -429,6 +458,9 @@ public static class PublishTexts
 
     public static string WorkshopIdSaveFailed(string error) => F("publish.steam.workshopIdSaveFailed", "Die Workshop-ID konnte nicht gespeichert werden: {0}", error);
 
+    public static string RemoteFileIdWriteFailed(string file, string error) => F(
+        "publish.steam.remoteFileIdWriteFailed", "Die Workshop-ID konnte nicht als remote_file_id in {0} eingetragen werden: {1}", file, error);
+
     public static string PageAlreadyCreated(string id) => F("publish.steam.pageAlreadyCreated", "Die Workshop-Seite {0} wurde schon angelegt; ein erneuter Versuch aktualisiert sie.", id);
 
     public static string LegalAgreement => T("publish.steam.legalAgreement", "Steam verlangt, dass du der Workshop-Vereinbarung zustimmst, bevor die Seite sichtbar wird. Das machst du selbst auf der Steam-Seite.\n\nSeite jetzt öffnen?");
@@ -477,6 +509,9 @@ public static class PublishTexts
 
     public static string StatusLine(string metadata, string top, string latest) =>
         F("publish.releases.status", "metadata.json: {0}     Changelog oben: {1}     Neueste Release: {2}", metadata, top, latest);
+
+    public static string StatusLineClassic(string metadata, string top, string latest) =>
+        F("publish.releases.statusClassic", ".mod-Datei: {0}     Changelog oben: {1}     Neueste Release: {2}", metadata, top, latest);
 
     public static string ChangelogReadFailed(string error) => F("publish.releases.readFailed", "Der Changelog konnte nicht gelesen werden: {0}", error);
 

@@ -112,7 +112,8 @@ public class SiblingMatcherTests
         watch.Stop();
         Assert.Equal("S:modifier#1500", units[1500].Key);
         Assert.Equal("S:modifier#2999", units[2999].Key);
-        Assert.True(watch.ElapsedMilliseconds < 2000, $"{watch.ElapsedMilliseconds} ms");
+        // Auffanggrenze gegen grobe Rückschritte: das Release-Werkzeug und test.bat fahren alle Testprojekte gleichzeitig, dann dauert dasselbe mehrfach so lang.
+        Assert.True(watch.ElapsedMilliseconds < 10000, $"{watch.ElapsedMilliseconds} ms");
     }
 
     [Fact]

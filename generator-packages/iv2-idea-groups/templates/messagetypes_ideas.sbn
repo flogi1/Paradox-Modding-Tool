@@ -1,0 +1,76 @@
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_4_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_5_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_6_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+
+WE_PERFORM_iv2_ga_ideagroup_{{ g }}_7_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}

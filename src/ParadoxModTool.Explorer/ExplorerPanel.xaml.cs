@@ -98,7 +98,10 @@ public partial class ExplorerPanel : UserControl
     // mit dem Stand eines anderen gleichzeitig offenen Fensters zusammenzuführen.
     private Dictionary<string, string> _colorsBaseline = new();
     private List<string> _favoritesBaseline = new();
-    private readonly List<string> _favoritePaths;
+    private readonly List<string> _favoritePaths = new();
+
+    // Favoriten gelten je Spiel (siehe SetGameProfile); solange kein Spiel bekannt ist, null - dann wird nichts gespeichert.
+    private string? _favoritesFilePath;
     private GameProfile? _activeProfile;
 
     /// <summary>Best-effort-Vorschlag für den Startordner des "Ordner hinzufügen…"-Dialogs (siehe
@@ -114,10 +117,7 @@ public partial class ExplorerPanel : UserControl
         FavoritesTree.ItemsSource = _favoriteEntries;
 
         _colors = ExplorerColorStore.TryLoad(ExplorerColorStore.GetDefaultColorsFilePath());
-        _favoritePaths = ExplorerFavoritesStore.TryLoad(ExplorerFavoritesStore.GetDefaultFavoritesFilePath());
         _colorsBaseline = new Dictionary<string, string>(_colors);
-        _favoritesBaseline = new List<string>(_favoritePaths);
-        RebuildFavoritesDisplay();
 
         // Nutzer-Feedback (Runde 10, weitere Verbesserungen): "Füge für Favoriten hinzufügen den
         // Hotkey Alt + F hinzu" - PreviewKeyDown (statt KeyDown) auf dem UserControl selbst, damit
@@ -425,14 +425,59 @@ public partial class ExplorerPanel : UserControl
     /// <summary>
     /// Setzt das aktive Spielprofil (für die Dateityp-Auswahl beim Anlegen neuer Dateien sowie
     /// die Standardfarben je Ordnerkategorie, siehe <see cref="FolderCategoryColorResolver"/>)
-    /// und färbt bereits geladene Ordner ohne EXPLIZITE Nutzerfarbe entsprechend neu ein.
+    /// und färbt bereits geladene Ordner ohne EXPLIZITE Nutzerfarbe entsprechend neu ein. Lädt außerdem die Favoriten dieses
+    /// Spiels; <paramref name="allProfiles"/> braucht die einmalige Übernahme aus der alten gemeinsamen Favoritendatei, um deren
+    /// Einträge den Spielen zuzuordnen (siehe <see cref="ExplorerFavoritesStore.LoadForGame"/>).
     /// </summary>
-    public void SetGameProfile(GameProfile? profile)
+    public void SetGameProfile(GameProfile? profile, IReadOnlyList<GameProfile> allProfiles)
     {
         _activeProfile = profile;
+        LoadFavoritesForGame(profile, allProfiles);
         foreach (var root in _roots)
         {
             ReapplyDefaultFolderColors(root);
+            ReapplyFavoriteState(root);
+        }
+    }
+
+    private void LoadFavoritesForGame(GameProfile? profile, IReadOnlyList<GameProfile> allProfiles)
+    {
+        _favoritePaths.Clear();
+        _favoritesFilePath = null;
+        if (profile is not null)
+        {
+            try
+            {
+                _favoritePaths.AddRange(ExplorerFavoritesStore.LoadForGame(profile.Id, allProfiles));
+                _favoritesFilePath = ExplorerFavoritesStore.GetFavoritesFilePath(profile.Id);
+            }
+            catch (IOException)
+            {
+                // Ohne lesbare Favoritendatei bleibt die Liste leer und wird nicht gespeichert (sonst überschriebe sie die Datei). Das gilt auch, wenn die
+                // Übernahme aus der alten gemeinsamen Datei scheitert: sie wird dann beim nächsten Start wiederholt.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Wie oben.
+            }
+        }
+
+        _favoritesBaseline = new List<string>(_favoritePaths);
+        RebuildFavoritesDisplay();
+    }
+
+    private void ReapplyFavoriteState(ExplorerEntry entry)
+    {
+        if (entry.IsPlaceholder)
+        {
+            return;
+        }
+
+        var key = PathNormalization.NormalizeKey(entry.FullPath);
+        entry.IsFavorite = _favoritePaths.Any(p => PathNormalization.NormalizeKey(p) == key);
+        foreach (var child in entry.Children)
+        {
+            ReapplyFavoriteState(child);
         }
     }
 
@@ -940,9 +985,15 @@ public partial class ExplorerPanel : UserControl
 
     private void SaveFavorites()
     {
+        if (_favoritesFilePath is not { } path)
+        {
+            // Noch kein Spiel bekannt: Favoriten wirken nur in der laufenden Sitzung.
+            return;
+        }
+
         try
         {
-            var merged = ExplorerFavoritesStore.SaveMerged(_favoritesBaseline, _favoritePaths, ExplorerFavoritesStore.GetDefaultFavoritesFilePath());
+            var merged = ExplorerFavoritesStore.SaveMerged(_favoritesBaseline, _favoritePaths, path);
             _favoritePaths.Clear();
             _favoritePaths.AddRange(merged);
             _favoritesBaseline = new List<string>(merged);

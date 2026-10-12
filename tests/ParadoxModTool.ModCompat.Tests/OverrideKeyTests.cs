@@ -54,6 +54,26 @@ public class OverrideKeyTests
         Assert.True(OverrideKey.Parse("TRY_REPLACE:a").IsReplace);
     }
 
+    [Theory]
+    [InlineData("INJECT:foo", OverrideOperator.Replace, "foo")]
+    [InlineData("TRY_INJECT:foo", OverrideOperator.TryReplace, "foo")]
+    [InlineData("INJECT_OR_CREATE:foo", OverrideOperator.ReplaceOrCreate, "foo")]
+    [InlineData("REPLACE:foo", OverrideOperator.Replace, "foo")]
+    public void Inject_acts_as_replace_in_a_replace_only_folder(string raw, OverrideOperator op, string key)
+    {
+        var parsed = OverrideKey.ParseInFolder(raw, new[] { "REPLACE", "TRY_REPLACE", "REPLACE_OR_CREATE" });
+        Assert.Equal(op, parsed.Operator);
+        Assert.Equal(key, parsed.Key);
+    }
+
+    [Fact]
+    public void Folder_without_operators_keeps_the_prefix_in_the_key()
+    {
+        var parsed = OverrideKey.ParseInFolder("INJECT:foo", Array.Empty<string>());
+        Assert.Equal(OverrideOperator.None, parsed.Operator);
+        Assert.Equal("INJECT:foo", parsed.Key);
+    }
+
     [Fact]
     public void Script_parser_reads_prefixed_key_as_one_identifier()
     {

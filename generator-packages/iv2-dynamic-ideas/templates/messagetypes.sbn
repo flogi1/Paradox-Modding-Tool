@@ -1,0 +1,25 @@
+{{~
+# Meldungsarten (Ort 17), wie army_1 der Mod: immer die vier Wahlen und die Abwahl.
+~}}
+{{~ for i in 1..4 ~}}
+WE_PERFORM_iv2_ga_select_national_idea_{{ id }}{{ sfx i }}_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+{{~ end ~}}
+WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}

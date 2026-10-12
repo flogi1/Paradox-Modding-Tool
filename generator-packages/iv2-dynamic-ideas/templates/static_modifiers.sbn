@@ -1,0 +1,19 @@
+{{~ for l in levels ~}}
+national_idea_modifier_{{ id }}{{ sfx l.index }} = {
+	game_data = {
+	    category = country
+    }
+{{~ plain = plain_modifiers l.modifiers ~}}
+{{~ if disabled ~}}
+	{{ note_line l.modifiers }}
+{{~ if plain != "" ~}}
+{{ indent plain "\t# " }}
+{{~ end ~}}
+{{~ else if plain != "" ~}}
+{{ indent plain "\t" }}
+{{~ end ~}}
+}
+{{~ if !l.last ~}}
+
+{{~ end ~}}
+{{~ end ~}}

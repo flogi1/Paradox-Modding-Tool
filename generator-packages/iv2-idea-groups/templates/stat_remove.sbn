@@ -1,0 +1,9 @@
+	if = {
+		limit = { 
+			NOT = { has_variable = iv2_ideagroup_select_{{ g }}_1 }
+		}
+		remove_list_variable = {
+					name = iv2_statistics_list_{{ category }}
+					target = flag:iv2_stat_{{ g }}
+		}	
+	}

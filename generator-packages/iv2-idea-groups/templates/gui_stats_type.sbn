@@ -1,0 +1,271 @@
+	type iv2_ig_stats_{{ g }} = widget {
+		datacontext = "[GetScriptedGui('iv2_gui_stat_name_{{ g }}')]"
+		visible = "[And(EqualTo_string(Scope.GetFlagName, 'iv2_stat_{{ g }}'), GetScriptedGui('iv2_gui_stat_name_{{ g }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End))]"
+			size = { 490 400 }
+			using = layoutpolicy_expanding			
+			allow_outside = no
+			using = bg_lateralview
+			vbox = {
+				spacing = 6
+				
+				layoutpolicy_horizontal = expanding
+				
+				hbox = {										
+					
+					spacing = 5
+					
+						text_single = {
+							text = "iv2_ideagroup_title_{{ g }}"
+							default_format = "#overview_text"
+							
+							tooltipwidget = {
+										using = iv2_ideagroup_tt_{{ g }}
+									}
+							
+						}
+						button_default = {
+							size = { 20 20 }
+							datacontext = "[GetScriptedGui('iv2_gui_stat_show_{{ g }}')]"
+							onclick = "[ScriptedGui.Execute( GuiScope.SetRoot( GetPlayer .MakeScope ).End )]"
+							visible = "[GetScriptedGui('iv2_gui_stat_show_{{ g }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	
+							tooltipwidget = {
+									using = iv2_button_statistic_show_ig
+								}
+							
+							icon = {
+								size = { 20 20 }
+								parentanchor = center
+								texture = "gfx/interface/buttons/flats/change.dds"
+								texture_density = 2													
+
+								using = button_panel_tab_icon_effect
+								
+								modify_texture = {
+									using = color_new_gold_texture
+									blend_mode = add
+								}
+
+								glow = {
+									name = "drop_shadow"
+									glow_radius = 3
+									color = {0.0 0.0 0.0 1.0}
+									alpha = 0.8
+								}
+							
+							}
+						}
+						
+						button_default = {
+							size = { 20 20 }
+							datacontext = "[GetScriptedGui('iv2_gui_stat_hide_{{ g }}')]"
+							onclick = "[ScriptedGui.Execute( GuiScope.SetRoot( GetPlayer .MakeScope ).End )]"
+							visible = "[GetScriptedGui('iv2_gui_stat_hide_{{ g }}').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							
+							tooltipwidget = {
+									using = iv2_button_statistic_hide_ig
+								}
+	
+							icon = {
+								size = { 20 20 }
+								parentanchor = center
+								texture = "gfx/interface/buttons/flats/change.dds"
+								texture_density = 2
+
+								using = button_panel_tab_icon_effect
+								
+								modify_texture = {
+									using = color_new_gold_texture
+									blend_mode = add
+								}
+
+								glow = {
+									name = "drop_shadow"
+									glow_radius = 3
+									color = {0.0 0.0 0.0 1.0}
+									alpha = 0.8
+								}
+							
+							}
+						}
+					
+					}
+					
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_1')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_1').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetDesc]"
+							}
+						}
+					}
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_2')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_2').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetDesc]"
+							}
+						}
+					}
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_3')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_3').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetDesc]"
+							}
+						}
+					}
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_4')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_4').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetDesc]"
+							}
+						}
+					}
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_5')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_5').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetDesc]"
+							}
+						}
+					}
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_6')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_6').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetDesc]"
+							}
+						}
+					}
+					vbox = {
+						datacontext = "[GetScriptedGui('iv2_gui_stat_{{ g }}_7')]"
+						visible = "[GetScriptedGui('iv2_gui_stat_{{ g }}_7').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetName]"
+							}
+						}
+						hbox = {													
+							text_single = {
+								size = { -1 -1 }
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								default_format = "#overview_text"
+								text = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetDesc]"
+							}
+						}
+					}
+					expand = {}	
+				}
+			}

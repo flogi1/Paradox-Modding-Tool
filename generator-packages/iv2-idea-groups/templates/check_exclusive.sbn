@@ -1,0 +1,4 @@
+{{~ # Je Partner: dessen Auswahl-Block muss diese Gruppe im is_shown nennen (bis zur nächsten Zeile ohne Einrückung) ~}}
+{{~ for n in exclusive_numbers ~}}
+iv2_ideagroup_select_{{ category }}_{{ n }}_1 = \{(?:(?!\n\S)[\s\S])*?has_variable = iv2_ideagroup_select_{{ g }}_1(?![0-9]) => {{ category }}_{{ n }}
+{{~ end ~}}

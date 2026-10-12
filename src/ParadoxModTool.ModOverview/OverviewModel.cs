@@ -33,7 +33,7 @@ public sealed class OverviewMod
     /// <summary>Fehlermeldung, wenn der Changelog nicht lesbar war; zählt für den Release-Hinweis mit.</summary>
     public string? ReleaseStatusProblem { get; init; }
 
-    /// <summary>Workshop-ID: aus dem Register, sonst <c>remote_file_id</c> der klassischen Metadaten-Datei; <see langword="null"/>, wenn keine bekannt ist.</summary>
+    /// <summary>Workshop-ID: aus dem Register, sonst <c>remote_file_id</c> einer der klassischen .mod-Dateien (zuerst der angezeigten); <see langword="null"/>, wenn keine bekannt ist.</summary>
     public string? WorkshopId { get; init; }
 
     public required EffectiveLinks Links { get; init; }

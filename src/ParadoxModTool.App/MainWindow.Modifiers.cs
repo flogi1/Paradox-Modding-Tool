@@ -46,7 +46,7 @@ public partial class MainWindow
 
             // Formate und Script-Values sind in Millisekunden fertig; die Namen lesen die ganze Lokalisierung und folgen danach.
             ModifierValueSettings.SetIndex(index, scriptValues);
-            var names = await Task.Run(() => ModifierNameIndex.Build(settings, index.Names, gameRoots, modRoots, languages));
+            var names = await Task.Run(() => ModifierNameIndex.Build(settings, index.AllNames, gameRoots, modRoots, languages));
             if (version == _modifierFormatsVersion)
             {
                 ModifierValueSettings.SetNames(names);

@@ -96,6 +96,24 @@ public sealed class HotkeyCatalogTests
         Assert.Contains((HotkeyModifiers.Alt, "Down"), designer);
     }
 
+    [Fact]
+    public void CompatchDecisionShortcutsAreListed()
+    {
+        var compatch = HotkeyCatalog.Entries
+            .Where(entry => entry.Group == HotkeyGroup.Compatch && entry.SourceFile == "CompatchWindow.Detail.cs")
+            .Select(entry => (entry.TextId, entry.Modifiers, entry.Key))
+            .ToList();
+
+        Assert.Contains(("compatch.confirm", HotkeyModifiers.None, "O"), compatch);
+        Assert.Contains(("compatch.takeA", HotkeyModifiers.None, "A"), compatch);
+        Assert.Contains(("compatch.takeB", HotkeyModifiers.None, "B"), compatch);
+        Assert.Contains(("compatch.reset", HotkeyModifiers.None, "R"), compatch);
+        Assert.Contains(("compatch.compare", HotkeyModifiers.None, "C"), compatch);
+        Assert.Contains(("compatch.treePrevious", HotkeyModifiers.None, "Up"), compatch);
+        Assert.Contains(("compatch.treeNext", HotkeyModifiers.None, "Down"), compatch);
+        Assert.Equal("Vorschau: vorigen Eintrag im Baum wählen", SettingsTexts.HotkeyDescription("compatch.treePrevious"));
+    }
+
     private static string FindRepositoryRoot()
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)

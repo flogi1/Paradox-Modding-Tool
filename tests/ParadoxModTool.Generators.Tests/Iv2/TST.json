@@ -1,0 +1,91 @@
+{
+  "packageId": "iv2",
+  "key": "TST",
+  "head": {
+    "values": { "tag": "TST", "coa": "coa/TST.dds" },
+    "translations": {},
+    "children": {
+      "categories": [
+        {
+          "values": {}, "translations": {},
+          "children": {
+            "ideas": [
+              {
+                "values": { "name": "Iron \"Will\"", "desc": "First line\nsecond line" },
+                "translations": { "name": { "german": "Eiserner Wille" }, "desc": { "german": "Erste Zeile\nzweite \"Zeile\"" } },
+                "children": { "levels": [
+                  { "values": { "modifiers": "monthly_legitimacy = 0.1", "expensive": "no" }, "translations": {}, "children": {} }
+                ] }
+              },
+              {
+                "values": { "name": "Second Idea", "desc": "Desc two" },
+                "translations": {},
+                "children": { "levels": [
+                  { "values": { "modifiers": "a = 1\nb = 2", "expensive": "no" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "", "expensive": "yes" }, "translations": {}, "children": {} }
+                ] }
+              },
+              {
+                "values": { "name": "Third", "desc": "" },
+                "translations": {},
+                "children": { "levels": [
+                  { "values": { "modifiers": "", "expensive": "yes" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "", "expensive": "no" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "c = 3", "expensive": "no" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "", "expensive": "yes" }, "translations": {}, "children": {} }
+                ] }
+              }
+            ]
+          }
+        },
+        {
+          "values": {}, "translations": {},
+          "children": {
+            "ideas": [
+              {
+                "values": { "name": "Diplomacy", "desc": "Dip desc" },
+                "translations": { "name": { "french": "Diplomatie" }, "desc": { "french": "Desc fr" } },
+                "children": { "levels": [
+                  { "values": { "modifiers": "", "expensive": "no" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "d = 4", "expensive": "no" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "", "expensive": "no" }, "translations": {}, "children": {} },
+                  { "values": { "modifiers": "", "expensive": "no" }, "translations": {}, "children": {} }
+                ] }
+              }
+            ]
+          }
+        },
+        {
+          "values": {}, "translations": {},
+          "children": { "ideas": [] }
+        },
+        {
+          "values": {}, "translations": {},
+          "children": {
+            "ideas": [
+              {
+                "values": { "name": "Navy One", "desc": "Sea" },
+                "translations": {},
+                "children": { "levels": [
+                  { "values": { "modifiers": "", "expensive": "no" }, "translations": {}, "children": {} }
+                ] }
+              },
+              {
+                "values": { "name": "Navy Two", "desc": "More sea" },
+                "translations": {},
+                "children": { "levels": [
+                  { "values": { "modifiers": "e = 5", "expensive": "no" }, "translations": {}, "children": {} }
+                ] }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "modRoot": null,
+  "target": "mod",
+  "outputFolder": null,
+  "languages": [ "english", "german", "french" ],
+  "languageRules": { "extendEnglish": false, "copyEnglish": false, "englishForMissing": true }
+}

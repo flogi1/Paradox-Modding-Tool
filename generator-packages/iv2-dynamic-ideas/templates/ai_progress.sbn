@@ -1,0 +1,5 @@
+{{~ if disabled ~}}
+			#iv2_ga_select_national_idea_{{ id }} # {{ disabled_mark }}, in iv2_generic_action_list_no_ai
+{{~ else ~}}
+			iv2_ga_select_national_idea_{{ id }}
+{{~ end ~}}

@@ -1,0 +1,95 @@
+{{~
+# Hilfen für die IV2-Vorlagen (Port von iv2_generator.py).
+
+# Zahl der Ideen über alle Kategorien.
+func total_ideas
+  t = 0
+  for c in categories
+    t = t + c.ideas.size
+  end
+  ret t
+end
+
+# Ideen ohne Name oder Beschreibung (Warnung bei "Englisch auf alle Sprachen").
+func incomplete_ideas
+  n = 0
+  for c in categories
+    for i in c.ideas
+      if (i.name | string.strip) == "" || (i.desc | string.strip) == ""
+        n = n + 1
+      end
+    end
+  end
+  ret n
+end
+
+# Stufen-Endung wie LEVEL_SUFFIXES: 0 -> "", 1 -> "_1" ...
+func level_suffix(n)
+  if n == 0
+    ret ""
+  end
+  ret "_" + n
+end
+
+# Variablen zum Senken der Innovationskosten beim Abwählen der Stufen 2..4 (INNOVATION_DECREASE_VARS).
+func innovation_decrease(n)
+  if n == 1
+    ret "iv2_innovation_cost_increase"
+  end
+  ret "iv2_innovation_cost_decrease_x" + n
+end
+
+# Klick-Aktion eines Knopfs (gen_scripted_action_tooltip_lines), Zeilen mit Einrückung.
+func action_tooltip(indent, action)
+  s = indent + "scripted_action_tooltip = {\n"
+  s = s + indent + "\tclick_type = left\n"
+  s = s + indent + "\tclick_mode = confirm\n"
+  s = s + indent + "\taction_name = \"" + action + "\"\n"
+  s = s + indent + "\tactor = \"[Player]\"\n"
+  s = s + indent + "\tparameter = {\n"
+  s = s + indent + "\t\tparameter_name = \"target\"\n"
+  s = s + indent + "\t\tparameter_value = \"[Country.MakeScope]\"\n"
+  s = s + indent + "\t}\n"
+  s = s + indent + "}\n"
+  ret s + indent + "enabled = \"[PdxGuiWidget.IsUberButtonEnabled]\""
+end
+
+# Modifikator-Text einer Stufe, jede Zeile mit einem Tab eingerückt.
+func indent_lines(text)
+  ret "\t" + (text | string.strip | string.replace "\r\n" "\n" | string.replace "\n" "\n\t")
+end
+# IV2 AI chooser (historic): same values as iv2_ai_chooser_config.json (Idea Variation 2 Skripte/KI-Auswaehler)
+# (historic_order_decay; category_balance is fixed at 0.5 = square root). A PMT test compares them.
+historic_order_decay = 0.6
+
+# Square root by Newton's method (Scriban has no sqrt).
+func sqrt(x)
+  if x <= 0
+    ret 0
+  end
+  r = x
+  k = 0
+  while k < 40
+    r = (r + x / r) / 2
+    k = k + 1
+  end
+  ret r
+end
+
+# Weight of the idea at `position` (0 = first) in a category with `size` ideas; `mean` = mean size of the filled categories.
+# floor(100 * decay^position * sqrt(mean / size) + 0.5), at least 1.
+func historic_weight(position, size, mean)
+  w = 100
+  p = 0
+  while p < position
+    w = w * historic_order_decay
+    p = p + 1
+  end
+  w = math.floor(w * sqrt(mean / size) + 0.5)
+  if w < 1
+    ret 1
+  end
+  ret w
+end
+
+~}}

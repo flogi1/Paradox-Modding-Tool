@@ -1,0 +1,17 @@
+{{~ p =((condition ?? "") | string.strip) == "" ? "\t\t" : "\t\t\t" ~}}
+{{ p }}set_variable = {
+{{ p }}	name = iv2_nat_{{ id }}
+{{ p }}	value = flag:iv2_nat_{{ id }}
+{{ p + "}" }}
+{{~ if disabled ~}}
+{{ p }}#add_to_variable_list = { # {{ disabled_mark }}: not in the list, so no empty cell in the grid
+{{ p }}		#name = {{ list_name }}
+{{ p }}		#target = flag:iv2_nat_{{ id }}
+{{ p + "#}" }}
+{{ p }}remove_list_variable = { name = {{ list_name }} target = flag:iv2_nat_{{ id }} } # cleans saves from before 2026-10-10
+{{~ else ~}}
+{{ p }}add_to_variable_list = {
+{{ p }}		name = {{ list_name }}
+{{ p }}		target = flag:iv2_nat_{{ id }}
+{{ p + "}" }}
+{{~ end ~}}

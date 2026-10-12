@@ -1,0 +1,15 @@
+if = {
+	limit = { has_or_had_tag = {{ tag }} }
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+	set_variable = {
+		name = iv2_nat_{{ tag }}_{{ i.number }}
+		value = flag:iv2_nat_{{ tag }}_{{ i.number }}
+	}
+	add_to_variable_list = {
+		name = iv2_historic_ideas_list_{{ c.key }}
+		target = flag:iv2_nat_{{ tag }}_{{ i.number }}
+	}
+{{~ end ~}}
+{{~ end ~}}
+}

@@ -10,4 +10,7 @@ public sealed class PaneSessionState
     /// bzw. der Arbeitsbereich leer war.
     /// </summary>
     public int ActiveDocumentIndex { get; set; } = -1;
+
+    /// <summary>Sortierung der Tabs dieses Arbeitsbereichs: <c>Manual</c> (Ziehen, Standard), <c>Name</c>, <c>Category</c> oder <c>Origin</c>.</summary>
+    public string TabSort { get; set; } = "Manual";
 }

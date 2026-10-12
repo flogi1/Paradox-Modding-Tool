@@ -1,0 +1,7 @@
+{{ for i in ideas ~}}
+sw_modifier_{{ tag }}_{{ i.number }} = {
+{{ if i.modifiers != "" ~}}
+{{ "\t" + (i.modifiers | string.replace "\n" "\n\t") }}
+{{ end ~}}
+}
+{{ end ~}}

@@ -1,0 +1,7 @@
+{{ func total_ideas
+  t = 0
+  for c in categories
+    t = t + c.ideas.size
+  end
+  ret t
+end }}

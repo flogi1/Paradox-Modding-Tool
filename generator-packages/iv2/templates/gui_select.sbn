@@ -1,0 +1,87 @@
+##########################################################################################################################
+####### {{ tag }} National Ideas - Select
+##########################################################################################################################
+
+types iv2_historic_idea_{{ tag }}_select_adm {
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+	type iv2_historic_idea_select_{{ tag }}_{{ i.number }} = widget {
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_nat_{{ tag }}_{{ i.number }}')]"
+		position = { 5 5 }
+		size = { 335 78 }
+
+		icon = {
+			texture = "gfx/interface/iv2_glow_frame.dds"
+			size = { 350 96 }
+			position = { -12 -7 }
+			texture_density = 2
+			alpha = 0.8
+			visible = "[And3(GetVariableSystem.Exists('iv2_search_historic_idea_{{ c.key }}'), Not(StringIsEmpty(GetVariableSystem.Get('iv2_search_historic_idea_{{ c.key }}'))), StringContains(GetModifier('national_idea_modifier_{{ tag }}_{{ i.number }}').GetDesc, GetVariableSystem.Get('iv2_search_historic_idea_{{ c.key }}')))]"
+		}
+
+		card_header_button_04 = {
+			size = { 325 78 }
+			position = { 0 0 }
+{{ action_tooltip "\t\t\t" ("iv2_ga_select_historic_" + tag + "_" + i.number) }}
+
+			tooltipwidget = {
+				using = iv_2_historic_idea_select_tt_{{ tag }}_{{ i.number }}
+			}
+
+			icon = {
+				size = { 335 86 }
+				parentanchor = center
+				texture = "gfx/interface/national_idea_selection_button.dds"
+			}
+
+			scrollarea = {
+				size = { 325 65 }
+				using = agenda_scrollarea_setup
+
+				scrollwidget = {
+					vbox = {
+						hbox = {
+							text_single = {
+								using = layoutpolicy_expanding
+								autoresize = yes
+								fontsize = 13
+								maximumsize = { 309 30 }
+								default_format = "#explanation_link_overview"
+								text = "[GetModifier('national_idea_modifier_{{ tag }}_{{ i.number }}').GetName]"
+							}
+						}
+						text_single = {
+							using = layoutpolicy_expanding
+							autoresize = yes
+							fontsize = 13
+							maximumsize = { 309 -1 }
+							default_format = "#overview_text"
+							text = "[GetModifier('national_idea_modifier_{{ tag }}_{{ i.number }}').GetDesc]"
+						}
+					}
+				}
+			}
+		}
+
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/coa/{{ tag }}.dds"
+			texture_density = 2
+			tooltipwidget = {
+				using = iv2_{{ tag }}_flag_tt
+			}
+		}
+		icon = {
+			size = { 36 24 }
+			parentanchor = right
+			position = { -12 0 }
+			texture = "gfx/interface/component_decoration/flag_frames/frame_180x120.dds"
+			texture_density = 2
+		}
+	}
+
+{{~ end ~}}
+{{~ end ~}}
+} # Close types

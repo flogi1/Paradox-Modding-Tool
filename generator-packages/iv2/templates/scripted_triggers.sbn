@@ -1,0 +1,13 @@
+###################################################
+###### Dynamic Nat Idea scripted Triggers {{ tag }}
+###################################################
+
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ for l in i.levels ~}}
+iv2_sct_nat_idea_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
+}
+
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}

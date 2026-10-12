@@ -1,3 +1,4 @@
+using ParadoxModTool.GameProfiles;
 using ParadoxModTool.VanillaDiff;
 
 namespace ParadoxModTool.ModCompat;
@@ -5,7 +6,10 @@ namespace ParadoxModTool.ModCompat;
 /// <summary>Bewertet alle Beiträge zu einem Schlüssel (siehe Tabelle im Plan, Task 6).</summary>
 internal static class KeyClassifier
 {
-    public static CompatFinding? Classify(KeyGroup group)
+    /// <param name="firstWinsInLoadOrder">Victoria 3: bei "zuerst geladen gewinnt" zählt die Ladereihenfolge der Pfade, nicht der Playset-Rang (gemessen 2026-10-11).</param>
+    /// <param name="injectAppends">INJECT hängt an (Victoria 3): gleiche Teilschlüssel zweier INJECTs haben keinen bekannten Gewinner.</param>
+    /// <param name="vanillaFirst">Victoria 3: die zuerst geladene Vanilla-Definition des Schlüssels; lädt sie vor allen Mods, gewinnt sie.</param>
+    public static CompatFinding? Classify(KeyGroup group, bool firstWinsInLoadOrder = false, bool injectAppends = false, CompatContribution? vanillaFirst = null)
     {
         var all = group.Contributions
             .OrderBy(c => c.Participant.Rank)
@@ -41,7 +45,17 @@ internal static class KeyClassifier
         switch (group.Behavior)
         {
             case OverrideBehavior.FirstWins:
-                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingFirstWins(group.Key, names, all[0].Participant.Name), all[0], CompatSuggestion.NeedsCompatch);
+            {
+                var first = firstWinsInLoadOrder
+                    ? all.OrderBy(c => c.RelativePath, GameLoadOrder.Instance).ThenByDescending(c => c.Participant.Rank).First()
+                    : all[0];
+                if (vanillaFirst is not null && GameLoadOrder.Instance.Compare(vanillaFirst.RelativePath, first.RelativePath) < 0)
+                {
+                    first = vanillaFirst;
+                }
+
+                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingFirstWins(group.Key, names, first.Participant.Name), first, CompatSuggestion.NeedsCompatch);
+            }
             case OverrideBehavior.LastWins:
             case OverrideBehavior.PartialKeys:
                 return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingLastWins(group.Key, names, all[^1].Participant.Name), all[^1], CompatSuggestion.NeedsCompatch);
@@ -55,11 +69,11 @@ internal static class KeyClassifier
             }
 
             default:
-                return ClassifyPerKey(group, all, names, (kind, severity, message, winner, suggestion, extra) => Make(kind, severity, message, winner, suggestion, extra));
+                return ClassifyPerKey(group, all, names, injectAppends, (kind, severity, message, winner, suggestion, extra) => Make(kind, severity, message, winner, suggestion, extra));
         }
     }
 
-    private static CompatFinding ClassifyPerKey(KeyGroup group, List<CompatContribution> all, string names, Func<CompatKind, CompatSeverity, string, CompatContribution?, CompatSuggestion, bool, CompatFinding> make)
+    private static CompatFinding ClassifyPerKey(KeyGroup group, List<CompatContribution> all, string names, bool injectAppends, Func<CompatKind, CompatSeverity, string, CompatContribution?, CompatSuggestion, bool, CompatFinding> make)
     {
         var replaces = all.Where(c => new OverrideKey(c.Operator, string.Empty).IsReplace).ToList();
         var injects = all.Where(c => new OverrideKey(c.Operator, string.Empty).IsInject).ToList();
@@ -90,6 +104,12 @@ internal static class KeyClassifier
 
         var pool = injects.Concat(plains).ToList();
         var clashes = OverlappingChildKeys(pool);
+        if (clashes.Count > 0 && injectAppends)
+        {
+            // Victoria 3 (Wiki): INJECT hängt an, beide Werte stehen danach im Eintrag; welcher gilt, ist nicht gemessen.
+            return make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingChildAppend(names, string.Join(", ", clashes), group.Key), null, CompatSuggestion.NeedsCompatch, true);
+        }
+
         if (clashes.Count > 0)
         {
             // INJECT überschreibt vorhandene Teilschlüssel, das zuletzt angewendete gewinnt (gemessen 2026-10-02 in Europa Universalis V mit einem

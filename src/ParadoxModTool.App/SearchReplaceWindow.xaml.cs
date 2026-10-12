@@ -175,6 +175,7 @@ public partial class SearchReplaceWindow : Window
         FavoritesList.ToolTip = SearchTexts.FavoritesTip;
         SearchLabel.Text = SearchTexts.SearchLabel;
         ReplaceLabel.Text = SearchTexts.ReplaceLabel;
+        SwapButton.ToolTip = SearchTexts.SwapTip;
         MatchCaseCheckBox.Content = SearchTexts.MatchCase;
         WholeWordCheckBox.Content = SearchTexts.WholeWord;
         IgnoreFormattingCheckBox.Content = SearchTexts.IgnoreFormatting;
@@ -323,6 +324,14 @@ public partial class SearchReplaceWindow : Window
         {
             FolderTextBox.Text = dialog.SelectedPath;
         }
+    }
+
+    /// <summary>Tauscht Such- und Ersetzen-Text (wie in Notepad++); der Fokus bleibt im Suchfeld.</summary>
+    private void Swap_Click(object sender, RoutedEventArgs e)
+    {
+        (SearchTextBox.Text, ReplaceTextBox.Text) = (ReplaceTextBox.Text, SearchTextBox.Text);
+        SearchTextBox.Focus();
+        SearchTextBox.CaretIndex = SearchTextBox.Text.Length;
     }
 
     private void AddFavorite_Click(object sender, RoutedEventArgs e)

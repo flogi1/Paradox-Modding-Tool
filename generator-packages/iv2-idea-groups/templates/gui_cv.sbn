@@ -1,0 +1,288 @@
+	type iv2_cv_ig_{{ g }} = widget {
+		visible = "[EqualTo_string(Scope.GetFlagName, 'iv2_{{ g }}')]"
+		size = { 470 36 }
+		hbox = {
+			minimumsize = { 470 36 }
+			margin = { 4 2 }
+			spacing = 6
+			icon = {
+				using = iv2_cv_row_icon
+				texture = "gfx/interface/icons/ideagroups/ig_icon_{{ g }}.dds"
+			}
+			text_single = {
+				align = left|nobaseline
+				text = "iv2_ideagroup_title_{{ g }}"
+			}
+			expand = {}
+			hbox = {
+				spacing = 2
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_1').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_1').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_2').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_2').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_3').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_3').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_4').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_4').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_5').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_5').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_6').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_6').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+				icon = {
+					using = iv2_cv_pip_on
+					visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_7').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}
+				icon = {
+					using = iv2_cv_pip_off
+					visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_7').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+				}
+			}
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_icon" {
+						icon = {
+							using = tooltip_title_icon_size
+							texture = "gfx/interface/icons/ideagroups/ig_icon_{{ g }}.dds"
+						}
+					}
+					blockoverride "title_text" {
+						text = "iv2_ideagroup_title_{{ g }}"
+					}
+					blockoverride "concept_link" {
+						text = "IV2_CV_CAT_{{ category | string.upcase }}"
+					}
+					blockoverride "tooltip_content" {
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							spacing = 4
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_1').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_1').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetDesc]"
+									}
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_2').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_2').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetDesc]"
+									}
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_3').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_3').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetDesc]"
+									}
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_4').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_4').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetDesc]"
+									}
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_5').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_5').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetDesc]"
+									}
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_6').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_6').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetDesc]"
+									}
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 6
+								icon = {
+									using = iv2_cv_pip_on
+									visible = "[GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_7').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+								}
+								icon = {
+									using = iv2_cv_pip_off
+									visible = "[Not(GetScriptedGui('iv2_sgui_cv_ig_{{ g }}_7').IsValid(GuiScope.SetRoot(Country.MakeScope).End))]"
+								}
+								icon = {
+									size = { 24 24 }
+									texture = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetIcon]"
+								}
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										align = left|nobaseline
+										text = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetName]"
+									}
+									TooltipRowList = {
+										textcontext = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetDesc]"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}

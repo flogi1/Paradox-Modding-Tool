@@ -1,0 +1,11 @@
+{{ for c in categories -}}
+{{ for i in c.ideas -}}
+{{ for l in i.levels -}}
+national_idea_modifier_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
+{{ if l.modifiers != "" -}}
+	{{ l.modifiers }}
+{{ end -}}
+}
+{{ end -}}
+{{ end -}}
+{{ end -}}

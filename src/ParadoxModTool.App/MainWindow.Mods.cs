@@ -4,6 +4,10 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using ParadoxModTool.Editor;
 using ParadoxModTool.Mods;
+using System.Windows.Controls.Primitives;
+using ParadoxModTool.Editor.Controls;
+using ParadoxModTool.Settings;
+using Controls = System.Windows.Controls;
 using MessageBox = System.Windows.MessageBox;
 
 namespace ParadoxModTool.App;
@@ -46,6 +50,27 @@ public partial class MainWindow
             };
         }
 
+        // Feste Wahl aus der Sitzung; beim ersten Start mit dieser Funktion wird die gerade erkannte Mod fest gewählt.
+        _mods.Choice = _activeModChoice;
+        RefreshActiveMod();
+        if (_activeModChoice is null)
+        {
+            SetActiveModChoice(ActiveModChoice.Initial(null, _mods.ActiveMod));
+        }
+    }
+
+    /// <summary>Gespeicherte Wahl der aktiven Mod (Mod-Id oder <see cref="ActiveModChoice.Automatic"/>), siehe <see cref="AppSessionState.ActiveModChoice"/>.</summary>
+    private string? _activeModChoice;
+
+    /// <summary>Wählt die aktive Mod fest (Mod-Id) oder "Automatisch" und erkennt neu.</summary>
+    private void SetActiveModChoice(string choice)
+    {
+        _activeModChoice = choice;
+        if (_mods is not null)
+        {
+            _mods.Choice = choice;
+        }
+
         RefreshActiveMod();
     }
 
@@ -63,11 +88,13 @@ public partial class MainWindow
 
         var unknownFolder = _mods.Refresh(candidates, vanillaRoots);
 
-        ModStatusText.Text = _mods.ActiveMod is { } mod
-            ? $"Mod: {mod.Name}{ProjectSuffix(mod, (_modSourcePane ?? PanelPane).CurrentFilePath)}"
+        var name = _mods.ActiveMod is { } mod
+            ? mod.Name + ProjectSuffix(mod, (_modSourcePane ?? PanelPane).CurrentFilePath)
             : _mods.UnmanagedFolder is { } unmanaged
-                ? MainTexts.ModStatusUnmanaged(Path.GetFileName(unmanaged))
-                : "Mod: —";
+                ? MainTexts.ModStatusUnmanagedName(Path.GetFileName(unmanaged))
+                : "—";
+        ModStatusText.Text = (_mods.ChoiceLost ? "⚠ " + MainTexts.ModChoiceLost + " · " : string.Empty)
+            + (_mods.IsAutomatic ? MainTexts.ModStatusAutomatic(name) : MainTexts.ModStatusFixed(name));
         if (_mods.Registry.LoadWarning is { } warning)
         {
             ModStatusText.Text += "   ⚠ " + warning;
@@ -258,5 +285,75 @@ public partial class MainWindow
         _vanillaDiffWindow?.OpenFilePair(left, right, leftLabel, rightLabel);
     }
 
-    private void ModStatus_Click(object sender, MouseButtonEventArgs e) => OpenModsWindow_Click(sender, e);
+    /// <summary>Klick auf "Mod: …" in der Statusleiste: Auswahl der aktiven Mod (aufgeklappt, Suchfeld oben), dazu "Mods verwalten".</summary>
+    private void ModStatus_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (_mods is null)
+        {
+            return;
+        }
+
+        var popup = new Popup { PlacementTarget = ModStatusText, Placement = PlacementMode.Top, StaysOpen = false, AllowsTransparency = false };
+        var choice = new SearchableChoice(searchWidth: 140, choiceWidth: 320);
+        var items = new List<(string Text, object? Tag)> { (MenuTexts.ModsAutomatic, ActiveModChoice.Automatic) };
+        items.AddRange(ChoosableMods().Select(m => (m.Name, (object?)m.Id)));
+        choice.SetItems(items, _mods.IsAutomatic && !_mods.ChoiceLost ? ActiveModChoice.Automatic : _mods.Choice, pinned: 1);
+        choice.SelectionChanged += (_, _) =>
+        {
+            if (choice.SelectedTag is string picked && picked != _activeModChoice)
+            {
+                SetActiveModChoice(picked);
+            }
+
+            popup.IsOpen = false;
+        };
+        var manage = new Controls.Button { Content = new Controls.TextBlock { Text = MenuTexts.ModsManage }, Padding = new Thickness(8, 1, 8, 1), Margin = new Thickness(6, 0, 0, 0) };
+        manage.Click += (_, _) =>
+        {
+            popup.IsOpen = false;
+            OpenModsWindow_Click(manage, new RoutedEventArgs());
+        };
+        var row = new Controls.StackPanel { Orientation = Controls.Orientation.Horizontal, Margin = new Thickness(8) };
+        row.Children.Add(choice);
+        row.Children.Add(manage);
+        var border = new Controls.Border { Child = row, BorderThickness = new Thickness(1) };
+        border.SetResourceReference(Controls.Border.BackgroundProperty, "Theme.PanelBackground");
+        border.SetResourceReference(Controls.Border.BorderBrushProperty, "Theme.ControlBorder");
+        popup.Child = border;
+        popup.IsOpen = true;
+
+        // Liste gleich aufklappen; das Suchfeld oben darin hat dann den Fokus.
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () => choice.Choice.IsDropDownOpen = true);
+    }
+
+    /// <summary>Angelegte Mods des Spiels mit vorhandenem Ordner, nach Namen sortiert (Auswahl in Statusleiste und Menü).</summary>
+    private IReadOnlyList<ModInfo> ChoosableMods() =>
+        _mods?.Registry.Mods.Where(m => m.Paths.Any(Directory.Exists)).OrderBy(m => m.Name, StringComparer.CurrentCultureIgnoreCase).ToList()
+        ?? (IReadOnlyList<ModInfo>)Array.Empty<ModInfo>();
+
+    /// <summary>Menü "Mods": "Mods verwalten", dann "Automatisch (offene Datei)" und alle Mods; die gültige Wahl hat ein Häkchen.</summary>
+    private void ModsMenu_SubmenuOpened(object sender, RoutedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, ModsMenuItem))
+        {
+            return;
+        }
+
+        ModsMenuItem.Items.Clear();
+        var manage = new Controls.MenuItem { Header = MenuTexts.ModsManage, ToolTip = MenuTexts.ModsManageTip };
+        manage.Click += OpenModsWindow_Click;
+        ModsMenuItem.Items.Add(manage);
+        ModsMenuItem.Items.Add(new Controls.Separator());
+        var automatic = _mods is null || (_mods.IsAutomatic && !_mods.ChoiceLost);
+        var auto = new Controls.MenuItem { Header = MenuTexts.ModsAutomatic, IsCheckable = true, IsChecked = automatic, ToolTip = MenuTexts.ModsAutomaticTip };
+        auto.Click += (_, _) => SetActiveModChoice(ActiveModChoice.Automatic);
+        ModsMenuItem.Items.Add(auto);
+        foreach (var mod in ChoosableMods())
+        {
+            var id = mod.Id;
+            var item = new Controls.MenuItem { Header = mod.Name.Replace("_", "__"), IsCheckable = true, IsChecked = !automatic && _mods?.ActiveMod?.Id == id };
+            item.Click += (_, _) => SetActiveModChoice(id);
+            ModsMenuItem.Items.Add(item);
+        }
+    }
 }

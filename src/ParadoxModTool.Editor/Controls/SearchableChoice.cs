@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using ParadoxModTool.Settings;
 
 namespace ParadoxModTool.Editor.Controls;
@@ -10,34 +12,55 @@ namespace ParadoxModTool.Editor.Controls;
 public sealed record ChoiceItem(string Text, object? Tag, bool Enabled = true, object? ToolTip = null);
 
 /// <summary>
-/// Auswahlliste mit eigenem Suchfeld davor, für lange Listen (Nutzerregel: lange Dropdowns bekommen immer ein Suchfeld). Das Suchfeld
-/// filtert die Einträge als Teilstring ohne Groß-/Kleinschreibung; die ersten <c>pinned</c> Einträge (z.B. "Alle Länder") und der gewählte
-/// Eintrag bleiben immer sichtbar. Enter wählt den ersten wählbaren Treffer, Escape leert die Suche. <see cref="SelectionChanged"/> kommt nur,
-/// wenn der Nutzer wählt, nicht beim Füllen oder Filtern.
+/// Auswahlliste mit Suchfeld oben im aufgeklappten Teil, für lange Listen (Nutzerregel: lange Dropdowns bekommen immer ein Suchfeld). Beim
+/// Aufklappen liegt der Fokus im Suchfeld; es filtert die Einträge als Teilstring ohne Groß-/Kleinschreibung; die ersten <c>pinned</c> Einträge
+/// (z.B. "Alle Länder") und der gewählte Eintrag bleiben immer sichtbar. Enter wählt den ersten wählbaren Treffer, Escape leert die Suche, beim
+/// Zuklappen wird sie geleert. <see cref="SelectionChanged"/> kommt nur, wenn der Nutzer wählt, nicht beim Füllen oder Filtern.
 /// Die Einträge sind <see cref="ChoiceItem"/>-Daten (angezeigt über <c>DisplayMemberPath</c>): ComboBoxItems mit TextBlock als Inhalt ließen
 /// Fenster mit SizeToContent endlos wachsen (GUI-Bausteine Teil 1). Unterstriche bleiben sichtbar, weil die Theme-Vorlagen keine Zugriffstasten
 /// lesen. Die Liste virtualisiert, damit auch Tausende Einträge (Modifier) flüssig bleiben.
 /// </summary>
 public sealed class SearchableChoice : StackPanel
 {
+    private readonly Grid _searchHost;
     private IReadOnlyList<ChoiceItem> _items = Array.Empty<ChoiceItem>();
+    private bool _searchPlaced;
     private int _pinned;
     private object? _selected;
     private bool _updating;
 
+    /// <summary><paramref name="searchWidth"/>: Mindestbreite des Suchfelds im aufgeklappten Teil; <paramref name="choiceWidth"/>: Breite der Liste.</summary>
     public SearchableChoice(double searchWidth = 90, double choiceWidth = 180)
     {
         Orientation = Orientation.Horizontal;
-        Search = new TextBox { Width = searchWidth, Margin = new Thickness(0, 0, 4, 0), VerticalContentAlignment = VerticalAlignment.Center, ToolTip = SettingsTexts.ListSearchTip };
-        Choice = new ComboBox { Width = choiceWidth, DisplayMemberPath = nameof(ChoiceItem.Text) };
+        Search = new TextBox { VerticalContentAlignment = VerticalAlignment.Center, ToolTip = SettingsTexts.ListSearchTip, IsTabStop = true };
+        var placeholder = new TextBlock { Text = SettingsTexts.ListSearchPlaceholder, IsHitTestVisible = false, Margin = new Thickness(5, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        placeholder.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
+        _searchHost = new Grid { MinWidth = searchWidth, Margin = new Thickness(4) };
+        _searchHost.Children.Add(Search);
+        _searchHost.Children.Add(placeholder);
+        Choice = new ComboBox { Width = choiceWidth, DisplayMemberPath = nameof(ChoiceItem.Text), IsTextSearchEnabled = false };
         Choice.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(VirtualizingStackPanel)));
         VirtualizingPanel.SetIsVirtualizing(Choice, true);
         VirtualizingPanel.SetVirtualizationMode(Choice, VirtualizationMode.Recycling);
         ScrollViewer.SetCanContentScroll(Choice, true);
         Choice.ItemContainerStyle = ContainerStyle();
-        Children.Add(Search);
         Children.Add(Choice);
-        Search.TextChanged += (_, _) => Rebuild();
+        Choice.Loaded += (_, _) => PlaceSearchInDropDown();
+        Choice.DropDownOpened += (_, _) =>
+        {
+            PlaceSearchInDropDown();
+            ClearSearch();
+            // Nach dem Öffnen setzt die ComboBox den Fokus auf ihren Eintrag; danach ins Suchfeld.
+            Dispatcher.BeginInvoke(DispatcherPriority.Input, () => Keyboard.Focus(Search));
+        };
+        // Jedes Aufklappen beginnt mit voller Liste; beim Zuklappen leeren, damit die geschlossene Liste nicht gefiltert bleibt.
+        Choice.DropDownClosed += (_, _) => ClearSearch();
+        Search.TextChanged += (_, _) =>
+        {
+            placeholder.Visibility = Search.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            Rebuild();
+        };
         Search.PreviewKeyDown += (_, e) => e.Handled = PressInSearch(e.Key);
         Choice.SelectionChanged += (_, _) =>
         {
@@ -75,12 +98,37 @@ public sealed class SearchableChoice : StackPanel
         Rebuild();
     }
 
-    /// <summary>Tastendruck im Suchfeld: Enter wählt den ersten Treffer, Escape leert die Suche. Liefert, ob die Taste verarbeitet wurde.</summary>
+    /// <summary>
+    /// Tastendruck im Suchfeld: Enter wählt den ersten Treffer und schließt die Liste, Pfeil nach unten geht in die Liste, Escape leert die Suche
+    /// bzw. schließt die Liste, wenn die Suche schon leer ist. Liefert, ob die Taste verarbeitet wurde.
+    /// </summary>
     public bool PressInSearch(Key key)
     {
-        if (key == Key.Escape && Search.Text.Length > 0)
+        if (key == Key.Escape)
         {
-            Search.Text = string.Empty;
+            if (Search.Text.Length > 0)
+            {
+                Search.Text = string.Empty;
+                return true;
+            }
+
+            if (Choice.IsDropDownOpen)
+            {
+                Choice.IsDropDownOpen = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (key == Key.Down && Choice.IsDropDownOpen && Choice.Items.Count > 0)
+        {
+            var index = Math.Max(0, Choice.SelectedIndex);
+            if (Choice.ItemContainerGenerator.ContainerFromIndex(index) is ComboBoxItem item)
+            {
+                item.Focus();
+            }
+
             return true;
         }
 
@@ -94,10 +142,60 @@ public sealed class SearchableChoice : StackPanel
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
 
+            Choice.IsDropDownOpen = false;
             return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Hängt das Suchfeld oben in den aufklappenden Teil der ComboBox (Popup <c>PART_Popup</c> der Vorlage): beim PMT-Theme in dessen Rahmen
+    /// über die Liste, bei anderen Vorlagen mit eigenem Rahmen um den ganzen Inhalt.
+    /// </summary>
+    private void PlaceSearchInDropDown()
+    {
+        if (_searchPlaced)
+        {
+            return;
+        }
+
+        Choice.ApplyTemplate();
+        if (Choice.Template?.FindName("PART_Popup", Choice) is not Popup { Child: { } content } popup)
+        {
+            return;
+        }
+
+        _searchPlaced = true;
+        if (content is Border { Child: { } inner } border)
+        {
+            border.Child = null;
+            border.Child = WithSearch(inner);
+            return;
+        }
+
+        popup.Child = null;
+        var frame = new Border { BorderThickness = new Thickness(1), Child = WithSearch(content) };
+        frame.SetResourceReference(Border.BackgroundProperty, "Theme.PanelBackground");
+        frame.SetResourceReference(Border.BorderBrushProperty, "Theme.ControlBorder");
+        popup.Child = frame;
+    }
+
+    private void ClearSearch()
+    {
+        if (Search.Text.Length > 0)
+        {
+            Search.Text = string.Empty;
+        }
+    }
+
+    private DockPanel WithSearch(UIElement list)
+    {
+        var panel = new DockPanel { LastChildFill = true };
+        DockPanel.SetDock(_searchHost, Dock.Top);
+        panel.Children.Add(_searchHost);
+        panel.Children.Add(list);
+        return panel;
     }
 
     /// <summary>Freigabe und Tooltip je Eintrag; baut auf der Theme-Vorlage für ComboBoxItem auf, sofern die Anwendung eine hat.</summary>

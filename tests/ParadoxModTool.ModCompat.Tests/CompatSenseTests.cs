@@ -72,6 +72,53 @@ public class CompatSenseTests : CompatTestBase
         Assert.Equal(CompatSuggestion.UseInject, change.Suggestion);
     }
 
+    /// <summary>Regeln nach Art von Victoria 3: Präfixe nur in Ordnern der Wiki-Liste, nur REPLACE in scripted_effects, INJECT hängt an.</summary>
+    private List<CompatFinding> SenseVic3(string folder, string vanillaText, string mineText)
+    {
+        var vanilla = Vanilla();
+        var mine = Mod("Mine", 2);
+        Put(vanilla, folder + "a.txt", vanillaText);
+        Put(mine, folder + "a.txt", mineText);
+        var rules = new OverrideRules(new[]
+        {
+            new OverrideRule("common", OverrideBehavior.LastWins, Operators: Array.Empty<string>()),
+            new OverrideRule("common/buildings", OverrideBehavior.PerKey),
+            new OverrideRule("common/scripted_effects", OverrideBehavior.PerKey, Operators: new[] { "REPLACE", "TRY_REPLACE", "REPLACE_OR_CREATE" }),
+        })
+        { InjectAppends = true };
+        return Sense(CompatAnalyzer.Analyze(new CompatRequest { Participants = new[] { vanilla, mine }, Rules = rules, FocusId = "Mine" })).ToList();
+    }
+
+    [Fact]
+    public void Appending_game_suggests_replace_for_a_value_change()
+    {
+        var finding = Assert.Single(SenseVic3("common/buildings/", "farm = { cost = 10 }\n", "farm = { cost = 20 }\n"));
+        Assert.Equal(CompatKind.ReplaceNeeded, finding.Kind);
+        Assert.Equal(CompatSuggestion.UseReplace, finding.Suggestion);
+    }
+
+    [Fact]
+    public void Appending_game_still_suggests_inject_for_a_pure_addition()
+    {
+        var finding = Assert.Single(SenseVic3("common/buildings/", "farm = { cost = 10 }\n", "farm = { cost = 10 upkeep = 2 }\n"));
+        Assert.Equal(CompatKind.AdditiveOnly, finding.Kind);
+        Assert.Equal(CompatSuggestion.UseInject, finding.Suggestion);
+    }
+
+    [Fact]
+    public void Folder_without_operators_gets_no_operator_suggestion()
+    {
+        var findings = SenseVic3("common/coat_of_arms/", "farm = { cost = 10 }\n", "farm = { cost = 10 upkeep = 2 }\n");
+        Assert.DoesNotContain(findings, f => f.Kind is CompatKind.ReplaceNeeded or CompatKind.AdditiveOnly or CompatKind.ValueChangeOnly);
+    }
+
+    [Fact]
+    public void Replace_only_folder_suggests_replace_for_a_pure_addition()
+    {
+        var finding = Assert.Single(SenseVic3("common/scripted_effects/", "farm = { cost = 10 }\n", "farm = { cost = 10 upkeep = 2 }\n"));
+        Assert.Equal(CompatKind.ReplaceNeeded, finding.Kind);
+    }
+
     [Fact]
     public void Entry_with_only_added_child_keys_suggests_inject()
     {

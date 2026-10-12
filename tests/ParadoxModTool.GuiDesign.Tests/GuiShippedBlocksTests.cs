@@ -15,6 +15,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void ShippedBlocks_LoadRenderAndParse(string game)
     {
         foreach (var block in Shipped(game))
@@ -33,6 +34,9 @@ public class GuiShippedBlocksTests
     [InlineData("ck3", "Fenster", "Fenster", "Fenster mit Tabs", "Scrollbare Liste", "Tab-Leiste")]
     [InlineData("ck3", "Bedienelemente", "Checkbox", "Dropdown", "Knopf mit Icon", "Standard-Knopf", "Suchfeld")]
     [InlineData("ck3", "Anzeige", "Charakterporträt", "Fortschrittsbalken", "Icon mit Tooltip", "Modifier-Tooltip", "Trennlinie", "Überschrift und Text", "Wappen")]
+    [InlineData("vic3", "Fenster", "Fenster", "Fenster mit Tabs", "Scrollbare Liste", "Tab-Leiste")]
+    [InlineData("vic3", "Bedienelemente", "Checkbox", "Dropdown", "Knopf mit Icon", "Standard-Knopf", "Suchfeld")]
+    [InlineData("vic3", "Anzeige", "Charakterporträt", "Flagge", "Fortschrittsbalken", "Icon mit Tooltip", "Modifier-Tooltip", "Trennlinie", "Überschrift und Text")]
     public void Group_HasExactlyTheseBlocks(string game, string group, params string[] names)
     {
         Assert.Equal(
@@ -43,6 +47,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void ShippedBlocks_AreSixteenPlusEmptyFile(string game)
     {
         Assert.Equal(16, Shipped(game).Count);
@@ -72,6 +77,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void ShippedBlocks_RenderWithZeroAndTwoEntries(string game)
     {
         foreach (var block in Shipped(game))
@@ -91,6 +97,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void ShippedBlocks_InsertAsChild(string game)
     {
         foreach (var block in Shipped(game))
@@ -110,6 +117,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void Requires_AreUsedInBody(string game)
     {
         foreach (var block in Shipped(game))
@@ -126,6 +134,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void Textures_ExistInVanilla(string game)
     {
         var vanilla = VanillaGui.For(game);
@@ -147,6 +156,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void Models_ExistInVanilla(string game)
     {
         var vanilla = VanillaGui.For(game);
@@ -197,6 +207,31 @@ public class GuiShippedBlocksTests
         Assert.Equal(3, Count(plain, "onclick"));
     }
 
+    [Theory]
+    [InlineData("eu5")]
+    [InlineData("ck3")]
+    [InlineData("vic3")]
+    public void TabsWithSubtabBar_SetsTheStartSubtabWhenTheWindowOpens(string game)
+    {
+        var block = Shipped(game).Single(b => b.Name == "Fenster mit Tabs");
+        var values = GuiBlockValues.Defaults(block);
+        values.Repeats["tabs"][0].Resize(block, "tabs.sub", 1);
+
+        var text = GuiBlockRenderer.Render(block, values);
+
+        Assert.Contains("on_start = \"[GetVariableSystem.Set( 'my_window_tab_1', 'tab_1_sub_1' )]\"", text);
+        Assert.Empty(GuiParser.Parse(text).Diagnostics);
+    }
+
+    /// <summary>Victoria 3: divider_clean ist schon 100 % breit; eine Breite 0 ließe die Linie außerhalb von vbox/hbox verschwinden.</summary>
+    [Fact]
+    public void Vic3_divider_keeps_its_full_width()
+    {
+        var block = Shipped("vic3").Single(b => b.Name == "Trennlinie");
+
+        Assert.DoesNotContain("size = { 0 2 }", GuiBlockRenderer.Render(block, GuiBlockValues.Defaults(block)));
+    }
+
     [Fact]
     public void Insert_RenderedWindowWithTabs_ParsesAndIndents()
     {
@@ -221,6 +256,7 @@ public class GuiShippedBlocksTests
     [Theory]
     [InlineData("eu5")]
     [InlineData("ck3")]
+    [InlineData("vic3")]
     public void Requires_ExistInVanilla(string game)
     {
         var vanilla = VanillaGui.For(game);
@@ -235,6 +271,21 @@ public class GuiShippedBlocksTests
             var pattern = new Regex(@"\b(type|template)\s+" + Regex.Escape(name) + @"\b");
             Assert.True(texts.Any(pattern.IsMatch), $"{name} fehlt in Vanilla");
         }
+    }
+
+    /// <summary>Victoria 3: Ein Mod-Fenster erscheint über gui/scripted_widgets; sichtbar, solange die Variable besteht, der Schließen-Knopf löscht sie.</summary>
+    [Theory]
+    [InlineData("Fenster")]
+    [InlineData("Fenster mit Tabs")]
+    public void Vic3_windows_open_and_close_through_their_variable(string name)
+    {
+        var block = Shipped("vic3").Single(b => b.Name == name);
+
+        var text = GuiBlockRenderer.Render(block, GuiBlockValues.Defaults(block));
+
+        Assert.Contains("visible = \"[GetVariableSystem.Exists( 'my_window' )]\"", text);
+        Assert.Matches(@"(?m)^\s*onclick = ""\[GetVariableSystem\.Clear\( 'my_window' \)\]""", text);
+        Assert.Contains("scripted_widgets", block.Description);
     }
 
     private static int Count(string text, string word) => Regex.Matches(text, @"\b" + Regex.Escape(word) + @"\b").Count;

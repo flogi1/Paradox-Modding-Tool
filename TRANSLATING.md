@@ -34,6 +34,13 @@ Each line is a key and a text:
 - Keep texts short. Many buttons and columns have a fixed width, and long texts get cut off.
 - Check `locales/_glossary.json`. Terms under `keep` stay in English (modders use them that way), and `terms` and `style` list agreed
   translations and the tone for your language.
+- Key groups for the main window: `menu.*` (menu bar, `menu.tile.*` for the tile bar, `menu.myGameMods` takes the game's short name as
+  `{0}`), `settings.category.*` (the categories of the settings window, including `tiles` and `toolbars`),
+  `settings.toolbarItem.*` (one entry per button of the small toolbar; the file buttons New, Open, Save, Save all and Close reuse
+  `menu.workspace.*`, only `settings.toolbarItem.move` is separate), `settings.toolbarGroup.*` (the groups of the classic toolbar),
+  `settings.layout.*` (window layout and toolbar position), `settings.tiles.*` (the tile bar page), `settings.toolbars.*` (the
+  toolbars page), `settings.reorder.*` (the reorder list control), `menu.workspace.sort*` (the tab sort menu of a workspace) and
+  `editor.workspace.name` (the workspace name in its bar).
 
 ## 4. Check your file
 

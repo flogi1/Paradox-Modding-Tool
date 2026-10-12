@@ -83,6 +83,26 @@ public class LocalWorkshopScannerTests : IDisposable
     {
         Assert.Empty(Find("X", null, "gibtsnicht"));
     }
+
+    [Fact]
+    public void Klassisches_Format_liest_die_descriptor_mod_im_Workshop_Ordner()
+    {
+        void Classic(string id, string descriptor)
+        {
+            var folder = Path.Combine(_dir, "lib", "steamapps", "workshop", "content", "236850", id);
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder, "descriptor.mod"), descriptor);
+        }
+
+        Classic("1703319446", "name=\"The Idea Variation Beyond Typus Addon\"\ntags={\n\t\"Addon\"\n}\nremote_file_id=\"1703319446\"");
+        Classic("1385440355", "name=\"Anbennar: A Fantasy Total Conversion\"\n");
+
+        var matches = LocalWorkshopScanner.Find(new[] { Path.Combine(_dir, "lib") }, "236850", "*.mod", "the idea variation beyond typus addon", null);
+
+        var match = Assert.Single(matches);
+        Assert.Equal("1703319446", match.Id);
+        Assert.Equal("The Idea Variation Beyond Typus Addon", match.Title);
+    }
 }
 
 public class WorkshopProfilePageTests

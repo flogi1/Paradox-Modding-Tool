@@ -128,6 +128,11 @@ public static class ScriptDocLogParser
     /// </summary>
     public static IReadOnlyList<ScriptDocEntry> ParseModifiers(string text)
     {
+        if (!Lines(text).Any(l => l.StartsWith("Tag:", StringComparison.Ordinal)))
+        {
+            return ParseModifierBlocks(text);
+        }
+
         var result = new List<ScriptDocEntry>();
         ScriptDocEntry? pending = null;
         foreach (var line in Lines(text))
@@ -174,6 +179,84 @@ public static class ScriptDocLogParser
             }
 
             result.Add(entry);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Format von Victoria 3: Abschnitte <c>--- Static modifier types ---</c> (auch Dynamic, Potential dynamic), darin je Modifier eine Zeile
+    /// <c>name:</c> und eingerückt <c>Mask:</c>, <c>Name:</c> und <c>Description:</c> (Name und Beschreibung in der Sprache der Spieloberfläche).
+    /// Eine Beschreibung kann ohne Einrückung auf weiteren Zeilen weitergehen. Die Maske wird zum Scope, der Abschnitt steht in
+    /// <see cref="ScriptDocEntry.Extra"/> unter "Section", der Anzeigename unter "Name".
+    /// </summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseModifierBlocks(string text)
+    {
+        var result = new List<ScriptDocEntry>();
+        ScriptDocEntry? current = null;
+        var section = string.Empty;
+        var inDescription = false;
+        var blankInDescription = false;
+        foreach (var raw in Lines(text))
+        {
+            // Eine Leerzeile trennt Absätze einer Beschreibung; erst ein Abschnitt, ein neuer Modifier oder eine Angabe beendet sie.
+            if (raw.Trim().Length == 0)
+            {
+                blankInDescription = inDescription;
+                continue;
+            }
+
+            if (raw.StartsWith("---", StringComparison.Ordinal))
+            {
+                section = raw.Trim('-', ' ').Replace(" modifier types", string.Empty, StringComparison.Ordinal);
+                current = null;
+                inDescription = false;
+                blankInDescription = false;
+                continue;
+            }
+
+            if (raw.StartsWith(' ') && current is not null)
+            {
+                var line = raw.Trim();
+                inDescription = false;
+                blankInDescription = false;
+                if (TryLabel(line, "Mask:", out var mask))
+                {
+                    current.Scopes = mask.Trim() is { Length: > 0 } scope ? new List<string> { scope } : new List<string>();
+                }
+                else if (TryLabel(line, "Name:", out var name))
+                {
+                    current.Extra["Name"] = name.Trim();
+                }
+                else if (TryLabel(line, "Description:", out var description))
+                {
+                    current.Description = description.Trim();
+                    inDescription = true;
+                    blankInDescription = false;
+                }
+
+                continue;
+            }
+
+            if (raw.EndsWith(':') && !raw.Contains(' '))
+            {
+                current = new ScriptDocEntry { Kind = ScriptDocKind.Modifier, Name = raw[..^1] };
+                if (section.Length > 0)
+                {
+                    current.Extra["Section"] = section;
+                }
+
+                result.Add(current);
+                inDescription = false;
+                blankInDescription = false;
+                continue;
+            }
+
+            if (inDescription && current is not null)
+            {
+                current.Description += (blankInDescription ? "\n\n" : "\n") + raw.Trim();
+                blankInDescription = false;
+            }
         }
 
         return result;

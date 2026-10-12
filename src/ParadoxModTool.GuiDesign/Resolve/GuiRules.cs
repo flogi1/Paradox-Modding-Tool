@@ -56,7 +56,8 @@ public sealed class GuiRules
                 gui.LayoutHolders,
                 new GuiLayout(
                     gui.Contexts is { } contexts ? contexts.ToList() : GuiLayout.Default.Contexts,
-                    string.Equals(gui.TypeOverride, "firstWins", StringComparison.OrdinalIgnoreCase)))
+                    string.Equals(gui.TypeOverride, "firstWins", StringComparison.OrdinalIgnoreCase),
+                    gui.ModsBeforeVanilla))
             : Empty;
 
     /// <summary>

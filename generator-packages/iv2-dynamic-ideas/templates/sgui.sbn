@@ -1,0 +1,16 @@
+###################################################
+###### Nat Ideas {{ id }}
+###################################################
+
+{{~ for l in levels ~}}
+iv2_sgui_dynamic_nat_{{ id }}{{ sfx l.index }} = {
+    scope = country
+
+	is_valid = {
+		has_country_modifier = national_idea_modifier_{{ id }}{{ sfx l.index }}
+	}
+}
+{{~ if !l.last ~}}
+
+{{~ end ~}}
+{{~ end ~}}

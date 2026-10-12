@@ -136,7 +136,7 @@ public static class KeyPartReader
             }
 
             var key = rule.Behavior == OverrideBehavior.PerKey
-                ? OverrideKey.ParseFor(statement.Key, keyOperators)
+                ? (rule.Operators is { } folderOperators ? OverrideKey.ParseInFolder(statement.Key, folderOperators) : OverrideKey.ParseFor(statement.Key, keyOperators))
                 : new OverrideKey(OverrideOperator.None, statement.Key);
             used.Add(statement);
             result.Keys.Add(Make(result, key.Operator, key.Key, new ScriptEntry[] { statement }, constants));

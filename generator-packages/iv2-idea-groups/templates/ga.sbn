@@ -1,0 +1,556 @@
+###############################################################
+#### Select Idea Group {{ g }}
+###############################################################
+
+
+iv2_ga_select_ideagroup_{{ g }} = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+{{~ if category != "army" ~}}
+	potential = {
+		
+	}
+{{~ end ~}}
+
+	allow = {
+{{~ if (allow ?? "" | string.strip) != "" ~}}
+{{ indent allow "\t\t" }}
+{{~ else ~}}
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_variable = iv2_ideagroup_select_{{ g }}_1 }
+			}
+			custom_tooltip = {
+				text = iv2_tt_no_available_idea_{{ category }}
+				var:iv2_var_current_idea_group_{{ category }} > var:iv2_var_current_picked_idea_group_{{ category }}
+			}
+		}
+{{~ end ~}}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			set_variable = iv2_ideagroup_select_{{ g }}_1 
+			set_variable = { 
+				name = iv2_var_{{ g }}
+				value = flag:iv2_{{ g }}
+			}
+			add_to_variable_list = {
+					name = iv2_picked_ideagroups_{{ category }}
+					target = flag:iv2_{{ g }}
+			}
+			set_variable = { 
+				name = iv2_var_stat_{{ g }}
+				value = flag:iv2_stat_{{ g }}
+			}
+			add_to_variable_list = {
+					name = iv2_statistics_list_{{ category }}
+					target = flag:iv2_stat_{{ g }}
+			}	
+			change_variable = {
+				name = iv2_var_current_picked_idea_group_{{ category }}
+				add = 1
+			}
+		}
+	}
+}
+
+###############################################################
+#### De Select Idea Group {{ g }}
+###############################################################
+
+
+iv2_ga_deselect_ideagroup_{{ g }} = {
+	type = owncountry	
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	potential = {
+		
+	}
+
+	allow = {
+		
+	}
+	
+	effect = {
+		scope:actor = {
+			remove_variable = iv2_ideagroup_select_{{ g }}_1 
+			remove_list_variable = {
+					name = iv2_picked_ideagroups_{{ category }}
+					target = flag:iv2_{{ g }}
+			}
+			remove_list_variable = {
+					name = iv2_statistics_list_{{ category }}
+					target = flag:iv2_stat_{{ g }}
+			}
+			iv2_scripted_effect_ig_revoke_{{ g }} = yes
+			change_variable = {
+				name = iv2_var_current_picked_idea_group_{{ category }}
+				subtract = 1
+			}
+		}	
+	}
+}
+
+
+
+iv2_ga_ideagroup_{{ g }}_1 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_1 }
+				has_variable = iv2_ideagroup_select_{{ g }}_1
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_1 
+					years = -1 
+				}
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 1
+				}
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[0].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+
+iv2_ga_ideagroup_{{ g }}_2 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_2 }
+				has_country_modifier = ideagroup_modifier_{{ g }}_1
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_2 
+					years = -1 
+				}
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 2
+				}
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[1].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+iv2_ga_ideagroup_{{ g }}_3 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_3 }
+				has_country_modifier = ideagroup_modifier_{{ g }}_2
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_3
+					years = -1 
+				}
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 3
+				}
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[2].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+iv2_ga_ideagroup_{{ g }}_4 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_4 }
+				has_country_modifier = ideagroup_modifier_{{ g }}_3
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_4
+					years = -1 
+				}
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 4
+				}
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[3].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+iv2_ga_ideagroup_{{ g }}_5 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_5 }
+				has_country_modifier = ideagroup_modifier_{{ g }}_4
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_5
+					years = -1 
+				}
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 5
+				}
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[4].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+iv2_ga_ideagroup_{{ g }}_6 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_6 }
+				has_country_modifier = ideagroup_modifier_{{ g }}_5
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_6
+					years = -1 
+				}
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 6
+				}
+{{~ end ~}}
+			}	
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[5].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+iv2_ga_ideagroup_{{ g }}_7 = {
+	type = owncountry	
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+
+	potential = {
+		
+	}
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+				NOT = { has_country_modifier = ideagroup_modifier_{{ g }}_7 }
+				has_country_modifier = ideagroup_modifier_{{ g }}_6
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_idea_{{ category }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_idea_cost_{{ category }}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+	
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_7
+					years = -1 
+				}
+				change_variable = {
+					name = iv2_var_finished_idea_group_{{ category }}
+					add = 1
+				}	
+{{~ if groupType != "none" ~}}
+				set_variable = {
+					name = iv2_{{ groupType }}_ideagroup
+					value = 7
+				}
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_id_sub_points_{{ category }}
+				change_variable = {
+						name = iv2_var_innovation_points_{{ category }}
+						subtract = iv2_idea_cost_{{ category }}
+				}
+{{~ if ideas[6].recalc ~}}
+				trigger_event_non_silently = { id = IV2_calc.2 }
+{{~ end ~}}
+			}
+		}
+	}
+}
+
+###################################################
+###################################################
+###### Ideagroup {{ g }} End
+###################################################
+###################################################

@@ -1,0 +1,29 @@
+# block: Überschrift und Text
+# group: Anzeige
+# description: Abschnittsüberschrift (default_header, das Band mit Verzierung an den Seiten) und darunter ein mehrzeiliger Text, der bis zur angegebenen Breite umbricht. Überschrift ohne Band: textbox mit using = header_font und using = header_font_size. Vorbild: gui/window_component_library.gui, gui/shared/backgrounds.gui, gui/shared/defaults.gui
+# param: title | Überschrift (Lokalisierungsschlüssel) | MY_TITLE
+# param: text | Text (Lokalisierungsschlüssel) | MY_TEXT
+# param: width | Breite | 400
+# requires: default_header
+
+vbox = {
+	spacing = 5
+
+	default_header = {
+		blockoverride "size" {
+			size = { $width$ 44 }
+		}
+
+		blockoverride "text" {
+			text = "$title$"
+		}
+	}
+
+	textbox = {
+		text = "$text$"
+		multiline = yes
+		autoresize = yes
+		maximumsize = { $width$ -1 }
+		align = nobaseline
+	}
+}

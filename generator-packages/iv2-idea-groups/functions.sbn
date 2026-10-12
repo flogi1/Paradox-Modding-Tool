@@ -1,0 +1,164 @@
+{{~
+# Hilfen für die Vorlagen der IV2-Ideengruppen.
+
+# Kennung der Gruppe, z. B. adm_18.
+func g
+  ret category + "_" + group
+end
+
+# Kennung als regulärer Ausdruck mit Zahlgrenzen, damit adm_1 nicht adm_18 trifft.
+func gm
+  ret "(?<![0-9])" + g + "(?![0-9])"
+end
+
+# Treffer nur in der Kopfzeile einer Einheit oder in einem Kommentar: Blöcke anderer Gruppen, die diese Gruppe im Inhalt nennen
+# (Ausschluss-Paare wie adm_12/adm_13), gehören nicht dazu.
+func hm
+  ret "\\A(?:#.*|[^{\\n]*)" + gm
+end
+
+# Spalte im Auswahlfenster als Index der widget-Blöcke im Fenster (das erste widget ist der Schließen-Knopf).
+func column_index
+  if column == "Left"
+    ret 2
+  else if column == "Middle"
+    ret 3
+  end
+  ret 4
+end
+
+# Zusatzbedingungen aus dem allow-Feld: die Zeilen in scope:actor außer hidden_trigger und custom_tooltip, eine Ebene ausgerückt.
+# Sie stehen auch im is_shown der Scripted GUI und im limit der Länderbildung.
+func extras
+  out = []
+  if allow == null || (allow | string.strip) == ""
+    ret out
+  end
+  # hidden_trigger und custom_tooltip (mit höchstens einer inneren Klammerebene) entfernen
+  text = allow | string.replace "\r\n" "\n" | regex.replace `(?m)^\t(?:hidden_trigger|custom_tooltip)\s*=\s*\{(?:[^{}]|\{[^{}]*\})*\}[ \t]*\n?` ""
+  depth = 0
+  for raw in (text | string.split "\n")
+    t = raw | string.strip
+    before = depth
+    # Klammern zählen über die Längendifferenz (string.split lässt leere Teile weg)
+    depth = depth + (t | string.size) - (t | string.replace "{" "" | string.size) - (t | string.size) + (t | string.replace "}" "" | string.size)
+    if before >= 1 && !(before == 1 && depth == 0) && t != ""
+      out = out | array.add (raw | string.slice 1)
+    end
+  end
+  ret out
+end
+
+# Wort der Gruppenart in den Triggern: iv2_scripted_trigger_has_<wort>_ig_selected.
+func type_word
+  if groupType == "reli"
+    ret "religion"
+  else if groupType == "gov"
+    ret "government"
+  end
+  ret groupType
+end
+
+# Mehrzeiliger Text, jede Zeile mit dem Präfix eingerückt (leere Zeilen ohne Präfix).
+func indent(text, prefix)
+  lines = text | string.strip | string.replace "\r\n" "\n" | string.split "\n"
+  out = []
+  for line in lines
+    if (line | string.strip) == ""
+      out = out | array.add ""
+    else
+      out = out | array.add (prefix + line)
+    end
+  end
+  ret out | array.join "\n"
+end
+
+# Exklusive Gruppen: Partnernummern aus "Schließt aus" (Komma, Semikolon oder Leerzeichen), ohne die eigene Nummer, ohne Doppelte, aufsteigend.
+func exclusive_numbers
+  out = []
+  if exclusive == null
+    ret out
+  end
+  own = ("" + group) | string.to_int
+  for part in (exclusive | regex.split `[\s,;]+`)
+    t = part | string.strip
+    if t == ""
+      continue
+    end
+    n = t | string.to_int
+    if n != null && n != own && !(out | array.contains n)
+      out = out | array.add n
+    end
+  end
+  ret out | array.sort
+end
+
+# Eigene Nummer und Partner aufsteigend: die OR-Liste im is_shown der Auswahl
+func exclusive_set
+  ret exclusive_numbers | array.add (("" + group) | string.to_int) | array.sort
+end
+
+# Regierungs- und Rang-Gruppen: Variable, switch-Trigger, Dateiwort und Präfix der KI-Liste je Gruppenart (Rang sonst Regierung).
+func govrank_variable
+  ret groupType == "rank" ? "iv2_rank_ideagroup" : "iv2_gov_ideagroup"
+end
+
+func govrank_trigger_key
+  ret groupType == "rank" ? "country_rank" : "government_type"
+end
+
+# Wort in Datei-, Effekt- und Triggernamen: government / rank
+func govrank_file_word
+  ret groupType == "rank" ? "rank" : "government"
+end
+
+# Kurzwort der Effekte iv2_scripted_effect_remove_<wort>_idea_groups_all: gov / rank
+func govrank_effect_word
+  ret groupType == "rank" ? "rank" : "gov"
+end
+
+# Datei der KI-Listen: gov_type / gov_rank
+func govrank_list_file
+  ret groupType == "rank" ? "gov_rank" : "gov_type"
+end
+
+func govrank_list_prefix
+  ret groupType == "rank" ? "iv2_ga_list_govrank_" : "iv2_ga_list_govtype_"
+end
+
+# Bedingungswerte, je Zeile eine (religion = religion:x, religion.group = religion_group:y, government_type = government_type:x,
+# country_rank = country_rank:x), ohne leere Zeilen.
+func condition_lines
+  text = religions
+  if text == null
+    text = ""
+  end
+  out = []
+  for l in (text | string.replace "\r\n" "\n" | string.split "\n")
+    t = l | string.strip
+    if t != ""
+      out = out | array.add t
+    end
+  end
+  ret out
+end
+
+# Schlüssel eines switch-Falls: rechte Seite der Bedingung (religion:x bzw. religion_group:y).
+func case_key(condition)
+  parts = condition | string.split "="
+  ret parts[parts.size - 1] | string.strip
+end
+
+# Bedingungen als Zeilen mit Einrückung: eine einzelne direkt, mehrere in einem OR-Block.
+func condition_block(prefix)
+  lines = condition_lines
+  if lines.size == 1
+    ret prefix + lines[0]
+  end
+  s = prefix + "OR = {"
+  for l in lines
+    s = s + "\n" + prefix + "\t" + l
+  end
+  ret s + "\n" + prefix + "}"
+end
+~}}

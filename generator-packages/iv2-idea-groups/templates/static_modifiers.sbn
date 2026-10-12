@@ -1,0 +1,17 @@
+###############################################################
+#### Idea Group {{ g }} {{ title }}
+###############################################################
+
+{{~ for i in ideas ~}}
+ideagroup_modifier_{{ g }}_{{ i.index }} = {
+	game_data = {
+	    category = country
+    }
+{{~ if (i.modifiers ?? "" | string.strip) != "" ~}}
+{{ indent i.modifiers "\t" }}
+{{~ end ~}}
+}
+{{~ if !i.last ~}}
+
+{{~ end ~}}
+{{~ end ~}}

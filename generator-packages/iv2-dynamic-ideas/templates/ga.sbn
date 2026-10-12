@@ -1,0 +1,209 @@
+{{~ base_level = levels[0] ~}}
+###############################################################
+#### Select National Idea {{ id }}
+###############################################################
+
+iv2_ga_select_national_idea_{{ id }} = {
+	type = owncountry
+
+	ai_tick = never
+	#ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			hidden_trigger = {
+{{~ for l in levels ~}}
+				NOT = { has_country_modifier = national_idea_modifier_{{ id }}{{ sfx l.index }} }
+{{~ end ~}}
+			}
+			custom_tooltip = {
+			text = iv2_tt_no_points_for_nat_idea{{ expensive_part base_level }}_{{ category }}
+			var:iv2_var_progress_points_{{ category }} >= var:iv2_var_national_idea_cost{{ expensive_part base_level }}_{{ category }}
+			}
+			custom_tooltip = {
+			text = iv2_tt_not_reached_national_idea_limit
+			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
+			}
+			iv2_sct_dnat_idea_{{ id }} = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = {
+					modifier = national_idea_modifier_{{ id }}
+					years = -1
+				}
+				set_variable = iv2_nat_idea_select_{{ id }}_1
+				set_variable = {
+					name = iv2_var_nat_{{ id }}
+					value = flag:iv2_picked_nat_idea_{{ id }}
+				}
+				add_to_variable_list = {
+						name = iv2_picked_national_ideas_list
+						target = flag:iv2_picked_nat_idea_{{ id }}
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					add = 1
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points{{ expensive_part base_level }}_{{ category }}
+				change_variable = {
+					name = iv2_var_progress_points_{{ category }}
+					subtract = var:iv2_var_national_idea_cost{{ expensive_part base_level }}_{{ category }}
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_points_{{ category }}
+				change_variable = {
+					name = iv2_var_national_idea_cost_{{ category }}
+					add = iv2_progress_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_cost_expensive_{{ category }}
+					add = iv2_progress_cost_increase
+				}
+			}
+		}
+	}
+}
+{{~ for l in levels offset:1 ~}}
+
+###############################################################
+#### National Idea Level {{ l.index }} {{ id }}{{ sfx l.index }}
+###############################################################
+
+iv2_ga_select_national_idea_{{ id }}{{ sfx l.index }} = {
+	type = owncountry
+
+	ai_tick = monthly
+	ai_tick_frequency = 36
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = governmentreforms
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+			text = iv2_tt_no_innovation_points_for_nat_idea{{ expensive_part l }}_{{ category }}
+			has_country_modifier = national_idea_modifier_{{ id }}{{ sfx (l.index - 1) }}
+			var:iv2_var_innovation_points_{{ category }} >= var:iv2_var_national_idea_innovation_cost{{ expensive_part l }}_{{ category }}
+			}
+			iv2_sct_dnat_idea_{{ id }}{{ sfx l.index }} = yes
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			value = 1000
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_country_modifier = {
+					modifier = national_idea_modifier_{{ id }}{{ sfx l.index }}
+					years = -1
+				}
+				remove_country_modifier = national_idea_modifier_{{ id }}{{ sfx (l.index - 1) }}
+			}
+			custom_tooltip = {
+			text = iv2_tt_sub_points_innovation{{ expensive_part l }}_{{ category }}
+				change_variable = {
+					name = iv2_var_innovation_points_{{ category }}
+					subtract = var:iv2_var_national_idea_innovation_cost{{ expensive_part l }}_{{ category }}
+				}
+			}
+			custom_tooltip = {
+			text = iv2_tt_increase_innovation_points_{{ category }}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_{{ category }}
+					add = iv2_innovation_cost_increase
+				}
+				change_variable = {
+					name = iv2_var_national_idea_innovation_cost_expensive_{{ category }}
+					add = iv2_innovation_cost_increase
+				}
+			}
+		}
+	}
+}
+{{~ end ~}}
+
+###############################################################
+#### Deselect National Idea {{ id }}
+###############################################################
+
+
+iv2_ga_deselect_nat_idea_{{ id }} = {
+	type = owncountry
+
+	ai_tick = never
+
+	allow = {
+		scope:actor = {
+{{~ if levels.size == 1 ~}}
+			has_country_modifier = national_idea_modifier_{{ id }}
+{{~ else ~}}
+			OR = {
+{{~ for l in levels ~}}
+				has_country_modifier = national_idea_modifier_{{ id }}{{ sfx l.index }}
+{{~ end ~}}
+			}
+{{~ end ~}}
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			custom_tooltip = {
+				text = iv2_tt_give_up_nat_idea_{{ category }}
+{{~ for l in levels ~}}
+
+				if = {
+					limit = {
+						has_country_modifier = national_idea_modifier_{{ id }}{{ sfx l.index }}
+					}
+					remove_country_modifier = national_idea_modifier_{{ id }}{{ sfx l.index }}
+					change_variable = {
+						name = iv2_var_national_idea_cost_{{ category }}
+						subtract = iv2_progress_cost_increase
+					}
+{{~ if l.index > 1 ~}}
+					change_variable = {
+						name = iv2_var_national_idea_innovation_cost_{{ category }}
+						subtract = {{ l.index == 2 ? "iv2_innovation_cost_increase" : "iv2_innovation_cost_decrease_x" + (l.index - 1) }}
+					}
+{{~ end ~}}
+				}
+{{~ end ~}}
+			}
+			hidden_effect = {
+				remove_variable = iv2_nat_idea_select_{{ id }}_1
+				remove_list_variable = {
+					name = iv2_picked_national_ideas_list
+					target = flag:iv2_picked_nat_idea_{{ id }}
+				}
+				change_variable = {
+					name = iv2_var_national_idea_current
+					subtract = 1
+				}
+			}
+		}
+	}
+}

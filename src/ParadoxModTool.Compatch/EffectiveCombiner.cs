@@ -7,7 +7,8 @@ namespace ParadoxModTool.Compatch;
 internal static class EffectiveCombiner
 {
     /// <param name="ordered">Beiträge in Ladereihenfolge (siehe <see cref="EffectiveEntryResolver"/>).</param>
-    public static Effective Combine(IReadOnlyList<KeyPart> ordered, OverrideBehavior behavior, bool certain)
+    /// <param name="injectAppends">INJECT hängt an, statt Teilschlüssel zu überschreiben (Victoria 3, siehe <see cref="OverrideRules.InjectAppends"/>).</param>
+    public static Effective Combine(IReadOnlyList<KeyPart> ordered, OverrideBehavior behavior, bool certain, bool injectAppends = false)
     {
         if (ordered.Count == 0)
         {
@@ -42,7 +43,7 @@ internal static class EffectiveCombiner
                     continue;
                 }
 
-                entries = Inject(entries, part, ref uncertain);
+                entries = injectAppends ? Append(entries, part, ref uncertain) : Inject(entries, part, ref uncertain);
                 source = part;
                 operators.Add(part.Operator);
             }
@@ -72,6 +73,29 @@ internal static class EffectiveCombiner
         part.Entries.Select(e => e is ScriptStatement s && s.Key != part.Address.Key && part.Address.Kind == AddressKind.Key && !part.Address.Key.Contains('/')
             ? new ScriptStatement { Key = part.Address.Key, Operator = s.Operator, Value = s.Value, LeadingComments = s.LeadingComments, TrailingComment = s.TrailingComment }
             : e).ToList();
+
+    /// <summary>
+    /// INJECT in Victoria 3 (https://vic3.paradoxwikis.com/Mod_compatibility): Die Einträge kommen hinten an den vorhandenen Block, nichts wird
+    /// überschrieben. Ein Teilschlüssel, den der Block schon hat, ist unsicher: Trigger- und Effektblöcke lassen sich so laut Wiki nicht
+    /// einfügen, und welcher von zwei Werten gilt, ist nicht gemessen.
+    /// </summary>
+    private static IReadOnlyList<ScriptEntry> Append(IReadOnlyList<ScriptEntry> baseEntries, KeyPart part, ref bool uncertain)
+    {
+        if (baseEntries.Count != 1 || baseEntries[0] is not ScriptStatement { Value: ScriptBlock baseBlock } baseStatement
+            || part.Entries.Count != 1 || part.Entries[0] is not ScriptStatement { Value: ScriptBlock injected })
+        {
+            uncertain = true;
+            return baseEntries;
+        }
+
+        var baseKeys = EntryUnits.Build(baseBlock.Entries).Select(u => u.BaseKey).ToHashSet(StringComparer.Ordinal);
+        if (EntryUnits.Build(injected.Entries).Any(u => baseKeys.Contains(u.BaseKey)))
+        {
+            uncertain = true;
+        }
+
+        return new ScriptEntry[] { EntryUnits.WithBlockValue(baseStatement, new ScriptBlock { Entries = baseBlock.Entries.Concat(injected.Entries).ToList() }) };
+    }
 
     private static IReadOnlyList<ScriptEntry> Inject(IReadOnlyList<ScriptEntry> baseEntries, KeyPart part, ref bool uncertain)
     {

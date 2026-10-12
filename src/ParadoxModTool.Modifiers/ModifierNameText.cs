@@ -6,7 +6,7 @@ namespace ParadoxModTool.Modifiers;
 /// Macht aus einem Lokalisierungstext des Spiels einen lesbaren Namen: Farb- und Formatcodes fallen weg, Begriffe wie <c>[levy|E]</c> und Verweise auf andere
 /// Schlüssel wie <c>$MOD_X_ADD$</c> werden durch ihren Text aus der Lokalisierung ersetzt (auch verschachtelt). Ein Begriff ohne Treffer wird zu seinem Namen mit
 /// großem Anfangsbuchstaben ("Levy"), ein Verweis ohne Treffer ist ein Schlüsselname und ergibt keinen Namen.
-/// <c>[Concept('levy', 'Aufgebots')]</c> zeigt den zweiten Text. Bleibt ein Rest, den nur das Spiel auflösen kann (<c>[GetScheme('x').GetName]</c>),
+/// <c>[Concept('levy', 'Aufgebots')]</c> zeigt den zweiten Text. Victoria 3 schreibt Begriffe auch ohne Format (<c>[concept_pop]</c>). Bleibt ein Rest, den nur das Spiel auflösen kann (<c>[GetScheme('x').GetName]</c>),
 /// gibt es keinen Namen.
 /// </summary>
 public static partial class ModifierNameText
@@ -39,6 +39,8 @@ public static partial class ModifierNameText
         text = IconCode().Replace(text, string.Empty);
         text = ConceptCall().Replace(text, match => match.Groups["text"].Success ? match.Groups["text"].Value : Concept(match.Groups["id"].Value));
         text = ConceptWithFormat().Replace(text, match => Concept(match.Groups["id"].Value));
+        // Ohne Text zum Begriff zeigt Victoria 3 den Namen ohne das Präfix concept_ ("Pop" statt "Concept Pop").
+        text = BareConcept().Replace(text, match => ResolveText(concept, match.Groups["id"].Value, depth) ?? Humanize(match.Groups["id"].Value["concept_".Length..]));
         text = KeyReference().Replace(text, match => Reference(match.Groups["id"].Value));
         if (text.Contains('[') || text.Contains(']') || text.Contains('$'))
         {
@@ -61,6 +63,11 @@ public static partial class ModifierNameText
         }
 
         foreach (Match match in ConceptWithFormat().Matches(raw))
+        {
+            yield return match.Groups["id"].Value;
+        }
+
+        foreach (Match match in BareConcept().Matches(raw))
         {
             yield return match.Groups["id"].Value;
         }
@@ -87,6 +94,10 @@ public static partial class ModifierNameText
 
     [GeneratedRegex(@"\[Concept\(\s*'(?<id>[A-Za-z0-9_]+)'\s*(?:,\s*'(?<text>[^']*)'\s*)?\)(?:\|[^\]]*)?\]", RegexOptions.CultureInvariant)]
     private static partial Regex ConceptCall();
+
+    /// <summary>Begriff ohne Format, wie Victoria 3 ihn schreibt (<c>[concept_pop]</c>); nur mit dem Präfix <c>concept_</c>, andere Klammern bleiben unlösbar.</summary>
+    [GeneratedRegex(@"\[(?<id>concept_[A-Za-z0-9_]+)\]", RegexOptions.CultureInvariant)]
+    private static partial Regex BareConcept();
 
     [GeneratedRegex(@"\$(?<id>[A-Za-z0-9_]+)(?:\|[^$]*)?\$", RegexOptions.CultureInvariant)]
     private static partial Regex KeyReference();

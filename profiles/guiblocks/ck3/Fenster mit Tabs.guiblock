@@ -27,6 +27,11 @@ window = {
 	state = {
 		name = _show
 		on_start = "[GetVariableSystem.Set( '$name$_tab', '$start_tab$' )]"
+		$repeat tabs$
+		$repeat tabs.sub$
+		on_start = "[GetVariableSystem.Set( '$name$_$tabs.id$', '$tabs.sub.start$' )]"
+		$end tabs.sub$
+		$end tabs$
 	}
 
 	vbox = {

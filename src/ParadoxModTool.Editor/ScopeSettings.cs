@@ -2,6 +2,9 @@ using ParadoxModTool.Scopes;
 
 namespace ParadoxModTool.Editor;
 
+/// <summary>Eine Warnung im Text: Stelle, Meldung und ob sie schwer wiegt (rot) oder nur ein Hinweis ist (orange).</summary>
+public sealed record EditorWarning(int Start, int Length, string Message, bool Severe);
+
 /// <summary>
 /// Datenquelle und Schalter für die Scope-Anzeigen im Editor (Statusleisten, Hover-Tooltip, Warnungen, Panel). Gilt wie <see cref="ScriptHintSettings"/> für alle
 /// Arbeitsbereiche eines Fensters: das Hauptfenster setzt die Scope-Verfolgung und die Schalter, die Editoren lesen sie bei Bedarf.
@@ -29,7 +32,19 @@ public static class ScopeSettings
     /// <summary>Zusätzliche Zeile im Hover-Tooltip: ob der Name im aktuellen Scope erlaubt ist. Standard: an.</summary>
     public static bool HoverEnabled { get; private set; } = true;
 
+    /// <summary>
+    /// Weitere Warnungen derselben Art (Präfixe, die im Ordner nicht wirken, Victoria 3): Zum Dateipfad liefert das Hauptfenster auf dem UI-Thread eine
+    /// Prüfung, die dann im Hintergrund den Text prüft; <see langword="null"/>, wenn es für die Datei nichts zu prüfen gibt.
+    /// </summary>
+    public static Func<string?, Func<string, IReadOnlyList<EditorWarning>>?>? PrefixChecker { get; private set; }
+
     public static event EventHandler? Changed;
+
+    public static void SetPrefixChecker(Func<string?, Func<string, IReadOnlyList<EditorWarning>>?>? checker)
+    {
+        PrefixChecker = checker;
+        Changed?.Invoke(null, EventArgs.Empty);
+    }
 
     public static void SetEngine(ScopeEngine? engine, string info)
     {

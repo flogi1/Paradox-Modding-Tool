@@ -1,0 +1,39 @@
+##########################################################################################################################
+####### {{ tag }} National Ideas Remove TT
+##########################################################################################################################
+
+{{~ for c in categories ~}}
+{{~ if c.ideas.size > 0 ~}}
+##########################################
+####### {{ c.header }} Part
+##########################################
+
+{{~ for i in c.ideas ~}}
+template iv2_historic_idea_remove_{{ tag }}_{{ i.number }} {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('national_idea_modifier_{{ tag }}_{{ i.number }}').GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "iv2_ga_deselect_historic_{{ tag }}_{{ i.number }}"
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				name = "DescriptionTest"
+				visible = "[Not(StringIsEmpty(GetModifier('national_idea_modifier_{{ tag }}_{{ i.number }}').GetDesc))]"
+				blockoverride "text" {
+					text = "iv2_tt_give_up_nat_idea_{{ c.key }}"
+				}
+			}
+		}
+	}
+}
+
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}

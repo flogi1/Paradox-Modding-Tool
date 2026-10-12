@@ -26,6 +26,9 @@
     <None Include="..\..\profiles\ck3.json" Link="profiles\ck3.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\profiles\vic3.json" Link="profiles\vic3.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\profiles\guiblocks\**\*.guiblock" Link="profiles\guiblocks\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

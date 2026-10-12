@@ -39,6 +39,7 @@ public sealed class AppSettings
     private bool _explorerHideUgcReferences = true;
     private string _compatchDefaultView = "A";
     private readonly HashSet<string> _hiddenToolbarItems = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _toolbarItemsHiddenByMigration = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Dictionary<string, string>> _iconColors = new(StringComparer.Ordinal);
     private string _uiLanguage = LanguageCatalog.Normalize(null);
     private string _settingsWindowCategory = nameof(SettingsCategory.General);
@@ -60,6 +61,31 @@ public sealed class AppSettings
     private bool _myModsStartMaximized = true;
     private bool _myModsAlertsCollapsed;
     private WindowBoundsState? _myModsWindowBounds;
+    private string _windowLayout = "Tiles";
+    private string _toolbarPosition = "Top";
+    private bool _toolbarLabelsVisible = true;
+    private List<string> _toolbarOrder = ToolbarCatalog.DefaultOrder.ToList();
+    private bool _tileBarVisible = true;
+    private string _tileSize = "Large";
+    private bool _tileLabelsVisible = true;
+    private List<string> _tileOrder = TileCatalog.DefaultOrder.ToList();
+    private readonly HashSet<string> _hiddenTiles = DefaultHiddenTiles();
+    private readonly HashSet<string> _iconOnlyTiles = new(StringComparer.Ordinal);
+    private bool _workspaceCategoryButtonVisible = true;
+    private bool _workspaceSortButtonVisible = true;
+    private bool _workspaceMarkButtonsVisible = true;
+
+    private readonly bool _migrateTileTools;
+
+    /// <summary>
+    /// <paramref name="migrateTileTools"/>: Sitzungen ohne gespeichertes Fensterlayout blenden beim Laden die vier Werkzeuge aus der kleinen
+    /// Leiste aus, die im neuen Layout Kacheln sind. Erst einschalten, wenn die Kachelleiste im Hauptfenster existiert (Interface-Rework 2,
+    /// Plan 3); vorher würden die Knöpfe ersatzlos verschwinden.
+    /// </summary>
+    public AppSettings(bool migrateTileTools = false)
+    {
+        _migrateTileTools = migrateTileTools;
+    }
 
     /// <summary>Eine einzelne Einstellung hat sich geändert; das Argument ist der Name der Eigenschaft.</summary>
     public event EventHandler<string>? Changed;
@@ -264,10 +290,78 @@ public sealed class AppSettings
         }
     }
 
+    // ---- Interface-Rework 2 ----
+
+    /// <summary>Fensterlayout: <c>Tiles</c> (Standard) oder <c>Classic</c>.</summary>
+    public string WindowLayout { get => _windowLayout; set => Set(ref _windowLayout, OneOf(value, "Tiles", "Classic")); }
+
+    /// <summary>Position der kleinen Werkzeugleiste: <c>Top</c> (Standard), <c>Left</c>, <c>Right</c>, <c>Bottom</c>.</summary>
+    public string ToolbarPosition { get => _toolbarPosition; set => Set(ref _toolbarPosition, OneOf(value, "Top", "Left", "Right", "Bottom")); }
+
+    /// <summary>Beschriftung neben den Symbolen der kleinen Werkzeugleiste (nur waagerecht).</summary>
+    public bool ToolbarLabelsVisible { get => _toolbarLabelsVisible; set => Set(ref _toolbarLabelsVisible, value); }
+
+    /// <summary>Reihenfolge der kleinen Werkzeugleiste inkl. Trennlinien; wird beim Setzen über <see cref="ReorderList.Complete"/> vervollständigt.</summary>
+    public IReadOnlyList<string> ToolbarOrder
+    {
+        get => _toolbarOrder;
+        set => SetOrder(ref _toolbarOrder, NormalizeToolbarOrder(value), nameof(ToolbarOrder));
+    }
+
+    /// <summary>Kachelleiste anzeigen.</summary>
+    public bool TileBarVisible { get => _tileBarVisible; set => Set(ref _tileBarVisible, value); }
+
+    /// <summary>Standard-Kachelgröße: <c>Large</c> (Standard), <c>Medium</c>, <c>Compact</c>.</summary>
+    public string TileSize { get => _tileSize; set => Set(ref _tileSize, OneOf(value, "Large", "Medium", "Compact")); }
+
+    /// <summary>Beschriftung unter den Kachel-Symbolen.</summary>
+    public bool TileLabelsVisible { get => _tileLabelsVisible; set => Set(ref _tileLabelsVisible, value); }
+
+    /// <summary>Reihenfolge der Kacheln; wird beim Setzen vervollständigt (alle Katalog-Kennungen genau einmal).</summary>
+    public IReadOnlyList<string> TileOrder
+    {
+        get => _tileOrder;
+        set => SetOrder(ref _tileOrder, NormalizeTileOrder(value), nameof(TileOrder));
+    }
+
+    /// <summary>Ausgeblendete Kacheln (Kennungen aus <see cref="TileIds"/>).</summary>
+    public IReadOnlyCollection<string> HiddenTiles => _hiddenTiles;
+
+    public bool IsTileVisible(string id) => !_hiddenTiles.Contains(id);
+
+    /// <summary>Blendet eine Kachel ein oder aus; meldet <see cref="Changed"/> mit <c>HiddenTiles</c>, wenn sich etwas ändert.</summary>
+    public void SetTileVisible(string id, bool visible) => SetMember(_hiddenTiles, id, !visible, nameof(HiddenTiles));
+
+    /// <summary>Kacheln, die unabhängig von <see cref="TileSize"/> nur ihr Symbol zeigen.</summary>
+    public IReadOnlyCollection<string> IconOnlyTiles => _iconOnlyTiles;
+
+    public bool IsTileIconOnly(string id) => _iconOnlyTiles.Contains(id);
+
+    /// <summary>Setzt oder löscht "Nur Symbol" für eine Kachel; meldet <see cref="Changed"/> mit <c>IconOnlyTiles</c>, wenn sich etwas ändert.</summary>
+    public void SetTileIconOnly(string id, bool iconOnly) => SetMember(_iconOnlyTiles, id, iconOnly, nameof(IconOnlyTiles));
+
+    /// <summary>Knopf "Kategorie ▾" in der Leiste jedes Arbeitsbereichs.</summary>
+    public bool WorkspaceCategoryButtonVisible { get => _workspaceCategoryButtonVisible; set => Set(ref _workspaceCategoryButtonVisible, value); }
+
+    /// <summary>Knopf "Sortierung ▾" in der Leiste jedes Arbeitsbereichs.</summary>
+    public bool WorkspaceSortButtonVisible { get => _workspaceSortButtonVisible; set => Set(ref _workspaceSortButtonVisible, value); }
+
+    /// <summary>Knöpfe Notizen, Lesezeichen und Bug in der Leiste jedes Arbeitsbereichs (neues Layout).</summary>
+    public bool WorkspaceMarkButtonsVisible { get => _workspaceMarkButtonsVisible; set => Set(ref _workspaceMarkButtonsVisible, value); }
+
     /// <summary>Ausgeblendete Einträge der allgemeinen Werkzeugleiste (Kennungen aus <see cref="ToolbarItemIds"/>).</summary>
     public IReadOnlyCollection<string> HiddenToolbarItems => _hiddenToolbarItems;
 
     public bool IsToolbarItemVisible(string id) => !_hiddenToolbarItems.Contains(id);
+
+    /// <summary>Einträge, die die Migration einer alten Sitzung ausgeblendet hat; sie gelten im klassischen Layout weiter als sichtbar.</summary>
+    public IReadOnlyCollection<string> ToolbarItemsHiddenByMigration => _toolbarItemsHiddenByMigration;
+
+    /// <summary>
+    /// Sichtbarkeit im klassischen Layout: wie <see cref="IsToolbarItemVisible"/>, nur dass von der Migration ausgeblendete Einträge sichtbar
+    /// bleiben (dort gibt es keine Kachelleiste, und die Spec verspricht "Sichtbarkeit je Eintrag wie heute").
+    /// </summary>
+    public bool IsToolbarItemVisibleInClassic(string id) => IsToolbarItemVisible(id) || _toolbarItemsHiddenByMigration.Contains(id);
 
     /// <summary>Blendet einen Eintrag ein oder aus; meldet <see cref="Changed"/> mit <c>HiddenToolbarItems</c>, wenn sich etwas ändert.</summary>
     public void SetToolbarItemVisible(string id, bool visible)
@@ -277,7 +371,8 @@ public sealed class AppSettings
             throw new ArgumentException($"Unbekannter Werkzeugleisten-Eintrag '{id}'.", nameof(id));
         }
 
-        var changed = visible ? _hiddenToolbarItems.Remove(id) : _hiddenToolbarItems.Add(id);
+        // Eine ausdrückliche Wahl des Nutzers gilt in beiden Layouts; die Migrationsmarke fällt weg.
+        var changed = (visible ? _hiddenToolbarItems.Remove(id) : _hiddenToolbarItems.Add(id)) | _toolbarItemsHiddenByMigration.Remove(id);
         if (changed)
         {
             Changed?.Invoke(this, nameof(HiddenToolbarItems));
@@ -381,6 +476,19 @@ public sealed class AppSettings
         _myModsStartMaximized = state.MyModsStartMaximized;
         _myModsAlertsCollapsed = state.MyModsAlertsCollapsed;
         _myModsWindowBounds = Copy(state.MyModsWindowBounds);
+        _windowLayout = OneOf(state.WindowLayout, "Tiles", "Classic");
+        _toolbarPosition = OneOf(state.ToolbarPosition, "Top", "Left", "Right", "Bottom");
+        _toolbarLabelsVisible = state.ToolbarLabelsVisible ?? true;
+        _toolbarOrder = NormalizeToolbarOrder(state.ToolbarOrder);
+        _tileBarVisible = state.TileBarVisible ?? true;
+        _tileSize = OneOf(state.TileSize, "Large", "Medium", "Compact");
+        _tileLabelsVisible = state.TileLabelsVisible ?? true;
+        _tileOrder = NormalizeTileOrder(state.TileOrder);
+        LoadTileSet(_hiddenTiles, state.HiddenTiles, DefaultHiddenTiles());
+        LoadTileSet(_iconOnlyTiles, state.IconOnlyTiles, new HashSet<string>(StringComparer.Ordinal));
+        _workspaceCategoryButtonVisible = state.WorkspaceCategoryButtonVisible;
+        _workspaceSortButtonVisible = state.WorkspaceSortButtonVisible;
+        _workspaceMarkButtonsVisible = state.WorkspaceMarkButtonsVisible;
         LoadToolbar(state);
         LoadIconColors(state, themeIds);
         Reloaded?.Invoke(this, EventArgs.Empty);
@@ -436,7 +544,21 @@ public sealed class AppSettings
         state.MyModsStartMaximized = _myModsStartMaximized;
         state.MyModsAlertsCollapsed = _myModsAlertsCollapsed;
         state.MyModsWindowBounds = Copy(_myModsWindowBounds);
+        state.WindowLayout = _windowLayout;
+        state.ToolbarPosition = _toolbarPosition;
+        state.ToolbarLabelsVisible = _toolbarLabelsVisible;
+        state.ToolbarOrder = new List<string>(_toolbarOrder);
+        state.TileBarVisible = _tileBarVisible;
+        state.TileSize = _tileSize;
+        state.TileLabelsVisible = _tileLabelsVisible;
+        state.TileOrder = new List<string>(_tileOrder);
+        state.HiddenTiles = TileCatalog.DefaultOrder.Where(_hiddenTiles.Contains).ToList();
+        state.IconOnlyTiles = TileCatalog.DefaultOrder.Where(_iconOnlyTiles.Contains).ToList();
+        state.WorkspaceCategoryButtonVisible = _workspaceCategoryButtonVisible;
+        state.WorkspaceSortButtonVisible = _workspaceSortButtonVisible;
+        state.WorkspaceMarkButtonsVisible = _workspaceMarkButtonsVisible;
         state.HiddenToolbarItems = _hiddenToolbarItems.OrderBy(id => id, StringComparer.Ordinal).ToList();
+        state.ToolbarItemsHiddenByMigration = _toolbarItemsHiddenByMigration.OrderBy(id => id, StringComparer.Ordinal).ToList();
         state.ScriptHintButtonsVisible = IsToolbarItemVisible(ToolbarItemIds.AutoComplete) && IsToolbarItemVisible(ToolbarItemIds.Hover);
         state.IconColorsByTheme = _iconColors
             .Where(t => t.Value.Count > 0)
@@ -481,6 +603,7 @@ public sealed class AppSettings
     private void LoadToolbar(AppSessionState state)
     {
         _hiddenToolbarItems.Clear();
+        _toolbarItemsHiddenByMigration.Clear();
         if (state.HiddenToolbarItems is null)
         {
             if (!state.ScriptHintButtonsVisible)
@@ -488,13 +611,68 @@ public sealed class AppSettings
                 _hiddenToolbarItems.Add(ToolbarItemIds.AutoComplete);
                 _hiddenToolbarItems.Add(ToolbarItemIds.Hover);
             }
+        }
+        else
+        {
+            foreach (var id in state.HiddenToolbarItems.Where(ToolbarCatalog.IsKnown))
+            {
+                _hiddenToolbarItems.Add(id);
+            }
+        }
 
+        // Sitzung vor dem Interface-Rework 2 (kein Layout gespeichert) im neuen Layout: die Werkzeuge, die jetzt Kacheln sind, verschwinden
+        // einmalig aus der kleinen Leiste. Hat der Nutzer das Layout schon gewählt, gilt nur noch die gespeicherte Liste.
+        if (_migrateTileTools && state.WindowLayout is null && _windowLayout == "Tiles")
+        {
+            // Nur was die Migration selbst ausblendet, bleibt im klassischen Layout sichtbar; vorher schon Ausgeblendetes war die Wahl des Nutzers.
+            _toolbarItemsHiddenByMigration.UnionWith(ToolbarCatalog.DefaultHiddenInTilesLayout.Where(id => !_hiddenToolbarItems.Contains(id)));
+            _hiddenToolbarItems.UnionWith(ToolbarCatalog.DefaultHiddenInTilesLayout);
+        }
+        else if (state.ToolbarItemsHiddenByMigration is not null)
+        {
+            _toolbarItemsHiddenByMigration.UnionWith(state.ToolbarItemsHiddenByMigration.Where(id => id is not null && _hiddenToolbarItems.Contains(id)));
+        }
+    }
+
+    private static HashSet<string> DefaultHiddenTiles() =>
+        TileCatalog.All.Where(t => !t.DefaultVisible).Select(t => t.Id).ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>Ohne gespeicherte Liste gilt die Standardreihenfolge mit ihren Trennlinien; sonst wird die Liste vervollständigt.</summary>
+    private static List<string> NormalizeToolbarOrder(IEnumerable<string?>? order) =>
+        ReorderList.Complete(order is null ? ToolbarCatalog.DefaultOrder : order.Where(id => id is not null)!, ToolbarCatalog.All.Select(i => i.Id).ToList(), ToolbarCatalog.IsSeparator);
+
+    private static List<string> NormalizeTileOrder(IEnumerable<string?>? order) =>
+        ReorderList.Complete(order?.Where(id => id is not null)!, TileCatalog.DefaultOrder);
+
+    /// <summary>Übernimmt eine gespeicherte Kachelmenge (nur bekannte Kennungen, null-Einträge fallen weg); ohne Liste gilt <paramref name="fallback"/>.</summary>
+    private static void LoadTileSet(HashSet<string> target, List<string>? stored, HashSet<string> fallback)
+    {
+        target.Clear();
+        target.UnionWith(stored is null ? fallback : stored.Where(id => id is not null && TileCatalog.IsKnown(id)));
+    }
+
+    private void SetOrder(ref List<string> field, List<string> normalized, string name)
+    {
+        if (field.SequenceEqual(normalized, StringComparer.Ordinal))
+        {
             return;
         }
 
-        foreach (var id in state.HiddenToolbarItems.Where(ToolbarCatalog.IsKnown))
+        field = normalized;
+        Changed?.Invoke(this, name);
+    }
+
+    /// <summary>Nimmt eine bekannte Kachel-Kennung in die Menge auf oder entfernt sie; meldet <see cref="Changed"/> nur bei echter Änderung.</summary>
+    private void SetMember(HashSet<string> set, string id, bool member, string name)
+    {
+        if (!TileCatalog.IsKnown(id))
         {
-            _hiddenToolbarItems.Add(id);
+            return;
+        }
+
+        if (member ? set.Add(id) : set.Remove(id))
+        {
+            Changed?.Invoke(this, name);
         }
     }
 

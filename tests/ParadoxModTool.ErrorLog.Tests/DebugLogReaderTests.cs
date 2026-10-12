@@ -35,6 +35,28 @@ public class DebugLogReaderTests
 
     private static IReadOnlyList<TraceHit> Hits(string text) => DebugLogReader.Hits(LogReader.Parse(text.Split('\n')), Source);
 
+    /// <summary>Victoria 3 (Probelauf 2026-10-10, deutsche Oberfläche): Scope als "Art: Name (Id)" mit übersetzter Art, Marker hier eingesetzt.</summary>
+    [Fact]
+    public void Vic3_scope_line_gives_a_hit_with_kind_name_and_id()
+    {
+        const string Vic3 = """
+            [22:11:03][jomini_effect_impl.cpp:454]: events/pmt_probe_events.txt:9: PMT_TRACE_0001
+            [22:11:03][jomini_effect_impl.cpp:2501]: Land: Belgien (25)
+            Root: Land: Belgien (25)
+
+            Saved event targets:
+            pmt_probe_saved: Staat: Brabant (113)
+            """;
+
+        var hit = Assert.Single(Hits(Vic3));
+
+        Assert.Equal("events/pmt_probe_events.txt", hit.File);
+        Assert.Equal(9, hit.Line);
+        Assert.Equal(new TraceScope("Land", "Belgien", "25"), hit.Scope);
+        Assert.Equal(new TraceScope("Land", "Belgien", "25"), hit.Root);
+        Assert.Equal(("pmt_probe_saved", new TraceScope("Staat", "Brabant", "113")), Assert.Single(hit.Saved));
+    }
+
     [Fact]
     public void ProbeExcerptGivesCountryRulerAndCapitalHits()
     {

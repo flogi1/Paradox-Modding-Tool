@@ -21,6 +21,18 @@ public sealed class SettingsWindowTests
     });
 
     [Fact]
+    public void SavedWorkspaceToolbarCategoryOpensToolbarsAndStoresTheNewName() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        host.Settings.SettingsWindowCategory = "WorkspaceToolbar";
+        var window = new SettingsWindow(host);
+        Assert.Equal(SettingsCategory.Toolbars, window.CurrentCategory);
+        Assert.IsType<ToolbarsPage>(window.CurrentPage);
+        Assert.Equal("Toolbars", host.Settings.SettingsWindowCategory);
+        window.Close();
+    });
+
+    [Fact]
     public void WindowWithoutSavedCategoryOpensGeneral() => Sta.Run(() =>
     {
         var window = new SettingsWindow(new FakeHost());
@@ -46,7 +58,7 @@ public sealed class SettingsWindowTests
     });
 
     [Fact]
-    public void ListShowsAllThirteenCategories() => Sta.Run(() =>
+    public void ListShowsAllCategoriesInOrder() => Sta.Run(() =>
     {
         var window = new SettingsWindow(new FakeHost());
 

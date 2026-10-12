@@ -1,0 +1,48 @@
+iv2_sgui_cv_ig_{{ g }}_1 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_1
+	}
+}
+
+iv2_sgui_cv_ig_{{ g }}_2 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_2
+	}
+}
+
+iv2_sgui_cv_ig_{{ g }}_3 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_3
+	}
+}
+
+iv2_sgui_cv_ig_{{ g }}_4 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_4
+	}
+}
+
+iv2_sgui_cv_ig_{{ g }}_5 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_5
+	}
+}
+
+iv2_sgui_cv_ig_{{ g }}_6 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_6
+	}
+}
+
+iv2_sgui_cv_ig_{{ g }}_7 = {
+	scope = country
+	is_valid = {
+		has_country_modifier = ideagroup_modifier_{{ g }}_7
+	}
+}

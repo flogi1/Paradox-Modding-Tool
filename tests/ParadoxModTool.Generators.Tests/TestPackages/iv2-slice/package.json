@@ -1,0 +1,44 @@
+{
+  "id": "iv2-slice",
+  "name": "IV2 Ausschnitt (Test)",
+  "gameId": "eu5",
+  "keyField": "tag",
+  "head": [
+    { "id": "tag", "label": "Tag", "type": "text", "required": true, "pattern": "^[A-Z0-9]{2,5}$" },
+    { "id": "coa", "label": "Wappen", "type": "image", "asset": "coa" }
+  ],
+  "root": {
+    "id": "categories", "label": "Kategorien", "constantsTable": "categories",
+    "child": {
+      "id": "ideas", "label": "Ideen", "min": 0, "max": 9, "numberBaseField": "base",
+      "fields": [
+        { "id": "name", "label": "Name", "type": "text", "required": true, "multilingual": true },
+        { "id": "desc", "label": "Beschreibung", "type": "multilineText", "multilingual": true }
+      ],
+      "child": {
+        "id": "levels", "label": "Stufen", "min": 1, "max": 4,
+        "fields": [
+          { "id": "modifiers", "label": "Modifikatoren", "type": "modifiers" },
+          { "id": "expensive", "label": "teuer", "type": "bool", "default": "no" }
+        ]
+      }
+    }
+  },
+  "constants": {
+    "categories": [ { "key": "adm", "base": 0 }, { "key": "navy", "base": 30 } ]
+  },
+  "assets": { "coa": "assets/coa.zip" },
+  "outputs": [
+    { "id": "sgui", "kind": "ownFile", "path": "in_game/common/scripted_guis/02_IV2_sgui_{{ tag }}.txt", "template": "sgui.sbn" },
+    {
+      "id": "select", "kind": "insertSection", "forEach": "categories", "path": "in_game/gui/setup.gui",
+      "block": "iv2_historic_shell_{{ item.key }}", "template": "select.sbn", "skeleton": "setup_skeleton.sbn",
+      "legacyBegin": "# === IV2Generator:{{ tag }}:START ===", "legacyEnd": "# === IV2Generator:{{ tag }}:END ==="
+    },
+    { "id": "trigger", "kind": "ensureLine", "path": "in_game/common/scripted_triggers/setup.txt", "block": "iv2_tag_list.OR", "line": "has_or_had_tag = {{ tag }}" },
+    { "id": "loc", "kind": "localization", "path": "main_menu/localization/{{ lang }}/04_IV2_{{ tag }}_l_{{ lang }}.yml", "template": "loc.sbn" },
+    { "id": "modifiers", "kind": "syncBlocks", "path": "main_menu/common/static_modifiers/02_IV2_{{ tag }}.txt", "keyPattern": "national_idea_modifier_{{ tag }}_*", "template": "modifiers.sbn" },
+    { "id": "coa", "kind": "copyBinary", "path": "main_menu/gfx/interface/coa/{{ tag }}.dds", "source": "coa:{{ coa }}" }
+  ],
+  "warnings": [ { "when": "total_ideas < 10", "message": "Weniger als 10 Ideen" } ]
+}

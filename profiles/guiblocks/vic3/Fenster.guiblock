@@ -1,0 +1,40 @@
+# block: Fenster
+# group: Fenster
+# description: Verschiebbares Popup-Fenster (default_popup) mit Kopfzeile, Rahmen und Schließen-Knopf; der Inhaltsbereich (500×270) sitzt in den Rändern unter der Kopfzeile, das Fenster wird etwa 600×400 groß. Sichtbar, solange die Variable $name$ besteht: öffnen mit onclick = "[GetVariableSystem.Set( '$name$', 'yes' )]" an einem Knopf, der Schließen-Knopf löscht sie (die Vorgabe von default_popup schließt nur Infopanels des Spiels). Ein Fenster aus einer Mod-Datei entsteht nur, wenn es in gui/scripted_widgets/<datei>.txt als gui/<datei>.gui = $name$ eingetragen oder in ein Vanilla-Fenster eingebaut ist. Vorbild: gui/popups.gui, gui/block_windows.gui, gui/message_settings.gui
+# param: name | Name des Fensters | my_window
+# param: title | Titel (Lokalisierungsschlüssel) | MY_WINDOW_TITLE
+# requires: default_popup
+
+default_popup = {
+	name = "$name$"
+	visible = "[GetVariableSystem.Exists( '$name$' )]"
+
+	blockoverride "window_header_name" {
+		text = "$title$"
+	}
+
+	blockoverride "header_close_button_visibility" {
+		visible = yes
+	}
+
+	blockoverride "header_close_button" {
+		onclick = "[GetVariableSystem.Clear( '$name$' )]"
+	}
+
+	blockoverride "entire_scrollarea" {
+		widget = {
+			size = { 500 270 }
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				spacing = 10
+
+				widget = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+				}
+			}
+		}
+	}
+}

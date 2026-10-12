@@ -250,9 +250,11 @@ public partial class MainWindow
     }
 
     /// <summary>Toolbar-Button "Lesezeichen…": Lesezeichen mit Kommentar an der Markierung bzw. Cursorzeile setzen, ändern oder entfernen.</summary>
-    private void BookmarkWithComment_Click(object sender, RoutedEventArgs e)
+    private void BookmarkWithComment_Click(object sender, RoutedEventArgs e) => BookmarkWithCommentFor(ActivePane);
+
+    /// <summary>Lesezeichen mit Kommentar im angegebenen Arbeitsbereich (Knopf in dessen Leiste oder in der kleinen Leiste).</summary>
+    private void BookmarkWithCommentFor(EditorPane pane)
     {
-        var pane = ActivePane;
 
         if (pane.CurrentFilePath is not { } filePath)
         {

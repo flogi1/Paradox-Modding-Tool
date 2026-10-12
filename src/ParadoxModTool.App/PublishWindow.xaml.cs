@@ -14,7 +14,7 @@ using MessageBox = System.Windows.MessageBox;
 namespace ParadoxModTool.App;
 
 /// <summary>
-/// Fenster "Auf Steam veröffentlichen": bearbeitet die <c>metadata.json</c> (Version), zeigt die Prüfungen (siehe <see cref="PublishReadiness"/>), richtet bei Bedarf SteamCMD ein und lädt den
+/// Fenster "Auf Steam veröffentlichen": bearbeitet die <c>metadata.json</c> bzw. beim klassischen Format die <c>.mod</c>-Datei (Version), zeigt die Prüfungen (siehe <see cref="PublishReadiness"/>), richtet bei Bedarf SteamCMD ein und lädt den
 /// Mod-Ordner über <see cref="WorkshopPublisher"/> hoch, entweder über den laufenden Steam-Client oder über SteamCMD (siehe <see cref="IWorkshopBackend"/>). Das Programm sieht nie ein Passwort:
 /// beim Client-Weg gehört die Anmeldung Steam, bei SteamCMD läuft sie in dessen eigenem Fenster.
 /// </summary>
@@ -26,6 +26,9 @@ public partial class PublishWindow : Window
     private readonly ModRegistry _registry;
     private readonly ModInfo _mod;
     private readonly string _metadataFile;
+
+    /// <summary>Klassisches Format (EU IV, CK III): gezeigt und bearbeitet wird die <c>.mod</c>-Datei statt der <c>metadata.json</c>, siehe <see cref="ClassicModEditor"/>.</summary>
+    private readonly bool _classic;
     private readonly SteamPublishHost _host;
     private readonly SteamCmdSettingsStore _settingsStore;
     private SteamCmdSettings _settings;
@@ -60,6 +63,7 @@ public partial class PublishWindow : Window
         _registry = registry;
         _mod = mod;
         _metadataFile = metadataFile;
+        _classic = ModMetadata.IsClassic(metadataFile);
         _host = host;
         _settingsStore = new SteamCmdSettingsStore(host.GameDirectory);
         _settings = _settingsStore.Load();
@@ -70,7 +74,13 @@ public partial class PublishWindow : Window
 
         TitleText.Text = PublishTexts.SteamTitleFor(mod.Name);
         AppIdText.Text = PublishTexts.SteamGameLine(host.GameName, host.SteamAppId ?? "—");
-        WorkshopIdBox.Text = mod.SteamWorkshopId ?? string.Empty;
+        // Ohne ID im Register gilt beim klassischen Format die remote_file_id aus der .mod-Datei (vom Launcher eingetragen). Muss vor den Vorgaben
+        // für Sichtbarkeit und Seiten-Angaben unten stehen, sonst gilt der Upload als erstes Veröffentlichen und überschreibt Titel und Vorschaubild.
+        // Gesucht wird erst in der gezeigten Datei, dann in der zweiten (der Launcher trägt die ID oft nur in eine ein).
+        var idFromMod = string.IsNullOrWhiteSpace(mod.SteamWorkshopId) && _classic && ModMetadata.Find(mod, metadataFile) is { } found
+            ? ModMetadata.ClassicRemoteFileId(found.Folder, found.SourceFile)
+            : null;
+        WorkshopIdBox.Text = idFromMod ?? mod.SteamWorkshopId ?? string.Empty;
         UserBox.Text = _settings.UserName ?? string.Empty;
         if (string.IsNullOrWhiteSpace(UserBox.Text) && DetectSteamAccount() is { } account)
         {
@@ -83,6 +93,18 @@ public partial class PublishWindow : Window
         if (_settingsStore.LoadWarning is { } warning)
         {
             ResultText.Text = warning;
+        }
+        else if (idFromMod is not null)
+        {
+            ResultText.Text = PublishTexts.WorkshopIdFromMod;
+            ResultText.Foreground = Muted;
+        }
+
+        if (_classic)
+        {
+            MetaSaveButton.ToolTip = PublishTexts.MetaSaveTipClassic;
+            VersionBox.ToolTip = PublishTexts.VersionTipClassic;
+            ListingCheck.ToolTip = PublishTexts.ListingTipClassic;
         }
 
         _initialized = true;
@@ -129,7 +151,13 @@ public partial class PublishWindow : Window
     {
         _log = ReleaseLog.Load(_registry.DataDirectory(_mod.Id));
         _metadata = ModMetadata.Find(_mod, _metadataFile);
-        _metadataPath = _metadata is null ? null : Path.Combine(_metadata.Folder, _metadataFile);
+        // Beim klassischen Format ist "*.mod" kein Dateiname: die echte Datei ist die Geschwisterdatei <Ordner>.mod oder die descriptor.mod im Ordner.
+        // Gezeigt wird die Datei, aus der die Metadaten gelesen wurden: ist die Geschwisterdatei nicht lesbar, die descriptor.mod (die Geschwisterdatei ist
+        // dann die zweite Datei, deren Anpassung beim Speichern mit Fehlermeldung scheitert).
+        _metadataPath = _metadata is null
+            ? null
+            : _metadata.SourceFile is { Length: > 0 } source ? source : ModMetadata.ResolveFilePath(_metadata.Folder, _metadataFile);
+        ShowMetaFileName();
         LoadMetaText();
         LoadChangelog();
         RefreshClientStatus();
@@ -156,7 +184,7 @@ public partial class PublishWindow : Window
                 _metaOriginal = string.Empty;
                 MetaBox.Text = string.Empty;
                 MetaBox.IsReadOnly = true;
-                MetaErrorText.Text = PublishTexts.MetaMissing;
+                MetaErrorText.Text = _classic ? PublishTexts.MetaMissingClassic : PublishTexts.MetaMissing;
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
@@ -164,7 +192,7 @@ public partial class PublishWindow : Window
             _metaOriginal = string.Empty;
             MetaBox.Text = string.Empty;
             MetaBox.IsReadOnly = true;
-            MetaErrorText.Text = PublishTexts.MetaReadFailed(ex.Message);
+            MetaErrorText.Text = _classic ? PublishTexts.MetaReadFailedFile(MetaFileName, ex.Message) : PublishTexts.MetaReadFailed(ex.Message);
         }
         finally
         {
@@ -201,7 +229,45 @@ public partial class PublishWindow : Window
         }
     }
 
-    // ---- metadata.json
+    // ---- metadata.json bzw. .mod-Datei
+
+    /// <summary>Name der gezeigten Datei für Überschrift und Meldungen (<c>metadata.json</c> oder z. B. <c>Idea Variation BT Addon.mod</c>).</summary>
+    private string MetaFileName => _metadataPath is null ? (_classic ? ".mod" : "metadata.json") : Path.GetFileName(_metadataPath);
+
+    /// <summary>
+    /// Die zweite klassische Datei neben der gezeigten (z. B. <c>descriptor.mod</c> im Ordner, wenn die Geschwisterdatei gezeigt wird); <see langword="null"/> beim
+    /// JSON-Format oder wenn es nur eine gibt. Sie bekommt beim Speichern eine geänderte Version mit, sonst nichts (siehe <see cref="SaveMeta"/>).
+    /// </summary>
+    private string? OtherClassicFile() =>
+        !_classic || _metadata is null || _metadataPath is null
+            ? null
+            : ModMetadata.ClassicFilePaths(_metadata.Folder).FirstOrDefault(p => !string.Equals(Path.GetFullPath(p), Path.GetFullPath(_metadataPath), StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Ist <paramref name="file"/> die <see cref="ModMetadata.ClassicWorkshopDescriptorFile"/> im Mod-Ordner (die mit hochgeladen wird)?</summary>
+    private bool IsWorkshopDescriptor(string? file) =>
+        file is not null && _metadata is not null
+        && string.Equals(Path.GetFullPath(file), Path.GetFullPath(Path.Combine(_metadata.Folder, ModMetadata.ClassicWorkshopDescriptorFile)), StringComparison.OrdinalIgnoreCase);
+
+    private void ShowMetaFileName()
+    {
+        MetaHeaderText.Text = MetaFileName;
+        if (!_classic || _metadataPath is null)
+        {
+            MetaFileHint.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        MetaFileHint.Text = OtherClassicFile() is { } other
+            ? PublishTexts.MetaShownFileSynced(_metadataPath, Path.GetFileName(other))
+            : PublishTexts.MetaShownFile(_metadataPath);
+        MetaFileHint.Visibility = Visibility.Visible;
+    }
+
+    private string? ReadMetaVersion(string text) => _classic ? ClassicModEditor.ReadVersion(text) : ModMetadataEditor.ReadVersion(text);
+
+    private string SetMetaVersion(string text, string version) => _classic ? ClassicModEditor.SetVersion(text, version) : ModMetadataEditor.SetVersion(text, version);
+
+    private string? ValidateMeta(string text) => _classic ? ClassicModEditor.Validate(text) : ModMetadataEditor.Validate(text);
 
     private void SetMetaDirty(bool dirty)
     {
@@ -213,7 +279,7 @@ public partial class PublishWindow : Window
     private void SyncVersionBox()
     {
         _syncingVersion = true;
-        VersionBox.Text = ModMetadataEditor.ReadVersion(MetaBox.Text) ?? string.Empty;
+        VersionBox.Text = ReadMetaVersion(MetaBox.Text) ?? string.Empty;
         VersionBox.IsEnabled = !MetaBox.IsReadOnly;
         NextVersionButton.IsEnabled = !MetaBox.IsReadOnly;
         _syncingVersion = false;
@@ -258,7 +324,7 @@ public partial class PublishWindow : Window
     /// <summary>Setzt das Feld <c>version</c> im Text der Datei (nur dort, Rest bleibt gleich). Gespeichert wird erst mit "Änderung speichern".</summary>
     private void ApplyVersion(string version)
     {
-        if (_syncingVersion || MetaBox.IsReadOnly || version == (ModMetadataEditor.ReadVersion(MetaBox.Text) ?? string.Empty))
+        if (_syncingVersion || MetaBox.IsReadOnly || version == (ReadMetaVersion(MetaBox.Text) ?? string.Empty))
         {
             return;
         }
@@ -272,7 +338,7 @@ public partial class PublishWindow : Window
 
         try
         {
-            MetaBox.Text = ModMetadataEditor.SetVersion(MetaBox.Text, version);
+            MetaBox.Text = SetMetaVersion(MetaBox.Text, version);
         }
         catch (InvalidOperationException ex)
         {
@@ -289,7 +355,11 @@ public partial class PublishWindow : Window
         ReloadAll();
     }
 
-    /// <summary>Speichert die Datei, wenn der Text gültiges JSON ist. <see langword="true"/>, wenn danach nichts Ungespeichertes mehr da ist.</summary>
+    /// <summary>
+    /// Speichert die Datei, wenn der Text gültig ist (JSON bzw. beim klassischen Format ausgeglichene Klammern und Anführungszeichen). <see langword="true"/>, wenn danach
+    /// nichts Ungespeichertes mehr da ist. Beim klassischen Format bekommt die zweite Datei (siehe <see cref="OtherClassicFile"/>) eine geänderte Version mit; der übrige
+    /// Text wird nie hinübergeschrieben, weil sich beide Dateien zu Recht unterscheiden (z. B. <c>path=</c> nur in der Geschwisterdatei).
+    /// </summary>
     private bool SaveMeta()
     {
         if (!_metaDirty || _metadataPath is null)
@@ -297,23 +367,25 @@ public partial class PublishWindow : Window
             return true;
         }
 
-        if (ModMetadataEditor.Validate(MetaBox.Text) is { } error)
+        if (ValidateMeta(MetaBox.Text) is { } error)
         {
             MetaErrorText.Text = PublishTexts.MetaNotSaved(error);
             return false;
         }
 
+        string text;
         try
         {
             var onDisk = ModTextFile.Read(_metadataPath).Text;
+            var changedOutside = _classic ? PublishTexts.MetaChangedOutsideFile(MetaFileName) : PublishTexts.MetaChangedOutside;
             if (onDisk != _metaOriginal
-                && MessageBox.Show(this, PublishTexts.MetaChangedOutside, Caption, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                && MessageBox.Show(this, changedOutside, Caption, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             {
                 return false;
             }
 
             var newline = _metaOriginal.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
-            var text = MetaBox.Text.Replace("\r\n", "\n").Replace("\n", newline);
+            text = MetaBox.Text.Replace("\r\n", "\n").Replace("\n", newline);
             ModTextFile.Write(_metadataPath, new ModTextDocument(text, _metaHasBom), BackupDirectory);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
@@ -322,9 +394,100 @@ public partial class PublishWindow : Window
             return false;
         }
 
+        var syncProblem = SyncClassicVersion(ReadMetaVersion(_metaOriginal), ReadMetaVersion(text));
         SetMetaDirty(false);
         ReloadAll();
+        if (syncProblem is not null)
+        {
+            MetaErrorText.Text = syncProblem;
+        }
+
         return true;
+    }
+
+    /// <summary>
+    /// Schreibt eine geänderte Version auch in die zweite klassische Datei (nur die <c>version</c>-Zeile, deren eigene Zeilenenden und BOM bleiben; vorher eine Sicherung).
+    /// Ist deren Text kaputt (Klammern, Anführungszeichen) oder lässt sich die Version darin nicht sicher setzen (siehe <see cref="ClassicModEditor.SetVersion"/>), wird
+    /// nichts geschrieben. Gibt eine Fehlermeldung zurück, wenn das nicht ging; sonst <see langword="null"/>. <paramref name="beforeUpload"/> wählt den Text der Meldung.
+    /// </summary>
+    private string? SyncClassicVersion(string? before, string? after, bool beforeUpload = false)
+    {
+        if (string.IsNullOrWhiteSpace(after) || after == before || OtherClassicFile() is not { } other)
+        {
+            return null;
+        }
+
+        string Failed(string error) => beforeUpload
+            ? PublishTexts.MetaSyncBeforeUploadFailed(after, Path.GetFileName(other), error)
+            : PublishTexts.MetaSyncFailed(MetaFileName, Path.GetFileName(other), error);
+
+        try
+        {
+            var document = ModTextFile.Read(other);
+            if (ClassicModEditor.ReadVersion(document.Text) == after)
+            {
+                return null;
+            }
+
+            if (ClassicModEditor.Validate(document.Text) is { } invalid)
+            {
+                return Failed(invalid);
+            }
+
+            ModTextFile.Write(other, document with { Text = ClassicModEditor.SetVersion(document.Text, after) }, BackupDirectory);
+            return null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException or InvalidOperationException)
+        {
+            return Failed(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Trägt nach dem Hochladen die Workshop-ID als <c>remote_file_id</c> in beide klassischen Dateien ein, wie es der Launcher tut (nur diese Zeile, vorher eine
+    /// Sicherung). Dateien, in denen die ID schon steht oder deren Text kaputt ist, bleiben unverändert. Gibt je Datei, die nicht ging, eine Fehlermeldung zurück.
+    /// </summary>
+    private List<string> WriteClassicRemoteFileId(string id)
+    {
+        var problems = new List<string>();
+        if (!_classic || _metadata is null)
+        {
+            return problems;
+        }
+
+        var wroteShown = false;
+        foreach (var file in ModMetadata.ClassicFilePaths(_metadata.Folder))
+        {
+            try
+            {
+                var document = ModTextFile.Read(file);
+                if (ClassicModEditor.ReadRemoteFileId(document.Text) == id)
+                {
+                    continue;
+                }
+
+                if (ClassicModEditor.Validate(document.Text) is { } invalid)
+                {
+                    problems.Add(PublishTexts.RemoteFileIdWriteFailed(Path.GetFileName(file), invalid));
+                    continue;
+                }
+
+                ModTextFile.Write(file, document with { Text = ClassicModEditor.SetRemoteFileId(document.Text, id) }, BackupDirectory);
+                wroteShown |= _metadataPath is not null && string.Equals(Path.GetFullPath(file), Path.GetFullPath(_metadataPath), StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException or InvalidOperationException)
+            {
+                problems.Add(PublishTexts.RemoteFileIdWriteFailed(Path.GetFileName(file), ex.Message));
+            }
+        }
+
+        // Die gezeigte Datei hat sich geändert: neu laden, sonst meldet das nächste Speichern eine Änderung von außen
+        if (wroteShown && !_metaDirty)
+        {
+            LoadMetaText();
+        }
+
+        return problems;
     }
 
     /// <summary>Fragt bei ungespeicherter Änderung nach. <see langword="false"/> = abbrechen.</summary>
@@ -335,7 +498,7 @@ public partial class PublishWindow : Window
             return true;
         }
 
-        var answer = MessageBox.Show(this, PublishTexts.MetaUnsaved, Caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        var answer = MessageBox.Show(this, _classic ? PublishTexts.MetaUnsavedFile(MetaFileName) : PublishTexts.MetaUnsaved, Caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         switch (answer)
         {
             case MessageBoxResult.Yes:
@@ -350,7 +513,7 @@ public partial class PublishWindow : Window
 
     private void NewBanner_Click(object sender, RoutedEventArgs e)
     {
-        var version = ModMetadataEditor.ReadVersion(MetaBox.Text);
+        var version = ReadMetaVersion(MetaBox.Text);
         if (_changelogPath is null || !VersionNumber.TryParse(version, out var number))
         {
             return;
@@ -439,8 +602,10 @@ public partial class PublishWindow : Window
             return null;
         }
 
+        // picture steht relativ zum Ordner der Metadaten-Datei; beim klassischen Format relativ zum Mod-Ordner (die Geschwisterdatei liegt daneben, nicht darin).
         var picture = string.IsNullOrWhiteSpace(_metadata.Picture) ? FallbackPreview : _metadata.Picture;
-        return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(_metadataPath)!, picture));
+        var baseFolder = _classic ? _metadata.Folder : Path.GetDirectoryName(_metadataPath)!;
+        return Path.GetFullPath(Path.Combine(baseFolder, picture));
     }
 
     /// <summary>Der Name einer anderen Mod der Verwaltung, die schon die Workshop-ID im Feld führt; sonst <see langword="null"/>. Schützt davor, versehentlich die Seite einer anderen Mod zu überschreiben.</summary>
@@ -454,7 +619,7 @@ public partial class PublishWindow : Window
 
     private void RefreshChecks()
     {
-        var versionText = ModMetadataEditor.ReadVersion(MetaBox.Text);
+        var versionText = ReadMetaVersion(MetaBox.Text);
         var hasSection = VersionNumber.TryParse(versionText, out var number)
             && _entries?.Any(entry => VersionNumber.TryParse(entry.Version, out var other) && other.Equals(number)) == true;
         var preview = PreviewFullPath();
@@ -475,7 +640,9 @@ public partial class PublishWindow : Window
             NothingToUpload: _scope is { FileCount: 0 },
             UseSteamClient: _useClient,
             ClientProblem: _clientProblem,
-            WorkshopIdOwner: OtherModWithWorkshopId()));
+            WorkshopIdOwner: OtherModWithWorkshopId(),
+            ClassicMetadata: _classic,
+            ClassicDescriptorMissing: _classic && _metadata is not null && !File.Exists(Path.Combine(_metadata.Folder, ModMetadata.ClassicWorkshopDescriptorFile))));
 
         HintList.ItemsSource = _readiness.Hints.Select(h => new HintRow(h.Text, h.Blocking ? Danger : Muted)).ToList();
         PublishButton.Content = IsFirstPublish ? PublishTexts.Publish : "Update";
@@ -494,7 +661,7 @@ public partial class PublishWindow : Window
         }
 
         var text = string.Empty;
-        if (VersionNumber.TryParse(ModMetadataEditor.ReadVersion(MetaBox.Text), out var number)
+        if (VersionNumber.TryParse(ReadMetaVersion(MetaBox.Text), out var number)
             && _entries?.FirstOrDefault(entry => VersionNumber.TryParse(entry.Version, out var other) && other.Equals(number)) is { } section)
         {
             text = BbCodeCheck.IsChecked == true ? ChangeNoteFormatter.ToBbCode(section.Text) : section.Text;
@@ -611,7 +778,7 @@ public partial class PublishWindow : Window
     {
         if (_metadata is null || string.IsNullOrWhiteSpace(_host.SteamAppId))
         {
-            Report(PublishTexts.FindNeedsMetadata);
+            Report(_classic ? PublishTexts.FindNeedsMetadataClassic : PublishTexts.FindNeedsMetadata);
             return;
         }
 
@@ -925,6 +1092,15 @@ public partial class PublishWindow : Window
             return;
         }
 
+        // Hochgeladen wird die descriptor.mod im Ordner: ihre Version muss der geprüften entsprechen, auch wenn beide Dateien schon vorher auseinanderlagen
+        // oder das Nachziehen beim Speichern scheiterte. Erst nach der Bestätigung, damit ein Abbruch nichts schreibt; ohne Unterschied schreibt das nichts.
+        // Ist die gezeigte Datei selbst die descriptor.mod, wird die Geschwisterdatei daneben nicht hochgeladen und hier nicht angefasst.
+        if (_classic && IsWorkshopDescriptor(OtherClassicFile()) && SyncClassicVersion(null, version, beforeUpload: true) is { } syncProblem)
+        {
+            Report(syncProblem);
+            return;
+        }
+
         string? previewRelative = null;
         if (PreviewFullPath() is { } previewPath && File.Exists(previewPath))
         {
@@ -990,6 +1166,8 @@ public partial class PublishWindow : Window
             {
                 problems.Add(PublishTexts.WorkshopIdSaveFailed(ex.Message));
             }
+
+            problems.AddRange(WriteClassicRemoteFileId(id));
         }
 
         if (result.Outcome == WorkshopPublishOutcome.Success && result.WorkshopId is { } publishedId)

@@ -1,0 +1,211 @@
+{
+  "id": "iv2-dynamic-ideas",
+  "name": { "de": "IV2 Dynamische Nationalideen", "en": "IV2 Dynamic National Ideas", "fr": "Idées nationales dynamiques IV2", "es": "Ideas nacionales dinámicas IV2", "ru": "Динамические национальные идеи IV2", "pl": "Dynamiczne idee narodowe IV2", "pt-br": "Ideias nacionais dinâmicas IV2", "zh-hans": "IV2 动态国家理念" },
+  "gameId": "eu5",
+  "keyFields": [ "category", "number" ],
+  "head": [
+    { "id": "category", "label": { "de": "Kategorie", "en": "Category" }, "type": "choice", "choices": [ "adm", "dip", "army", "navy" ], "required": true },
+    { "id": "number", "label": { "de": "Nummer", "en": "Number" }, "type": "number", "required": true, "pattern": "^[1-9][0-9]*$", "autoNumber": true },
+    { "id": "name", "label": { "de": "Name", "en": "Name" }, "type": "text", "required": true, "multilingual": true },
+    { "id": "desc", "label": { "de": "Beschreibung", "en": "Description" }, "type": "multilineText", "multilingual": true },
+    { "id": "subTab", "label": {
+        "de": "Unter-Reiter (adm_1 Regierung, adm_5 Armee, adm_2 Gebäude & RGO, adm_3 Bevölkerung, adm_4 Charaktere & Nahrung, adm_6 Forschung; dip_1 Basis, dip_2 Stände, dip_3 Handel, dip_4 Diplomatie & Untertanen, dip_5 Gesellschaftswerte, dip_6 Kolonial)",
+        "en": "Sub-tab (adm_1 Governance, adm_5 Army, adm_2 Buildings & RGO, adm_3 Pops, adm_4 Characters & Food, adm_6 Research; dip_1 Basic, dip_2 Estates, dip_3 Trade, dip_4 Diplomacy & Subjects, dip_5 Society Values, dip_6 Colonial)" },
+      "type": "choice", "choices": [ "", "adm_1", "adm_2", "adm_3", "adm_4", "adm_5", "adm_6", "dip_1", "dip_2", "dip_3", "dip_4", "dip_5", "dip_6" ] },
+    { "id": "condition", "label": { "de": "Bedingung (Inhalt des Scripted Triggers)", "en": "Condition (content of the scripted trigger)" }, "type": "multilineText" },
+    { "id": "guiLevels", "label": { "de": "Im Fenster gezeigte Stufen (leer = alle)", "en": "Levels shown in the window (empty = all)" }, "type": "number", "pattern": "^[1-4]?$" },
+    { "id": "disabled", "label": { "de": "Deaktiviert", "en": "Disabled" }, "type": "bool", "default": "no" },
+    { "id": "disabledNote", "label": { "de": "Notiz zur Deaktivierung", "en": "Note on disabling" }, "type": "text" },
+    { "id": "aiTags", "label": { "de": "KI-Tags (je Zeile eine Tag-Kennung)", "en": "AI tags (one tag id per line)" }, "type": "multilineText" }
+  ],
+  "root": {
+    "id": "levels", "label": { "de": "Stufen", "en": "Levels" }, "min": 1, "max": 4, "initial": 4,
+    "fields": [
+      { "id": "modifiers", "label": { "de": "Modifikatoren", "en": "Modifiers" }, "type": "modifiers" },
+      { "id": "expensive", "label": { "de": "Teure Kosten", "en": "Expensive cost" }, "type": "bool", "default": "no" }
+    ]
+  },
+  "languages": { "copyEnglish": true },
+  "targets": [ "mod", "output" ],
+  "externals": {
+    "aiTags": { "label": { "de": "KI-Tag-Datei (iv2_ai_tags.json)", "en": "AI tag file (iv2_ai_tags.json)" }, "hint": "Idea Variation 2 Skripte/Tag-Editor/iv2_ai_tags.json" }
+  },
+  "afterGenerate": {
+    "de": "Bitte danach iv2_build_ai_chooser.py laufen lassen, damit der KI-Auswähler die neuen oder geänderten Ideen kennt.",
+    "en": "Please run iv2_build_ai_chooser.py afterwards so that the AI chooser knows the new or changed ideas."
+  },
+  "outputs": [
+    { "id": "static_modifiers", "kind": "syncMatching", "path": "main_menu/common/static_modifiers/01_IV2_dynamic_national_ideas_{{ category }}.txt",
+      "template": "static_modifiers.sbn", "match": "{{ hm }}", "insertAfter": "^national_idea_modifier_{{ category }}_[0-9]+" },
+    { "id": "ga", "kind": "syncMatching", "path": "in_game/common/generic_actions/iv2_ga_dynamic_national_ideas_{{ category }}.txt",
+      "template": "ga.sbn", "match": "{{ hm }}", "insertAfter": "^iv2_ga_(?:select_national|deselect_nat)_idea_{{ category }}_[0-9]+" },
+    { "id": "sgui", "kind": "syncMatching", "path": "in_game/common/scripted_guis/IV2_scripted_gui_dynamic_{{ category }}.txt",
+      "template": "sgui.sbn", "match": "{{ hm }}", "insertAfter": "^iv2_sgui_dynamic_nat_{{ category }}_[0-9]+" },
+    { "id": "triggers", "kind": "syncMatching", "path": "in_game/common/scripted_triggers/iv2_scripted_trigger_dynamic_nat_idea_{{ category }}.txt",
+      "template": "triggers.sbn", "match": "{{ hm }}", "insertAfter": "^iv2_sct_dnat_idea_{{ category }}_[0-9]+" },
+    { "id": "ai_progress", "kind": "syncMatching", "path": "in_game/common/generic_action_ai_lists/02_iv2_generic_action_list_dynamic_nat_ideas_{{ category }}.txt",
+      "block": "iv2_ga_list_dynamic_nat_ideas_progress_cost_{{ category }}.actions", "template": "ai_progress.sbn",
+      "match": "\\A#?[ \\t]*iv2_ga_select_national_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_ga_select_national_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "ai_innovation", "kind": "syncMatching", "path": "in_game/common/generic_action_ai_lists/02_iv2_generic_action_list_dynamic_nat_ideas_{{ category }}.txt",
+      "block": "iv2_ga_list_dynamic_nat_ideas_innovation_cost_{{ category }}.actions", "template": "ai_innovation.sbn",
+      "match": "\\A#?[ \\t]*iv2_ga_select_national_idea_{{ id }}_[0-9](?![0-9])", "insertAfter": "\\A#?[ \\t]*iv2_ga_select_national_idea_{{ category }}_[0-9]+_[0-9](?![0-9])" },
+    { "id": "setup_effect", "kind": "syncMatching", "path": "in_game/common/scripted_effects/01_iv2_scripted_effect_dynamic_national_idea_setup.txt",
+      "block": "iv2_dynamic_national_ideas_list_setup_effect", "template": "setup_effect.sbn", "ifLimit": "{{ condition }}",
+      "match": "flag:iv2_nat_{{ id }}(?![0-9])", "insertAfter": "flag:iv2_nat_{{ category }}_[0-9]+(?![0-9])" },
+    { "id": "setup_debug", "kind": "syncMatching", "path": "in_game/common/scripted_guis/IV2_scripted_gui_reload_gui_button.txt",
+      "block": "iv2_get_test.effect", "template": "setup_effect.sbn", "ifLimit": "{{ condition }}",
+      "match": "flag:iv2_nat_{{ id }}(?![0-9])", "insertAfter": "flag:iv2_nat_{{ category }}_[0-9]+(?![0-9])" },
+    { "id": "shell_1", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type {{ shell_slot 1 }}", "template": "setup_shell_1.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "shell_2", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type {{ shell_slot 2 }}", "template": "setup_shell_2.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "shell_3", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type {{ shell_slot 3 }}", "template": "setup_shell_3.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "shell_4", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type {{ shell_slot 4 }}", "template": "setup_shell_4.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "shell_5", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type {{ shell_slot 5 }}", "template": "setup_shell_5.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "shell_6", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type {{ shell_slot 6 }}", "template": "setup_shell_6.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "see_shell", "kind": "syncMatching", "path": "in_game/gui/Idea Variation 2 National Ideas/IV2_dynamic_national_ideas_setup.gui",
+      "block": "type iv2_picked_national_ideas_shell", "template": "setup_see_shell.sbn",
+      "match": "\\A#?[ \\t]*iv2_nat_idea_see_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_nat_idea_see_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "purger_nat", "kind": "syncMatching", "path": "in_game/common/scripted_effects/01_iv2_scripted_effect_log_purger.txt",
+      "block": "iv2_log_purger", "template": "purger_nat.sbn",
+      "match": "v = iv2_nat_{{ id }}(?![0-9])", "insertAfter": "v = iv2_nat_{{ category }}_[0-9]+(?![0-9])" },
+    { "id": "purger_var", "kind": "syncMatching", "path": "in_game/common/scripted_effects/01_iv2_scripted_effect_log_purger.txt",
+      "block": "iv2_log_purger", "template": "purger_var.sbn",
+      "match": "v = iv2_var_nat_{{ id }}(?![0-9])", "insertAfter": "v = iv2_var_nat_{{ category }}_[0-9]+(?![0-9])" },
+    { "id": "no_ai", "kind": "syncMatching", "path": "in_game/common/generic_action_ai_lists/iv2_generic_action_list_no_ai.txt",
+      "block": "iv2_ga_list_no_ai.actions", "template": "no_ai.sbn",
+      "match": "\\Aiv2_ga_select_national_idea_{{ id }}(?![0-9_])", "insertAfter": "\\Aiv2_ga_select_national_idea_(?:{{ categories_upto }})_[0-9]+(?![0-9_])" },
+    { "id": "gui_overview", "kind": "syncMatching", "path": "{{ gui_folder }}/IV2_dyn_national_ideas_overview_{{ category }}.gui",
+      "block": "types iv2_nat_ideas_{{ category }}_all", "template": "gui_overview.sbn",
+      "match": "\\A#?[ \\t]*type iv2_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*type iv2_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "gui_see", "kind": "syncMatching", "path": "{{ gui_folder }}/IV2_dyn_national_ideas_{{ category }}.gui",
+      "block": "types iv2_nat_ideas_see_{{ category }}", "template": "gui_see.sbn",
+      "match": "\\A#?[ \\t]*type iv2_nat_idea_see_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*type iv2_nat_idea_see_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "gui_select_tt", "kind": "syncMatching", "path": "{{ gui_folder }}/IV2_dyn_select_nat_idea_templates_{{ category }}.gui",
+      "template": "gui_select_tt.sbn",
+      "match": "\\A#?[ \\t]*template iv_2_tooltip_template_nat_idea_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*template iv_2_tooltip_template_nat_idea_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "gui_individual_tt", "kind": "syncMatching", "path": "{{ gui_folder }}/IV2_dyn_national_ideas_nat_ideas_tooltip_templates_{{ category }}.gui",
+      "template": "gui_individual_tt.sbn",
+      "match": "\\A#?[ \\t]*template iv2_individual_nat_idea_{{ id }}(?:_[0-9])?(?![0-9_])", "insertAfter": "\\A#?[ \\t]*template iv2_individual_nat_idea_{{ category }}_[0-9]+(?:_[0-9])?(?![0-9_])" },
+    { "id": "gui_remove_tt", "kind": "syncMatching", "path": "{{ gui_folder }}/IV2_dyn_nat_idea_tt_remove_{{ category }}.gui",
+      "template": "gui_remove_tt.sbn",
+      "match": "\\A#?[ \\t]*template iv2_individual_nat_idea_remove_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*template iv2_individual_nat_idea_remove_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "cv_type", "kind": "syncMatching", "path": "in_game/gui/IV2 Country View/IV2_cv_national_dynamic_{{ category }}.gui",
+      "block": "types iv2_cv_nat_dyn_{{ category }}", "template": "cv_type.sbn",
+      "match": "\\A#?[ \\t]*type iv2_cv_nat_dyn_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*type iv2_cv_nat_dyn_{{ category }}_[0-9]+(?![0-9_])" },
+    { "id": "cv_shell", "kind": "syncMatching", "path": "in_game/gui/IV2 Country View/IV2_cv_shells.gui",
+      "block": "type iv2_cv_national_idea_shell", "template": "cv_shell.sbn",
+      "match": "\\A#?[ \\t]*iv2_cv_nat_dyn_{{ id }}(?![0-9_])", "insertAfter": "\\A#?[ \\t]*iv2_cv_nat_dyn_(?:{{ categories_upto }})_[0-9]+(?![0-9_])" },
+    { "id": "loc_idea", "kind": "localization", "path": "main_menu/localization/{{ lang }}/{{ idea_loc_file }}", "template": "loc_idea.sbn",
+      "keys": "^(?:iv2_dynamic_nat_idea_|iv2_ga_select_national_idea_|iv2_ga_deselect_nat_idea_|STATIC_MODIFIER_(?:NAME|DESC)_national_idea_modifier_){{ id }}(?:_[0-9])?(?:_desc)?$",
+      "insertAfter": "^(?:iv2_dynamic_nat_idea_|iv2_ga_select_national_idea_|iv2_ga_deselect_nat_idea_|STATIC_MODIFIER_(?:NAME|DESC)_national_idea_modifier_){{ category }}_[0-9]+(?:_[0-9])?(?:_desc)?$" },
+    { "id": "messagetypes", "kind": "syncMatching", "path": "main_menu/gui/messagetypes.txt", "template": "messagetypes.sbn",
+      "match": "\\A#?[ \\t]*WE_PERFORM_iv2_ga_(?:select_national_idea_{{ id }}(?:_[0-9])?|deselect_nat_idea_{{ id }})_ACTION(?![0-9_])",
+      "insertAfter": "\\A#?[ \\t]*WE_PERFORM_iv2_ga_(?:select_national_idea_{{ category }}_[0-9]+(?:_[0-9])?|deselect_nat_idea_{{ category }}_[0-9]+)_ACTION(?![0-9_])" },
+    { "id": "loc_msg_select", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_select.sbn",
+      "keys": "^WE_PERFORM_iv2_ga_select_national_idea_{{ id }}(?:_[0-9])?_ACTION_[A-Z0-9]+$",
+      "insertAfter": "^WE_PERFORM_iv2_ga_select_national_idea_{{ category }}_[0-9]+(?:_[0-9])?_ACTION_[A-Z0-9]+$" },
+    { "id": "loc_msg_deselect", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_deselect.sbn",
+      "keys": "^WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_[A-Z0-9]+$",
+      "insertAfter": "^WE_PERFORM_iv2_ga_deselect_nat_idea_{{ category }}_[0-9]+_ACTION_[A-Z0-9]+$" },
+    { "id": "ai_tags", "kind": "jsonEntry", "path": "", "external": "aiTags", "jsonPath": "entries", "entryKey": "nat:{{ id }}", "template": "ai_tags.sbn" }
+  ],
+  "errors": [
+    { "when": "(category == \"adm\" || category == \"dip\") && !(subTab | string.starts_with (category + \"_\"))",
+      "message": { "de": "adm- und dip-Ideen brauchen einen Unter-Reiter ihrer Kategorie.", "en": "adm and dip ideas need a sub-tab of their category." } },
+    { "when": "(category == \"army\" || category == \"navy\") && subTab != \"\"",
+      "message": { "de": "army- und navy-Ideen haben keinen Unter-Reiter; das Feld muss leer sein.", "en": "army and navy ideas have no sub-tab; leave the field empty." } }
+  ],
+  "warnings": [
+    { "when": "gui_levels > levels.size",
+      "message": { "de": "Im Fenster gezeigte Stufen ist größer als die Zahl der Stufen.", "en": "Levels shown in the window is greater than the number of levels." } },
+    { "when": "!has_ai_tags",
+      "message": { "de": "Keine KI-Tags: der Eintrag in der KI-Tag-Datei wird nicht angelegt oder geändert.", "en": "No AI tags: the entry in the AI tag file is neither created nor changed." } }
+  ],
+  "read": {
+    "keys": {
+      "file": "^main_menu/common/static_modifiers/01_IV2_dynamic_national_ideas_(adm|dip|army|navy)\\.txt$",
+      "block": "national_idea_modifier_(?<category>adm|dip|army|navy)_(?<number>\\d+)"
+    },
+    "elements": {
+      "file": "main_menu/common/static_modifiers/01_IV2_dynamic_national_ideas_{{ category }}.txt",
+      "block": "national_idea_modifier_{{ category }}_{{ number }}(?<suffix>_\\d)?",
+      "level": "levels",
+      "fields": { "modifiers": { "body": true, "except": [ "game_data" ] } }
+    },
+    "localizationOutput": "loc_idea",
+    "localization": [
+      { "key": "iv2_dynamic_nat_idea_{{ category }}_{{ number }}", "field": "name", "output": "loc_idea" },
+      { "key": "iv2_ga_select_national_idea_{{ category }}_{{ number }}_desc", "field": "desc", "output": "loc_idea" }
+    ],
+    "flags": [
+      { "file": "in_game/common/generic_actions/iv2_ga_dynamic_national_ideas_{{ category }}.txt", "block": "iv2_ga_select_national_idea_{{ category }}_{{ number }}(?<suffix>_\\d)?",
+        "contains": "for_nat_idea_expensive_", "field": "levels.expensive" },
+      { "file": "in_game/common/scripted_effects/01_iv2_scripted_effect_dynamic_national_idea_setup.txt", "block": "iv2_dynamic_national_ideas_list_setup_effect",
+        "pattern": "remove_list_variable[ \\t]*=[ \\t]*\\{[^}\\n]*flag:iv2_nat_{{ category }}_{{ number }}(?![0-9])", "field": "disabled" }
+    ],
+    "values": [
+      { "file": "in_game/common/scripted_triggers/iv2_scripted_trigger_dynamic_nat_idea_{{ category }}.txt", "block": "iv2_sct_dnat_idea_{{ category }}_{{ number }}",
+        "body": ".", "field": "condition" },
+      { "file": "in_game/common/scripted_effects/01_iv2_scripted_effect_dynamic_national_idea_setup.txt", "block": "iv2_dynamic_national_ideas_list_setup_effect",
+        "pattern": "iv2_nat_ideas_list_(?<value>adm_[1-6]|dip_[1-6])\\s*#?\\s*target\\s*=\\s*flag:iv2_nat_{{ category }}_{{ number }}(?![0-9])", "field": "subTab" },
+      { "file": "in_game/common/scripted_effects/01_iv2_scripted_effect_dynamic_national_idea_setup.txt", "block": "iv2_dynamic_national_ideas_list_setup_effect",
+        "pattern": "#[ \\t]*add_to_variable_list[ \\t]*=[ \\t]*\\{[ \\t]*#[ \\t]*(?:disabled\\b[ \\t]*:?[ \\t]*)?(?<value>[^\\n]*?)(?:[ \\t]*:?[ \\t]*not in the list, so no empty cell in the grid)?[ \\t]*\\n[ \\t]*#[ \\t]*name[^\\n]*\\n[ \\t]*#[ \\t]*target[ \\t]*=[ \\t]*flag:iv2_nat_{{ category }}_{{ number }}(?![0-9])",
+        "field": "disabledNote" },
+      { "file": "{{ gui_folder }}/IV2_dyn_national_ideas_{{ category }}.gui",
+        "block": "types iv2_nat_ideas_see_{{ category }}",
+        "pattern": "type iv2_nat_idea_see_{{ category }}_{{ number }}(?![0-9])(?:(?!type iv2_nat_idea_see_)[\\s\\S])*?iv2_number_(?<value>[1-3])\\.dds(?:(?!iv2_number_|type iv2_nat_idea_see_)[\\s\\S])*?iv2_upgrade_no\\.dds",
+        "field": "guiLevels" }
+    ],
+    "json": [
+      { "external": "aiTags", "jsonPath": "entries", "entryKey": "nat:{{ category }}_{{ number }}", "property": "tags", "field": "aiTags" }
+    ]
+  },
+  "candidates": {
+    "category": "country",
+    "used": [
+      {
+        "file": "^main_menu/common/static_modifiers/01_IV2_dynamic_national_ideas_(adm|dip|army|navy)\\.txt$",
+        "block": "national_idea_modifier_(adm|dip|army|navy)_\\d+(_[123])?",
+        "except": ["game_data"]
+      }
+    ],
+    "groups": [
+      { "id": "goodsOutput", "label": { "de": "Produktion einzelner Güter", "en": "Output of single goods" },
+        "pattern": "^global_[a-z_]+_output_modifier$", "hidden": true },
+      { "id": "goodsOther", "label": { "de": "Weitere Modifier einzelner Güter (Nachfrage, Inflation, Münzen, Ein-/Ausfuhrverbot, Abbau, Aufbau)", "en": "Other single-good modifiers (demand, inflation, minting, import/export ban, extraction, establishment)" },
+        "pattern": "^global_[a-z_]+_pop_demand$|_impacts_inflation$|_used_for_minting$|^ban_(exports|imports)_of_|^can_extract_|^global_(?!building_)[a-z_]+_establishment_speed$", "hidden": true },
+      { "id": "modOwn", "label": { "de": "Eigene Modifier der Mod (iv_, iv2_)", "en": "The mod's own modifiers (iv_, iv2_)" },
+        "pattern": "^iv2?_", "hidden": false },
+      { "id": "ai", "label": { "de": "KI-Verhalten", "en": "AI behaviour" },
+        "pattern": "^ai_|_weight$|^bias_for_", "hidden": false },
+      { "id": "estates", "label": { "de": "Stände", "en": "Estates" },
+        "pattern": "(^|_)(nobles|nobility|clergy|burghers|peasants|peasant|crown|cossacks|dhimmi|tribes|commoners|estate|estates)(_|$)", "hidden": false },
+      { "id": "religion", "label": { "de": "Religion (oft nur für eine Religion oder Religionsfamilie)", "en": "Religion (often only for one religion or religion group)" },
+        "pattern": "(^|_)(religion|religious|faith|tenet|holy|church|pope|papal|curia|crusade|crusader|jihad|missionary|preacher|preachers|monastery|monasteries|synod|catholic|orthodox|protestant|calvinist|calvinism|lutheran|lutheranism|hussite|buddhist|buddhism|buddha|hindu|muslim|sunni|shia|ibadi|christian|hellenism|shinto|kami|heresy|heretic|liturgical|canonize|canonization|avatar|avatars|inti|mayan|nahuatl|ikko|deus|tithe|patriarch|patriarchate|caliph|ulema|zoroastrian|tengri|jewish|doom|harmony|karma|cleric|piety|saint|temple|mosque|cardinal|autocephalous|ecumenical|miaphysite|kirishitan|sects|rite|purity|righteousness|yanantin)(_|$)", "hidden": false },
+      { "id": "government", "label": { "de": "Regierung, Bürokratie, Parlament und Hof", "en": "Government, bureaucracy, parliament and court" },
+        "pattern": "(^|_)(bureaucracy|bureaucracies|parliament|parliaments|parliamentary|cabinet|reform|government|court|shogun|sengoku|tsardom|monarchy|republic|theocracy|theocratic|horde|tribal|tribals|emperor|empire|imperial|hre|elector|electorship|legitimacy|succession|heir|regency|ruler|rulers|abdicate|dynasty|dynastic|eunuch|eunuchs)(_|$)", "hidden": false },
+      { "id": "actionCost", "label": { "de": "Kosten einzelner Aktionen, Gebäude und Einheiten", "en": "Cost of single actions, buildings and units" },
+        "pattern": "_cost_modifier$|_cost$", "hidden": false },
+      { "id": "unlock", "label": { "de": "Freischaltungen und Sperren (ja/nein)", "en": "Unlocks and blocks (yes/no)" },
+        "pattern": "^(allow|allowed|allows|can|cannot|enable|enables|block|blocked|blocks|has|is|disallow|disallows|always|excluded|forbid|may)_|_cb$", "hidden": false },
+      { "id": "pops", "label": { "de": "Einzelne Bevölkerungsgruppen", "en": "Single pop types" },
+        "pattern": "^global_(laborers|slaves|soldiers|tribesmen)_", "hidden": false },
+      { "id": "proximity", "label": { "de": "Nähe zu Gelände", "en": "Terrain proximity" },
+        "pattern": "_proximity_impact$", "hidden": false },
+      { "id": "diseaseMovement", "label": { "de": "Krankheiten und Bewegungen", "en": "Diseases and movements" },
+        "pattern": "_movement_|(^|_)(plague|pestilence|influenza|malaria|measles|smallpox|typhus|mortality)(_|$)", "hidden": false }
+    ],
+    "create": { "ask": ["category", "subTab"], "name": "name", "modifiers": "levels.modifiers" }
+  }
+}

@@ -1,3 +1,5 @@
+using ParadoxModTool.GameProfiles;
+
 namespace ParadoxModTool.ModCompat;
 
 /// <summary>Prüft die Mods eines Sets gegeneinander. Liest nur, schreibt nie.</summary>
@@ -32,6 +34,7 @@ public static class CompatAnalyzer
         }
 
         findings.AddRange(ReplacePathChecker.Check(request, mods));
+        findings.AddRange(PrefixCheck.Check(request, index));
 
         progress?.Report(new CompatProgress(ModCompatTexts.ProgressCompareFiles, 0, 0));
         findings.AddRange(FileFindings(request, index, ct));
@@ -137,6 +140,8 @@ public static class CompatAnalyzer
 
     private static IEnumerable<CompatFinding> KeyFindings(CompatRequest request, ContributionIndex index, CancellationToken ct)
     {
+        var vanilla = request.Participants.FirstOrDefault(p => p.IsVanilla);
+        var vanillaByScope = new Dictionary<string, Dictionary<string, CompatContribution>>(StringComparer.OrdinalIgnoreCase);
         foreach (var group in index.KeyGroups.Values.OrderBy(g => g.Scope, StringComparer.OrdinalIgnoreCase).ThenBy(g => g.Key, StringComparer.Ordinal))
         {
             ct.ThrowIfCancellationRequested();
@@ -145,11 +150,52 @@ public static class CompatAnalyzer
                 continue;
             }
 
-            if (KeyClassifier.Classify(group) is { } finding && ApplyRelation(request, finding) is { } kept)
+            // Victoria 3: Vanilla zählt in derselben Ladereihenfolge mit; lädt seine Fassung zuerst, gewinnt sie (gemessen 2026-10-11).
+            var vanillaFirst = request.Rules.FirstWinsInLoadOrder && group.Behavior == OverrideBehavior.FirstWins && vanilla is not null
+                ? VanillaFirst(request, vanilla, group.Scope, vanillaByScope).GetValueOrDefault(group.Key)
+                : null;
+            if (KeyClassifier.Classify(group, request.Rules.FirstWinsInLoadOrder, request.Rules.InjectAppends, vanillaFirst) is { } finding && ApplyRelation(request, finding) is { } kept)
             {
                 yield return kept;
             }
         }
+    }
+
+    /// <summary>Je Schlüssel die zuerst geladene Vanilla-Definition im Ordner <paramref name="scope"/> (samt Unterordnern); je Ordner einmal gelesen.</summary>
+    private static Dictionary<string, CompatContribution> VanillaFirst(CompatRequest request, CompatParticipant vanilla, string scope, Dictionary<string, Dictionary<string, CompatContribution>> cache)
+    {
+        if (cache.TryGetValue(scope, out var known))
+        {
+            return known;
+        }
+
+        var result = new Dictionary<string, CompatContribution>(StringComparer.Ordinal);
+        cache[scope] = result;
+        var folder = Path.Combine(vanilla.Folder, scope.Replace('/', Path.DirectorySeparatorChar));
+        if (!Directory.Exists(folder))
+        {
+            return result;
+        }
+
+        foreach (var full in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+        {
+            var relative = Path.GetRelativePath(vanilla.Folder, full).Replace('\\', '/');
+            var rule = request.Rules.Match(relative);
+            if (rule.Behavior != OverrideBehavior.FirstWins || request.IsHidden(vanilla, relative))
+            {
+                continue;
+            }
+
+            foreach (var contribution in ContributionExtractor.Extract(vanilla, relative, full, rule, request.Cache, out _))
+            {
+                if (!result.TryGetValue(contribution.Key, out var earlier) || GameLoadOrder.Instance.Compare(relative, earlier.RelativePath) < 0)
+                {
+                    result[contribution.Key] = contribution;
+                }
+            }
+        }
+
+        return result;
     }
 
     private static bool AllIdentical(IReadOnlyList<CompatParticipant> group, ContributionIndex index, string relative)

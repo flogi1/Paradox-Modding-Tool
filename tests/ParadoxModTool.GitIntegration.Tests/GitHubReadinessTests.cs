@@ -36,6 +36,15 @@ public class GitHubReadinessTests
         Assert.True(readiness.CanPublish);
     }
 
+    [Fact]
+    public void UngueltigeVersion_NenntBeimKlassischenFormatDieModDatei()
+    {
+        Assert.Equal("metadata.json enthält keine gültige Version.", Assert.Single(GitHubReadiness.Evaluate(Good() with { VersionValid = false }).Hints).Text);
+        Assert.Equal(
+            "Die .mod-Datei enthält keine gültige Version.",
+            Assert.Single(GitHubReadiness.Evaluate(Good() with { VersionValid = false, ClassicMetadata = true }).Hints).Text);
+    }
+
     public static IEnumerable<object[]> BlockingCases()
     {
         yield return new object[] { Good() with { GhFound = false }, "gh" };

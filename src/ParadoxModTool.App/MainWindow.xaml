@@ -4,7 +4,20 @@
         xmlns:local="clr-namespace:ParadoxModTool.App"
         xmlns:editor="clr-namespace:ParadoxModTool.Editor;assembly=ParadoxModTool.Editor"
         xmlns:explorer="clr-namespace:ParadoxModTool.Explorer;assembly=ParadoxModTool.Explorer"
+        xmlns:shell="clr-namespace:ParadoxModTool.Shell;assembly=ParadoxModTool.Shell"
         Title="Paradox Modding Tool" Height="720" Width="1080">
+    <Window.Resources>
+        <!-- Senkrechter Trennstrich zwischen den Grundpunkten der Menüleiste (nur neues Layout, siehe MainWindow.Layout.cs). -->
+        <Style x:Key="MenuBarSeparator" TargetType="Separator">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Rectangle Width="1" Height="16" Margin="4,0" VerticalAlignment="Center" Fill="{DynamicResource Theme.Separator}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <!--
         Werkzeugleiste gemäß Architektur-Spezifikation, Abschnitt 5 ("Undo für
         Programmaktionen ... laufen über denselben Undo-Stack") und dem ursprünglichen
@@ -20,11 +33,17 @@
         <Menu DockPanel.Dock="Top">
             <!-- Übersicht über die Mods aller Spiele (MainWindow.MyMods.cs), ganz links. -->
             <MenuItem x:Name="MyModsMenuItem" Click="OpenMyMods_Click" />
+            <Separator x:Name="MenuSeparator1" Style="{StaticResource MenuBarSeparator}" Visibility="Collapsed" />
             <!-- Weiteres Spiel in einem eigenen Fenster öffnen (siehe MainWindow.Games.cs); die Einträge entstehen beim Öffnen. -->
             <MenuItem x:Name="WindowMenuItem" SubmenuOpened="WindowMenuItem_SubmenuOpened">
                 <MenuItem />
             </MenuItem>
-            <MenuItem x:Name="ModsMenuItem" Click="OpenModsWindow_Click" />
+            <Separator x:Name="MenuSeparator2" Style="{StaticResource MenuBarSeparator}" Visibility="Collapsed" />
+            <!-- Mods: aktive Mod wählen (fest oder automatisch) und Mods verwalten; Einträge baut MainWindow.Mods.cs beim Aufklappen. -->
+            <MenuItem x:Name="ModsMenuItem" SubmenuOpened="ModsMenu_SubmenuOpened">
+                <Separator />
+            </MenuItem>
+            <Separator x:Name="MenuSeparator3" Style="{StaticResource MenuBarSeparator}" Visibility="Collapsed" />
             <MenuItem x:Name="ProjectMenuItem">
                 <MenuItem x:Name="ProjectCopyMenuItem" />
                 <MenuItem x:Name="ProjectMoveMenuItem" />
@@ -34,8 +53,11 @@
             </MenuItem>
             <!-- Einstellungen: ein Klick öffnet das Einstellungsfenster (MainWindow.SettingsHost.cs). -->
             <MenuItem x:Name="SettingsMenuItem" Click="OpenSettings_Click" />
+            <Separator x:Name="MenuSeparator4" Style="{StaticResource MenuBarSeparator}" Visibility="Collapsed" />
             <MenuItem x:Name="CuToolMenuItem" Click="OpenVanillaDiffWindow_Click" />
             <MenuItem x:Name="PatchRecipesMenuItem" Click="OpenPatchRecipes_Click" />
+            <MenuItem x:Name="GeneratorPackagesMenuItem" Click="OpenGeneratorPackages_Click" />
+            <MenuItem x:Name="PackageEditorMenuItem" Click="OpenPackageEditor_Click" />
             <MenuItem x:Name="ModCompatMenuItem" Click="OpenModCompat_Click" />
             <MenuItem x:Name="CompatchMenuItem" Click="OpenCompatch_Click" />
             <MenuItem x:Name="ErrorLogMenuItem" Click="OpenErrorLog_Click" />
@@ -57,6 +79,11 @@
                 <MenuItem x:Name="ChangelogMenuItem" Click="ChangelogMenuItem_Click" ToolTipService.ShowOnDisabled="True" />
                 <Separator />
                 <MenuItem x:Name="AboutMenuItem" Click="AboutMenuItem_Click" />
+                <!-- Abschnitt "Unterstützen" (nur neues Layout; klassisch bleibt das eigene Menü unten). -->
+                <Separator x:Name="HelpSupportSeparator" Visibility="Collapsed" />
+                <MenuItem x:Name="HelpSupportHeader" IsEnabled="False" Visibility="Collapsed" />
+                <MenuItem x:Name="HelpSponsorMenuItem" Click="SponsorMenuItem_Click" Visibility="Collapsed" />
+                <MenuItem x:Name="HelpKofiMenuItem" Click="KofiMenuItem_Click" Visibility="Collapsed" />
             </MenuItem>
             <!-- Unterstützen: Spendenseiten (AppInfo.SponsorUrl, AppInfo.KofiUrl). -->
             <MenuItem x:Name="SupportMenuItem">
@@ -75,38 +102,44 @@
                 <TextBlock x:Name="UpdateBarText" VerticalAlignment="Center" Foreground="{DynamicResource Theme.NoticeText}" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </Border>
-        <!-- Allgemeine Werkzeugleiste in der Reihenfolge von ToolbarCatalog (Spec "Allgemeine Werkzeugleiste"). Texte setzt
-             MainWindow.Menu.cs aus MenuTexts; die Sichtbarkeit der Einträge und der drei Trennlinien setzt ApplyToolbarVisibility
-             (MainWindow.Settings.cs). "Rückgängig"/"Wiederholen" gelten für Programmaktionen beider Arbeitsbereiche (ein Verlauf). -->
-        <ToolBar DockPanel.Dock="Top">
-            <Button x:Name="UndoButton" Click="Undo_Click" IsEnabled="False" />
-            <Button x:Name="RedoButton" Click="Redo_Click" IsEnabled="False" />
-            <Separator x:Name="ToolbarToolsSeparator" />
-            <Button x:Name="ToolbarSearchButton" Click="SearchReplace_Click" />
-            <Button x:Name="ToolbarGoToLineButton" Click="GoToLine_Click" />
-            <Button x:Name="ToolbarGoToBracketButton" Click="GoToMatchingBracket_Click" />
-            <Button x:Name="ToolbarScopeFinderButton" Click="ScopePaths_Click" />
-            <Button x:Name="ToolbarGuiDataHelperButton" Click="GuiDataHelper_Click" />
-            <Button x:Name="ToolbarTemplatesButton" Click="OpenTemplateGenerator_Click" />
-            <Button x:Name="ToolbarFormatButton" Click="FormatDocument_Click" />
-            <Button x:Name="ToolbarNotesButton" Click="FileNote_Click" />
-            <Button x:Name="ToolbarBookmarkButton" Click="BookmarkWithComment_Click" />
-            <Button x:Name="ToolbarBugButton" Click="NewBug_Click" />
-            <Button x:Name="ToolbarBugTrackerButton" Click="BugTracker_Click" />
-            <Separator x:Name="ToolbarTogglesSeparator" />
-            <ToggleButton x:Name="SplitViewToggle" Click="SplitViewToggle_Click" />
-            <ToggleButton x:Name="ExplorerToggle" Click="ExplorerToggle_Click" IsChecked="True" />
-            <ToggleButton x:Name="NotesPanelToggle" Click="NotesPanelToggle_Click" IsChecked="True" />
-            <ToggleButton x:Name="ScriptAutoCompleteToggle" Click="ScriptAutoCompleteToggle_Click" IsChecked="True" />
-            <ToggleButton x:Name="ScriptHoverToggle" Click="ScriptHoverToggle_Click" IsChecked="True" />
-            <Button x:Name="ToolbarModifierReloadButton" Click="ModifierReload_Click" />
-            <Separator x:Name="ToolbarLaunchSeparator" />
+        <!-- Kachelleiste (Interface-Rework 2): die großen Werkzeuge; Sichtbarkeit nach Layout und TileBarVisible (ApplyTileBar). -->
+        <shell:TileBar x:Name="TileBarControl" DockPanel.Dock="Top" Visibility="Collapsed" />
+        <!-- Pool der Elemente der kleinen Werkzeugleiste (Interface-Rework 2): sie bleiben hier mit ihren Namen, damit alle Partials sie
+             kennen; ToolbarBuilder (MainWindow.Layout.cs, RebuildToolbar) hängt sie in der Reihenfolge von AppSettings.ToolbarOrder in den
+             ToolbarHost unten um. Inhalt und Tooltips setzt ApplyToolbarContent. "Rückgängig"/"Wiederholen" gelten für Programmaktionen
+             beider Arbeitsbereiche (ein Verlauf). -->
+        <StackPanel x:Name="ToolbarElementPool" Visibility="Collapsed">
+            <Button x:Name="ToolbarNewButton" Click="ToolbarNew_Click" Focusable="False" />
+            <Button x:Name="ToolbarOpenButton" Click="ToolbarOpen_Click" Focusable="False" />
+            <Button x:Name="ToolbarSaveButton" Click="ToolbarSave_Click" Focusable="False" />
+            <Button x:Name="ToolbarSaveAllButton" Click="ToolbarSaveAll_Click" Focusable="False" />
+            <Button x:Name="ToolbarCloseButton" Click="ToolbarClose_Click" Focusable="False" />
+            <Button x:Name="ToolbarMoveButton" Click="ToolbarMove_Click" Focusable="False" />
+            <Button x:Name="UndoButton" Click="Undo_Click" IsEnabled="False" Focusable="False" />
+            <Button x:Name="RedoButton" Click="Redo_Click" IsEnabled="False" Focusable="False" />
+            <Button x:Name="ToolbarSearchButton" Click="SearchReplace_Click" Focusable="False" />
+            <Button x:Name="ToolbarGoToLineButton" Click="GoToLine_Click" Focusable="False" />
+            <Button x:Name="ToolbarGoToBracketButton" Click="GoToMatchingBracket_Click" Focusable="False" />
+            <Button x:Name="ToolbarScopeFinderButton" Click="ScopePaths_Click" Focusable="False" />
+            <Button x:Name="ToolbarGuiDataHelperButton" Click="GuiDataHelper_Click" Focusable="False" />
+            <Button x:Name="ToolbarTemplatesButton" Click="OpenTemplateGenerator_Click" Focusable="False" />
+            <Button x:Name="ToolbarFormatButton" Click="FormatDocument_Click" Focusable="False" />
+            <Button x:Name="ToolbarNotesButton" Click="FileNote_Click" Focusable="False" />
+            <Button x:Name="ToolbarBookmarkButton" Click="BookmarkWithComment_Click" Focusable="False" />
+            <Button x:Name="ToolbarBugButton" Click="NewBug_Click" Focusable="False" />
+            <Button x:Name="ToolbarBugTrackerButton" Click="BugTracker_Click" Focusable="False" />
+            <ToggleButton x:Name="SplitViewToggle" Click="SplitViewToggle_Click" Focusable="False" />
+            <ToggleButton x:Name="ExplorerToggle" Click="ExplorerToggle_Click" IsChecked="True" Focusable="False" />
+            <ToggleButton x:Name="NotesPanelToggle" Click="NotesPanelToggle_Click" IsChecked="True" Focusable="False" />
+            <ToggleButton x:Name="ScriptAutoCompleteToggle" Click="ScriptAutoCompleteToggle_Click" IsChecked="True" Focusable="False" />
+            <ToggleButton x:Name="ScriptHoverToggle" Click="ScriptHoverToggle_Click" IsChecked="True" Focusable="False" />
+            <Button x:Name="ToolbarModifierReloadButton" Click="ModifierReload_Click" Focusable="False" />
             <!-- Startoptionen kommen aus dem aktiven Spielprofil (GameProfile.LaunchOptions), Playsets aus playsets.json (PlaysetStore).
-                 Ohne Playsets bleibt die Combo leer und "Spiel starten" wechselt kein Playset. -->
+                 Ohne Playsets bleibt die Combo leer und "Spiel starten" wechselt kein Playset. Senkrecht vertreten Menü-Knöpfe die Combos. -->
             <ComboBox x:Name="LaunchOptionsCombo" Width="260" DisplayMemberPath="Label" />
             <ComboBox x:Name="PlaysetsCombo" Width="220" DisplayMemberPath="DisplayText" />
-            <Button x:Name="LaunchGameButton" Click="LaunchGame_Click" />
-        </ToolBar>
+            <Button x:Name="LaunchGameButton" Click="LaunchGame_Click" Focusable="False" />
+        </StackPanel>
         <!-- Statusleiste: zeigt die erkannte Mod (siehe MainWindow.Mods.cs); ein Klick öffnet das Fenster "Mods…". -->
         <Border x:Name="ModStatusBar" DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="0,1,0,0" Padding="8,2">
             <TextBlock x:Name="ModStatusText" Text="Mod: —" Foreground="{DynamicResource Theme.TextMuted}" Cursor="Hand" TextTrimming="CharacterEllipsis"
@@ -153,6 +186,9 @@
                 </ListBox>
             </DockPanel>
         </Border>
+        <!-- Kleine Werkzeugleiste: Position oben, links, rechts oder unten (ApplyToolbarPosition). Steht nach Status- und Ergebnisleiste,
+             damit sie links/rechts zwischen Kachelleiste und Statusleiste sitzt. -->
+        <Border x:Name="ToolbarHost" DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.Separator}" BorderThickness="0,0,0,1" />
         <Grid>
             <Grid.ColumnDefinitions>
                 <!-- Verzeichnis-Übersicht links, wie bei Notepad++ - zwei zusätzliche Spalten

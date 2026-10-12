@@ -1,0 +1,3 @@
+{{~ if groupType == "gov" || groupType == "rank" ~}}
+		has_variable = iv2_ideagroup_select_{{ g }}_1
+{{~ end ~}}

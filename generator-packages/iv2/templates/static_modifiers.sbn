@@ -1,0 +1,23 @@
+#############################################################################
+###### Idea Variation 2 Historic National Idea Modifiers {{ tag }}
+#############################################################################
+
+{{~ for c in categories ~}}
+{{~ if c.ideas.size > 0 ~}}
+# {{ c.modheader }} Category
+
+{{~ for i in c.ideas ~}}
+{{~ for l in i.levels ~}}
+national_idea_modifier_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
+	game_data = {
+		category = country
+	}
+{{~ if (l.modifiers | string.strip) != "" ~}}
+{{ indent_lines l.modifiers }}
+{{~ end ~}}
+}
+
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}

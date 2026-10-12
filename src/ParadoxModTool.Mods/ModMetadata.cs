@@ -29,6 +29,12 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
     public IReadOnlyList<ModDependency> Dependencies { get; init; } = Array.Empty<ModDependency>();
 
     /// <summary>
+    /// Der vollständige Pfad der Datei, aus der gelesen wurde; leer, wenn unbekannt. Beim klassischen Format die Geschwisterdatei oder, wenn sie fehlt oder nicht lesbar
+    /// ist, die <see cref="ClassicWorkshopDescriptorFile"/> im Ordner (siehe <see cref="ClassicFilePaths"/>).
+    /// </summary>
+    public string SourceFile { get; init; } = string.Empty;
+
+    /// <summary>
     /// Sentinel-Wert für <c>GameProfile.MetadataFile</c>: statt einer JSON-Datei im Mod-Ordner (Launcher-v2-Format)
     /// wird die klassische Paradox-Mod-Metadatendatei gelesen — eine Geschwisterdatei <c>&lt;Ordnername&gt;.mod</c>
     /// NEBEN dem Mod-Ordner, im Clausewitz-Skriptformat (<c>key = "value"</c>), wie sie EU IV und andere Spiele
@@ -97,6 +103,7 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
                 Picture = Field(document.RootElement, "picture"),
                 ReplacePaths = JsonReplacePaths(document.RootElement),
                 Dependencies = JsonDependencies(document.RootElement),
+                SourceFile = Path.Combine(folder, metadataFile.Replace('/', Path.DirectorySeparatorChar)),
             };
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
@@ -109,20 +116,103 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
     public static ModMetadata? Find(ModInfo mod, string metadataFile) =>
         mod.Paths.Select(path => Read(path, metadataFile)).FirstOrDefault(m => m is not null);
 
-    /// <summary>Liest die klassische Geschwisterdatei <c>&lt;Ordnername&gt;.mod</c> neben <paramref name="folder"/>; siehe <see cref="ClassicSiblingMetadataFile"/>.</summary>
-    private static ModMetadata? ReadClassicSibling(string folder)
+    /// <summary>Steht die Einstellung des Spielprofils für das klassische Format (<see cref="ClassicSiblingMetadataFile"/>)?</summary>
+    public static bool IsClassic(string? metadataFile) => metadataFile == ClassicSiblingMetadataFile;
+
+    /// <summary>
+    /// Der vollständige Pfad der vorhandenen Metadaten-Datei von <paramref name="folder"/>: beim klassischen Format die Geschwisterdatei <c>&lt;Ordnername&gt;.mod</c>,
+    /// sonst die <c>descriptor.mod</c> im Ordner (siehe <see cref="ClassicFilePaths"/>); sonst <c>folder/metadataFile</c>. <see langword="null"/>, wenn keine Datei da ist.
+    /// </summary>
+    public static string? ResolveFilePath(string folder, string metadataFile)
     {
-        var trimmed = Path.TrimEndingDirectorySeparator(folder);
-        var parent = Path.GetDirectoryName(trimmed);
-        var name = Path.GetFileName(trimmed);
-        if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(name))
+        if (string.IsNullOrWhiteSpace(metadataFile) || string.IsNullOrWhiteSpace(folder))
         {
             return null;
         }
 
-        // Passt keine Geschwisterdatei zum Ordnernamen (z. B. "AGOT Flogis Buildings Mod.mod" neben "AGOT Flogis Buildings"), gilt die descriptor.mod im Ordner.
-        return ReadClassicFileAt(Path.Combine(parent, name + ".mod"), folder)
-            ?? ReadClassicFileAt(Path.Combine(folder, ClassicWorkshopDescriptorFile), folder);
+        if (IsClassic(metadataFile))
+        {
+            return ClassicFilePaths(folder).FirstOrDefault();
+        }
+
+        try
+        {
+            var file = Path.Combine(folder, metadataFile.Replace('/', Path.DirectorySeparatorChar));
+            return File.Exists(file) ? file : null;
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Die vorhandenen klassischen Metadaten-Dateien von <paramref name="folder"/> in Vorrang-Reihenfolge: erst die Geschwisterdatei <c>&lt;Ordnername&gt;.mod</c>
+    /// (liest der Launcher), dann <see cref="ClassicWorkshopDescriptorFile"/> im Ordner (geht mit in den Workshop). Beide können sich zu Recht unterscheiden (z. B. <c>path=</c>).
+    /// </summary>
+    public static IReadOnlyList<string> ClassicFilePaths(string folder)
+    {
+        var result = new List<string>();
+        try
+        {
+            var trimmed = Path.TrimEndingDirectorySeparator(folder);
+            var parent = Path.GetDirectoryName(trimmed);
+            var name = Path.GetFileName(trimmed);
+            if (!string.IsNullOrEmpty(parent) && !string.IsNullOrEmpty(name) && File.Exists(Path.Combine(parent, name + ".mod")))
+            {
+                result.Add(Path.Combine(parent, name + ".mod"));
+            }
+
+            var descriptor = Path.Combine(trimmed, ClassicWorkshopDescriptorFile);
+            if (File.Exists(descriptor))
+            {
+                result.Add(descriptor);
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
+        {
+            // Ein ungültiger Pfad hat keine Metadaten-Datei.
+        }
+
+        return result;
+    }
+
+    /// <summary>Liest die klassische Geschwisterdatei <c>&lt;Ordnername&gt;.mod</c> neben <paramref name="folder"/>; siehe <see cref="ClassicSiblingMetadataFile"/>.</summary>
+    private static ModMetadata? ReadClassicSibling(string folder)
+    {
+        // Passt keine Geschwisterdatei zum Ordnernamen (z. B. "AGOT Flogis Buildings Mod.mod" neben "AGOT Flogis Buildings") oder ist sie nicht lesbar,
+        // gilt die descriptor.mod im Ordner: die erste Datei, die sich lesen lässt, gewinnt (SourceFile nennt sie).
+        return ClassicFilePaths(folder).Select(file => ReadClassicFileAt(file, folder)).FirstOrDefault(m => m is not null);
+    }
+
+    /// <summary>
+    /// Die Workshop-ID aus <c>remote_file_id</c> der klassischen Dateien von <paramref name="folder"/>: erst aus <paramref name="shownFile"/>, dann aus den übrigen
+    /// (siehe <see cref="ClassicFilePaths"/>). Es zählt der erste Wert aus Ziffern, der nicht nur aus Nullen besteht; sonst <see langword="null"/>.
+    /// </summary>
+    public static string? ClassicRemoteFileId(string folder, string? shownFile)
+    {
+        var files = ClassicFilePaths(folder).ToList();
+        if (!string.IsNullOrEmpty(shownFile) && files.FindIndex(f => SamePath(f, shownFile)) is var index and > 0)
+        {
+            files.RemoveAt(index);
+            files.Insert(0, shownFile);
+        }
+
+        return files
+            .Select(file => ReadClassicFileAt(file, folder)?.RemoteFileId)
+            .FirstOrDefault(id => id is { Length: > 0 } && id.All(char.IsAsciiDigit) && !id.All(c => c == '0'));
+    }
+
+    private static bool SamePath(string a, string b)
+    {
+        try
+        {
+            return string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -155,7 +245,7 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
 
             return new ModMetadata(
                 ClassicField(content, "name"),
-                ClassicField(content, "version"),
+                ClassicModEditor.ReadVersion(content) ?? string.Empty,
                 ClassicField(content, "supported_version"),
                 folder)
             {
@@ -166,6 +256,7 @@ public sealed record ModMetadata(string Name, string Version, string SupportedGa
                     .ToList(),
                 Dependencies = ClassicDependencies(content),
                 RemoteFileId = ClassicField(content, "remote_file_id"),
+                SourceFile = file,
             };
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)

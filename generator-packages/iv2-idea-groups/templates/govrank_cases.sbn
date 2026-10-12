@@ -1,0 +1,10 @@
+{{~ # Ein switch-Fall je Regierungsform bzw. Rang, mit den Modifikatoren 1..n der Stufe ~}}
+{{~ if groupType == "gov" || groupType == "rank" ~}}
+{{~ for c in condition_lines ~}}
+			{{ case_key c }} = {
+{{~ for n in 1..item.index ~}}
+				add_country_modifier = { modifier = ideagroup_modifier_{{ g }}_{{ n }} years = -1 }
+{{~ end ~}}
+			}
+{{~ end ~}}
+{{~ end ~}}

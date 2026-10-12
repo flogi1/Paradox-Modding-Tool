@@ -4,20 +4,20 @@ namespace ParadoxModTool.Settings;
 public enum SettingsCategory
 {
     General,
-    Toolbar,
+    Layout,
+    Tiles,
+    Toolbars,
     Workspace,
-    WorkspaceToolbar,
     NotesPanel,
     Explorer,
     Compatch,
     GuiTools,
     ErrorLog,
     SaveExplorer,
-    Layout,
+    BugTracker,
     Language,
     Themes,
     Hotkeys,
-    BugTracker,
     Update,
 }
 
@@ -25,7 +25,13 @@ public static class SettingsCategories
 {
     public static IReadOnlyList<SettingsCategory> All { get; } = Enum.GetValues<SettingsCategory>();
 
-    /// <summary>Kategorie zum gespeicherten Namen (genau, Groß-/Kleinschreibung zählt); Unbekanntes, Zahlen und leer ergeben <see cref="SettingsCategory.General"/>.</summary>
-    public static SettingsCategory Parse(string? id) =>
-        All.Where(category => category.ToString() == id).DefaultIfEmpty(SettingsCategory.General).First();
+    /// <summary>
+    /// Kategorie zum gespeicherten Namen (genau, Groß-/Kleinschreibung zählt); Unbekanntes, Zahlen und leer ergeben
+    /// <see cref="SettingsCategory.General"/>. Die alten Namen <c>Toolbar</c> und <c>WorkspaceToolbar</c> ergeben <see cref="SettingsCategory.Toolbars"/>.
+    /// </summary>
+    public static SettingsCategory Parse(string? id) => id switch
+    {
+        "Toolbar" or "WorkspaceToolbar" => SettingsCategory.Toolbars,
+        _ => All.Where(category => category.ToString() == id).DefaultIfEmpty(SettingsCategory.General).First(),
+    };
 }

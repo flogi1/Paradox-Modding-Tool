@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using ParadoxModTool.Mods;
 
 namespace ParadoxModTool.SteamIntegration;
 
@@ -46,7 +47,7 @@ public static class WorkshopIdText
 
 /// <summary>
 /// Sucht die Workshop-ID einer Mod lokal: Steam legt abonnierte Workshop-Mods unter <c>steamapps\workshop\content\&lt;appid&gt;\&lt;id&gt;\</c> ab, der Ordnername ist die ID. Ein Eintrag passt,
-/// wenn der Name in seiner Metadaten-Datei dem Namen der Mod entspricht oder seine <c>id</c> der Mod-ID.
+/// wenn der Name in seiner Metadaten-Datei dem Namen der Mod entspricht oder seine <c>id</c> der Mod-ID (beim klassischen Format nur der Name, siehe <see cref="ReadClassic"/>).
 /// </summary>
 public static class LocalWorkshopScanner
 {
@@ -70,7 +71,9 @@ public static class LocalWorkshopScanner
                     continue;
                 }
 
-                var (name, metadataId) = ReadMetadata(Path.Combine(folder, metadataFile.Replace('/', Path.DirectorySeparatorChar)));
+                var (name, metadataId) = ModMetadata.IsClassic(metadataFile)
+                    ? ReadClassic(folder)
+                    : ReadMetadata(Path.Combine(folder, metadataFile.Replace('/', Path.DirectorySeparatorChar)));
                 var byName = wantedName.Length > 0 && name is not null && WorkshopMatcher.Normalize(name) == wantedName;
                 var byId = !string.IsNullOrWhiteSpace(modId) && string.Equals(metadataId, modId.Trim(), StringComparison.OrdinalIgnoreCase);
                 if (byName || byId)
@@ -82,6 +85,13 @@ public static class LocalWorkshopScanner
 
         return matches;
     }
+
+    /// <summary>
+    /// Klassisches Format (EU IV, CK III): im Workshop-Ordner liegt keine Geschwisterdatei, sondern die <see cref="ModMetadata.ClassicWorkshopDescriptorFile"/> im Ordner selbst.
+    /// Sie kennt keine Mod-ID; es zählt nur der Name.
+    /// </summary>
+    private static (string? Name, string? Id) ReadClassic(string folder) =>
+        (ModMetadata.ReadClassicFile(folder, ModMetadata.ClassicWorkshopDescriptorFile)?.Name, null);
 
     private static (string? Name, string? Id) ReadMetadata(string path)
     {

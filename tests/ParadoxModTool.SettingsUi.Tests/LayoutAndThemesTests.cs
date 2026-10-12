@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ParadoxModTool.Settings;
@@ -126,6 +127,33 @@ public sealed class LayoutAndThemesTests
 
         Assert.NotNull(page.View);
         Assert.NotEmpty(UiFind.All<System.Windows.FrameworkElement>(page.View).Skip(2));
+    });
+
+    [Fact]
+    public void LayoutPageSwitchesWindowLayoutAndHidesPositionInClassic() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new LayoutPage(host);
+        Assert.True(UiFind.Radio(page, SettingsTexts.WindowLayoutTiles).IsChecked);
+        var position = UiFind.Radio(page, SettingsTexts.ToolbarPositionLeft);
+        Assert.Equal(Visibility.Visible, ((FrameworkElement)position.Parent).Visibility);
+
+        UiFind.Choose(position);
+        Assert.Equal("Left", host.Settings.ToolbarPosition);
+
+        UiFind.Choose(UiFind.Radio(page, SettingsTexts.WindowLayoutClassic));
+        Assert.Equal("Classic", host.Settings.WindowLayout);
+        Assert.Equal(Visibility.Collapsed, ((FrameworkElement)position.Parent).Visibility);
+    });
+
+    [Fact]
+    public void LayoutPageFollowsExternalChanges() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new LayoutPage(host);
+        host.Settings.ToolbarPosition = "Bottom";
+        Assert.True(UiFind.Radio(page, SettingsTexts.ToolbarPositionBottom).IsChecked);
+        Assert.False(UiFind.Radio(page, SettingsTexts.ToolbarPositionTop).IsChecked);
     });
 
     public static IEnumerable<object[]> Categories() => SettingsCategories.All.Select(category => new object[] { category });

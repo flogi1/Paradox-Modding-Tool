@@ -21,17 +21,19 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
     <DockPanel>
-        <!-- Werkzeugleiste des Arbeitsbereichs in der Reihenfolge der UI-Reorganisation (Plan 3). Texte und Tooltips setzt
-             ApplyToolbarTexts aus MenuTexts. "Filter ▾" und "Symbole ▾" gehören seitdem hierher und nicht mehr zur Dokumentenleiste;
-             beide lassen sich in den Einstellungen (Kategorie 4) ausblenden, siehe SetToolbarButtonsVisible. -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+        <!-- Werkzeugleiste des Arbeitsbereichs (Interface-Rework 2). Texte und Tooltips setzt ApplyToolbarTexts aus MenuTexts. Welche Knöpfe
+             sichtbar sind, entscheidet SetToolbarLayout (EditorPane.Layout.cs): klassisch die Dateiknöpfe, im neuen Layout Notizen/Lesezeichen/Bug
+             und rechts der Name des Bereichs. -->
+        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+            <TextBlock x:Name="PaneNameText" DockPanel.Dock="Right" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed"
+                       Foreground="{DynamicResource Theme.TextMuted}" />
             <Button x:Name="NewButton" Click="NewDocument_Click" Margin="2" Padding="6,2" />
             <Button x:Name="OpenButton" Click="OpenDocument_Click" Margin="2" Padding="6,2" />
             <Button x:Name="SaveButton" Click="SaveDocument_Click" Margin="2" Padding="6,2" />
             <Button x:Name="SaveAllButton" Click="SaveAllDocuments_Click" Margin="2" Padding="6,2" />
             <Button x:Name="CloseDocumentButton" Click="CloseActiveDocument_Click" Margin="2" Padding="6,2" />
             <Button x:Name="MoveButton" Click="MoveActiveDocument_Click" Margin="2" Padding="6,2" />
-            <Separator Margin="4,2" />
+            <Separator x:Name="FileSeparator" Margin="4,2" />
             <!-- Manuelle Kategorie-Zuweisung: Menü mit "Automatisch" (Regeln entscheiden) und allen Kategorien;
                  das Häkchen zeigt die Zuweisung des aktiven Dokuments (siehe CategoryButton_Click). -->
             <Button x:Name="CategoryButton" Click="CategoryButton_Click" Margin="2" Padding="6,2" />
@@ -39,6 +41,13 @@
             <Button x:Name="FilterBarButton" Click="FilterBarButton_Click" Margin="2" Padding="6,2" />
             <!-- Welche Symbole die Tabs zeigen (Notiz, Lesezeichen, Bug, Vanilla, Mod, Sperre); siehe TabIconSettings. -->
             <Button x:Name="TabIconsButton" Click="TabIconsButton_Click" Margin="2" Padding="6,2" />
+            <!-- Sortierung der Tabs: Manuell, Name, Kategorie, Herkunft (EditorPane.Sort.cs). -->
+            <Button x:Name="SortButton" Click="SortButton_Click" Margin="2" Padding="6,2" />
+            <!-- Notizen, Lesezeichen, Bug für das aktive Dokument DIESES Arbeitsbereichs (nur neues Layout). -->
+            <Separator x:Name="MarkSeparator" Margin="4,2" Visibility="Collapsed" />
+            <Button x:Name="NoteButton" Click="NoteButton_Click" Margin="2" Padding="6,2" Visibility="Collapsed" />
+            <Button x:Name="BookmarkButton" Click="BookmarkButton_Click" Margin="2" Padding="6,2" Visibility="Collapsed" />
+            <Button x:Name="BugButton" Click="BugButton_Click" Margin="2" Padding="6,2" Visibility="Collapsed" />
             <!-- GUI-Designer (Plan 2a): nur bei .gui-Dateien sichtbar, siehe EditorPane.Gui.cs. -->
             <StackPanel x:Name="GuiModePanel" Orientation="Horizontal" Margin="6,0,0,0" Visibility="Collapsed">
                 <ToggleButton x:Name="GuiModeCodeButton" Content="Code" Margin="2" Padding="6,2" Click="GuiModeButton_Click"
@@ -48,7 +57,7 @@
                 <ToggleButton x:Name="GuiModeSplitButton" Content="Geteilt" Margin="2" Padding="6,2" Click="GuiModeButton_Click"
                               ToolTip="Designer oben, Code unten" />
             </StackPanel>
-        </StackPanel>
+        </DockPanel>
         <!-- Dateikategorie-Filter (Nutzer-Feedback: "Dateikategorien ... die man ein und ausblenden
              kann"). Alle Kategorien sind standardmäßig sichtbar; das aktive Dokument bleibt beim
              Ausblenden seiner Kategorie IMMER sichtbar (siehe CategoryFilter im Code-Behind), damit

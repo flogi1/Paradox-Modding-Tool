@@ -1,0 +1,27 @@
+# block: Standard-Knopf
+# group: Bedienelemente
+# description: Aktionsknopf mit Text und Tooltip (default_button_action, laut Komponentenbibliothek für Aktionen, die den Spielstand ändern; reine Navigation: default_button). Die Aktion läuft über ein scripted_gui in common/scripted_guis mit scope = country und dem eigenen Land als root; ist is_valid nicht erfüllt, wird der Knopf grau. Vorbild: gui/window_component_library.gui, gui/journal_entry.gui, gui/political_movement_panel.gui
+# param: name | Name | my_button
+# param: text | Text (Lokalisierungsschlüssel) | MY_BUTTON
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_BUTTON_TT
+# param: scripted_gui | scripted_gui | my_scripted_gui
+# requires: default_button_action
+
+button = {
+	name = "$name$"
+	using = default_button_action
+	size = { 260 40 }
+	tooltip = "$tooltip$"
+	onclick = "[GetScriptedGui('$scripted_gui$').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	enabled = "[GetScriptedGui('$scripted_gui$').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+
+	textbox = {
+		text = "$text$"
+		parentanchor = center
+		autoresize = yes
+		max_width = 240
+		align = nobaseline
+		elide = right
+		fontsize_min = 14
+	}
+}

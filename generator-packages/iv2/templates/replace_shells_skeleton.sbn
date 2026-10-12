@@ -1,0 +1,6 @@
+types iv2_historic_idea_dynamic_national_ideas_setup {
+
+	type iv2_picked_national_ideas_shell = widget {
+		parentanchor = left
+	}
+}

@@ -234,7 +234,7 @@ public partial class ModCompatWindow
         }
     }
 
-    /// <summary>CK III und EU V: je Mod die replace_path-Ordner der später ladenden Mods (sie blenden die Dateien der früheren aus); sonst leer.</summary>
+    /// <summary>CK III, EU V und Victoria 3: je Mod die replace_path-Ordner der später ladenden Mods (sie blenden die Dateien der früheren aus); sonst leer.</summary>
     private IReadOnlyDictionary<string, IReadOnlyCollection<string>> HiddenModFolders(IReadOnlyList<CompatParticipant> participants)
     {
         if (_host.Profile is not { ReplacePathHidesEarlierMods: true } profile)

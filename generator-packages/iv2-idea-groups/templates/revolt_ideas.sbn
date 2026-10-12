@@ -1,0 +1,71 @@
+{{~ if groupType == "none" || groupType == "gov" ~}}
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_1 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_1
+					years = -1 
+			}
+	}	
+		
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_2 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_2
+					years = -1 
+			}
+	}
+	
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_3 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_3
+					years = -1 
+			}
+	}
+	
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_4 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_4
+					years = -1 
+			}
+	}
+	
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_5 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_5
+					years = -1 
+			}
+	}
+	
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_6 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_6
+					years = -1 
+			}
+	}
+	
+	if = {
+			limit = {
+				root = { has_country_modifier = ideagroup_modifier_{{ g }}_7 }
+			}
+			add_country_modifier = { 
+					modifier = ideagroup_modifier_{{ g }}_7
+					years = -1 
+			}
+	}
+{{~ end ~}}

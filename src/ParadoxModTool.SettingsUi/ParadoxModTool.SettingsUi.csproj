@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ParadoxModTool.Settings\ParadoxModTool.Settings.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Shell\ParadoxModTool.Shell.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Editor\ParadoxModTool.Editor.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Compatch\ParadoxModTool.Compatch.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GuiDesign\ParadoxModTool.GuiDesign.csproj" />

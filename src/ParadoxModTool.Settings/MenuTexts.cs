@@ -22,11 +22,27 @@ public static class MenuTexts
 
     public static string Mods => T("menu.mods", "Mods");
 
-    public static string ModsTip => T("menu.mods.tip", "Mods dieses Spiels verwalten: umbenennen, Ordner verknüpfen, entfernen");
+    public static string ModsTip => T("menu.mods.tip", "Aktive Mod wählen (fest oder automatisch nach offener Datei) und Mods dieses Spiels verwalten");
+
+    public static string ModsManage => T("menu.mods.manage", "Mods verwalten");
+
+    public static string ModsManageTip => T("menu.mods.manage.tip", "Mods dieses Spiels verwalten: umbenennen, Ordner verknüpfen, entfernen");
+
+    public static string ModsAutomatic => T("menu.mods.automatic", "Automatisch (offene Datei)");
+
+    public static string ModsAutomaticTip => T("menu.mods.automatic.tip", "Die aktive Mod folgt der Datei, die im Editor offen ist; bei einer Vanilla-Datei gilt der erste Mod-Ordner der Verzeichnis-Übersicht");
 
     public static string MyMods => T("menu.myMods", "Meine Mods");
 
     public static string MyModsTip => T("menu.myMods.tip", "Übersicht über die eigenen Mods aller Spiele: Steam-Zahlen, Bugs, Releases und Hinweise");
+
+    /// <summary>Interface-Rework 2: Menüpunkt für das Fenster "Meine Mods" (spielübergreifende Übersicht).</summary>
+    public static string Overview => T("menu.overview", "Mod-Übersicht");
+
+    public static string OverviewTip => MyModsTip;
+
+    /// <summary>Interface-Rework 2: Menü mit der aktiven Mod und der Mod-Verwaltung, mit dem Spielkürzel aus dem Profil.</summary>
+    public static string MyGameMods(string shortName) => F("menu.myGameMods", "Meine {0} Mods", shortName);
 
     public static string Project => T("menu.project", "Mod-Projekt");
 
@@ -49,6 +65,14 @@ public static class MenuTexts
     public static string PatchRecipes => T("menu.patchRecipes", "Patch-Rezepte");
 
     public static string PatchRecipesTip => T("menu.patchRecipes.tip", "Patch-Rezepte: wiederholbare Regel-Patches für die Mod (Tabelle plus Regeln), nach jedem Vanilla-Update erneut anwendbar");
+
+    public static string GeneratorPackages => T("menu.generatorPackages", "Generator-Pakete");
+
+    public static string PackageEditor => T("menu.packageEditor", "Paket-Editor");
+
+    public static string PackageEditorTip => T("menu.packageEditor.tip", "Paket-Editor: Generator-Pakete mit Masken anlegen und bearbeiten (Formular, Ausgaben, Vorlagen), prüfen, exportieren und importieren");
+
+    public static string GeneratorPackagesTip => T("menu.generatorPackages.tip", "Generator-Pakete: aus einem Formular viele Mod-Dateien auf einmal erzeugen (z. B. ein Nationale-Ideen-Set), mit Vorschau und einem Rückgängig-Schritt");
 
     public static string ModCompat => T("menu.modCompat", "Mod-Kompatibilität prüfen");
 
@@ -115,8 +139,55 @@ public static class MenuTexts
         _ => SettingsTexts.ToolbarItemLabel(id),
     };
 
+    /// <summary>
+    /// Beschriftung einer Kachel (<see cref="TileIds"/>): die heutigen Menütexte, für "Projekt verwalten" und "GUI" eigene Schlüssel.
+    /// Texte aus anderen Projekten (Error-Log, Desync, Save Explorer) liefert <paramref name="external"/>; ohne Treffer steht die Kennung.
+    /// </summary>
+    public static string TileLabel(string tileId, Func<string, string?>? external = null) => tileId switch
+    {
+        TileIds.Project => T("menu.tile.project", "Projekt verwalten"),
+        TileIds.CuTool => CuTool,
+        TileIds.Compatch => Compatch,
+        TileIds.ModCompat => ModCompat,
+        TileIds.PatchRecipes => PatchRecipes,
+        TileIds.ScriptDocs => ScriptDocs,
+        TileIds.ScopeFinder => SettingsTexts.ToolbarItemLabel(ToolbarItemIds.ScopeFinder),
+        TileIds.Gui => T("menu.tile.gui", "GUI"),
+        TileIds.GuiDataHelper => SettingsTexts.ToolbarItemLabel(ToolbarItemIds.GuiDataHelper),
+        TileIds.Templates => Templates,
+        TileIds.GeneratorPackages => GeneratorPackages,
+        TileIds.PackageEditor => PackageEditor,
+        TileIds.BugTracker => SettingsTexts.ToolbarItemLabel(ToolbarItemIds.BugTracker),
+        _ => external?.Invoke(tileId) ?? tileId,
+    };
+
+    /// <summary>Tooltip einer Kachel; Quellen wie bei <see cref="TileLabel"/>.</summary>
+    public static string TileTip(string tileId, Func<string, string?>? external = null) => tileId switch
+    {
+        TileIds.Project => ProjectTip,
+        TileIds.CuTool => CuToolTip,
+        TileIds.Compatch => CompatchTip,
+        TileIds.ModCompat => ModCompatTip,
+        TileIds.PatchRecipes => PatchRecipesTip,
+        TileIds.ScriptDocs => ScriptDocsTip,
+        TileIds.ScopeFinder => ToolbarTip(ToolbarItemIds.ScopeFinder),
+        TileIds.Gui => T("menu.tile.gui.tip", "GUI-Inspektor, Datenhelfer, Bausteine, neue GUI-Datei und GUI-Einstellungen der Mod"),
+        TileIds.GuiDataHelper => ToolbarTip(ToolbarItemIds.GuiDataHelper),
+        TileIds.Templates => TemplatesTip,
+        TileIds.GeneratorPackages => GeneratorPackagesTip,
+        TileIds.PackageEditor => PackageEditorTip,
+        TileIds.BugTracker => ToolbarTip(ToolbarItemIds.BugTracker),
+        _ => external?.Invoke(tileId) ?? tileId,
+    };
+
     public static string ToolbarTip(string id) => id switch
     {
+        ToolbarItemIds.New => WorkspaceNewTip,
+        ToolbarItemIds.Open => WorkspaceOpenTip,
+        ToolbarItemIds.Save => WorkspaceSaveTip,
+        ToolbarItemIds.SaveAll => WorkspaceSaveAllTip,
+        ToolbarItemIds.Close => WorkspaceCloseTip,
+        ToolbarItemIds.Move => WorkspaceMoveTip,
         ToolbarItemIds.Undo => T("menu.toolbar.undo.tip", "Letzte Programmaktion rückgängig machen, z. B. Speichern oder Ersetzen in Dateien"),
         ToolbarItemIds.Redo => T("menu.toolbar.redo.tip", "Zuletzt rückgängig gemachte Programmaktion wiederholen"),
         ToolbarItemIds.Search => T("menu.toolbar.search.tip", "Suchen & Ersetzen, auch in allen Dateien eines Ordners (Strg+F)"),
@@ -184,6 +255,22 @@ public static class MenuTexts
     public static string WorkspaceIcons => T("menu.workspace.icons", "Symbole ▾");
 
     public static string WorkspaceIconsTip => T("menu.workspace.icons.tip", "Festlegen, welche Symbole neben den Dokumenten stehen");
+
+    /// <summary>Notizen-Knopf der Arbeitsbereich-Leiste: Emoji wie bei Lesezeichen und Bug, Text aus den Werkzeugleisten-Namen (kein eigener Schlüssel).</summary>
+    public static string WorkspaceNotes => "🗒 " + SettingsTexts.ToolbarItemLabel(ToolbarItemIds.Notes);
+
+    /// <summary>Interface-Rework 2: Menü "Sortierung ▾" der Arbeitsbereich-Leiste (Werte siehe <c>TabSorting</c> im Editor-Projekt).</summary>
+    public static string WorkspaceSort => T("menu.workspace.sort", "Sortierung ▾");
+
+    public static string WorkspaceSortTip => T("menu.workspace.sort.tip", "Reihenfolge der Tabs dieses Arbeitsbereichs: manuell (Ziehen) oder automatisch nach Name, Kategorie oder Herkunft");
+
+    public static string WorkspaceSortManual => T("menu.workspace.sort.manual", "Manuell (Ziehen)");
+
+    public static string WorkspaceSortName => T("menu.workspace.sort.name", "Name");
+
+    public static string WorkspaceSortCategory => T("menu.workspace.sort.category", "Kategorie");
+
+    public static string WorkspaceSortOrigin => T("menu.workspace.sort.origin", "Herkunft (Vanilla, Mod, Extern)");
 
     private static string T(string key, string fallback) => UiText.Get(key, fallback);
 

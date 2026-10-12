@@ -1,0 +1,238 @@
+###################################################
+###### {{ g }} Idea Start
+###################################################
+
+template iv2_individual_idea_{{ g }}_1 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_1"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_1').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_1').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template iv2_individual_idea_{{ g }}_2 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_2"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_2').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_2').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template iv2_individual_idea_{{ g }}_3 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_3"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_3').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_3').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template iv2_individual_idea_{{ g }}_4 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_4"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_4').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_4').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template iv2_individual_idea_{{ g }}_5 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_5"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_5').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_5').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template iv2_individual_idea_{{ g }}_6 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_6"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_6').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_6').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template iv2_individual_idea_{{ g }}_7 {
+	SimpleContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetIcon]"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "STATIC_MODIFIER_NAME_ideagroup_modifier_{{ g }}_7"
+		}
+
+		blockoverride "tooltip_content" {
+			
+			
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty(GetModifier('ideagroup_modifier_{{ g }}_7').GetDesc))]"
+				blockoverride "text" {
+					text = "[GetModifier('ideagroup_modifier_{{ g }}_7').GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+###################################################
+###### {{ g }} Idea End
+###################################################

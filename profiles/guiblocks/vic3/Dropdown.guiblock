@@ -1,0 +1,33 @@
+# block: Dropdown
+# group: Bedienelemente
+# description: Auswahlliste; ohne datamodel erscheint sie nicht. Die Auswahl (onselectionchanged, selectedindex) steuern in Vanilla nur Funktionen des Spiels, nicht GetVariableSystem. Mit der Vorgabe listet sie die aktiven Interessengruppen des eigenen Landes. Vorbild: gui/message_settings.gui, gui/frontend/shared/lists.gui, gui/politics_panel_types.gui
+# param: name | Name | my_dropdown
+# param: datamodel | Liste (datamodel) | AccessPlayer.AccessActiveInterestGroups
+# param: item_text | Text je Eintrag | InterestGroup.GetName
+# requires: dropdown_menu_standard
+
+dropdown_menu_standard = {
+	blockoverride "dropdown_properties" {
+		name = "$name$"
+		datamodel = "[$datamodel$]"
+		# onselectionchanged = "[...]"
+		# selectedindex = "[...]"
+	}
+
+	blockoverride "dropdown_size" {
+		size = { 290 32 }
+	}
+
+	blockoverride "dropdown_list_maxsize" {
+		minimumsize = { 290 -1 }
+		maximumsize = { 290 250 }
+	}
+
+	blockoverride "dropdown_active_item_properties" {
+		raw_text = "[$item_text$]"
+	}
+
+	blockoverride "dropdown_item_properties" {
+		raw_text = "[$item_text$]"
+	}
+}

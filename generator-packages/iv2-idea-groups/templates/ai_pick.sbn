@@ -1,0 +1,3 @@
+{{~ if aiList ~}}
+		iv2_ga_select_ideagroup_{{ g }}
+{{~ end ~}}

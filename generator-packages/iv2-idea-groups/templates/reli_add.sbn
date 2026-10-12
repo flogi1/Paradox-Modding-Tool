@@ -1,0 +1,35 @@
+{{~ if groupType == "reli" ~}}
+{{~ conditions = condition_lines ~}}
+{{~ if conditions.size == 0 ~}}
+		if = {
+			limit = {
+				iv2_scripted_trigger_has_religion_ig_selected = yes
+{{~ for line in extras ~}}
+				{{ line }}
+{{~ end ~}}
+			}
+			fire_generic_action = {
+				type = iv2_ga_select_ideagroup_{{ g }}
+				actor = root
+				recipient = root
+			}
+		}
+{{~ else ~}}
+{{~ for condition in conditions ~}}
+		if = {
+			limit = {
+				iv2_scripted_trigger_has_religion_ig_selected = yes
+				{{ condition }}
+			}
+			fire_generic_action = {
+				type = iv2_ga_select_ideagroup_{{ g }}
+				actor = root
+				recipient = root
+			}
+		}
+{{~ if !for.last ~}}
+
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}

@@ -52,28 +52,6 @@ public sealed class WorkspacePagesTests
     });
 
     [Fact]
-    public void ToolbarPageListsAllButLaunchItems() => Sta.Run(() =>
-    {
-        using var page = new ToolbarPage(new FakeHost());
-        var labels = UiFind.All<System.Windows.Controls.CheckBox>(page.View).Select(UiFind.Label).ToList();
-
-        Assert.Equal(ToolbarCatalog.All.Where(item => item.Group != ToolbarGroup.Launch).Select(item => SettingsTexts.ToolbarItemLabel(item.Id)), labels);
-    });
-
-    [Fact]
-    public void ToolbarPageFollowsExternalVisibilityChanges() => Sta.Run(() =>
-    {
-        var host = new FakeHost();
-        using var page = new ToolbarPage(host);
-        var box = UiFind.CheckBox(page, SettingsTexts.ToolbarItemLabel(ToolbarItemIds.Format));
-        Assert.True(box.IsChecked);
-
-        host.Settings.SetToolbarItemVisible(ToolbarItemIds.Format, false);
-
-        Assert.False(box.IsChecked);
-    });
-
-    [Fact]
     public void WorkspacePageWritesModelAndEditorSettings() => Sta.Run(() =>
     {
         var host = new FakeHost();

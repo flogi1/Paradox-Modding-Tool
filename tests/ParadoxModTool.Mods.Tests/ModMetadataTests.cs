@@ -173,6 +173,111 @@ public class ModMetadataTests : TempDirTests
     }
 
     [Fact]
+    public void Classic_unlesbare_Geschwisterdatei_faellt_auf_descriptor_zurueck_und_nennt_ihn_als_Quelle()
+    {
+        var folder = Make("m");
+        var descriptor = Path.Combine(folder, "descriptor.mod");
+        File.WriteAllText(descriptor, "name=\"D\"\nversion=\"1.2\"\n");
+        var sibling = Path.Combine(Dir, "m.mod");
+        File.WriteAllText(sibling, "name=\"S\"\n");
+
+        ModMetadata? metadata;
+        using (new FileStream(sibling, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            metadata = ModMetadata.Read(folder, ModMetadata.ClassicSiblingMetadataFile);
+        }
+
+        Assert.Equal("D", metadata!.Name);
+        Assert.Equal("1.2", metadata.Version);
+        Assert.Equal(descriptor, metadata.SourceFile);
+    }
+
+    [Fact]
+    public void SourceFile_nennt_die_gelesene_Datei()
+    {
+        var folder = Make("m");
+        File.WriteAllText(Path.Combine(folder, "descriptor.mod"), "name=\"D\"\n");
+        var sibling = Path.Combine(Dir, "m.mod");
+        File.WriteAllText(sibling, "name=\"S\"\n");
+        var json = Mod("j", "{ \"name\": \"X\" }");
+
+        Assert.Equal(sibling, ModMetadata.Read(folder, ModMetadata.ClassicSiblingMetadataFile)!.SourceFile);
+        Assert.Equal(Path.Combine(json, ".metadata", "metadata.json"), ModMetadata.Read(json, MetadataFile)!.SourceFile);
+    }
+
+    [Fact]
+    public void ClassicRemoteFileId_gezeigte_Datei_zuerst_dann_die_andere()
+    {
+        var folder = Make("m");
+        var descriptor = Path.Combine(folder, "descriptor.mod");
+        var sibling = Path.Combine(Dir, "m.mod");
+        File.WriteAllText(descriptor, "name=\"D\"\nremote_file_id=\"222\"\n");
+        File.WriteAllText(sibling, "name=\"S\"\n");
+
+        // Die Geschwisterdatei hat keine ID: die descriptor.mod liefert sie.
+        Assert.Equal("222", ModMetadata.ClassicRemoteFileId(folder, sibling));
+
+        File.WriteAllText(sibling, "name=\"S\"\nremote_file_id=\"111\"\n");
+        Assert.Equal("111", ModMetadata.ClassicRemoteFileId(folder, sibling));
+        Assert.Equal("222", ModMetadata.ClassicRemoteFileId(folder, descriptor));
+    }
+
+    [Fact]
+    public void ClassicRemoteFileId_ueberspringt_ungueltige_Werte()
+    {
+        var folder = Make("m");
+        var descriptor = Path.Combine(folder, "descriptor.mod");
+        var sibling = Path.Combine(Dir, "m.mod");
+        File.WriteAllText(sibling, "remote_file_id=\"0\"\n");
+        File.WriteAllText(descriptor, "remote_file_id=\"abc\"\n");
+
+        Assert.Null(ModMetadata.ClassicRemoteFileId(folder, sibling));
+
+        File.WriteAllText(descriptor, "remote_file_id=\"333\"\n");
+        Assert.Equal("333", ModMetadata.ClassicRemoteFileId(folder, sibling));
+        Assert.Null(ModMetadata.ClassicRemoteFileId(Make("leer"), null));
+    }
+
+    [Fact]
+    public void ResolveFilePath_klassisch_Geschwisterdatei_vor_descriptor_sonst_null()
+    {
+        var folder = Make("m");
+        Assert.Null(ModMetadata.ResolveFilePath(folder, ModMetadata.ClassicSiblingMetadataFile));
+        Assert.Empty(ModMetadata.ClassicFilePaths(folder));
+
+        var descriptor = Path.Combine(folder, "descriptor.mod");
+        File.WriteAllText(descriptor, "name=\"D\"\n");
+        Assert.Equal(descriptor, ModMetadata.ResolveFilePath(folder, ModMetadata.ClassicSiblingMetadataFile));
+
+        var sibling = Path.Combine(Dir, "m.mod");
+        File.WriteAllText(sibling, "name=\"S\"\n");
+        Assert.Equal(sibling, ModMetadata.ResolveFilePath(folder + Path.DirectorySeparatorChar, ModMetadata.ClassicSiblingMetadataFile));
+        Assert.Equal(new[] { sibling, descriptor }, ModMetadata.ClassicFilePaths(folder));
+        Assert.DoesNotContain("*", ModMetadata.ResolveFilePath(folder, ModMetadata.ClassicSiblingMetadataFile));
+    }
+
+    [Fact]
+    public void ResolveFilePath_json_nur_wenn_die_Datei_existiert()
+    {
+        var folder = Mod("m", "{ \"name\": \"X\" }");
+
+        Assert.Equal(Path.Combine(folder, ".metadata", "metadata.json"), ModMetadata.ResolveFilePath(folder, MetadataFile));
+        Assert.Null(ModMetadata.ResolveFilePath(Make("leer"), MetadataFile));
+        Assert.Null(ModMetadata.ResolveFilePath(folder, string.Empty));
+        Assert.True(ModMetadata.IsClassic(ModMetadata.ClassicSiblingMetadataFile));
+        Assert.False(ModMetadata.IsClassic(MetadataFile));
+    }
+
+    [Fact]
+    public void Classic_reads_unquoted_version()
+    {
+        var folder = Make("m");
+        File.WriteAllText(Path.Combine(Dir, "m.mod"), "name=\"X\"\nversion=1.2\nsupported_version=\"1.*\"");
+
+        Assert.Equal("1.2", ModMetadata.Read(folder, ModMetadata.ClassicSiblingMetadataFile)!.Version);
+    }
+
+    [Fact]
     public void Classic_reads_all_replace_path_lines()
     {
         var folder = Make("m");

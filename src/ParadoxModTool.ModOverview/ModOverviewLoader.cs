@@ -59,7 +59,8 @@ public static class ModOverviewLoader
         var (changelog, problem) = ReadChangelog(mod);
         var linkEntry = ModLinkStore.Find(links, profile.Id, mod.Id);
         var workshopId = mod.SteamWorkshopId is { Length: > 0 } registered ? registered
-            : metadata?.RemoteFileId is { Length: > 0 } remote ? remote
+            : metadata is not null && ModMetadata.IsClassic(profile.MetadataFile)
+                && ModMetadata.ClassicRemoteFileId(metadata.Folder, metadata.SourceFile) is { } remote ? remote
             : linkEntry?.WorkshopId is { Length: > 0 } adopted ? adopted
             : null;
         var steamEntry = workshopId is not null && steam.TryGetValue(workshopId, out var entry) ? entry : null;
@@ -77,7 +78,7 @@ public static class ModOverviewLoader
                 ? new OverviewRelease(last.Version, last.Date, last.Steam is not null, last.GitHub is { Count: > 0 })
                 : null,
             HasGitHubRelease = hasGitHubRelease,
-            ReleaseStatus = ReleaseStatus.Evaluate(metadata, changelog, releases),
+            ReleaseStatus = ReleaseStatus.Evaluate(metadata, changelog, releases, ModMetadata.IsClassic(profile.MetadataFile)),
             ReleaseStatusProblem = problem,
             WorkshopId = workshopId,
             Links = ModLinks.For(mod, linkEntry, workshopId),

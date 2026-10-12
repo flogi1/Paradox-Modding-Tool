@@ -93,6 +93,9 @@ internal static class SenseChecker
             return result;
         }
 
+        // Ohne Präfixe der Regel gilt das bisherige Verhalten (INJECT und REPLACE vorschlagen); die Präfixe des Spiels kennt die Anfrage nicht.
+        var allowInject = rule.Operators is null || rule.Allows("INJECT", Array.Empty<string>());
+        var allowReplace = rule.Operators is null || rule.Allows("REPLACE", Array.Empty<string>());
         var unchanged = 0;
         var added = 0;
         var changedKeys = new List<string>();
@@ -114,6 +117,17 @@ internal static class SenseChecker
             var shape = original.Value is ScriptBlock baseBlock && statement.Value is ScriptBlock modBlock
                 ? InjectShape.Of(baseBlock.Entries, modBlock.Entries, ScriptStructuralComparer.EntryEquals)
                 : null;
+            // Victoria 3: INJECT hängt nur an (ein geänderter Wert braucht REPLACE), und manche Ordner kennen nur REPLACE oder gar kein Präfix.
+            if (shape is { Changed: > 0 } && request.Rules.InjectAppends || shape is not null && !allowInject)
+            {
+                shape = null;
+            }
+
+            if (shape is null && !allowReplace)
+            {
+                continue;
+            }
+
             result.Add(shape switch
             {
                 null => Make(CompatKind.ReplaceNeeded, CompatSeverity.Info, statement.Key, ModCompatTexts.FindingReplaceNeeded(statement.Key, basePart.Name), CompatSuggestion.UseReplace, statement, original),

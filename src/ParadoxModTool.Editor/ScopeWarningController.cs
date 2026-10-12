@@ -29,6 +29,7 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
 {
     private static readonly string[] ScriptExtensions = { ".txt", ".gui", ".gfx" };
     private static readonly Brush FallbackBrush = new SolidColorBrush(Color.FromRgb(0xE5, 0x39, 0x35));
+    private static readonly Brush WarningFallbackBrush = new SolidColorBrush(Color.FromRgb(0xF0, 0x9A, 0x1A));
 
     private readonly TextEditor _editor;
     private readonly Func<string?> _currentFilePath;
@@ -41,7 +42,37 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
     private sealed class IssueSegment : TextSegment
     {
         public string Message { get; init; } = string.Empty;
+
+        public bool Severe { get; init; } = true;
     }
+
+    /// <summary>
+    /// Die Präfix-Prüfung für die Datei: nur für Skriptdateien gefragt (sie liest Wurzeln und Regeln auf dem UI-Thread); scheitert sie, gibt es
+    /// keine Prüfung statt eines Fehlers.
+    /// </summary>
+    internal static Func<string, IReadOnlyList<EditorWarning>>? PrefixCheckFor(string? path, Func<string?, Func<string, IReadOnlyList<EditorWarning>>?>? checker)
+    {
+        if (path is null || checker is null || !ScriptExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        try
+        {
+            return checker(path);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Scope-Warnungen (schwer) und weitere Warnungen (Präfixe) in einer Liste, nach Textstelle geordnet.</summary>
+    internal static IReadOnlyList<EditorWarning> Merge(IReadOnlyList<ScopeIssue> scope, IReadOnlyList<EditorWarning> other) =>
+        scope.Select(issue => new EditorWarning(issue.Start, issue.Length, issue.Message, true))
+            .Concat(other)
+            .OrderBy(warning => warning.Start)
+            .ToList();
 
     public ScopeWarningController(TextEditor editor, Func<string?> currentFilePath)
     {
@@ -90,7 +121,7 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
         }
     }
 
-    private bool IsActive => (ScopeSettings.WarningsEnabled || ScopeSettings.PanelEnabled) && ScopeSettings.Engine is not null;
+    private bool IsActive => (ScopeSettings.WarningsEnabled || ScopeSettings.PanelEnabled) && (ScopeSettings.Engine is not null || ScopeSettings.PrefixChecker is not null);
 
     private void Reset()
     {
@@ -124,7 +155,9 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
     private async Task ComputeAsync()
     {
         var path = _currentFilePath();
-        if (ScopeSettings.Engine is not { } engine
+        var engine = ScopeSettings.Engine;
+        var prefixCheck = PrefixCheckFor(path, ScopeSettings.PrefixChecker);
+        if ((engine is null && prefixCheck is null)
             || (path is not null && !ScriptExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)))
         {
             Clear();
@@ -135,15 +168,15 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
         var version = ++_version;
         var text = document.Text;
 
-        IReadOnlyList<ScopeIssue> found;
+        IReadOnlyList<EditorWarning> found;
         try
         {
-            found = await Task.Run(() => engine.FindIssues(text, path));
+            found = await Task.Run(() => Merge(engine?.FindIssues(text, path) ?? Array.Empty<ScopeIssue>(), prefixCheck?.Invoke(text) ?? Array.Empty<EditorWarning>()));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             // Eine Prüfung, die scheitert, darf den Editor nicht stören: dann gibt es eben keine Warnungen.
-            found = Array.Empty<ScopeIssue>();
+            found = Array.Empty<EditorWarning>();
         }
 
         if (version != _version || !ReferenceEquals(document, _editor.Document))
@@ -160,7 +193,7 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
                 continue;
             }
 
-            segments.Add(new IssueSegment { StartOffset = issue.Start, Length = issue.Length, Message = issue.Message });
+            segments.Add(new IssueSegment { StartOffset = issue.Start, Length = issue.Length, Message = issue.Message, Severe = issue.Severe });
             lines.Add(new ScopeIssueLine(document.GetLineByOffset(issue.Start).LineNumber, issue.Start, issue.Message));
         }
 
@@ -181,14 +214,14 @@ internal sealed class ScopeWarningController : IBackgroundRenderer
 
         var viewStart = textView.VisualLines[0].FirstDocumentLine.Offset;
         var viewEnd = textView.VisualLines[^1].LastDocumentLine.EndOffset;
-        var brush = _editor.TryFindResource("Theme.Danger") as Brush ?? FallbackBrush;
-        var pen = new Pen(brush, 1);
+        var severePen = new Pen(_editor.TryFindResource("Theme.Danger") as Brush ?? FallbackBrush, 1);
+        var hintPen = new Pen(_editor.TryFindResource("Theme.Warning") as Brush ?? WarningFallbackBrush, 1);
 
         foreach (var segment in _segments.FindOverlappingSegments(viewStart, viewEnd - viewStart))
         {
             foreach (var rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
             {
-                drawingContext.DrawGeometry(null, pen, CreateSquiggle(rect.BottomLeft, rect.BottomRight));
+                drawingContext.DrawGeometry(null, segment.Severe ? severePen : hintPen, CreateSquiggle(rect.BottomLeft, rect.BottomRight));
             }
         }
     }

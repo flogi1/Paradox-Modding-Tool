@@ -120,6 +120,49 @@ public class PatchPlannerTests : CompatchTestBase
         Assert.DoesNotContain("farm", Assert.Single(plan.Files).Text);
     }
 
+    private IReadOnlyList<PatchForm> Vic3Forms(string folder, string desired)
+    {
+        PutVanilla(folder + "/00_x.txt", "farm = { cost = 10 }\n");
+        PutA(folder + "/a.txt", "farm = { cost = 10 }\n");
+        PutB(folder + "/b.txt", "farm = { cost = 10 }\n");
+        var input = Vic3Input();
+        var info = EffectiveEntryResolver.Resolve(input).Addresses[EntryAddress.ForKey(input.Rules.Match(folder + "/a.txt").Scope, "farm")];
+        return PatchPlanner.AvailableForms(info, ParadoxModTool.VanillaDiff.ScriptDocument.Parse(desired).Entries, input);
+    }
+
+    [Fact]
+    public void Appending_game_offers_no_inject_for_a_changed_value()
+    {
+        var forms = Vic3Forms("common/buildings", "farm = { cost = 20 }\n");
+
+        Assert.DoesNotContain(PatchForm.Inject, forms);
+        Assert.Contains(PatchForm.Replace, forms);
+    }
+
+    [Fact]
+    public void Appending_game_offers_inject_for_a_pure_addition()
+    {
+        Assert.Contains(PatchForm.Inject, Vic3Forms("common/buildings", "farm = { cost = 10 upkeep = 2 }\n"));
+    }
+
+    [Fact]
+    public void Replace_only_folder_offers_no_inject()
+    {
+        var forms = Vic3Forms("common/scripted_effects", "farm = { cost = 10 upkeep = 2 }\n");
+
+        Assert.DoesNotContain(PatchForm.Inject, forms);
+        Assert.Contains(PatchForm.Replace, forms);
+    }
+
+    [Fact]
+    public void Folder_without_operators_offers_neither_inject_nor_replace()
+    {
+        var forms = Vic3Forms("common/coat_of_arms", "farm = { cost = 10 upkeep = 2 }\n");
+
+        Assert.DoesNotContain(PatchForm.Inject, forms);
+        Assert.DoesNotContain(PatchForm.Replace, forms);
+    }
+
     [Fact]
     public void Gui_type_is_wrapped_in_types_block()
     {

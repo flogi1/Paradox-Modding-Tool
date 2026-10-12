@@ -5,12 +5,28 @@ using ParadoxModTool.Settings;
 
 namespace ParadoxModTool.SettingsUi.Pages;
 
-/// <summary>Kategorie 8: Reiter einfärben und Symbolfarben für das aktuelle Theme (Farbfeld öffnet die Farbwahl, "Zurücksetzen" = Standard).</summary>
+/// <summary>Kategorie 2 (Layout): Fensterlayout (Kacheln/Klassisch), Position der kleinen Werkzeugleiste (Leistenposition), Reiter einfärben und Symbolfarben für das aktuelle Theme (Farbfeld öffnet die Farbwahl, "Zurücksetzen" = Standard).</summary>
 public sealed class LayoutPage : SettingsPage
 {
     public LayoutPage(ISettingsHost host)
         : base(host)
     {
+        AddHeading(SettingsTexts.WindowLayoutHeading);
+        AddRadio("windowLayout", SettingsTexts.WindowLayoutTiles, () => Host.Settings.WindowLayout == "Tiles", () => Host.Settings.WindowLayout = "Tiles");
+        AddRadio("windowLayout", SettingsTexts.WindowLayoutClassic, () => Host.Settings.WindowLayout == "Classic", () => Host.Settings.WindowLayout = "Classic");
+        AddHint(SettingsTexts.WindowLayoutHint);
+
+        // Die Position gilt nur für die kleine Werkzeugleiste des neuen Layouts; im klassischen Layout ist das Feld ausgeblendet.
+        var positionPanel = new StackPanel();
+        AddHeading(SettingsTexts.ToolbarPositionHeading, positionPanel);
+        AddPositionRadio("Top", SettingsTexts.ToolbarPositionTop, positionPanel);
+        AddPositionRadio("Left", SettingsTexts.ToolbarPositionLeft, positionPanel);
+        AddPositionRadio("Right", SettingsTexts.ToolbarPositionRight, positionPanel);
+        AddPositionRadio("Bottom", SettingsTexts.ToolbarPositionBottom, positionPanel);
+        AddHint(SettingsTexts.ToolbarPositionHint, positionPanel);
+        Root.Children.Add(positionPanel);
+        OnRefresh(() => positionPanel.Visibility = Host.Settings.WindowLayout == "Tiles" ? Visibility.Visible : Visibility.Collapsed);
+
         AddCheckBox(SettingsTexts.ColorizeWholeTab, SettingsTexts.ColorizeWholeTabTip, () => Host.Settings.ColorizeWholeTab, value => Host.Settings.ColorizeWholeTab = value);
 
         var heading = AddHeading(string.Empty);
@@ -26,6 +42,9 @@ public sealed class LayoutPage : SettingsPage
     }
 
     internal static string Hex(Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+
+    private void AddPositionRadio(string position, string label, Panel parent) =>
+        AddRadio("toolbarPosition", label, () => Host.Settings.ToolbarPosition == position, () => Host.Settings.ToolbarPosition = position, parent);
 
     private void AddIconRow(string iconId)
     {

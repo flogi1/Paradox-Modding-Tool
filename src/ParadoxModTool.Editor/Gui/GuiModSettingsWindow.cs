@@ -100,7 +100,7 @@ public sealed class GuiModSettingsWindow : Window
         panel.Children.Add(_typesFile);
         if (_layout.FirstWins)
         {
-            var firstWins = new TextBlock { Text = GuiTexts.ModSettingsFirstWinsHint, TextWrapping = TextWrapping.Wrap, MaxWidth = 460, Margin = new Thickness(0, 2, 0, 6) };
+            var firstWins = new TextBlock { Text = GuiTexts.ModSettingsFirstWinsHintFor(_layout), TextWrapping = TextWrapping.Wrap, MaxWidth = 460, Margin = new Thickness(0, 2, 0, 6) };
             firstWins.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
             panel.Children.Add(firstWins);
         }

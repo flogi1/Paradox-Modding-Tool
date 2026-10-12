@@ -93,7 +93,7 @@ public sealed class CompatchCardView : Controls.Border
 
         panel.Children.Add(Titles(item.Window.ModAName, item.Window.ModBName));
         var (rows, hidden) = action.Address.Kind == AddressKind.WholeFile
-            ? (ActionText.WholeFileRows(info, decision), 0)
+            ? Mini(ActionText.WholeFileRows(info, decision, withVanilla: false))
             : ActionText.MiniRows(action, decision, MaxMiniRows, item.Window.HideComments);
         foreach (var row in rows)
         {
@@ -185,6 +185,13 @@ public sealed class CompatchCardView : Controls.Border
         Margin = new Thickness(6, 0, 0, 0),
         VerticalAlignment = System.Windows.VerticalAlignment.Center,
     };
+
+    /// <summary>Mini-Diff einer ganzen Datei: nur die abweichenden Zeilen, höchstens <see cref="MaxMiniRows"/>, dazu die Zahl der weggelassenen.</summary>
+    private static (IReadOnlyList<AlignedRow> Rows, int Hidden) Mini(IReadOnlyList<AlignedRow> rows)
+    {
+        var differing = rows.Where(CompareNavigation.IsDifference).ToList();
+        return differing.Count <= MaxMiniRows ? (differing, 0) : (differing.Take(MaxMiniRows).ToList(), differing.Count - MaxMiniRows);
+    }
 
     private static Controls.Grid Titles(string modA, string modB)
     {

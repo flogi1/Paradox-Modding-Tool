@@ -7,4 +7,8 @@
     <RootNamespace>ParadoxModTool.Categories</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
 </Project>

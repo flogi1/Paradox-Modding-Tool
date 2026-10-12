@@ -1,0 +1,3 @@
+{{~ if has_ai_tags ~}}
+{ "tags": {{ ai_tag_list }}, "name": {{ ai_tag_name | object.to_json }} }
+{{~ end ~}}

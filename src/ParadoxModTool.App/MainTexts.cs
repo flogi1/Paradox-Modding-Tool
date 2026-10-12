@@ -11,9 +11,15 @@ public static class MainTexts
 {
     // Hauptfenster: Statusleiste und Ergebnisleiste (MainWindow.xaml)
 
-    public static string ModStatusTip => T("main.modStatus.tip", "Die Mod, zu der die offene Datei (oder der Explorer-Ordner) gehört. Klick öffnet die Mod-Verwaltung.");
+    public static string ModStatusTip => T("main.modStatus.tip", "Die aktive Mod (z. B. Ziel für GUI-Übernahmen und Vorgabe für Patch-Rezepte und Generator). Klick: andere Mod wählen oder \"Automatisch (offene Datei)\"; auch im Menü \"Mods\".");
 
-    public static string ModStatusUnmanaged(string folder) => F("main.modStatus.unmanaged", "Mod: — ({0} ist nicht angelegt, Klick öffnet die Mod-Verwaltung)", folder);
+    public static string ModStatusFixed(string name) => F("main.modStatus.fixed", "Mod: {0}", name);
+
+    public static string ModStatusAutomatic(string name) => F("main.modStatus.automatic", "Mod (automatisch): {0}", name);
+
+    public static string ModStatusUnmanagedName(string folder) => F("main.modStatus.unmanagedName", "— ({0} ist nicht angelegt, über \"Mods verwalten\" anlegen)", folder);
+
+    public static string ModChoiceLost => T("main.modStatus.choiceLost", "gewählte Mod fehlt");
 
     public static string ModStatusLockedFile => T("main.modStatus.lockedFile", "Datei");
 

@@ -1,0 +1,18 @@
+types iv2_historic_national_ideas_setup {
+
+	type iv2_historic_shell_adm = widget {
+		parentanchor = left
+	}
+
+	type iv2_historic_shell_dip = widget {
+		parentanchor = left
+	}
+
+	type iv2_historic_shell_army = widget {
+		parentanchor = left
+	}
+
+	type iv2_historic_shell_navy = widget {
+		parentanchor = left
+	}
+}

@@ -133,6 +133,7 @@ public partial class MainWindow : Window
         InitializeSettings();
         InitializeFolderFilters();
         InitializeMenuTexts();
+        InitializeTileBar();
         ApplySavedWindowBounds();
         ThemeManager.Attach(this);
         InitializeThemeSupport();
@@ -151,6 +152,8 @@ public partial class MainWindow : Window
 
         WireEditorPane(LeftEditor, RightEditor);
         WireEditorPane(RightEditor, LeftEditor);
+        LeftEditor.PaneName = "A";
+        RightEditor.PaneName = "B";
 
         // Verzeichnis-Übersicht (Nutzer-Feedback Runde 10) - siehe ExplorerPanel_OpenFileRequested/
         // ExplorerPanel_NewFileRequested weiter unten. NewFolderRequested/DeleteRequested kamen
@@ -205,7 +208,8 @@ public partial class MainWindow : Window
 
                 // Verzeichnis-Übersicht (Nutzer-Feedback Runde 10): Standardfarben je
                 // Ordnerkategorie kommen aus dem aktiven Spielprofil (FolderCategoryColorResolver).
-                ExplorerPanelControl.SetGameProfile(_activeProfile);
+                ExplorerPanelControl.SetGameProfile(_activeProfile, GameContext.Profiles.Select(e => e.Profile).ToList());
+                InstallPrefixWarnings();
 
                 // Startoptionen (Normal/Debug-Modus/Ignore-Crash) kommen direkt aus dem
                 // Spielprofil (Konzept Abschnitt 8) - siehe GameProfile.LaunchOptions.
@@ -453,9 +457,17 @@ public partial class MainWindow : Window
         // Nutzer-Feedback: eingestellter Pfad zu playsets.json soll ebenfalls die Session überdauern.
         _playsetsFilePath = state.PlaysetsFilePath;
 
+        // Zuletzt gewählte Startoption (z. B. Debug-Modus) wieder wählen; die Liste kommt schon in MainWindow_Loaded aus dem Spielprofil.
+        if (_activeProfile is { } launchProfile)
+        {
+            LaunchOptionsCombo.SelectedIndex = LaunchOptionMemory.IndexOf(
+                launchProfile.LaunchOptions.Select(o => o.Args).ToList(), state.LaunchOptionArgs);
+        }
+
         // Bugfix Vanilla-Diff-Fenster: gewählter Mod-Ordner (einer konkreten Mod, nicht der
         // Sammelordner) soll ebenfalls die Session überdauern.
         _vanillaDiffModRootOverride = state.VanillaDiffModRootOverride;
+        _activeModChoice = state.ActiveModChoice;
         _searchLastFolder = state.SearchLastFolder;
         _scriptDocsFolderOverride = state.ScriptDocsFolder;
 
@@ -500,8 +512,16 @@ public partial class MainWindow : Window
 
     private void RestorePane(EditorPane pane, PaneSessionState state)
     {
+        // Sortierung vor dem Laden setzen, damit die Dokumente gleich an der sortierten Stelle landen.
+        pane.TabSort = state.TabSort;
+
+        // Den aktiven Tab über sein Dokument merken, nicht über den Index: übersprungene Dateien und die Sortierung (manuelle
+        // Kategorie erst nach dem Einfügen, inzwischen geänderte Kategorie-Regeln oder Wurzelordner) verschieben die Indizes.
+        OpenDocument? active = null;
+        var index = -1;
         foreach (var documentState in state.Documents)
         {
+            index++;
             _restoreDone++;
             StartupProgress.Report(
                 0.4 + 0.5 * _restoreDone / Math.Max(1, _restoreTotal),
@@ -526,6 +546,10 @@ public partial class MainWindow : Window
                 }
 
                 UpdateHasNote(document);
+                if (index == state.ActiveDocumentIndex)
+                {
+                    active = document;
+                }
             }
             catch (IOException)
             {
@@ -537,9 +561,9 @@ public partial class MainWindow : Window
             }
         }
 
-        if (state.ActiveDocumentIndex >= 0)
+        if (active is not null)
         {
-            pane.SelectDocumentAt(state.ActiveDocumentIndex);
+            pane.ActivateDocument(active);
         }
     }
 
@@ -593,7 +617,9 @@ public partial class MainWindow : Window
         CloseSaveExplorer();
         state.GameExecutablePath = _gameExecutablePath;
         state.PlaysetsFilePath = _playsetsFilePath;
+        state.LaunchOptionArgs = (LaunchOptionsCombo.SelectedItem as LaunchOption)?.Args;
         state.VanillaDiffModRootOverride = _vanillaDiffModRootOverride;
+        state.ActiveModChoice = _activeModChoice;
         state.SearchLastFolder = _searchLastFolder;
         state.ScriptDocsFolder = _scriptDocsFolderOverride;
         state.StorageParentFolder = _storageSettings.ParentFolder;
@@ -638,7 +664,7 @@ public partial class MainWindow : Window
             active.CaretOffset = pane.CurrentCaretOffset;
         }
 
-        var state = new PaneSessionState();
+        var state = new PaneSessionState { TabSort = pane.TabSort };
 
         foreach (var document in pane.Documents)
         {
@@ -692,6 +718,10 @@ public partial class MainWindow : Window
         pane.ShowBugRequested += (_, document) => CycleBugs(document);
         pane.ShowErrorLogRequested += (_, document) => OpenErrorLogWindow(document.FilePath);
         pane.ManageCategoriesRequested += (_, _) => OpenCategoriesDialog();
+        // Interface-Rework 2: Notizen/Lesezeichen/Bug in der Leiste des Bereichs wirken auf diesen Bereich, nicht auf ActivePane.
+        pane.NoteRequested += (_, _) => FileNoteFor(pane);
+        pane.BookmarkRequested += (_, _) => BookmarkWithCommentFor(pane);
+        pane.BugRequested += (_, _) => CreateBug(pane, attach: false);
     }
 
     /// <summary>
@@ -718,7 +748,7 @@ public partial class MainWindow : Window
         foreach (var category in categories)
         {
             var patterns = string.Join(";", category.Extensions.Select(x => "*" + x));
-            filter.Append($"|{category.Name} ({patterns})|{patterns}");
+            filter.Append($"|{ParadoxModTool.Categories.CategoryDefaults.DisplayName(category)} ({patterns})|{patterns}");
         }
 
         return filter.ToString();
@@ -1170,9 +1200,9 @@ public partial class MainWindow : Window
         }
 
         FileCategoryClassifier.SetCategories(dialog.Categories);
-        foreach (var document in AllPanes.SelectMany(p => p.Documents))
+        foreach (var pane in AllPanes)
         {
-            document.RefreshAutoCategory();
+            pane.RefreshAutoCategories();
         }
 
         // Speichert je nach aktivem Theme in dessen Datei (eigenes Theme) oder als persönliche Anpassung (Hell/Dunkel);
@@ -1202,9 +1232,12 @@ public partial class MainWindow : Window
     /// zugeordnet werden könnte - in diesem Fall wird der Nutzer stattdessen gebeten, die Datei
     /// zuerst zu speichern.
     /// </summary>
-    private void FileNote_Click(object sender, RoutedEventArgs e)
+    private void FileNote_Click(object sender, RoutedEventArgs e) => FileNoteFor(ActivePane);
+
+    /// <summary>Notiz zum aktiven Dokument eines bestimmten Arbeitsbereichs (Knopf in dessen Leiste oder in der kleinen Leiste).</summary>
+    private void FileNoteFor(EditorPane pane)
     {
-        if (ActivePane.ActiveDocument is { } document)
+        if (pane.ActiveDocument is { } document)
         {
             ShowNoteFor(document);
         }

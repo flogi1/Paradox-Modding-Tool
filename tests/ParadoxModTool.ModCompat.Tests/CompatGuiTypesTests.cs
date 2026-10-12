@@ -15,6 +15,38 @@ public class CompatGuiTypesTests : CompatTestBase
 
     private static OverrideRules Ck3Rules() => new(new[] { new OverrideRule("gui", OverrideBehavior.FirstWins) });
 
+    /// <summary>Victoria 3 (gemessen 2026-10-11): Die Playset-Reihenfolge zählt nicht, die zuerst geladene Datei gewinnt (Dateien vor Unterordnern).</summary>
+    [Fact]
+    public void Vic3_first_loaded_file_wins_regardless_of_playset_order()
+    {
+        var a = Mod("A", 1);
+        var b = Mod("B", 2);
+        Put(a, "gui/shared/zz_a.gui", "types A {\n\ttype hud_button = button { size = { 10 10 } }\n}\n");
+        Put(b, "gui/00_b.gui", "types B {\n\ttype hud_button = button { size = { 20 20 } }\n}\n");
+        var rules = new OverrideRules(new[] { new OverrideRule("gui", OverrideBehavior.FirstWins) }) { FirstWinsInLoadOrder = true };
+
+        var finding = Assert.Single(Run(new[] { a, b }, rules).Findings, f => f.Key == "type hud_button");
+
+        Assert.Equal("B", finding.Winner!.Name);
+    }
+
+    [Fact]
+    public void Vic3_vanilla_that_loads_first_is_the_winner()
+    {
+        var vanilla = Vanilla();
+        var a = Mod("A", 1);
+        var b = Mod("B", 2);
+        Put(vanilla, "gui/shared/button_icons.gui", "types V {\n\ttype hud_button = button { size = { 5 5 } }\n}\n");
+        Put(a, "gui/shared/zz_a.gui", "types A {\n\ttype hud_button = button { size = { 10 10 } }\n}\n");
+        Put(b, "gui/shared/zzz_b.gui", "types B {\n\ttype hud_button = button { size = { 20 20 } }\n}\n");
+        var rules = new OverrideRules(new[] { new OverrideRule("gui", OverrideBehavior.FirstWins) }) { FirstWinsInLoadOrder = true };
+
+        var finding = Assert.Single(Run(new[] { vanilla, a, b }, rules).Findings, f => f.Key == "type hud_button");
+
+        Assert.True(finding.Winner!.IsVanilla);
+        Assert.Contains("Vanilla", finding.Message);
+    }
+
     [Fact]
     public void Same_type_changed_differently_is_a_conflict()
     {

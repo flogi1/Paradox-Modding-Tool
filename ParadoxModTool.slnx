@@ -8,6 +8,8 @@
     <Project Path="src/ParadoxModTool.ErrorLog/ParadoxModTool.ErrorLog.csproj" />
     <Project Path="src/ParadoxModTool.Explorer/ParadoxModTool.Explorer.csproj" />
     <Project Path="src/ParadoxModTool.GameProfiles/ParadoxModTool.GameProfiles.csproj" />
+    <Project Path="src/ParadoxModTool.Generators/ParadoxModTool.Generators.csproj" />
+    <Project Path="src/ParadoxModTool.GeneratorCli/ParadoxModTool.GeneratorCli.csproj" />
     <Project Path="src/ParadoxModTool.GitIntegration/ParadoxModTool.GitIntegration.csproj" />
     <Project Path="src/ParadoxModTool.GuiDesign/ParadoxModTool.GuiDesign.csproj" />
     <Project Path="src/ParadoxModTool.LaunchControl/ParadoxModTool.LaunchControl.csproj" />
@@ -26,6 +28,7 @@
     <Project Path="src/ParadoxModTool.Patches/ParadoxModTool.Patches.csproj" />
     <Project Path="src/ParadoxModTool.Settings/ParadoxModTool.Settings.csproj" />
     <Project Path="src/ParadoxModTool.SettingsUi/ParadoxModTool.SettingsUi.csproj" />
+    <Project Path="src/ParadoxModTool.Shell/ParadoxModTool.Shell.csproj" />
     <Project Path="src/ParadoxModTool.SteamIntegration/ParadoxModTool.SteamIntegration.csproj" />
     <Project Path="src/ParadoxModTool.Storage/ParadoxModTool.Storage.csproj" />
     <Project Path="src/ParadoxModTool.Templates/ParadoxModTool.Templates.csproj" />
@@ -51,6 +54,7 @@
     <Project Path="tests/ParadoxModTool.Notes.Tests/ParadoxModTool.Notes.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Patches.Tests/ParadoxModTool.Patches.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.BugTracking.Tests/ParadoxModTool.BugTracking.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Generators.Tests/ParadoxModTool.Generators.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.GitIntegration.Tests/ParadoxModTool.GitIntegration.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.GuiDesign.Tests/ParadoxModTool.GuiDesign.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Release.Tests/ParadoxModTool.Release.Tests.csproj" />
@@ -62,6 +66,7 @@
     <Project Path="tests/ParadoxModTool.Localization.Tests/ParadoxModTool.Localization.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Settings.Tests/ParadoxModTool.Settings.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.SettingsUi.Tests/ParadoxModTool.SettingsUi.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Shell.Tests/ParadoxModTool.Shell.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Editor.Tests/ParadoxModTool.Editor.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.SteamIntegration.Tests/ParadoxModTool.SteamIntegration.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Storage.Tests/ParadoxModTool.Storage.Tests.csproj" />

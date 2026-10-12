@@ -1,0 +1,53 @@
+{
+  "id": "stadtwappen",
+  "name": { "en": "City arms (example)", "de": "Stadtwappen (Beispiel)" },
+  "gameId": "eu5",
+  "keyField": "tag",
+  "head": [
+    { "id": "tag", "label": "Tag", "type": "text", "required": true, "pattern": "^[A-Z]{3}$" }
+  ],
+  "root": {
+    "id": "ideas", "label": { "en": "Ideas", "de": "Ideen" }, "min": 1, "max": 5, "initial": 2,
+    "fields": [
+      {
+        "id": "name", "label": "Name", "type": "text", "required": true, "multilingual": true,
+        "lookup": { "sources": [ "cities" ], "fills": { "name": "name" } }
+      },
+      { "id": "desc", "label": { "en": "Description", "de": "Beschreibung" }, "type": "multilineText", "multilingual": true },
+      { "id": "modifiers", "label": { "en": "Modifiers", "de": "Modifikatoren" }, "type": "modifiers" }
+    ]
+  },
+  "assets": { "cities": { "path": "assets/cities.json", "origin": "mod" } },
+  "lookups": [
+    {
+      "id": "cities", "kind": "json", "asset": "cities", "items": "cities[].arms[]",
+      "fields": { "key": "id", "name": "title", "tag": "../tag" },
+      "label": { "en": "City", "de": "Stadt" }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "modifiers", "kind": "syncBlocks", "path": "in_game/common/static_modifiers/sw_{{ tag }}.txt",
+      "keyPattern": "sw_modifier_{{ tag }}_*", "template": "modifiers.sbn"
+    },
+    { "id": "loc", "kind": "localization", "path": "main_menu/localization/{{ lang }}/sw_{{ tag }}_l_{{ lang }}.yml", "template": "loc.sbn" },
+    {
+      "id": "setup", "kind": "insertSection", "path": "in_game/common/scripted_triggers/sw_setup.txt", "block": "sw_tags",
+      "template": "setup.sbn", "skeleton": "setup_skeleton.sbn"
+    }
+  ],
+  "read": {
+    "keys": "^in_game/common/static_modifiers/sw_(?<key>[A-Z]{3})\\.txt$",
+    "elements": {
+      "file": "in_game/common/static_modifiers/sw_{{ tag }}.txt",
+      "block": "sw_modifier_{{ tag }}_(?<number>\\d+)",
+      "level": "ideas",
+      "fields": { "modifiers": { "body": true } }
+    },
+    "localization": [
+      { "key": "sw_{{ tag }}_(?<number>\\d+)", "field": "ideas.name" },
+      { "key": "sw_{{ tag }}_(?<number>\\d+)_desc", "field": "ideas.desc" }
+    ]
+  },
+  "errors": [ { "when": "ideas.size == 0", "message": { "en": "No idea has been added.", "de": "Keine Idee angelegt." } } ]
+}

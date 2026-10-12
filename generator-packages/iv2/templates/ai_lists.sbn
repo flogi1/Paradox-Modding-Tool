@@ -1,0 +1,60 @@
+###############################################################
+#### Dynamic National Ideas GA List {{ tag }}
+###############################################################
+
+iv2_ga_list_nat_ideas_progress_cost_{{ tag }} = {
+	potential = {
+		NOT = { has_game_rule = iv2_rule_national_ideas_3 }
+		has_or_had_tag = {{ tag }}
+		trigger_if = {
+			limit = {
+				has_variable = iv2_var_progress_points_adm
+			}
+			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+		}
+	}
+	actions = {
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+		iv2_ga_select_historic_{{ tag }}_{{ i.number }}
+{{~ end ~}}
+{{~ end ~}}
+	}
+}
+
+iv2_ga_list_nat_ideas_innovation_cost_{{ tag }} = {
+	potential = {
+		NOT = { has_game_rule = iv2_rule_national_ideas_3 }
+		has_or_had_tag = {{ tag }}
+		trigger_if = {
+			limit = {
+				has_variable = iv2_var_innovation_points_adm
+			}
+			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+		}
+	}
+	actions = {
+		# All {{ tag }} Level Selects
+{{~ for c in categories ~}}
+{{~ for i in c.ideas ~}}
+{{~ for l in i.levels ~}}
+{{~ if !l.first ~}}
+		iv2_ga_select_historic_{{ tag }}_{{ i.number }}{{ l.suffix }}
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}
+	}
+}
+
+# IV2 AI chooser: the AI picks historic ideas only through iv2_ga_ai_choose_historic_{{ tag }}
+iv2_ga_list_ai_choose_historic_{{ tag }} = {
+	potential = {
+		is_ai = yes
+		iv2_scripted_trigger_use_historic_ideas = yes
+		has_or_had_tag = {{ tag }}
+	}
+	actions = {
+		iv2_ga_ai_choose_historic_{{ tag }}
+	}
+}

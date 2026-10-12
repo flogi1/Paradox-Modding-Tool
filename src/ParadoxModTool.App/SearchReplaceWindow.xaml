@@ -82,7 +82,11 @@
         </StackPanel>
 
         <StackPanel Grid.Row="3" Margin="0,0,0,4">
-            <TextBlock x:Name="ReplaceLabel" Margin="0,0,0,2" />
+            <DockPanel Margin="0,0,0,2">
+                <Button x:Name="SwapButton" DockPanel.Dock="Right" Content="⇅" Click="Swap_Click"
+                        Padding="4,0" Focusable="False" />
+                <TextBlock x:Name="ReplaceLabel" VerticalAlignment="Bottom" />
+            </DockPanel>
             <TextBox x:Name="ReplaceTextBox" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
                      MinHeight="48" MaxHeight="96" VerticalScrollBarVisibility="Auto"
                      FontFamily="Consolas" />

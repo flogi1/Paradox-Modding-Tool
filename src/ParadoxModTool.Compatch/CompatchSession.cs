@@ -810,7 +810,7 @@ public sealed class CompatchSession
                 parts.Add(found[0].Part);
             }
 
-            var combined = EffectiveCombiner.Combine(parts, info.Behavior, info.Certain).Entries;
+            var combined = EffectiveCombiner.Combine(parts, info.Behavior, info.Certain, Input.Rules.InjectAppends).Entries;
             if (combined.Count > 0)
             {
                 _existing[address] = combined;

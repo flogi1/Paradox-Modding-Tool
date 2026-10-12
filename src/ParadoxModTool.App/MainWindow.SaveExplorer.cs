@@ -17,7 +17,11 @@ public partial class MainWindow
     /// <summary>Block <c>saveGames</c> des aktuellen Spielprofils; null = Explorer für dieses Spiel nicht verfügbar.</summary>
     private SaveGameSettings? SaveExplorerSettings => (GameContext.Profile ?? _activeProfile)?.SaveGames;
 
-    private void InitializeSaveExplorer() => SaveExplorerMenuItem.IsEnabled = SaveExplorerSettings is not null;
+    private void InitializeSaveExplorer()
+    {
+        SaveExplorerMenuItem.IsEnabled = SaveExplorerSettings is not null;
+        TileBarControl.Rebuild();
+    }
 
     private void OpenSaveExplorer_Click(object sender, RoutedEventArgs e) => OpenSaveExplorerWindow(null);
 

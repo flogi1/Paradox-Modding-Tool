@@ -1,0 +1,6 @@
+[22:11:03][jomini_effect_impl.cpp:454]: events/pmt_probe_events.txt:9: PMT probe event 1
+[22:11:03][jomini_effect_impl.cpp:2501]: Land: Belgien (25)
+Root: Land: Belgien (25)
+
+Saved event targets:
+[22:11:22][jomini_trigger.cpp:102]: Adding trigger after PostInitAndValidate, unless this is handled by filewatcher reload, it will not be validated. Use SScopedDisableTriggerValidation if intentional.

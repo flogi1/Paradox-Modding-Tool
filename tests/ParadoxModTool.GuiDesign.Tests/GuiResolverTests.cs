@@ -200,7 +200,8 @@ public class GuiResolverTests
 
         var element = resolver.Resolve(Top(doc, "a"));
 
-        Assert.True(watch.ElapsedMilliseconds < 2000);
+        // Auffanggrenze gegen grobe Rückschritte: das Release-Werkzeug und test.bat fahren alle Testprojekte gleichzeitig, dann dauert dasselbe mehrfach so lang.
+        Assert.True(watch.ElapsedMilliseconds < 10000);
         Assert.Contains(element.Issues.Concat(element.Children.SelectMany(c => c.Issues)), i => i.Kind == GuiResolveIssueKind.TypeCycle);
     }
 
