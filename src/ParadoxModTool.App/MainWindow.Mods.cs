@@ -213,7 +213,7 @@ public partial class MainWindow
 
         if (_modsWindow is null)
         {
-            _modsWindow = new ModsWindow(_mods.Registry, _mods.MetadataFile, OnModRegistryChanged, _mods.ReleaseNoteKeys, SteamHost(), OpenBranchSyncWindow, mod => OpenModCompatWindow(mod), OpenCompatchForMod) { Owner = this };
+            _modsWindow = new ModsWindow(_mods.Registry, _mods.MetadataFile, OnModRegistryChanged, _mods.ReleaseNoteKeys, SteamHost(), OpenBranchSyncWindow, mod => OpenModCompatWindow(mod), OpenCompatchForMod, PlaysetQuick()) { Owner = this };
             _modsWindow.Closed += (_, _) => _modsWindow = null;
         }
 

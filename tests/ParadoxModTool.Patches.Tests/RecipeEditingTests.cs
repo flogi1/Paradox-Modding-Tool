@@ -209,6 +209,7 @@ public sealed class RecipeEditingTests
 
         Assert.Equal(PatchTexts.ColumnNameInvalid, RecipeEditing.ColumnNameProblem(recipe, "1a", null));
         Assert.Equal(PatchTexts.ColumnNameInvalid, RecipeEditing.ColumnNameProblem(recipe, "a b", null));
+        Assert.Equal(PatchTexts.ColumnNameInvalid, RecipeEditing.ColumnNameProblem(recipe, "a\n", null));
         Assert.Equal(PatchTexts.ColumnNameReserved, RecipeEditing.ColumnNameProblem(recipe, "key", null));
         Assert.Equal(PatchTexts.ColumnNameTaken, RecipeEditing.ColumnNameProblem(recipe, "barony", null));
         Assert.Null(RecipeEditing.ColumnNameProblem(recipe, "barony", "barony"));

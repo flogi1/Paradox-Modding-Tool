@@ -1,6 +1,7 @@
 {
   "id": "ck3",
   "steamAppId": "1158310",
+  "playsetLoadFile": "dlc_load.json",
   "displayName": "Crusader Kings III",
   "shortName": "CK III",
   "releaseDate": "2020-09-01",

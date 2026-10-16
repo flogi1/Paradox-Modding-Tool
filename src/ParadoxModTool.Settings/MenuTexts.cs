@@ -78,6 +78,10 @@ public static class MenuTexts
 
     public static string ModCompatTip => T("menu.modCompat.tip", "Mods gegeneinander prüfen: Datei- und Schlüsselkonflikte, Sinnhaftigkeit von Überschreibungen und ein Bericht für Kompatibilitätspatches");
 
+    public static string Playsets => T("menu.playsets", "Playsets verwalten");
+
+    public static string PlaysetsTip => T("menu.playsets.tip", "Playsets des Spiels anlegen, ändern, löschen und das Spiel damit starten (Mods, DLCs, Sicherungen)");
+
     public static string Compatch => T("menu.compatch", "Komp-Patch Tool");
 
     public static string CompatchTip => T("menu.compatch.tip", "Zwei Mods zusammenführen und das Ergebnis als Kompatibilitätspatch oder in eine eigene Mod schreiben");
@@ -149,6 +153,7 @@ public static class MenuTexts
         TileIds.CuTool => CuTool,
         TileIds.Compatch => Compatch,
         TileIds.ModCompat => ModCompat,
+        TileIds.Playsets => Playsets,
         TileIds.PatchRecipes => PatchRecipes,
         TileIds.ScriptDocs => ScriptDocs,
         TileIds.ScopeFinder => SettingsTexts.ToolbarItemLabel(ToolbarItemIds.ScopeFinder),
@@ -168,6 +173,7 @@ public static class MenuTexts
         TileIds.CuTool => CuToolTip,
         TileIds.Compatch => CompatchTip,
         TileIds.ModCompat => ModCompatTip,
+        TileIds.Playsets => PlaysetsTip,
         TileIds.PatchRecipes => PatchRecipesTip,
         TileIds.ScriptDocs => ScriptDocsTip,
         TileIds.ScopeFinder => ToolbarTip(ToolbarItemIds.ScopeFinder),

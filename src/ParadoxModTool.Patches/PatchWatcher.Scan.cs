@@ -41,14 +41,15 @@ public sealed record WatchHit(WatchFile File, WatchStatus Status, string? Ignore
 public static partial class PatchWatcher
 {
     /// <summary>
-    /// Stand des Rezepts ohne Ignorierliste und ohne Regelnamen: Ignorieren stuft nur neu ein, ein neuer Regelname ändert kein Ergebnis;
-    /// alles andere verlangt einen neuen Scan.
+    /// Stand des Rezepts ohne Ignorierliste, Regelnamen und Erklärung: Ignorieren stuft nur neu ein, ein neuer Regelname oder eine geänderte
+    /// Erklärung ändert kein Ergebnis; alles andere verlangt einen neuen Scan.
     /// </summary>
     public static string Fingerprint(PatchRecipe recipe)
     {
         var copy = PatchRecipeStore.Clone(recipe);
         copy.Watch.Ignored = new List<IgnoredWatchFile>();
         copy.OnlyRowKey = null;
+        copy.Description = null;
         foreach (var rule in copy.Rules)
         {
             rule.Name = string.Empty;

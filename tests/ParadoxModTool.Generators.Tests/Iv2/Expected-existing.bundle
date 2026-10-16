@@ -142,6 +142,9 @@ iv2_ga_select_historic_TST_1 = {
 					add = iv2_progress_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -190,6 +193,9 @@ iv2_ga_deselect_historic_TST_1 = {
 					subtract = 1
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -222,7 +228,7 @@ iv2_ga_select_historic_TST_2 = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_nat_idea_TST_1 = yes
+			iv2_sct_nat_idea_TST_2 = yes
 		}
 	}
 
@@ -270,6 +276,9 @@ iv2_ga_select_historic_TST_2 = {
 					add = iv2_progress_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -295,7 +304,7 @@ iv2_ga_select_historic_TST_2_1 = {
 			has_country_modifier = national_idea_modifier_TST_2
 			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm
 			}
-			iv2_sct_nat_idea_TST_1_1 = yes
+			iv2_sct_nat_idea_TST_2_1 = yes
 		}
 	}
 
@@ -331,6 +340,9 @@ iv2_ga_select_historic_TST_2_1 = {
 					name = iv2_var_national_idea_innovation_cost_expensive_adm
 					add = iv2_innovation_cost_increase
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -396,6 +408,9 @@ iv2_ga_deselect_historic_TST_2 = {
 					subtract = 1
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -430,7 +445,7 @@ iv2_ga_select_historic_TST_3 = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_nat_idea_TST_1 = yes
+			iv2_sct_nat_idea_TST_3 = yes
 		}
 	}
 
@@ -478,6 +493,9 @@ iv2_ga_select_historic_TST_3 = {
 					add = iv2_progress_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -503,7 +521,7 @@ iv2_ga_select_historic_TST_3_1 = {
 			has_country_modifier = national_idea_modifier_TST_3
 			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
 			}
-			iv2_sct_nat_idea_TST_1_1 = yes
+			iv2_sct_nat_idea_TST_3_1 = yes
 		}
 	}
 
@@ -540,6 +558,9 @@ iv2_ga_select_historic_TST_3_1 = {
 					add = iv2_innovation_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -565,7 +586,7 @@ iv2_ga_select_historic_TST_3_2 = {
 			has_country_modifier = national_idea_modifier_TST_3_1
 			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
 			}
-			iv2_sct_nat_idea_TST_1_2 = yes
+			iv2_sct_nat_idea_TST_3_2 = yes
 		}
 	}
 
@@ -602,6 +623,9 @@ iv2_ga_select_historic_TST_3_2 = {
 					add = iv2_innovation_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -627,7 +651,7 @@ iv2_ga_select_historic_TST_3_3 = {
 			has_country_modifier = national_idea_modifier_TST_3_2
 			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm
 			}
-			iv2_sct_nat_idea_TST_1_3 = yes
+			iv2_sct_nat_idea_TST_3_3 = yes
 		}
 	}
 
@@ -663,6 +687,9 @@ iv2_ga_select_historic_TST_3_3 = {
 					name = iv2_var_national_idea_innovation_cost_expensive_adm
 					add = iv2_innovation_cost_increase
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -760,6 +787,9 @@ iv2_ga_deselect_historic_TST_3 = {
 					subtract = 1
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -794,7 +824,7 @@ iv2_ga_select_historic_TST_11 = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_dip_1 = yes
+			iv2_sct_nat_idea_TST_11 = yes
 		}
 	}
 
@@ -842,6 +872,9 @@ iv2_ga_select_historic_TST_11 = {
 					add = iv2_progress_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -867,7 +900,7 @@ iv2_ga_select_historic_TST_11_1 = {
 			has_country_modifier = national_idea_modifier_TST_11
 			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
 			}
-			iv2_sct_dnat_idea_dip_1_1 = yes
+			iv2_sct_nat_idea_TST_11_1 = yes
 		}
 	}
 
@@ -904,6 +937,9 @@ iv2_ga_select_historic_TST_11_1 = {
 					add = iv2_innovation_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -929,7 +965,7 @@ iv2_ga_select_historic_TST_11_2 = {
 			has_country_modifier = national_idea_modifier_TST_11_1
 			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
 			}
-			iv2_sct_dnat_idea_dip_1_2 = yes
+			iv2_sct_nat_idea_TST_11_2 = yes
 		}
 	}
 
@@ -966,6 +1002,9 @@ iv2_ga_select_historic_TST_11_2 = {
 					add = iv2_innovation_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -991,7 +1030,7 @@ iv2_ga_select_historic_TST_11_3 = {
 			has_country_modifier = national_idea_modifier_TST_11_2
 			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
 			}
-			iv2_sct_dnat_idea_dip_1_3 = yes
+			iv2_sct_nat_idea_TST_11_3 = yes
 		}
 	}
 
@@ -1027,6 +1066,9 @@ iv2_ga_select_historic_TST_11_3 = {
 					name = iv2_var_national_idea_innovation_cost_expensive_dip
 					add = iv2_innovation_cost_increase
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -1124,6 +1166,9 @@ iv2_ga_deselect_historic_TST_11 = {
 					subtract = 1
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -1155,7 +1200,7 @@ iv2_ga_select_historic_TST_31 = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_navy_1 = yes
+			iv2_sct_nat_idea_TST_31 = yes
 		}
 	}
 
@@ -1202,6 +1247,9 @@ iv2_ga_select_historic_TST_31 = {
 					name = iv2_var_national_idea_cost_expensive_navy
 					add = iv2_progress_cost_increase
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -1251,6 +1299,9 @@ iv2_ga_deselect_historic_TST_31 = {
 					subtract = 1
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -1282,7 +1333,7 @@ iv2_ga_select_historic_TST_32 = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_navy_1 = yes
+			iv2_sct_nat_idea_TST_32 = yes
 		}
 	}
 
@@ -1329,6 +1380,9 @@ iv2_ga_select_historic_TST_32 = {
 					name = iv2_var_national_idea_cost_expensive_navy
 					add = iv2_progress_cost_increase
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -1378,6 +1432,9 @@ iv2_ga_deselect_historic_TST_32 = {
 					subtract = 1
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -1425,7 +1482,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_nat_idea_TST_1 = yes
+			iv2_sct_nat_idea_TST_2 = yes
 		}
 	}
 				AND = {
@@ -1444,7 +1501,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_nat_idea_TST_1 = yes
+			iv2_sct_nat_idea_TST_3 = yes
 		}
 	}
 				AND = {
@@ -1463,7 +1520,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_dip_1 = yes
+			iv2_sct_nat_idea_TST_11 = yes
 		}
 	}
 				AND = {
@@ -1479,7 +1536,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_navy_1 = yes
+			iv2_sct_nat_idea_TST_31 = yes
 		}
 	}
 				AND = {
@@ -1495,7 +1552,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_navy_1 = yes
+			iv2_sct_nat_idea_TST_32 = yes
 		}
 	}
 			}
@@ -1578,7 +1635,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_nat_idea_TST_1 = yes
+			iv2_sct_nat_idea_TST_2 = yes
 		}
 	}
 
@@ -1639,7 +1696,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_nat_idea_TST_1 = yes
+			iv2_sct_nat_idea_TST_3 = yes
 		}
 	}
 
@@ -1700,7 +1757,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_dip_1 = yes
+			iv2_sct_nat_idea_TST_11 = yes
 		}
 	}
 
@@ -1758,7 +1815,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_navy_1 = yes
+			iv2_sct_nat_idea_TST_31 = yes
 		}
 	}
 
@@ -1816,7 +1873,7 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_not_reached_national_idea_limit
 			var:iv2_var_current_national_idea_limit > var:iv2_var_national_idea_current
 			}
-			iv2_sct_dnat_idea_navy_1 = yes
+			iv2_sct_nat_idea_TST_32 = yes
 		}
 	}
 

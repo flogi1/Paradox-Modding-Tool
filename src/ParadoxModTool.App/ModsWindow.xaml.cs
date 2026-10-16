@@ -18,8 +18,9 @@ public partial class ModsWindow : Window
     private readonly Action<ModInfo> _openCompat;
     private readonly Action<ModInfo> _openCompatch;
     private readonly CompatchPickContext _pick;
+    private readonly PlaysetQuickActions? _playsetQuick;
 
-    public ModsWindow(ModRegistry registry, string metadataFile, Action changed, Action<ModInfo> beforeRemove, SteamPublishHost steam, Action<ModInfo> openSync, Action<ModInfo> openCompat, Action<ModInfo> openCompatch)
+    public ModsWindow(ModRegistry registry, string metadataFile, Action changed, Action<ModInfo> beforeRemove, SteamPublishHost steam, Action<ModInfo> openSync, Action<ModInfo> openCompat, Action<ModInfo> openCompatch, PlaysetQuickActions? playsetQuick = null)
     {
         InitializeComponent();
         _registry = registry;
@@ -30,10 +31,13 @@ public partial class ModsWindow : Window
         _openSync = openSync;
         _openCompat = openCompat;
         _openCompatch = openCompatch;
+        _playsetQuick = playsetQuick;
         _pick = new CompatchPickContext(registry, metadataFile, steam.SteamAppId);
         SetCompatchMenuItem.Header = CompatchTexts.ModsSetCompatch;
         ClearCompatchMenuItem.Header = CompatchTexts.ModsClearCompatch;
         OpenCompatchMenuItem.Header = CompatchTexts.ModsOpenMerge;
+        QuickStartMenuItem.Header = PlaysetWindowTexts.QuickStart;
+        QuickNewMenuItem.Header = PlaysetWindowTexts.QuickNew;
         RefreshMods();
     }
 
@@ -78,6 +82,24 @@ public partial class ModsWindow : Window
         SetCompatchMenuItem.IsEnabled = mod is not null && !ModProjects.IsProject(_registry, mod);
         ClearCompatchMenuItem.IsEnabled = mod?.IsCompatch == true;
         OpenCompatchMenuItem.IsEnabled = mod?.IsCompatch == true;
+        QuickStartMenuItem.IsEnabled = mod is not null && _playsetQuick is not null && _playsetQuick.CanStart();
+        QuickNewMenuItem.IsEnabled = mod is not null && _playsetQuick is not null;
+    }
+
+    private void QuickStart_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedMod is { } mod)
+        {
+            _playsetQuick?.StartWith(mod);
+        }
+    }
+
+    private void QuickNew_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedMod is { } mod)
+        {
+            _playsetQuick?.NewFrom(mod);
+        }
     }
 
     private void SetCompatch_Click(object sender, RoutedEventArgs e)

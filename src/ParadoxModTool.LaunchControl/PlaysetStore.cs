@@ -93,6 +93,7 @@ public static class PlaysetStore
                 result.Add(new PlaysetInfo
                 {
                     Name = name,
+                    Id = name,
                     IsActive = isActive,
                     ModCount = modCount,
                     EnabledModCount = enabledModCount,

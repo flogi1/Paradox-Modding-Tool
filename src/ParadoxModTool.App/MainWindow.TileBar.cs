@@ -61,6 +61,7 @@ public partial class MainWindow
             case TileIds.CuTool: OpenVanillaDiffWindow_Click(this, args); break;
             case TileIds.Compatch: OpenCompatch_Click(this, args); break;
             case TileIds.ModCompat: OpenModCompat_Click(this, args); break;
+            case TileIds.Playsets: OpenPlaysets_Click(this, args); break;
             case TileIds.PatchRecipes: OpenPatchRecipes_Click(this, args); break;
             case TileIds.SaveExplorer: OpenSaveExplorer_Click(this, args); break;
             case TileIds.ErrorLog: OpenErrorLog_Click(this, args); break;

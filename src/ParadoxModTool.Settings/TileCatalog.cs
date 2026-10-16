@@ -7,6 +7,7 @@ public static class TileIds
     public const string CuTool = "cuTool";
     public const string Compatch = "compatch";
     public const string ModCompat = "modCompat";
+    public const string Playsets = "playsets";
     public const string PatchRecipes = "patchRecipes";
     public const string SaveExplorer = "saveExplorer";
     public const string ErrorLog = "errorLog";
@@ -44,6 +45,7 @@ public static class TileCatalog
         new TileItem(TileIds.CuTool, true, false, TileBadge.None, false),
         new TileItem(TileIds.Compatch, true, false, TileBadge.None, false),
         new TileItem(TileIds.ModCompat, true, false, TileBadge.None, false),
+        new TileItem(TileIds.Playsets, true, false, TileBadge.None, false),
         new TileItem(TileIds.PatchRecipes, true, false, TileBadge.None, false),
         new TileItem(TileIds.SaveExplorer, true, false, TileBadge.None, false),
         new TileItem(TileIds.ErrorLog, true, false, TileBadge.ErrorLog, false),

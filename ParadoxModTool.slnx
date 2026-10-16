@@ -26,6 +26,7 @@
     <Project Path="src/ParadoxModTool.Scopes/ParadoxModTool.Scopes.csproj" />
     <Project Path="src/ParadoxModTool.Session/ParadoxModTool.Session.csproj" />
     <Project Path="src/ParadoxModTool.Patches/ParadoxModTool.Patches.csproj" />
+    <Project Path="src/ParadoxModTool.PatchCli/ParadoxModTool.PatchCli.csproj" />
     <Project Path="src/ParadoxModTool.Settings/ParadoxModTool.Settings.csproj" />
     <Project Path="src/ParadoxModTool.SettingsUi/ParadoxModTool.SettingsUi.csproj" />
     <Project Path="src/ParadoxModTool.Shell/ParadoxModTool.Shell.csproj" />

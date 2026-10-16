@@ -10,10 +10,15 @@ public class RealLogCoverageTests
 
     public RealLogCoverageTests(ITestOutputHelper output) => _output = output;
 
+    /// <summary>
+    /// Prüft den Fehlerkatalog gegen die echten error*.log des Nutzers. Das Ergebnis hängt davon ab, was der Nutzer zuletzt gespielt hat (Testmods mit
+    /// absichtlichen Fehlern, andere Mods), und ließ den Test-Schritt des Release-Werkzeugs scheitern. Deshalb nur auf Wunsch:
+    /// Umgebungsvariable <c>PMT_REAL_ERROR_LOGS=1</c> setzen (wie <c>PMT_OOS_SAMPLES</c> bei den Desync-Tests).
+    /// </summary>
     [Fact]
     public void LessThanOnePercentOfTheUsersLogLinesStayUnmatched()
     {
-        if (!Directory.Exists(Catalogs.UserLogDirectory))
+        if (Environment.GetEnvironmentVariable("PMT_REAL_ERROR_LOGS") != "1" || !Directory.Exists(Catalogs.UserLogDirectory))
         {
             return;
         }

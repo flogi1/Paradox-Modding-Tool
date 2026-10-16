@@ -109,6 +109,13 @@ public sealed class GameProfile
     /// (Geschwisterdatei &lt;Ordnername&gt;.mod NEBEN dem Mod-Ordner, z. B. EU IV).
     /// </summary>
     public string MetadataFile { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Name der Lade-Datei im Spielordner, die das Spiel beim direkten Start liest und die der Paradox-Launcher sonst schreibt (<c>dlc_load.json</c>,
+    /// <c>content_load.json</c>); null = das Spiel liest die Playsets selbst (EU V, playsets.json).
+    /// </summary>
+    public string? PlaysetLoadFile { get; set; }
+
     public string LoadOrderRule { get; set; } = string.Empty;
     public List<FolderCategory> FolderCategories { get; set; } = new();
     public List<FileTypeMapping> FileTypes { get; set; } = new();

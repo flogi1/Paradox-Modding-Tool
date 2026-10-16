@@ -1,6 +1,7 @@
 {
   "id": "eu4",
   "steamAppId": "236850",
+  "playsetLoadFile": "dlc_load.json",
   "displayName": "Europa Universalis IV",
   "shortName": "EU IV",
   "releaseDate": "2013-08-13",

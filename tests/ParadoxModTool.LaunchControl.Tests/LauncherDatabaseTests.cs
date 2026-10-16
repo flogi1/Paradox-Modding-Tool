@@ -53,6 +53,7 @@ public class LauncherDatabaseTests : IDisposable
         var playsets = PlaysetStore.ListPlaysets(_file);
         Assert.Equal(new[] { ("Initial playset", false, 3, 2), ("RNW Test", true, 1, 1) },
             playsets.Select(p => (p.Name, p.IsActive, p.ModCount, p.EnabledModCount)));
+        Assert.Equal(new[] { "p1", "p2" }, playsets.Select(p => p.Id));
     }
 
     [Fact]

@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using ICSharpCode.AvalonEdit;
 using ParadoxModTool.Generators.Ai;
+using ParadoxModTool.Patches.Ai;
 using Button = System.Windows.Controls.Button;
 using Orientation = System.Windows.Controls.Orientation;
 using TextBox = System.Windows.Controls.TextBox;
@@ -99,7 +100,7 @@ internal sealed class SnippetSourceWindow : Window
 
     private void TakeSelection()
     {
-        var code = AiTaskBuilder.WholeLines(_editor.Text, _editor.SelectionStart, _editor.SelectionLength);
+        var code = AiTaskFiles.WholeLines(_editor.Text, _editor.SelectionStart, _editor.SelectionLength);
         if (code.Trim().Length == 0)
         {
             _status.Text = AiPackageTexts.SourceNoSelection;

@@ -119,4 +119,15 @@ public sealed class TemplateRendererTests
     {
         Assert.Empty(TemplateRenderer.RenderEach("{holdings}", Values(("holdings", " ")), new HashSet<string> { "holdings" }));
     }
+
+    [Fact]
+    public void SectionProblems_finds_unclosed_and_stray_sections()
+    {
+        Assert.Equal(new[] { "a" }, TemplateRenderer.SectionProblems("{?a}x"));
+        Assert.Equal(new[] { "b" }, TemplateRenderer.SectionProblems("x{/b}"));
+        Assert.Empty(TemplateRenderer.SectionProblems("{*c}{c}{/c}"));
+        Assert.Empty(TemplateRenderer.SectionProblems("{?barony}{*barony}{barony}{/barony}{/barony}"));
+        Assert.Equal(new[] { "a" }, TemplateRenderer.SectionProblems("{?a}{!a}x{/a}"));
+        Assert.Empty(TemplateRenderer.SectionProblems("a = { b = {key} }"));
+    }
 }

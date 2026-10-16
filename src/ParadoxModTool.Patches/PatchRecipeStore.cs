@@ -22,6 +22,14 @@ public static class PatchRecipeStore
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
+    /// <summary>Optionen zum Lesen: wie <see cref="Options"/>, dazu Kommentare, Endkommas und Namen in beliebiger Schreibweise.</summary>
+    private static readonly JsonSerializerOptions ReadOptions = new(Options)
+    {
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+        PropertyNameCaseInsensitive = true,
+    };
+
     /// <summary>Der frühere (und mit "im Mod-Ordner speichern" weiter genutzte) Rezeptordner <c>&lt;mod&gt;/.pmt-patches</c>.</summary>
     public static string Folder(string modRoot) => Path.Combine(modRoot, FolderName);
 
@@ -47,11 +55,7 @@ public static class PatchRecipeStore
 
             try
             {
-                var recipe = JsonSerializer.Deserialize<PatchRecipe>(File.ReadAllText(file), Options);
-                if (recipe is not null)
-                {
-                    result.Add(recipe);
-                }
+                result.Add(Deserialize(File.ReadAllText(file)));
             }
             catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or NotSupportedException)
             {
@@ -173,6 +177,15 @@ public static class PatchRecipeStore
 
     /// <summary>Das Rezept im Speicherformat (z. B. als Fingerabdruck für den Wächter).</summary>
     public static string Serialize(PatchRecipe recipe) => JsonSerializer.Serialize(recipe, Options);
+
+    /// <summary>
+    /// Liest ein Rezept toleranter als <see cref="Save"/> schreibt (Kommentare, Endkommas, <c>kind</c> an beliebiger Stelle und Schreibweise,
+    /// Enum-Werte in beliebiger Schreibweise, Null-Listen = leer). Eigenschaften, die das Modell nicht kennt, werden als
+    /// <c>&lt;JSON-Pfad&gt;: &lt;Name&gt;</c> in <paramref name="unknownProperties"/> gesammelt und nicht übernommen.
+    /// Wirft <see cref="JsonException"/>, wenn das Rezept nicht lesbar ist (auch bei unbekannter oder fehlender Regelart).
+    /// </summary>
+    public static PatchRecipe Deserialize(string json, List<string>? unknownProperties = null) =>
+        PatchRecipeReader.Read(json, ReadOptions, unknownProperties);
 
     /// <summary>Tiefe Kopie über dieselbe JSON-Form wie beim Speichern.</summary>
     public static PatchRecipe Clone(PatchRecipe recipe)

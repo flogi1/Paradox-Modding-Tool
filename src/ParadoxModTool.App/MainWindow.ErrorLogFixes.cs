@@ -144,7 +144,16 @@ public partial class MainWindow
         }
 
         var own = _mods?.Registry.Mods.SelectMany(m => m.Paths).ToList() ?? new List<string>();
-        var result = PlaysetEdits.AddMod(_playsetsFilePath, playset, mod.Directory, own, () => GameProcess.IsRunning(_gameExecutablePath));
+        var launcherGame = PlaysetStore.IsLauncherDatabase(_playsetsFilePath);
+        if (launcherGame && !EnsureGameExecutable())
+        {
+            return new FixOutcome(false, ParadoxModTool.Localization.CommonTexts.Cancelled);
+        }
+
+        // Launcher-Spiele laufen über die Playset-Verwaltung (Datenbank, Sicherung, Schutz vor laufendem Launcher), playsets.json wie bisher über PlaysetEdits.
+        var result = launcherGame && CreatePlaysetManager() is { } manager
+            ? manager.AddMod(playset, new PlaysetModEntry(mod.Directory, mod.Name, true, null), own)
+            : PlaysetEdits.AddMod(_playsetsFilePath, playset, mod.Directory, own, () => GameProcess.IsRunning(_gameExecutablePath));
         if (result.Changed)
         {
             RefreshPlaysetsCombo();
@@ -161,6 +170,7 @@ public partial class MainWindow
             PlaysetEditStatus.PlaysetMissing => new FixOutcome(false, ErrorLogTexts.AddModPlaysetMissing(playset)),
             PlaysetEditStatus.InvalidFile => new FixOutcome(false, ErrorLogTexts.AddModInvalidFile),
             PlaysetEditStatus.LauncherDatabase => new FixOutcome(false, PlaysetTexts.LauncherDatabaseReadOnly),
+            PlaysetEditStatus.WriteFailed when launcherGame => new FixOutcome(false, result.Detail ?? string.Empty),
             _ => new FixOutcome(false, ErrorLogTexts.AddModWriteFailed(result.Detail ?? string.Empty)),
         };
     }

@@ -1,0 +1,20 @@
+ex_build_harbors_effect = {
+	ex_log = harbors
+	# PMT-Patch harbors/effects begin
+	# PMT-Unit ex_harbor_north
+	if = {
+		limit = { ex_has_building = ex_harbor_north }
+		ex_add_income = 8
+	}
+	# PMT-Unit ex_harbor_south
+	if = {
+		limit = { ex_has_building = ex_harbor_south }
+		ex_add_income = 5
+	}
+	# PMT-Unit ex_harbor_west
+	if = {
+		limit = { ex_has_building = ex_harbor_west }
+		ex_add_income = 5
+	}
+	# PMT-Patch harbors/effects end
+}

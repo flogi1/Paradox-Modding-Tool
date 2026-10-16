@@ -20,7 +20,7 @@ A package is a folder with `package.json`, a folder `templates/` with Scriban te
 | `languages` | Default language rules: `extendEnglish`, `copyEnglish`, `englishForMissing` (booleans). |
 | `assets` | `{ "<asset id>": { "path": "assets/file.zip", "origin": "mod" } }`; `origin` is `game` or `mod`. |
 | `externals` | `{ "<external id>": { "label": ..., "hint": ... } }`: files outside the mod that a `jsonEntry` output writes into. `label` names the file in the generator window, `hint` (optional) is its tooltip; the user chooses the path there, it is not part of the package. |
-| `afterGenerate` | Optional hint (text or language map) that the generator window appends to its message after a successful "Erzeugen", e.g. "Run iv2_build_ai_chooser.py". Not shown when generating fails. |
+| `afterGenerate` | Optional hint (text or language map) that the generator window appends to its message after a successful "Generate" ("Erzeugen"), e.g. "Run iv2_build_ai_chooser.py". Not shown when generating fails. |
 | `outputs` | List of outputs (see Output kinds). |
 | `warnings` / `errors` | List of `{ "when": ..., "message": ... }`: `when` is a Scriban expression, `message` a text or language map; a true error blocks generating. |
 | `read` | Optional: how to read sets back from a mod (see Reading back). |
@@ -39,7 +39,7 @@ translation is missing.
 |---|---|
 | `id` | Name in templates; letters, digits, `_`, not starting with a digit. |
 | `label` | Label in the form (text or language map). |
-| `type` | `text`, `multilineText`, `number`, `bool` (yes/no), `choice`, `image`, `modifiers` (multi-line `key = value`; a line without a value blocks "Erzeugen" for every package). |
+| `type` | `text`, `multilineText`, `number`, `bool` (yes/no), `choice`, `image`, `modifiers` (multi-line `key = value`; a line without a value blocks "Generate" ("Erzeugen") for every package). |
 | `required` | `true` = must be filled before generating. |
 | `pattern` | Regular expression the value must match, e.g. `^[A-Z]{3}$`. |
 | `choices` | Values of a `choice` field. |
@@ -47,7 +47,7 @@ translation is missing.
 | `default` | Start value. |
 | `asset` | For `image` fields: id of the asset library (zip or folder) to choose from. |
 | `lookup` | "From database": `{ "sources": [ "<lookup id>" ], "fills": { "name": "<field>", "desc": "<field>" } }`. |
-| `autoNumber` | `true` on the last key field of type `number`: "Neuer Stand" prefills it with the highest number found for the other key parts plus 1 (gaps stay free); the user may overwrite it. Before the preview PMT hashes every localization key the plan adds (MurmurHash3) and compares them with the keys of the game and the mod; a new state whose keys collide moves to the next number and says so (only in a package with a `read` section), an existing state (its key is in the mod) only gets a warning. Not allowed on any other field. |
+| `autoNumber` | `true` on the last key field of type `number`: "New" ("Neu", a new work state) prefills it with the highest number found for the other key parts plus 1 (gaps stay free); the user may overwrite it. Before the preview PMT hashes every localization key the plan adds (MurmurHash3) and compares them with the keys of the game and the mod; a new state whose keys collide moves to the next number and says so (only in a package with a `read` section), an existing state (its key is in the mod) only gets a warning. Not allowed on any other field. |
 
 ## Levels
 
@@ -99,7 +99,7 @@ output once per element of that level (the element is `item`). `newLine` forces 
 | `ensureLine` | `block`, `line`, `skeleton` | Adds one line to a block if it is missing (e.g. `has_or_had_tag = {{ tag }}` in an `OR`). |
 | `syncBlocks` | `template`, `keyPattern`, `keep`, `checkUnreferenced` | Syncs top-level blocks whose key matches `keyPattern` (`*` = name characters): adds missing, removes ones no longer rendered (after a confirmation), replaces only the sub-keys the template sets; `keep` lists sub-keys left alone. |
 | `copyBinary` | `source` | Copies `<asset id>:<entry>` from an asset library, e.g. `coa:{{ coa }}`. |
-| `syncMatching` | `template`, `match`, `block`, `skeleton`, `insertAfter`, `ifLimit` | For sets spread over shared files. The children of `block` (or of the file) are units: statements, GUI headers with their body (`template x { }`, `type x = widget { }`), list values, unnamed blocks like `if = { }` and comment lines. Units whose text matches the regular expression `match` are replaced in place by the rendered text; without a match the text goes to the end of the block or file, or, with `insertAfter` (a regular expression rendered like `match`, tested against each unit), right after the last unit it matches, with as many blank lines before it as stand above that unit (no such unit: to the end as before; `insertAfter` is ignored for units that already exist). No markers. Write boundaries into `match` (`adm_{{ group }}(?![0-9])`) and render the indentation the file uses. With `ifLimit` (a Scriban template, e.g. `{{ condition }}`) units can sit inside shared `if = { limit = { <condition> } … }` blocks: such an `if` is not a unit, its other children are. Rendered empty = the unit belongs to the top level; otherwise it belongs inside the `if` whose `limit` equals the rendered condition (compared like "Nur Format" in "Mod prüfen": comments and whitespace differences ignored, `{value=x}` equals `{ value = x }`). PMT replaces it in place when it already sits there; otherwise it moves it (removing an `if` left with only its `limit`) to the top level, to the end of the matching `if` (with `insertAfter` only one that still holds a unit matching it after the hits are removed), or into a new `if` after the `insertAfter` unit (or at the end). Neighbours in the same `if` stay. With a condition the template must indent one level deeper (inside the `if`). |
+| `syncMatching` | `template`, `match`, `block`, `skeleton`, `insertAfter`, `ifLimit` | For sets spread over shared files. The children of `block` (or of the file) are units: statements, GUI headers with their body (`template x { }`, `type x = widget { }`), list values, unnamed blocks like `if = { }` and comment lines. Units whose text matches the regular expression `match` are replaced in place by the rendered text; without a match the text goes to the end of the block or file, or, with `insertAfter` (a regular expression rendered like `match`, tested against each unit), right after the last unit it matches, with as many blank lines before it as stand above that unit (no such unit: to the end as before; `insertAfter` is ignored for units that already exist). No markers. Write boundaries into `match` (`adm_{{ group }}(?![0-9])`) and render the indentation the file uses. With `ifLimit` (a Scriban template, e.g. `{{ condition }}`) units can sit inside shared `if = { limit = { <condition> } … }` blocks: such an `if` is not a unit, its other children are. Rendered empty = the unit belongs to the top level; otherwise it belongs inside the `if` whose `limit` equals the rendered condition (compared like "Format only" in "Check mod" ("Nur Format" in "Mod prüfen"): comments and whitespace differences ignored, `{value=x}` equals `{ value = x }`). PMT replaces it in place when it already sits there; otherwise it moves it (removing an `if` left with only its `limit`) to the top level, to the end of the matching `if` (with `insertAfter` only one that still holds a unit matching it after the hits are removed), or into a new `if` after the `insertAfter` unit (or at the end). Neighbours in the same `if` stay. With a condition the template must indent one level deeper (inside the `if`). |
 | `check` | `template`, `message` | Writes nothing. Each non-empty rendered line is `<regex> => <argument>`; after all other outputs PMT tests the regex against the planned text of `path` (else the file in the output folder, else in the mod; no file = nothing to test). A regex without a hit adds `message` (text per interface language, Scriban with the extra variable `arg` = the line's argument) as a warning to the preview. Use it to warn about other sets that must be generated again, e.g. a partner group that does not exclude this one. |
 | `jsonEntry` | `external`, `jsonPath`, `entryKey`, `template` | Sets one entry in a JSON file outside the mod (an id from `externals`; write `"path": ""`). `jsonPath` is a dot path of objects in the file (`entries`; empty = root object), `entryKey` the key in it (Scriban), `template` the entry's value as JSON; string values must be JSON-escaped, e.g. `{{ name | object.to_json }}` (names can contain `"` or `\`). A key that exists is replaced in place, a new one is appended; a template that renders empty writes nothing (the entry stays as it is or is not added). PMT writes Python `json.dumps(ensure_ascii=False, indent=N)` style (indent and line ending of the file), so the rest stays byte-identical, and copies the old file to `backups/` next to it first. The only output that may write outside the mod; skipped with a warning when the file is not chosen. |
 
@@ -174,7 +174,7 @@ unmarked old entries that PMT removes before inserting.
 ## Candidates
 
 Optional section `candidates`: lists the game modifiers that the mod does not use yet (not inside the `used` blocks of its files) and creates work
-states from them. A modifier that is only in a work state is still listed; the window marks it (column "Arbeitsstand") and asks for
+states from them. A modifier that is only in a work state is still listed; the window marks it (column "Work state" / "Arbeitsstand") and asks for
 confirmation before creating a duplicate.
 
 ```json
@@ -190,19 +190,19 @@ confirmation before creating a duplicate.
 |---|---|
 | `category` | Source of the modifiers: the union of definition category and script-database scope with this name. Empty or `all` is not a category. |
 | `used` | Required, not empty. Each entry: `file` (regex on the relative path), `block` (regex on the whole top-level key), optional `except` (child keys that do not count, e.g. `game_data`). Used = the direct child statements of each matching top-level block, minus `except`; comments never count. |
-| `groups` | Optional list of `{ "id", "label", "pattern", "hidden" }`. `pattern` is a regex on the modifier name; groups are tried in package order, the first match wins, the rest is "Allgemein" (shown first). `hidden` = hidden by default (the window can toggle it). Use name-part boundaries like `(^\|_)(word\|word2)(_\|$)`, not bare substrings. `id` non-empty and unique. |
+| `groups` | Optional list of `{ "id", "label", "pattern", "hidden" }`. `pattern` is a regex on the modifier name; groups are tried in package order, the first match wins, the rest is "General" ("Allgemein", shown first). `hidden` = hidden by default (the window can toggle it). Use name-part boundaries like `(^\|_)(word\|word2)(_\|$)`, not bare substrings. `id` non-empty and unique. |
 | `create` | `{ "ask", "name", "modifiers" }`. `ask`: head fields of type `choice` the user picks once for the batch (not the `autoNumber` field); together with the `autoNumber` field they must cover every key field. `name`: head field of type `text`. `modifiers`: `<root level id>.<field id>` of a field of type `modifiers`. |
 
 - The package must have an `autoNumber` key field (new states take the next number).
 - Every regular expression (`file`, `block`, `pattern`) must compile; otherwise the package does not load.
-- The window keeps its settings in `candidates.json`: the hide toggle per group (`HiddenGroups`), the "nicht als Idee" list (`NotAsIdea`)
+- The window keeps its settings in `candidates.json`: the hide toggle per group (`HiddenGroups`), the "not as idea" ("nicht als Idee") list (`NotAsIdea`)
   and the extra hide regex (`CustomHide`). The `ask` values are not stored.
 - Renaming a group `id` makes the user's hide toggle for it fall back to the package `hidden` default; the old id stays orphaned in `candidates.json`.
 
 ## Common errors
 
 - An unknown name in a template (typo in a field id, or a field you forgot to define) — check every `{{ }}`.
-  "Prüfen" and `pmt-generator check` render each template once with sample values and report such names.
+  "Check" ("Prüfen") and `pmt-generator check` render each template once with sample values and report such names.
 - A `.yml` file written by `insertSection` or `ownFile` instead of `localization`.
 - `for` or `if` without `end`.
 - Whitespace: `~}}` before an indented line removes its indentation.

@@ -175,22 +175,44 @@ public partial class PatchRecipesWindow
         return border;
     }
 
-    private async Task ComputePreviewAsync()
+    /// <summary>"Vorschau berechnen": der Plan, wenn er berechnet wurde und das Rezept inzwischen noch gewählt ist; sonst null (Grund in der Statuszeile).</summary>
+    private async Task<PatchPlan?> ComputePreviewAsync()
     {
         if (Recipe is not { } recipe)
         {
-            return;
+            return null;
         }
 
         SaveNow();
         var plan = await RunPlanAsync(recipe);
-        if (plan is not null && ReferenceEquals(recipe, Recipe))
+        if (plan is null || !ReferenceEquals(recipe, Recipe))
         {
-            SetPlan(plan);
-            SetStatus(recipe.Rows.Count == 0 && recipe.Rules.Any(r => r.Enabled && r.Scope == RuleScope.PerRow)
-                ? PatchRecipeTexts.NoRowsHint
-                : PatchRecipeTexts.PlanReady(plan.Files.Count(f => f.Status is PlannedFileStatus.New or PlannedFileStatus.Changed or PlannedFileStatus.Conflict)));
+            return null;
         }
+
+        SetPlan(plan);
+        SetStatus(recipe.Rows.Count == 0 && recipe.Rules.Any(r => r.Enabled && r.Scope == RuleScope.PerRow)
+            ? PatchRecipeTexts.NoRowsHint
+            : PatchRecipeTexts.PlanReady(plan.Files.Count(f => f.Status is PlannedFileStatus.New or PlannedFileStatus.Changed or PlannedFileStatus.Conflict)));
+        return plan;
+    }
+
+    /// <summary>
+    /// Nach einem KI-Import (Spec 2026-10-12-patch-recipes-ai-guide, Abschnitt 2): Rezepte neu laden, das neue wählen, seine Erklärung aufklappen,
+    /// in den Reiter "Vorschau" wechseln und den Plan berechnen (ohne zu schreiben). Rückgabe ist der Plan oder null (Grund in der Statuszeile).
+    /// </summary>
+    internal async Task<PatchPlan?> ShowImportedAsync(string recipeId)
+    {
+        SaveNow();
+        ReloadRecipes(recipeId);
+        if (Recipe is not { } recipe || !string.Equals(recipe.Id, recipeId, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        DescriptionExpander.IsExpanded = true;
+        Tabs.SelectedItem = PreviewTab;
+        return await ComputePreviewAsync();
     }
 
     private void SetPlan(PatchPlan? plan)

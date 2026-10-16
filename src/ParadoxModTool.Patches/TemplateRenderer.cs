@@ -111,6 +111,38 @@ public static class TemplateRenderer
             .ToList();
     }
 
+    /// <summary>Abschnitte <c>{?x}</c>/<c>{!x}</c>/<c>{*x}</c> ohne passendes <c>{/x}</c> und <c>{/x}</c> ohne Anfang (Namen, ohne Doppelte).</summary>
+    public static IReadOnlyList<string> SectionProblems(string template)
+    {
+        // Gleichnamige Abschnitte dürfen sich schachteln: ein {/x} schließt den zuletzt offenen {?x}/{!x}/{*x}.
+        var open = new List<string>();
+        var stray = new List<string>();
+        foreach (Match m in SectionTag.Matches(template ?? string.Empty))
+        {
+            var name = m.Groups["name"].Value;
+            if (m.Groups["close"].Success)
+            {
+                var index = open.LastIndexOf(name);
+                if (index < 0)
+                {
+                    stray.Add(name);
+                }
+                else
+                {
+                    open.RemoveAt(index);
+                }
+            }
+            else
+            {
+                open.Add(name);
+            }
+        }
+
+        return stray.Concat(open).Distinct(StringComparer.Ordinal).ToList();
+    }
+
+    private static readonly Regex SectionTag = new(@"\{(?:(?<close>/)|[?!*])(?<name>" + Name + @")\}", RegexOptions.CultureInvariant);
+
     public static IReadOnlyList<string> SplitList(string raw) =>
         raw.Split(',').Select(v => v.Trim()).Where(v => v.Length > 0).Distinct(StringComparer.Ordinal).ToList();
 

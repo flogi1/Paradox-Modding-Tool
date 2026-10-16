@@ -5,14 +5,15 @@ namespace ParadoxModTool.Settings.Tests;
 public sealed class TileCatalogTests
 {
     [Fact]
-    public void CatalogHasSixteenUniqueIdsInSpecOrder()
+    public void CatalogHasSeventeenUniqueIdsInSpecOrder()
     {
         var ids = TileCatalog.All.Select(t => t.Id).ToList();
 
-        Assert.Equal(16, ids.Count);
+        Assert.Equal(17, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(TileIds.Project, ids[0]);
-        Assert.Equal(TileIds.Templates, ids[12]);
+        Assert.Equal(TileIds.Playsets, ids[4]);
+        Assert.Equal(TileIds.Templates, ids[13]);
         Assert.Equal(TileIds.Desync, ids[^1]);
         Assert.Equal(ids, TileCatalog.DefaultOrder);
     }

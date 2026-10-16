@@ -17,6 +17,7 @@ public partial class App : Application
     /// </summary>
     protected override void OnStartup(StartupEventArgs e)
     {
+        UnexpectedErrorHandler.Register(this);
         base.OnStartup(e);
         FocusReturnOnClose.Register();
 
@@ -86,6 +87,7 @@ public partial class App : Application
         {
             StartupProgress.Report(1.0, ParadoxModTool.Localization.CommonTexts.Done);
             StartupProgress.Finish();
+            UnexpectedErrorHandler.Started();
             main.OnFirstRenderedAfterStart(updateStart);
         };
         main.Show();

@@ -1,3 +1,5 @@
+using ParadoxModTool.Patches;
+
 namespace ParadoxModTool.Generators;
 
 /// <summary>
@@ -8,11 +10,6 @@ public static class SafeRelativePath
 {
     public static bool IsSafe(string path)
     {
-        if (string.IsNullOrWhiteSpace(path) || path.Contains(':') || path[0] is '/' or '\\')
-        {
-            return false;
-        }
-
-        return path.Split('/', '\\').All(part => part != "..");
+        return PathSafety.IsSafeRelative(path);
     }
 }

@@ -294,7 +294,7 @@ public sealed class ReleaseWindow : Window
             + string.Join(Environment.NewLine, run.Files.Select(f => $"  {Path.GetFileName(f.Path)} ({f.Bytes / 1024.0 / 1024.0:0.0} MB)"))
             + $"{Environment.NewLine}{Environment.NewLine}Öffentlicher Commit 'Release v{_version.Text.Trim()}' als {PublicCommit.Name} <{PublicCommit.Email}>, ohne {string.Join(", ", PublicCommit.Excluded)}."
             + $"{Environment.NewLine}{Environment.NewLine}Notizen:{Environment.NewLine}{run.Notes}{Environment.NewLine}Commit, Tag, Push und Veröffentlichung jetzt ausführen?";
-        if (MessageBox.Show(this, summary, Title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (!ConfirmDialog.Ask(this, summary, Title))
         {
             run.Revert();
             _run = null;

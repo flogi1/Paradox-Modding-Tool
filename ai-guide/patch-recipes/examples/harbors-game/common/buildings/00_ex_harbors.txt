@@ -1,0 +1,20 @@
+ex_harbor_north = {
+	type = special
+	cost = 100
+	is_enabled = {
+		has_coast = yes
+	}
+}
+
+ex_harbor_south = {
+	type = special
+	cost = 120
+	is_enabled = {
+		has_coast = yes
+	}
+}
+
+ex_harbor_west = {
+	type = special
+	cost = 90
+}

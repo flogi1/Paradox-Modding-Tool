@@ -34,15 +34,18 @@ public partial class MainWindow
     /// <summary>Menüpunkte, die es nur im klassischen Layout gibt (alle Werkzeuge, Mod-Projekt, Unterstützen).</summary>
     private IEnumerable<UIElement> ClassicOnlyMenuItems => new UIElement[]
     {
-        ProjectMenuItem, CuToolMenuItem, PatchRecipesMenuItem, GeneratorPackagesMenuItem, PackageEditorMenuItem, ModCompatMenuItem,
+        ProjectMenuItem, CuToolMenuItem, PatchRecipesMenuItem, GeneratorPackagesMenuItem, PackageEditorMenuItem, ModCompatMenuItem, PlaysetsMenuItem,
         CompatchMenuItem, ErrorLogMenuItem, DesyncMenuItem, SaveExplorerMenuItem, ScriptDocsMenuItem, GuiMenuItem, TemplatesMenuItem,
         SupportMenuItem,
     };
 
+    /// <summary>Menüpunkte, die das Spiel nicht unterstützt, bleiben auch im klassischen Layout verborgen (Desync-Analyse nur mit <c>desyncRules</c>).</summary>
+    private bool IsMenuItemAvailable(UIElement item) => item != DesyncMenuItem || DesyncAvailable;
+
     /// <summary>Elemente, die es nur im neuen Layout gibt (senkrechte Trennstriche, Abschnitt "Unterstützen" in Hilfe).</summary>
     private IEnumerable<UIElement> TilesOnlyMenuItems => new UIElement[]
     {
-        MenuSeparator1, MenuSeparator2, MenuSeparator3, MenuSeparator4, HelpSupportSeparator, HelpSupportHeader, HelpSponsorMenuItem, HelpKofiMenuItem,
+        MenuSeparator1, MenuSeparator1b, PlaysetsBarMenuItem, MenuSeparator2, MenuSeparator3, MenuSeparator4, HelpSupportSeparator, HelpSupportHeader, HelpSponsorMenuItem, HelpKofiMenuItem,
     };
 
     /// <summary>Wendet das gewählte Fensterlayout auf alle Bereiche an.</summary>
@@ -73,13 +76,13 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>Menüleiste: fünf Grundpunkte mit Trennstrichen im neuen Layout, alle Werkzeuge im klassischen; "Mods" trägt im neuen Layout das Spielkürzel.</summary>
+    /// <summary>Menüleiste: sechs Grundpunkte (mit Playsets hinter der Spielauswahl) mit Trennstrichen im neuen Layout, alle Werkzeuge im klassischen; "Mods" trägt im neuen Layout das Spielkürzel.</summary>
     private void ApplyMenuLayout()
     {
         var tiles = IsTilesLayout;
         foreach (var item in ClassicOnlyMenuItems)
         {
-            item.Visibility = tiles ? Visibility.Collapsed : Visibility.Visible;
+            item.Visibility = tiles || !IsMenuItemAvailable(item) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         foreach (var item in TilesOnlyMenuItems)

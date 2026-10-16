@@ -1543,16 +1543,37 @@ public partial class MainWindow : Window
         // ohnehin schon das aktive ist - ein Fehlschlag hier (Datei fehlt/nicht gefunden/nicht
         // schreibbar) bricht den Start bewusst AB, statt das Spiel dann ggf. mit dem falschen
         // Playset zu starten, ohne dass der Nutzer das bemerkt.
-        if (PlaysetsCombo.SelectedItem is PlaysetInfo selectedPlayset && !selectedPlayset.IsActive)
+        if (PlaysetsCombo.SelectedItem is PlaysetInfo selectedPlayset)
         {
-            var playsetResult = PlaysetStore.SetActivePlayset(_playsetsFilePath, selectedPlayset.Name);
-            if (!playsetResult.Success)
+            var manager = CreatePlaysetManager();
+            if (manager is not null && (!manager.UsesLauncherDatabase || manager.LoadFilePath is not null))
             {
-                MessageBox.Show(playsetResult.ErrorMessage, MainTexts.LaunchPlaysetFailed);
-                return false;
-            }
+                // Launcher-Spiele: Aktiv setzen und Lade-Datei schreiben bei jedem Start (das Spiel liest die Lade-Datei); EU V: nur, wenn das Playset noch nicht aktiv ist.
+                if (manager.UsesLauncherDatabase || !selectedPlayset.IsActive)
+                {
+                    var all = manager.LoadAll();
+                    var id = (selectedPlayset.Id is { } known && all.Any(p => p.Id == known) ? known : all.FirstOrDefault(p => p.Name == selectedPlayset.Name)?.Id);
+                    var prepared = id is null ? new PlaysetResult(PlaysetStatus.PlaysetMissing, selectedPlayset.Name) : manager.PrepareStart(id);
+                    if (!prepared.Success)
+                    {
+                        MessageBox.Show(PlaysetTexts.Describe(prepared), MainTexts.LaunchPlaysetFailed);
+                        return false;
+                    }
 
-            RefreshPlaysetsCombo();
+                    RefreshPlaysetsCombo();
+                }
+            }
+            else if (!selectedPlayset.IsActive)
+            {
+                var playsetResult = PlaysetStore.SetActivePlayset(_playsetsFilePath, selectedPlayset.Name);
+                if (!playsetResult.Success)
+                {
+                    MessageBox.Show(playsetResult.ErrorMessage, MainTexts.LaunchPlaysetFailed);
+                    return false;
+                }
+
+                RefreshPlaysetsCombo();
+            }
         }
 
         var result = GameLauncher.Launch(_gameExecutablePath, arguments);

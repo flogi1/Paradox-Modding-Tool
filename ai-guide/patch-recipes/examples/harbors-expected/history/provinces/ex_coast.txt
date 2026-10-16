@@ -1,0 +1,11 @@
+1001 = {
+	culture = ex_coast_people
+	#ex_harbor_slot = ex_harbor_north
+}
+1002 = {
+	#ex_harbor_slot = ex_harbor_south
+}
+1003 = {
+	culture = ex_coast_people
+	#ex_harbor_slot = ex_harbor_west
+}

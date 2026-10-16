@@ -29,7 +29,8 @@ public partial class MainWindow
                 OpenPatchFileAtLine,
                 OpenPatchFileInUpdateTool,
                 PreparePatchOutdatedFiles,
-                () => _activeProfile)) { Owner = this };
+                () => _activeProfile,
+                GeneratorKnownMods)) { Owner = this };
             _patchRecipesWindow.Closed += (_, _) => _patchRecipesWindow = null;
         }
 

@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using ParadoxModTool.Patches;
 
 namespace ParadoxModTool.Generators.Editing.Package;
 
@@ -54,16 +55,16 @@ public static class PackageStore
         Directory.CreateDirectory(target);
         File.Copy(Path.Combine(sourceFolder, "package.json"), Path.Combine(target, "package.json"));
         CopyFileIfExists(Path.Combine(sourceFolder, "functions.sbn"), Path.Combine(target, "functions.sbn"));
-        CopyTree(Path.Combine(sourceFolder, "templates"), Path.Combine(target, "templates"));
+        FolderCopy.CopyTree(Path.Combine(sourceFolder, "templates"), Path.Combine(target, "templates"));
         Directory.CreateDirectory(Path.Combine(target, "templates"));
         if (withStates)
         {
-            CopyTree(Path.Combine(sourceDataFolder, "states"), Path.Combine(target, "states"));
+            FolderCopy.CopyTree(Path.Combine(sourceDataFolder, "states"), Path.Combine(target, "states"));
         }
 
         if (withAssets)
         {
-            CopyTree(Path.Combine(sourceDataFolder, "assets"), Path.Combine(target, "assets"));
+            FolderCopy.CopyTree(Path.Combine(sourceDataFolder, "assets"), Path.Combine(target, "assets"));
         }
 
         var document = PackageDocument.Load(target);
@@ -85,21 +86,6 @@ public static class PackageStore
 
     /// <summary>Löscht den Paketordner über <paramref name="deleteDirectory"/> (die App gibt das Löschen in den Papierkorb hinein).</summary>
     public static void Delete(string folder, Action<string> deleteDirectory) => deleteDirectory(folder);
-
-    internal static void CopyTree(string source, string target)
-    {
-        if (!Directory.Exists(source))
-        {
-            return;
-        }
-
-        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
-        {
-            var to = Path.Combine(target, Path.GetRelativePath(source, file));
-            Directory.CreateDirectory(Path.GetDirectoryName(to)!);
-            File.Copy(file, to, overwrite: true);
-        }
-    }
 
     private static void CopyFileIfExists(string source, string target)
     {

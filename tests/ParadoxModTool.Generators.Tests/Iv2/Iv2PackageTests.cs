@@ -167,6 +167,8 @@ public sealed class Iv2PackageTests : IDisposable
     private string Planned(string file) =>
         _fixture.Plan(_fixture.State(), _fixture.FreshMod).Files.Single(f => f.RelativePath == file).NewText!.Replace("\r\n", "\n");
 
+    private const string AlertRecalc = "hidden_effect = { if = { limit = { is_ai = no } iv2_recalc_alerts = yes } }";
+
     private static string Flat(string text) => System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
 
     private static string Block(string text, string name)
@@ -243,8 +245,24 @@ public sealed class Iv2PackageTests : IDisposable
         {
             var action = Block(ga, $"iv2_ga_select_historic_TST_{number}");
             Assert.Contains("trigger = { " + Flat(Inner(action, "allow")) + " }", flat);
-            Assert.Contains(Flat(Inner(action, "effect")), flat);
+            // the alert recalc at the end of the player action is not copied: the chooser runs only for the AI
+            Assert.Contains(Flat(Inner(action, "effect")).Replace(" " + AlertRecalc, string.Empty), flat);
         }
+    }
+
+    [Fact]
+    public void Historic_actions_use_the_trigger_of_their_own_idea()
+    {
+        // every idea and level has its own iv2_sct_nat_idea_<tag>_<n>[_<level>]; never the trigger of idea 1 or a dynamic one
+        var ga = Planned("in_game/common/generic_actions/iv2_GA_ideas_TST.txt");
+        Assert.DoesNotContain("iv2_sct_dnat_idea_", ga);
+        Assert.DoesNotContain("iv2_sct_dnat_idea_", Planned(ChooserFile));
+        foreach (var number in new[] { 1, 2, 3, 11, 31, 32 })
+        {
+            Assert.Contains($"iv2_sct_nat_idea_TST_{number} = yes", Flat(Inner(Block(ga, $"iv2_ga_select_historic_TST_{number}"), "allow")));
+        }
+
+        Assert.Contains("iv2_sct_nat_idea_TST_11_2 = yes", Flat(Inner(Block(ga, "iv2_ga_select_historic_TST_11_2"), "allow")));
     }
 
     [Fact]

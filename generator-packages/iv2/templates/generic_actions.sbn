@@ -5,7 +5,7 @@
 {{~ for c in categories ~}}
 {{~ for i in c.ideas ~}}
 {{~ exp0 = i.levels[0].expensive ? "_expensive" : "" ~}}
-{{~ sct = c.key == "adm" ? "iv2_sct_nat_idea_" + tag + "_1" : "iv2_sct_dnat_idea_" + c.key + "_1" ~}}
+{{~ sct = "iv2_sct_nat_idea_" + tag + "_" + i.number ~}}
 ###############################################################
 #### Select National Idea {{ tag }}_{{ i.number }}
 ###############################################################
@@ -83,6 +83,9 @@ iv2_ga_select_historic_{{ tag }}_{{ i.number }} = {
 					add = iv2_progress_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -149,6 +152,9 @@ iv2_ga_select_historic_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
 					add = iv2_innovation_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -207,6 +213,9 @@ iv2_ga_deselect_historic_{{ tag }}_{{ i.number }} = {
 					name = iv2_var_national_idea_current
 					subtract = 1
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}

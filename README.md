@@ -26,12 +26,17 @@ PMT is not affiliated with Paradox Interactive. It reads the game files and your
 ### Compare and update after a game patch
 - Compare two files or two folders side by side, WinMerge style, with an overview bar, difference navigation and taking exactly the marked lines into the other side.
 - Old vanilla versions are recorded automatically. After a game update the Update tab shows which of your overriding files changed in vanilla and merges the new vanilla version into your mod: places only vanilla changed are taken, places only you changed stay, places both changed become review cards.
-- Patch recipes: repeatable rule patches for a mod (line rules, block copies from vanilla, templates, edits of existing blocks). A preview shows every file change before anything is written, hand edits are kept, and a watcher lists vanilla and mod files your recipe does not cover yet.
+- Patch recipes: repeatable rule patches for a mod (line rules, block copies from vanilla, templates, edits of existing blocks). A preview shows every file change before anything is written, hand edits are kept, and a watcher lists vanilla and mod files your recipe does not cover yet. An AI of your choice can build a recipe from your description ("Create with AI"), and the command-line program pmt-patch.exe lets an AI with file access check and dry-run it.
 
 ### Mod compatibility and compatch
 - The compatibility check finds file and key conflicts between mods in your playset by the game's real override rules, including `INJECT:` and `REPLACE:` operators, `replace_path`, load order, and files that are overridden too coarsely. It also tells you where a smaller change would do (`INJECT:` instead of a whole file) and warns about `replace_path` entries that cannot work.
 - The compatch creator merges two mods against vanilla: changes that do not overlap are taken automatically, real conflicts become cards with the differences side by side, and PMT writes the smallest possible patch (`INJECT:`, `REPLACE:`, a separate patch file or a merged file). Work states are saved, every decision can be undone, and nothing is written until you confirm.
-- Playsets can be imported from the Paradox Launcher database (read only).
+- Playsets can be imported from the Paradox Launcher database into the compatibility set.
+
+### Playsets
+- Create, copy, rename and delete the playsets of a game, edit their mods (keyword search, reorder, switch on and off) and DLCs, and start the game with one, for Crusader Kings III, Victoria 3, Europa Universalis IV and Europa Universalis V. Existing launcher playsets can be edited too.
+- Right-click a test mod in the mod list to start the game with the current playset plus that mod, or to create a new playset from it.
+- Before every change PMT backs up the playset files (the last 10 backups stay, one click restores) and refuses to write while the game, or the Paradox Launcher for launcher games, is running.
 
 ### Error log
 - Reads the game's `error.log` and groups errors by mod and file, with explanations, filters, jump to the code, suppression and export. Errors are marked in editor tabs and in the explorer, and the game log is watched live while you play.

@@ -53,6 +53,12 @@ public static class ColumnResolver
                     var cell = row.Values.TryGetValue(column.Name, out var raw) ? raw.Trim() : string.Empty;
                     values[column.Name] = cell.Length > 0 ? cell : column.Default;
                 }
+                else if (RecipePaths.IsUnsafe(column.Lookup.Files))
+                {
+                    // Suchdateien mit .. oder absolut: nichts wird gelesen, die Zeile hat einen Fehler und fällt für alle Regeln aus.
+                    values[column.Name] = string.Empty;
+                    errors.Add(PatchTexts.UnsafePath(column.Lookup.Files ?? string.Empty));
+                }
                 else
                 {
                     if (!indexes.TryGetValue(column.Lookup, out var index))

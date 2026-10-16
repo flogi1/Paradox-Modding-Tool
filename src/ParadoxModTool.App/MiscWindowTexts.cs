@@ -44,6 +44,13 @@ public static class MiscWindowTexts
 
     public static string SplashBuildingWindow => T("splash.buildingWindow", "Fenster wird aufgebaut…");
 
+    // Unerwartete Fehler
+    public static string UnexpectedErrorTitle => T("unexpectedError.title", "Unerwarteter Fehler");
+
+    public static string UnexpectedError(string message, string logFile) => F("unexpectedError.message", "In PMT ist ein unerwarteter Fehler aufgetreten:\n\n{0}\n\nPMT läuft weiter. Speichere zur Sicherheit deine Arbeit. Einzelheiten stehen in {1}.", message, logFile);
+
+    public static string UnexpectedErrorAtStart(string message, string logFile) => F("unexpectedError.atStart", "PMT konnte wegen eines unerwarteten Fehlers nicht starten:\n\n{0}\n\nEinzelheiten stehen in {1}.", message, logFile);
+
     // Theme-Editor
     public static string ThemeEditorTitle => SettingsTexts.ThemeEditor;
 

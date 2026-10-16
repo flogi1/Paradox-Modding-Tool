@@ -65,6 +65,9 @@ iv2_ga_select_ideagroup_{{ g }} = {
 				name = iv2_var_current_picked_idea_group_{{ category }}
 				add = 1
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -103,6 +106,9 @@ iv2_ga_deselect_ideagroup_{{ g }} = {
 			change_variable = {
 				name = iv2_var_current_picked_idea_group_{{ category }}
 				subtract = 1
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}	
 	}
@@ -168,6 +174,9 @@ iv2_ga_ideagroup_{{ g }}_1 = {
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -231,6 +240,9 @@ iv2_ga_ideagroup_{{ g }}_2 = {
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -292,6 +304,9 @@ iv2_ga_ideagroup_{{ g }}_3 = {
 {{~ if ideas[2].recalc ~}}
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -355,6 +370,9 @@ iv2_ga_ideagroup_{{ g }}_4 = {
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -417,6 +435,9 @@ iv2_ga_ideagroup_{{ g }}_5 = {
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -478,6 +499,9 @@ iv2_ga_ideagroup_{{ g }}_6 = {
 {{~ if ideas[5].recalc ~}}
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -544,6 +568,9 @@ iv2_ga_ideagroup_{{ g }}_7 = {
 {{~ if ideas[6].recalc ~}}
 				trigger_event_non_silently = { id = IV2_calc.2 }
 {{~ end ~}}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}

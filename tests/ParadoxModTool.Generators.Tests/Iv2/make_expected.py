@@ -4,6 +4,8 @@ Usage (run once when the fixtures change; never needed for the normal test run):
     python make_expected.py <path to iv2_generator.py> <TST.json> <Base.bundle> <output folder> < /dev/null
     python make_expected.py pack <folder> <bundle>      (pack a folder into a bundle)
     python make_expected.py ai-chooser <TST.json> <bundle>...   (only the IV2 AI chooser additions)
+    python make_expected.py alert-recalc <bundle>...   (only the alert recalc lines of the historic actions)
+    python make_expected.py historic-sct <bundle>...   (only the per-idea triggers of the historic actions)
 
 Fixtures are bundles (one text file per scenario, "##FILE <relative path>" before each file), because
 the IV2 paths exceed the Windows path limit inside the repository.
@@ -20,6 +22,7 @@ use the game's current automation category governmentreforms.
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -36,11 +39,49 @@ PMT_DEVIATIONS = [
 ]
 
 
+# PMT only: every historic action refreshes the IV2 alerts at the end of its effect (alert fix 2026-10-14)
+ALERT_RECALC = "\t\t\thidden_effect = {\n\t\t\t\tif = { limit = { is_ai = no } iv2_recalc_alerts = yes }\n\t\t\t}\n"
+_ACTION_END = re.compile(r"(?m)^\t\t\}[ \t]*\n\t\}[ \t]*\n\}[ \t]*$")
+
+
+def add_alert_recalc(text):
+    """Insert ALERT_RECALC before the end of every action in the historic generic action files (idempotent)."""
+    chunks = text.split(MARK)
+    for i, chunk in enumerate(chunks):
+        if chunk.startswith("in_game/common/generic_actions/iv2_GA_ideas_") and "iv2_recalc_alerts" not in chunk:
+            chunks[i] = _ACTION_END.sub(lambda m: ALERT_RECALC + m.group(0), chunk)
+    return MARK.join(chunks)
+
+
+# PMT only: every historic idea uses its own trigger iv2_sct_nat_idea_<tag>_<n>[_<level>]. The Python generator gives every
+# idea the trigger of idea 1, for dip/army/navy even the dynamic iv2_sct_dnat_idea_<cat>_1 (fixed 2026-10-14).
+_HISTORIC_SCT = re.compile(r"iv2_sct_(?:nat_idea_[A-Za-z]+|dnat_idea_[a-z]+)_1((?:_\d)?) = yes")
+_HISTORIC_MODIFIER = re.compile(r"national_idea_modifier_([A-Z]+)_(\d+)")
+
+
+def fix_historic_sct(text):
+    """Name the trigger after the idea of the nearest national_idea_modifier_<tag>_<n> before it (idempotent)."""
+    chunks = text.split(MARK)
+    for i, chunk in enumerate(chunks):
+        if not (chunk.startswith("in_game/common/generic_actions/iv2_GA_ideas_")
+                or chunk.startswith("in_game/common/generic_actions/iv2_ga_ai_choose_historic_")):
+            continue
+
+        def own(m, chunk=chunk):
+            idea = list(_HISTORIC_MODIFIER.finditer(chunk, 0, m.start()))[-1]
+            return f"iv2_sct_nat_idea_{idea.group(1)}_{idea.group(2)}{m.group(1)} = yes"
+
+        chunks[i] = _HISTORIC_SCT.sub(own, chunk)
+    return MARK.join(chunks)
+
+
 def apply_deviations(bundle):
     with open(bundle, encoding="utf-8") as f:
         text = f.read()
     for old, new in PMT_DEVIATIONS:
         text = text.replace(old, new)
+    text = add_alert_recalc(text)
+    text = fix_historic_sct(text)
     with open(bundle, "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
@@ -234,6 +275,22 @@ def apply_ai_chooser(bundle, state):
 def main():
     if sys.argv[1] == "pack":
         pack(sys.argv[2], sys.argv[3])
+        return
+    if sys.argv[1] == "alert-recalc":
+        # python make_expected.py alert-recalc <bundle> [<bundle> ...]: only the alert recalc lines
+        for bundle in sys.argv[2:]:
+            with open(bundle, encoding="utf-8") as f:
+                text = f.read()
+            with open(bundle, "w", encoding="utf-8", newline="\n") as f:
+                f.write(add_alert_recalc(text))
+        return
+    if sys.argv[1] == "historic-sct":
+        # python make_expected.py historic-sct <bundle> [<bundle> ...]: only the per-idea historic triggers
+        for bundle in sys.argv[2:]:
+            with open(bundle, encoding="utf-8") as f:
+                text = f.read()
+            with open(bundle, "w", encoding="utf-8", newline="\n") as f:
+                f.write(fix_historic_sct(text))
         return
     if sys.argv[1] == "ai-chooser":
         # python make_expected.py ai-chooser <TST.json> <bundle> [<bundle> ...]: only the AI chooser additions

@@ -27,6 +27,8 @@ public partial class MainWindow
         SetMenuText(GeneratorPackagesMenuItem, MenuTexts.GeneratorPackages, MenuTexts.GeneratorPackagesTip);
         SetMenuText(PackageEditorMenuItem, MenuTexts.PackageEditor, MenuTexts.PackageEditorTip);
         SetMenuText(ModCompatMenuItem, MenuTexts.ModCompat, MenuTexts.ModCompatTip);
+        SetMenuText(PlaysetsMenuItem, MenuTexts.Playsets, MenuTexts.PlaysetsTip);
+        SetMenuText(PlaysetsBarMenuItem, MenuTexts.Playsets, MenuTexts.PlaysetsTip);
         SetMenuText(ErrorLogMenuItem, ParadoxModTool.ErrorLog.ErrorLogTexts.Menu, ParadoxModTool.ErrorLog.ErrorLogTexts.MenuTip);
         SetMenuText(DesyncMenuItem, ParadoxModTool.Desync.DesyncTexts.Menu, ParadoxModTool.Desync.DesyncTexts.MenuTip);
         SetMenuText(SaveExplorerMenuItem, SaveExplorerTexts.Menu, SaveExplorerSettings is null ? SaveExplorerTexts.NotAvailable : SaveExplorerTexts.MenuTip);

@@ -8,6 +8,12 @@ public static class PatchPlanWriter
 {
     public static IUndoableAction CreateAction(PatchContext context, PatchPlan plan)
     {
+        // Rückhalt: geschrieben wird nur unterhalb der Mod-Wurzel, egal woher der Plan kommt.
+        foreach (var file in plan.Files.Where(f => !PathSafety.IsSafeRelative(f.RelativePath) || !PathSafety.IsInside(context.ModRoot, f.RelativePath)))
+        {
+            throw new UnsafePathException(file.RelativePath);
+        }
+
         var description = PatchTexts.ApplyUndo(plan.RecipeName);
         var actions = plan.Files
             .Where(f => f.Status is PlannedFileStatus.New or PlannedFileStatus.Changed)
@@ -32,6 +38,13 @@ public static class PatchPlanWriter
         var stale = new List<string>();
         foreach (var file in plan.Files.Where(f => f.Status is PlannedFileStatus.New or PlannedFileStatus.Changed))
         {
+            if (!PathSafety.IsSafeRelative(file.RelativePath) || !PathSafety.IsInside(context.ModRoot, file.RelativePath))
+            {
+                // Außerhalb der Mod wird nichts gelesen; der Plan gilt als veraltet.
+                stale.Add(file.RelativePath);
+                continue;
+            }
+
             var path = FullPath(context.ModRoot, file.RelativePath);
             var disk = File.Exists(path) ? TextFile.Read(path).Text : null;
             if (disk != file.OriginalText)
@@ -53,6 +66,11 @@ public static class PatchPlanWriter
 
         foreach (var file in plan.Files.Where(f => f.CreatedFromVanilla && f.Status is PlannedFileStatus.New or PlannedFileStatus.Changed))
         {
+            if (!PathSafety.IsSafeRelative(file.RelativePath) || !PathSafety.IsInside(context.VanillaRoot, file.RelativePath))
+            {
+                continue;
+            }
+
             var vanilla = FullPath(context.VanillaRoot, file.RelativePath);
             if (File.Exists(vanilla))
             {

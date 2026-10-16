@@ -275,4 +275,158 @@ public sealed class PatchRunnerTests
 
         Assert.Throws<OperationCanceledException>(() => PatchRunner.Plan(Context(mod), Recipe("angkor_wat_01"), cancel.Token));
     }
+
+    private static PatchRecipe TemplateRecipe(string target, params string[] keys)
+    {
+        var recipe = new PatchRecipe { Id = "safe", Name = "Safe", GameId = "ck3", Rules = { new TemplateRule { Id = "t1", Target = target, Text = "{key} = { }" } } };
+        foreach (var key in keys)
+        {
+            recipe.Rows.Add(new PatchRow { Key = key });
+        }
+
+        return recipe;
+    }
+
+    private static void AssertAllInsideMod(TempMod mod, PatchPlan plan) =>
+        Assert.All(plan.Files, f => Assert.True(PathSafety.IsInside(mod.ModRoot, f.RelativePath), f.RelativePath));
+
+    [Fact]
+    public void Template_rule_with_parent_target_is_skipped()
+    {
+        using var mod = new TempMod();
+
+        var plan = PatchRunner.Plan(Context(mod), TemplateRecipe("../outside.txt", "a"));
+
+        Assert.Empty(plan.Files);
+        Assert.Equal(new[] { new SkippedRow("t1", "global", PatchTexts.UnsafePath("../outside.txt")) }, plan.Skipped);
+    }
+
+    [Theory]
+    [InlineData("/abs.txt")]
+    [InlineData("C:/abs.txt")]
+    [InlineData("a/../../x.txt")]
+    public void Template_rule_with_absolute_or_parent_target_writes_nothing(string target)
+    {
+        using var mod = new TempMod();
+
+        var plan = PatchRunner.Plan(Context(mod), TemplateRecipe(target, "a"));
+
+        Assert.Empty(plan.Files);
+        Assert.Equal(new[] { new SkippedRow("t1", "global", PatchTexts.UnsafePath(target)) }, plan.Skipped);
+    }
+
+    [Theory]
+    [InlineData("common/x.txt;")]
+    [InlineData("common/a.txt;common/b.txt")]
+    [InlineData("common/*.txt")]
+    [InlineData("common/x?.txt")]
+    [InlineData("common/x.txt ")]
+    [InlineData(" common/x.txt")]
+    [InlineData("common/x.")]
+    [InlineData("common//x.txt")]
+    [InlineData("common/")]
+    [InlineData("common/x|y.txt")]
+    public void Template_rule_with_target_that_is_no_single_file_writes_nothing(string target)
+    {
+        using var mod = new TempMod();
+
+        var plan = PatchRunner.Plan(Context(mod), TemplateRecipe(target, "a"));
+
+        Assert.Empty(plan.Files);
+        Assert.Equal(new[] { new SkippedRow("t1", "global", PatchTexts.TargetNotSingleFile(target)) }, plan.Skipped);
+    }
+
+    [Fact]
+    public void Unsafe_rule_does_not_stop_the_other_rules()
+    {
+        using var mod = new TempMod();
+        var recipe = TemplateRecipe("../outside.txt", "a");
+        recipe.Rules.Add(new TemplateRule { Id = "t2", Target = "common/ok.txt", Text = "{key} = { }" });
+
+        var plan = PatchRunner.Plan(Context(mod), recipe);
+
+        Assert.Equal(new[] { "common/ok.txt" }, plan.Files.Select(f => f.RelativePath));
+        Assert.Single(plan.Skipped);
+    }
+
+    [Fact]
+    public void Line_rule_with_parent_files_reads_nothing_outside_the_mod()
+    {
+        using var mod = new TempMod();
+        System.IO.File.WriteAllText(Path.Combine(Directory.GetParent(mod.ModRoot)!.FullName, "bait.txt"), "a = 1\n");
+        var recipe = new PatchRecipe { Id = "safe", Name = "Safe", GameId = "ck3", Rules = { new LineRule { Id = "l1", Scope = RuleScope.Global, Files = "../*.txt", Match = "a = 1", Action = LineAction.Delete } } };
+
+        var plan = PatchRunner.Plan(Context(mod), recipe);
+
+        Assert.Empty(plan.Files);
+        Assert.Equal(new[] { new SkippedRow("l1", "global", PatchTexts.UnsafePath("../*.txt")) }, plan.Skipped);
+    }
+
+    [Fact]
+    public void Lookup_with_parent_files_gives_each_row_an_error()
+    {
+        using var mod = new TempMod();
+        System.IO.File.WriteAllText(Path.Combine(Directory.GetParent(mod.ModRoot)!.FullName, "bait.txt"), "100 = { special_building_slot = a }\n");
+        var recipe = TemplateRecipe("common/ok.txt", "a");
+        recipe.Columns.Add(new PatchColumn { Name = "provinz", Lookup = new DerivedLookup { Files = "../*.txt", Source = LookupSource.Mod, Match = "special_building_slot = {key}", Optional = true } });
+
+        var plan = PatchRunner.Plan(Context(mod), recipe);
+
+        Assert.Empty(plan.Files);
+        Assert.Equal(new[] { new SkippedRow("t1", "a", PatchTexts.UnsafePath("../*.txt")) }, plan.Skipped);
+    }
+
+    /// <summary>Pfade in Zielen werden nicht je Zeile gefüllt: <c>{key}</c> bleibt Teil des Dateinamens, ein Zeilenschlüssel mit <c>..</c> verlässt die Mod nie.</summary>
+    [Fact]
+    public void Placeholder_in_target_stays_literal_so_row_key_cannot_leave_the_mod()
+    {
+        using var mod = new TempMod();
+        var outer = Directory.GetParent(mod.ModRoot)!.FullName;
+
+        var plan = PatchRunner.Plan(Context(mod), TemplateRecipe("{key}/x.txt", "a", "../../outside"));
+        PatchPlanWriter.CreateAction(Context(mod), plan).Do();
+
+        AssertAllInsideMod(mod, plan);
+        Assert.Equal(new[] { "{key}/x.txt" }, plan.Files.Select(f => f.RelativePath));
+        Assert.False(Directory.Exists(Path.Combine(outer, "..", "outside")));
+        Assert.False(System.IO.File.Exists(Path.Combine(outer, "outside", "x.txt")));
+        Assert.Empty(Directory.GetFiles(outer, "*.txt"));
+    }
+
+    [Fact]
+    public void Own_column_value_with_parent_path_cannot_leave_the_mod()
+    {
+        using var mod = new TempMod();
+        var recipe = TemplateRecipe("common/{dir}/x.txt", "a", "b");
+        recipe.Columns.Add(new PatchColumn { Name = "dir" });
+        recipe.Rows[1].Values["dir"] = "../..";
+
+        var plan = PatchRunner.Plan(Context(mod), recipe);
+        PatchPlanWriter.CreateAction(Context(mod), plan).Do();
+
+        AssertAllInsideMod(mod, plan);
+        Assert.Empty(Directory.GetFiles(Directory.GetParent(mod.ModRoot)!.FullName, "*.txt"));
+    }
+
+    [Fact]
+    public void Plan_writer_refuses_file_outside_mod()
+    {
+        using var mod = new TempMod();
+        var plan = new PatchPlan
+        {
+            RecipeId = "safe",
+            RecipeName = "Safe",
+            Files = new[] { new PlannedFile("../x.txt", PlannedFileStatus.New, null, "x", true, false, Array.Empty<string>(), Array.Empty<string>()) },
+            Skipped = Array.Empty<SkippedRow>(),
+            Warnings = Array.Empty<string>(),
+            OldMemory = new PatchMemory(),
+            NewMemory = new PatchMemory(),
+            ConflictUnitIds = Array.Empty<string>(),
+        };
+
+        var ex = Assert.Throws<UnsafePathException>(() => PatchPlanWriter.CreateAction(Context(mod), plan));
+
+        Assert.Equal("../x.txt", ex.Path);
+        Assert.False(System.IO.File.Exists(Path.Combine(Directory.GetParent(mod.ModRoot)!.FullName, "x.txt")));
+    }
 }

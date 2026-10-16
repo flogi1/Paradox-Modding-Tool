@@ -1,6 +1,7 @@
 {
   "id": "vic3",
   "steamAppId": "529340",
+  "playsetLoadFile": "content_load.json",
   "displayName": "Victoria 3",
   "shortName": "Vic 3",
   "releaseDate": "2022-10-25",

@@ -481,6 +481,8 @@ public static class ErrorLogTexts
 
     public static string AddModConfirm(string mod, string playset) => F("errorlog.addMod.confirm", "{0} ins Playset „{1}“ aufnehmen? PMT setzt die Mod vor deine erste eigene Mod und sichert playsets.json vorher als playsets.json.pmt-backup. Das Spiel muss dafür geschlossen sein.", mod, playset);
 
+    public static string AddModConfirmLauncher(string mod, string playset) => F("errorlog.addMod.confirmLauncher", "{0} ins Playset „{1}“ aufnehmen? PMT setzt die Mod vor deine erste eigene Mod und sichert die Datenbank des Paradox-Launchers vorher (Sicherungen im Playset-Fenster). Spiel und Launcher müssen dafür geschlossen sein.", mod, playset);
+
     public static string AddModNoPlayset => T("errorlog.addMod.noPlayset", "Kein Playset gewählt. Bitte oben im Fenster ein Playset wählen.");
 
     public static string AddModAdded(string mod, string playset) => F("errorlog.addMod.added", "{0} steht jetzt im Playset „{1}“. Die Meldungen verschwinden nach dem nächsten Spielstart.", mod, playset);

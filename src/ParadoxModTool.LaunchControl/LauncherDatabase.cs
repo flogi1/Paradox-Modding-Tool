@@ -12,7 +12,8 @@ internal static class LauncherDatabase
     private const string PlaysetsQuery = """
         select p.name, p.isActive,
                (select count(*) from playsets_mods pm where pm.playsetId = p.id),
-               (select count(*) from playsets_mods pm where pm.playsetId = p.id and pm.enabled)
+               (select count(*) from playsets_mods pm where pm.playsetId = p.id and pm.enabled),
+               p.id
         from playsets p
         where not coalesce(p.isRemoved, 0)
         order by p.createdOn, p.name
@@ -47,6 +48,7 @@ internal static class LauncherDatabase
                     IsActive = !reader.IsDBNull(1) && reader.GetBoolean(1),
                     ModCount = reader.GetInt32(2),
                     EnabledModCount = reader.GetInt32(3),
+                    Id = reader.IsDBNull(4) ? null : reader.GetString(4),
                 });
             }
 
@@ -73,7 +75,7 @@ internal static class LauncherDatabase
         }) ?? Array.Empty<PlaysetMod>();
 
     /// <summary>Führt <paramref name="query"/> auf der Datenbank aus; ist sie gesperrt, auf einer Kopie. <see langword="null"/>, wenn beides scheitert.</summary>
-    private static T? Read<T>(string path, Func<SqliteConnection, T> query) where T : class
+    internal static T? Read<T>(string path, Func<SqliteConnection, T> query) where T : class
     {
         try
         {

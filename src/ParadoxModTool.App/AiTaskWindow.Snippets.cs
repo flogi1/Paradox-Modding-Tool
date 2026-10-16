@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using ParadoxModTool.Generators.Ai;
 using ParadoxModTool.Generators.Editing.Package;
+using ParadoxModTool.Patches.Ai;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
 using FontFamily = System.Windows.Media.FontFamily;
@@ -17,7 +18,7 @@ namespace ParadoxModTool.App;
 /// und optionaler Erläuterung. Blöcke lassen sich zuklappen und direkt aus einer Datei der Mod oder des Spiels übernehmen.
 /// Das hält den Auftrag klein genug für kostenlose Chat-KIs. Die Blöcke leben nur, solange das Fenster offen ist.
 /// </summary>
-internal sealed partial class AiPackageWindow
+internal sealed partial class AiTaskWindow
 {
     // Dateien, die als Text in Frage kommen; Bilder, Sounds und Modelle bleiben draußen
     private static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -34,11 +35,14 @@ internal sealed partial class AiPackageWindow
     private IReadOnlyList<string>? _gameFiles;
     private string? _gameFilesRoot;
 
+    /// <summary>Angehakte Spieldateien, die es nach einem Wechsel des Spielordners dort nicht mehr gibt; <see cref="ReportDroppedGameFiles"/> meldet sie.</summary>
+    private readonly List<string> _droppedGameFiles = new();
+
     private FrameworkElement SnippetsPanel()
     {
         var panel = new DockPanel { Margin = new Thickness(4) };
         var top = new StackPanel();
-        top.Children.Add(Note(AiPackageTexts.SnippetsIntro));
+        top.Children.Add(Note(_flavor.SnippetsIntro));
         var buttons = new WrapPanel();
         buttons.Children.Add(Button(AiPackageTexts.AddSnippet, AiPackageTexts.AddSnippetTip, () => AddSnippet().Path.Focus()));
         buttons.Children.Add(Button(AiPackageTexts.SnippetFromMod, AiPackageTexts.SnippetFromModTip, () => TakeFromFile(fromGame: false)));
@@ -56,10 +60,10 @@ internal sealed partial class AiPackageWindow
     {
         var path = new TextBox { ToolTip = AiPackageTexts.SnippetPathTip, VerticalContentAlignment = VerticalAlignment.Center };
         var group = "snippet" + _snippetGroups++;
-        var whole = new RadioButton { Content = new TextBlock { Text = AiPackageTexts.SnippetWholeFile }, ToolTip = AiPackageTexts.SnippetWholeFileTip, GroupName = group, Margin = new Thickness(0, 0, 12, 0) };
-        var excerpt = new RadioButton { Content = new TextBlock { Text = AiPackageTexts.SnippetExcerpt }, ToolTip = AiPackageTexts.SnippetExcerptTip, GroupName = group, IsChecked = true, Margin = new Thickness(0, 0, 12, 0) };
+        var whole = new RadioButton { Content = new TextBlock { Text = AiPackageTexts.SnippetWholeFile }, ToolTip = _flavor.SnippetWholeFileTip, GroupName = group, Margin = new Thickness(0, 0, 12, 0) };
+        var excerpt = new RadioButton { Content = new TextBlock { Text = AiPackageTexts.SnippetExcerpt }, ToolTip = _flavor.SnippetExcerptTip, GroupName = group, IsChecked = true, Margin = new Thickness(0, 0, 12, 0) };
         var fromGame = new CheckBox { Content = new TextBlock { Text = AiPackageTexts.SnippetFromGameFile }, ToolTip = AiPackageTexts.SnippetFromGameFileTip };
-        var note = new TextBox { AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 24, MaxHeight = 90, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, ToolTip = AiPackageTexts.SnippetNoteTip };
+        var note = new TextBox { AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 24, MaxHeight = 90, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, ToolTip = _flavor.SnippetNoteTip };
         var code = new TextBox
         {
             AcceptsReturn = true, AcceptsTab = true, TextWrapping = TextWrapping.NoWrap, FontFamily = new FontFamily("Consolas"), MinHeight = 90, MaxHeight = 260,
@@ -101,7 +105,7 @@ internal sealed partial class AiPackageWindow
         body.Children.Add(pathRow);
 
         var noteRow = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
-        var noteLabel = new TextBlock { Text = AiPackageTexts.SnippetNote, Width = 120, ToolTip = AiPackageTexts.SnippetNoteTip, Margin = new Thickness(0, 3, 0, 0) };
+        var noteLabel = new TextBlock { Text = AiPackageTexts.SnippetNote, Width = 120, ToolTip = _flavor.SnippetNoteTip, Margin = new Thickness(0, 3, 0, 0) };
         DockPanel.SetDock(noteLabel, Dock.Left);
         noteRow.Children.Add(noteLabel);
         noteRow.Children.Add(note);
@@ -189,7 +193,7 @@ internal sealed partial class AiPackageWindow
         var root = fromGame ? GameRoot() : _modRoot;
         if (root is null)
         {
-            Status(fromGame ? AiPackageTexts.NoGameFolder : AiPackageTexts.NoMod);
+            Status(fromGame ? _flavor.NoGameFolder : AiPackageTexts.NoMod);
             return;
         }
 
@@ -226,16 +230,16 @@ internal sealed partial class AiPackageWindow
     }
 
     /// <summary>Spielordner mit denselben relativen Pfaden wie eine Mod; fehlt er, darf der Nutzer die Spiel-Exe wählen.</summary>
-    private string? GameRoot()
-    {
-        string? Find() => _host.GameRoots().Where(Directory.Exists).LastOrDefault();
-        return Find() ?? (_host.ChooseGameFolder() ? Find() : null);
-    }
+    private string? GameRoot() => _host.GameRoot();
 
     private IReadOnlyList<string> GameFiles(string root)
     {
         if (_gameFiles is null || !string.Equals(_gameFilesRoot, root, StringComparison.OrdinalIgnoreCase))
         {
+            // Anderer Spielordner: Größen gehören zum alten
+            _gameFileSizes = null;
+            _gameSizeLookup = null;
+
             // Der erste Durchlauf über den ganzen Spielordner dauert einige Sekunden
             System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             try
@@ -247,9 +251,48 @@ internal sealed partial class AiPackageWindow
             {
                 System.Windows.Input.Mouse.OverrideCursor = null;
             }
+
+            // Angehakte Spieldateien bleiben, wenn der neue Ordner sie unter demselben Pfad hat; die übrigen fallen weg und werden gemeldet.
+            if (_chosenGame.Count > 0)
+            {
+                var available = _gameFiles.ToHashSet(StringComparer.Ordinal);
+                var dropped = _chosenGame.Where(p => !available.Contains(p)).ToList();
+                if (dropped.Count > 0)
+                {
+                    _chosenGame.ExceptWith(dropped);
+                    _droppedGameFiles.AddRange(dropped);
+                }
+
+                _chosenBytes = null;
+                FillChosen();
+            }
+
+            // Zeigt die Dateiliste gerade Spieldateien, gehört sie zum alten Ordner: Größen neu lesen und die Liste neu füllen.
+            // Erst hier, nachdem _gameFiles/_gameFilesRoot stehen, sonst liefe LoadGameFileSizes erneut in diesen Zweig.
+            if (_showGame)
+            {
+                LoadGameFileSizes(root);
+                FillFiles();
+            }
         }
 
         return _gameFiles;
+    }
+
+    /// <summary>Meldet die Spieldateien, die <see cref="GameFiles"/> beim Wechsel des Spielordners abgewählt hat, einmal; true, wenn es welche gab.</summary>
+    private bool ReportDroppedGameFiles()
+    {
+        if (_droppedGameFiles.Count == 0)
+        {
+            return false;
+        }
+
+        const int MaxListed = 20;
+        var dropped = _droppedGameFiles.Distinct(StringComparer.Ordinal).OrderBy(p => p, StringComparer.OrdinalIgnoreCase).ToList();
+        _droppedGameFiles.Clear();
+        var list = string.Join("\n", dropped.Take(MaxListed)) + (dropped.Count > MaxListed ? "\n…" : string.Empty);
+        System.Windows.MessageBox.Show(this, AiPackageTexts.GameFilesDropped(list), _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+        return true;
     }
 
     private void UpdateSnippetsHeader() =>

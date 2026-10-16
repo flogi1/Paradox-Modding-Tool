@@ -1,5 +1,6 @@
 using System.Text;
 using ParadoxModTool.Generators.Ai;
+using ParadoxModTool.Patches.Ai;
 using Xunit;
 
 namespace ParadoxModTool.Generators.Tests;
@@ -55,18 +56,6 @@ public sealed class AiTaskBuilderTests : IDisposable
     }
 
     [Fact]
-    public void Snippet_bytes_count_utf8()
-    {
-        Assert.Equal(4 + 3, AiTaskBuilder.SnippetBytes(new[] { new AiTaskSnippet("a", true, "abcd"), new AiTaskSnippet("b", false, "ä ") }));
-    }
-
-    [Fact]
-    public void Snippet_bytes_include_the_note()
-    {
-        Assert.Equal(4 + 2, AiTaskBuilder.SnippetBytes(new[] { new AiTaskSnippet("a", true, "abcd") { Note = "xy" } }));
-    }
-
-    [Fact]
     public void Code_block_note_follows_the_header_line_by_line()
     {
         var snippet = new AiTaskSnippet("in_game/common/x.txt", false, "a = 1\r\n") { Note = "Repeats per idea.\r\nKeep potential.\r\n" };
@@ -96,28 +85,16 @@ public sealed class AiTaskBuilderTests : IDisposable
         Assert.DoesNotContain("\"game file\" marks", text);
     }
 
-    [Theory]
-    [InlineData("ab\ncd\nef\n", 4, 1, "cd")]
-    [InlineData("ab\ncd\nef\n", 1, 3, "ab\ncd")]
-    [InlineData("ab\r\ncd\r\nef", 2, 5, "ab\r\ncd")]
-    [InlineData("ab\ncd\nef", 0, 3, "ab")]
-    [InlineData("ab\ncd\nef", 7, 2, "ef")]
-    [InlineData("ab\ncd", 1, 0, "")]
-    public void Selection_grows_to_whole_lines(string text, int start, int length, string expected)
-    {
-        Assert.Equal(expected, AiTaskBuilder.WholeLines(text, start, length));
-    }
-
     [Fact]
     public void Large_file_is_truncated()
     {
         _temp.Write("mod/big.txt", new string('a', 300 * 1024));
 
-        var file = Assert.Single(AiTaskBuilder.ReadFiles(_temp.PathOf("mod"), new[] { "big.txt" }));
+        var file = Assert.Single(AiTaskFiles.ReadFiles(_temp.PathOf("mod"), new[] { "big.txt" }));
 
         Assert.True(file.Truncated);
         Assert.Equal(300 * 1024, file.Bytes);
-        Assert.True(file.Text!.Length <= AiTaskBuilder.MaxFileBytes);
+        Assert.True(file.Text!.Length <= AiTaskFiles.MaxFileBytes);
         var text = AiTaskBuilder.BuildText(new AiTaskRequest("d", "eu5", _temp.PathOf("mod"), new[] { "big.txt" }, null, null), AiGuideTests.GuideRoot);
         Assert.Contains("[truncated: first 200 KB of 300 KB]", text);
     }
@@ -127,7 +104,7 @@ public sealed class AiTaskBuilderTests : IDisposable
     {
         _temp.Write("mod/coa.dds", "DDS \0\0\0x");
 
-        var file = Assert.Single(AiTaskBuilder.ReadFiles(_temp.PathOf("mod"), new[] { "coa.dds" }));
+        var file = Assert.Single(AiTaskFiles.ReadFiles(_temp.PathOf("mod"), new[] { "coa.dds" }));
 
         Assert.Null(file.Text);
         var text = AiTaskBuilder.BuildText(new AiTaskRequest("d", "eu5", _temp.PathOf("mod"), new[] { "coa.dds" }, null, null), AiGuideTests.GuideRoot);
@@ -179,15 +156,6 @@ public sealed class AiTaskBuilderTests : IDisposable
         Assert.Contains("Ten ideas per tag", File.ReadAllText(Path.Combine(target, "task.md")));
         Assert.True(File.Exists(Path.Combine(target, "example", "in_game", "common", "static_modifiers", "sw_HAM.txt")));
         Assert.True(File.Exists(Path.Combine(target, "package", "templates", "loc.sbn")));
-    }
-
-    [Fact]
-    public void Total_size_sums_bytes()
-    {
-        _temp.Write("mod/a.txt", "12345");
-        _temp.Write("mod/b.txt", "123");
-
-        Assert.Equal(8, AiTaskBuilder.TotalBytes(AiTaskBuilder.ReadFiles(_temp.PathOf("mod"), new[] { "a.txt", "b.txt" })));
     }
 
     [Fact]

@@ -1,0 +1,25 @@
+﻿# PMT-Patch harbors/buildings begin
+# PMT-Unit ex_harbor_north
+ex_harbor_north = {
+	cost = 100
+	is_enabled = {
+		has_coast = yes
+		ex_in_province = 1001
+	}
+}
+# PMT-Unit ex_harbor_south
+ex_harbor_south = {
+	cost = 120
+	is_enabled = {
+		has_coast = yes
+		ex_in_province = 1002
+	}
+}
+# PMT-Unit ex_harbor_west
+ex_harbor_west = {
+	cost = 90
+	is_enabled = {
+		ex_in_province = 1003
+	}
+}
+# PMT-Patch harbors/buildings end

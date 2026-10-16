@@ -150,7 +150,7 @@
   "style": {
     "fr": "Formal 'vous'. Infinitive for buttons and menu items.",
     "es": "Neutral imperative (tú avoided where possible). Infinitive for buttons.",
-    "ru": "Formal 'вы'. Infinitive for buttons and menu items.",
+    "ru": "Informal 'ты'. Infinitive for buttons and menu items.",
     "pl": "Imperative for buttons and menu items, as in Polish Windows (Zapisz, Otwórz, Anuluj, Zmień nazwę). Neutral, impersonal forms elsewhere. Inflect kept English terms with Polish endings (moda, playsetu).",
     "zh-hans": "Concise, standard software terminology (mainland China).",
     "pt-br": "Brazilian Portuguese, 'você' where needed. Infinitive for buttons."

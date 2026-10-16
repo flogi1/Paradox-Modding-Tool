@@ -71,6 +71,7 @@ public class PlaysetStoreTests : IDisposable
 
         var initial = Assert.Single(playsets, p => p.Name == "Initial playset");
         Assert.False(initial.IsActive);
+        Assert.Equal("Initial playset", initial.Id);
         Assert.Equal(2, initial.ModCount);
         Assert.Equal(1, initial.EnabledModCount);
 

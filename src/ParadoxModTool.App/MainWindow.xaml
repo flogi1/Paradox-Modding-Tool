@@ -38,6 +38,9 @@
             <MenuItem x:Name="WindowMenuItem" SubmenuOpened="WindowMenuItem_SubmenuOpened">
                 <MenuItem />
             </MenuItem>
+            <!-- Playset-Verwaltung direkt hinter der Spielauswahl (nur im neuen Layout; im klassischen steht sie bei den Werkzeugen). -->
+            <Separator x:Name="MenuSeparator1b" Style="{StaticResource MenuBarSeparator}" Visibility="Collapsed" />
+            <MenuItem x:Name="PlaysetsBarMenuItem" Click="OpenPlaysets_Click" Visibility="Collapsed" />
             <Separator x:Name="MenuSeparator2" Style="{StaticResource MenuBarSeparator}" Visibility="Collapsed" />
             <!-- Mods: aktive Mod wählen (fest oder automatisch) und Mods verwalten; Einträge baut MainWindow.Mods.cs beim Aufklappen. -->
             <MenuItem x:Name="ModsMenuItem" SubmenuOpened="ModsMenu_SubmenuOpened">
@@ -59,6 +62,7 @@
             <MenuItem x:Name="GeneratorPackagesMenuItem" Click="OpenGeneratorPackages_Click" />
             <MenuItem x:Name="PackageEditorMenuItem" Click="OpenPackageEditor_Click" />
             <MenuItem x:Name="ModCompatMenuItem" Click="OpenModCompat_Click" />
+            <MenuItem x:Name="PlaysetsMenuItem" Click="OpenPlaysets_Click" />
             <MenuItem x:Name="CompatchMenuItem" Click="OpenCompatch_Click" />
             <MenuItem x:Name="ErrorLogMenuItem" Click="OpenErrorLog_Click" />
             <MenuItem x:Name="DesyncMenuItem" Click="OpenDesync_Click" />

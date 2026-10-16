@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- pmt-patch.exe: Prüf- und Probelauf-Befehle für Patch-Rezepte ohne Oberfläche (für KIs mit Dateizugriff). Liegt im Programmordner neben ParadoxModTool.exe. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.PatchCli</RootNamespace>
+    <AssemblyName>pmt-patch</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Patches\ParadoxModTool.Patches.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
+</Project>

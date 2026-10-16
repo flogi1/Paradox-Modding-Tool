@@ -237,7 +237,7 @@ public sealed partial class PackageEditorWindow
 
     /// <summary>"Paket mit KI erstellen" öffnen; das offene Paket kann als Vorlage mitgehen.</summary>
     internal void OpenAiWindow() =>
-        new AiPackageWindow(this, _host, _entry?.Folder, (file, loadFailed) =>
+        new AiTaskWindow(this, GeneratorAiFlavor.Host(_host), new GeneratorAiFlavor(_host, _entry?.Folder, (file, loadFailed) =>
         {
             // Wie beim normalen Import: ungespeicherte Änderungen am offenen Paket erst klären (die Antwort kann genau dieses Paket ersetzen).
             if (!ConfirmLeave())
@@ -252,7 +252,7 @@ public sealed partial class PackageEditorWindow
             }
 
             return target;
-        }).Show();
+        })).Show();
 
     /// <summary>Fragt eine neue Kennung, bis sie gültig und frei ist; <see langword="null"/> bei Abbruch.</summary>
     private string? AskImportId(string message, string initial, string root)

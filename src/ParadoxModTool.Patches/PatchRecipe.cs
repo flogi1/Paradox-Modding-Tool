@@ -248,6 +248,10 @@ public sealed class PatchRecipe
 
     public string GameId { get; set; } = string.Empty;
 
+    /// <summary>Erklärung für den Modder: was das Rezept tut und wie es gedacht ist; null = keine (wird dann nicht geschrieben).</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Description { get; set; }
+
     public List<PatchColumn> Columns { get; set; } = new();
 
     public List<PatchRow> Rows { get; set; } = new();

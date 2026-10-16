@@ -19,7 +19,13 @@ public static class GlobMatcher
     /// </summary>
     public static IEnumerable<string> Enumerate(string root, string glob)
     {
-        var parts = Parts(glob);
+        // Muster mit .., absolutem Pfad oder Laufwerk finden nichts: gelesen wird nur unterhalb der Wurzel.
+        var parts = Parts(glob).Where(PathSafety.IsSafeRelative).ToList();
+        if (parts.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
         return parts.Count == 1
             ? EnumerateOne(root, parts[0])
             : parts.SelectMany(part => EnumerateOne(root, part)).Distinct(StringComparer.Ordinal).OrderBy(rel => rel, StringComparer.Ordinal).ToList();

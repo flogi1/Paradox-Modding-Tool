@@ -46,6 +46,9 @@
                             <MenuItem x:Name="SetCompatchMenuItem" Click="SetCompatch_Click" />
                             <MenuItem x:Name="ClearCompatchMenuItem" Click="ClearCompatch_Click" />
                             <MenuItem x:Name="OpenCompatchMenuItem" Click="OpenCompatch_Click" />
+                            <Separator />
+                            <MenuItem x:Name="QuickStartMenuItem" Click="QuickStart_Click" />
+                            <MenuItem x:Name="QuickNewMenuItem" Click="QuickNew_Click" />
                         </ContextMenu>
                     </ListBox.ContextMenu>
                     <ListBox.ItemTemplate>

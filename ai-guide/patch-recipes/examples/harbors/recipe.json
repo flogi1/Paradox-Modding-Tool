@@ -1,0 +1,62 @@
+{
+  "id": "harbors",
+  "name": "Harbors as normal buildings",
+  "description": "What it does:\nTurns the special harbors into normal buildings. The harbor slots in the province history are commented out. Each harbor's building block is copied from the game into your mod, without type = special and with the province it belongs to. Your effect ex_build_harbors_effect gets one if-block per harbor that adds its income.\n\nFiles it changes:\n- history/provinces/ex_coast.txt: new copy from the game, every ex_harbor_slot line commented out.\n- common/buildings/zz_ex_harbors.txt: new file with the copied harbor buildings.\n- common/scripted_effects/ex_harbor_effects.txt: your own file; the if-blocks go at the end of ex_build_harbors_effect.\n\nWhere the rows come from:\nAll 3 harbor blocks with type = special in the game's common/buildings/00_ex_harbors.txt (ex_harbor_north, ex_harbor_south, ex_harbor_west); each of them has an ex_harbor_slot in history/provinces/*.txt. The province of each harbor is looked up in the game's history/provinces/*.txt: it is the province block whose ex_harbor_slot names the harbor. The income is 5 unless a row says otherwise (ex_harbor_north: 8).\n\nWhat to check in the preview:\n- zz_ex_harbors.txt: three blocks without type = special, each with ex_in_province = <province> inside is_enabled. ex_harbor_west has no is_enabled in the game, so PMT adds one.\n- ex_harbor_effects.txt: three if-blocks; ex_harbor_north adds 8, the others 5.\n- ex_coast.txt: every ex_harbor_slot line starts with #.\n\nIf the building copy or the if-block cannot be made for a harbor, both leave that harbor out (rows completely or not at all). The slot lines are commented out for all harbors in any case, also for a harbor that was left out; the preview lists left-out harbors under skipped rows.",
+  "columns": [
+    {
+      "name": "province",
+      "lookup": {
+        "files": "history/provinces/*.txt",
+        "source": "vanilla",
+        "match": "ex_harbor_slot = {key}",
+        "take": "topLevelKey"
+      }
+    },
+    {
+      "name": "income",
+      "type": "number",
+      "default": "5"
+    }
+  ],
+  "rows": [
+    { "key": "ex_harbor_north", "values": { "income": "8" } },
+    { "key": "ex_harbor_south" },
+    { "key": "ex_harbor_west" }
+  ],
+  "rules": [
+    {
+      "kind": "lines",
+      "id": "slots",
+      "name": "Comment out the harbor slots",
+      "scope": "global",
+      "files": "history/provinces/*.txt",
+      "match": "ex_harbor_slot\\s*=\\s*\\w+",
+      "matchKind": "regex",
+      "action": "comment",
+      "createCopy": true
+    },
+    {
+      "kind": "blockCopy",
+      "id": "buildings",
+      "name": "Harbor buildings as normal buildings",
+      "scope": "perRow",
+      "sourceFiles": "common/buildings/00_ex_harbors.txt",
+      "blockKey": "{key}",
+      "target": "common/buildings/zz_ex_harbors.txt",
+      "edits": [
+        { "kind": "remove", "key": "type", "value": "special" },
+        { "kind": "insertInto", "key": "is_enabled", "text": "ex_in_province = {province}" }
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "effects",
+      "name": "Income per harbor",
+      "scope": "perRow",
+      "target": "common/scripted_effects/ex_harbor_effects.txt",
+      "inside": "ex_build_harbors_effect",
+      "text": "if = {\n\tlimit = { ex_has_building = {key} }\n\tex_add_income = {income}\n}"
+    }
+  ],
+  "wholeRows": true
+}

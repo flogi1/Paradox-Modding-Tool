@@ -26,7 +26,8 @@ public sealed record PatchWindowHost(
     Action<string, int> OpenFileAtLine,
     Action<string, string> OpenInUpdateTool,
     Func<string, Func<OutdatedLookup>> PrepareOutdatedFiles,
-    Func<ParadoxModTool.GameProfiles.GameProfile?> Profile);
+    Func<ParadoxModTool.GameProfiles.GameProfile?> Profile,
+    Func<IReadOnlyList<(string Name, string Path)>> KnownMods);
 
 /// <summary>Ergebnis der Suche nach "veraltet" für den Wächter: Pfade und, falls sie scheiterte, eine Warnung.</summary>
 public sealed record OutdatedLookup(IReadOnlySet<string> Paths, string? Warning);
@@ -43,7 +44,8 @@ public partial class PatchRecipesWindow : Window
     private string? _modRoot;
     private bool _dirty;
     private bool _loading;
-    private PatchRecipeHelpWindow? _guideWindow;
+    private bool _fillingDescription;
+    private AiTaskWindow? _aiWindow;
 
     public PatchRecipesWindow(PatchWindowHost host)
     {
@@ -73,7 +75,12 @@ public partial class PatchRecipesWindow : Window
     }
 
     /// <summary>Nur Suchmuster oder Ignorierliste des Wächters geändert: speichern (verzögert), die berechnete Vorschau bleibt gültig.</summary>
-    internal void MarkWatchSettingsEdited()
+    internal void MarkWatchSettingsEdited() => ScheduleSave();
+
+    /// <summary>Nur die Erklärung geändert: speichern (verzögert); sie ändert nichts an der Mod, deshalb bleiben Vorschau und Wächter gültig.</summary>
+    private void MarkDescriptionEdited() => ScheduleSave();
+
+    private void ScheduleSave()
     {
         if (_loading)
         {
@@ -84,6 +91,32 @@ public partial class PatchRecipesWindow : Window
         _saveTimer.Stop();
         _saveTimer.Start();
     }
+
+    /// <summary>Rezeptordner der gewählten Mod (dort liegen Rezepte und Gedächtnis-Dateien); nur mit gewählter Mod.</summary>
+    internal string RecipesFolderOfCurrentMod() =>
+        _modRoot is null ? throw new InvalidOperationException("no mod selected") : RecipesFolder(_modRoot);
+
+    /// <summary>Vergebene Rezept-Kennungen der gewählten Mod: geladene Rezepte und Rezeptdateien, auch unlesbare (sonst überschriebe ein Import sie).</summary>
+    internal IReadOnlyList<string> RecipeIdsOfCurrentMod()
+    {
+        var ids = _recipes.Select(r => r.Id).ToList();
+        var folder = _modRoot is null ? null : RecipesFolder(_modRoot);
+        if (folder is not null && Directory.Exists(folder))
+        {
+            ids.AddRange(Directory.EnumerateFiles(folder, "*.json")
+                .Select(Path.GetFileName)
+                .Where(name => !name!.EndsWith(".memory.json", StringComparison.OrdinalIgnoreCase))
+                .Select(name => Path.GetFileNameWithoutExtension(name!)));
+        }
+
+        return ids.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    /// <summary>Das geladene Rezept mit dieser Kennung in der gewählten Mod; null, wenn es keines gibt.</summary>
+    internal PatchRecipe? FindRecipe(string id) => _recipes.FirstOrDefault(r => string.Equals(r.Id, id, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Der Text der Statuszeile, z. B. warum keine Vorschau berechnet wurde.</summary>
+    internal string StatusLine => StatusText.Text;
 
     /// <summary>Die Reiter melden hier jede Änderung am Rezept: speichern (verzögert) und abhängige Ansichten verwerfen.</summary>
     internal void MarkRecipeEdited()
@@ -195,6 +228,7 @@ public partial class PatchRecipesWindow : Window
     /// <summary>Ein anderes Rezept (oder keines) ist gewählt: alle Reiter neu aufbauen.</summary>
     private void OnRecipeSelected()
     {
+        FillDescription();
         TableRecipeSelected();
         RulesRecipeSelected();
         WatchRecipeSelected();
@@ -270,7 +304,7 @@ public partial class PatchRecipesWindow : Window
 
             var hasMod = _modRoot is not null;
             RecipeBox.IsEnabled = hasMod && _recipes.Count > 0;
-            NewRecipeButton.IsEnabled = hasMod;
+            NewRecipeButton.IsEnabled = AiRecipeButton.IsEnabled = hasMod;
             RenameRecipeButton.IsEnabled = DeleteRecipeButton.IsEnabled = Recipe is not null;
             Tabs.IsEnabled = Recipe is not null;
             var status = errors.Count > 0 ? PatchRecipeTexts.LoadErrors(errors.Count) + ": " + string.Join("; ", errors)
@@ -286,7 +320,8 @@ public partial class PatchRecipesWindow : Window
         OnRecipeSelected();
     }
 
-    private void SaveNow()
+    /// <summary>Speichert ausstehende Änderungen am gewählten Rezept sofort (sonst nach 500 ms), z. B. bevor ein KI-Import dasselbe Rezept ersetzt.</summary>
+    internal void SaveNow()
     {
         _saveTimer.Stop();
         if (!_dirty || _modRoot is null || Recipe is not { } recipe)
@@ -417,6 +452,49 @@ public partial class PatchRecipesWindow : Window
         ReloadRecipes(null);
     }
 
+    /// <summary>Erklärung des gewählten Rezepts ins Feld; aufgeklappt, wenn es eine hat. Das Füllen selbst zählt nicht als Änderung.</summary>
+    private void FillDescription()
+    {
+        _fillingDescription = true;
+        try
+        {
+            DescriptionBox.Text = Recipe?.Description ?? string.Empty;
+            DescriptionExpander.IsExpanded = !string.IsNullOrWhiteSpace(Recipe?.Description);
+            DescriptionExpander.IsEnabled = Recipe is not null;
+        }
+        finally
+        {
+            _fillingDescription = false;
+        }
+    }
+
+    private void DescriptionBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_fillingDescription || _loading || Recipe is not { } recipe)
+        {
+            return;
+        }
+
+        // Leerer Text heißt: keine Erklärung (null, damit die Datei kein leeres Feld bekommt)
+        recipe.Description = string.IsNullOrWhiteSpace(DescriptionBox.Text) ? null : DescriptionBox.Text;
+        MarkDescriptionEdited();
+    }
+
+    /// <summary>"Mit KI erstellen": höchstens ein KI-Fenster; ein offenes wird nach vorn geholt.</summary>
+    private void AiRecipe_Click(object sender, RoutedEventArgs e)
+    {
+        if (_aiWindow is not null)
+        {
+            _aiWindow.Activate();
+            return;
+        }
+
+        SaveNow();
+        _aiWindow = new AiTaskWindow(this, RecipeAiFlavor.Host(this, _host), new RecipeAiFlavor(this, _host));
+        _aiWindow.Closed += (_, _) => _aiWindow = null;
+        _aiWindow.Show();
+    }
+
     private void Guide_Click(object sender, RoutedEventArgs e) => ShowGuide();
 
     /// <summary>F1 öffnet die Anleitung, auch während ein Eingabefeld den Fokus hat.</summary>
@@ -429,20 +507,8 @@ public partial class PatchRecipesWindow : Window
         }
     }
 
-    /// <summary>Höchstens ein Anleitungsfenster; ein offenes wird nach vorn geholt.</summary>
-    private void ShowGuide()
-    {
-        if (_guideWindow is null)
-        {
-            _guideWindow = new PatchRecipeHelpWindow { Owner = this };
-            _guideWindow.Closed += (_, _) => _guideWindow = null;
-            _guideWindow.Show();
-        }
-        else
-        {
-            _guideWindow.Activate();
-        }
-    }
+    /// <summary>Höchstens ein Anleitungsfenster (auch zusammen mit dem KI-Fenster); ein offenes wird nach vorn geholt.</summary>
+    private void ShowGuide() => PatchRecipeHelpWindow.Show(this, null);
 
     private void Window_Closing(object? sender, CancelEventArgs e) => SaveNow();
 }

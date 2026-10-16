@@ -12,6 +12,9 @@ public sealed class PlaysetInfo
 {
     public required string Name { get; init; }
 
+    /// <summary>Kennung des Playsets in der Datei: UUID in der Launcher-Datenbank, der Name in playsets.json. Zwei Playsets können denselben Namen tragen, die Kennung nicht.</summary>
+    public string? Id { get; init; }
+
     public bool IsActive { get; init; }
 
     public int ModCount { get; init; }

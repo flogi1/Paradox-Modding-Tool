@@ -26,6 +26,7 @@ public static class ToolIcons
         [TileIds.CuTool] = "M4 4h7v16H4z M13 4h7v16h-7z M7 9v6 M16 9v6",
         [TileIds.Compatch] = "M4 4h11v11H4z M9 9h11v11H9z",
         [TileIds.ModCompat] = "M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z M8 12l3 3 5-6",
+        [TileIds.Playsets] = "M3 6h12 M3 12h12 M3 18h8 M18 14v6 M15 17h6",
         [TileIds.PatchRecipes] = "M4 5h16v14H4z M7 9h6 M7 12h10 M7 15h4 M15 15l2 2 3-3",
         [TileIds.SaveExplorer] = "M5 3h9l4 4v5 M5 3v18h6 M18 15a3 3 0 1 1-6 0a3 3 0 1 1 6 0 M17.2 17.2l3.8 3.8",
         [TileIds.ErrorLog] = "M12 4l9 16H3z M12 10v4 M12 17v1",

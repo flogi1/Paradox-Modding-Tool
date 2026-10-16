@@ -1129,14 +1129,11 @@ public sealed class ErrorLogWindow : Window
             return;
         }
 
-        // launcher-v2.sqlite liest PMT nur: gleich den Hinweis zeigen statt erst eine Bestätigung, die von playsets.json spricht.
-        if (PlaysetStore.IsLauncherDatabase(_service.Host.PlaysetsFile()))
-        {
-            MessageBox.Show(this, PlaysetTexts.LauncherDatabaseReadOnly, ErrorLogTexts.AddModTitle, MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        if (MessageBox.Show(this, ErrorLogTexts.AddModConfirm(mod.Name, playset), ErrorLogTexts.AddModTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        // Launcher-Spiele schreiben in die Datenbank des Launchers (mit Sicherung), die anderen in playsets.json: die Rückfrage nennt die richtige Datei.
+        var confirm = PlaysetStore.IsLauncherDatabase(_service.Host.PlaysetsFile())
+            ? ErrorLogTexts.AddModConfirmLauncher(mod.Name, playset)
+            : ErrorLogTexts.AddModConfirm(mod.Name, playset);
+        if (MessageBox.Show(this, confirm, ErrorLogTexts.AddModTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;
         }

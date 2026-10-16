@@ -499,6 +499,83 @@ public static class PatchRecipeTexts
 
     public static string FilesTip => T("patchUi.field.files.tip", "Pfad ab dem Spielordner; * und ** für Ordner, mehrere Muster mit ; trennen");
 
+    // ---- Erklärung und "Rezept mit KI erstellen" (Spec 2026-10-12-patch-recipes-ai-guide, Abschnitt 2) ----
+    public static string Description => T("patchUi.description", "Erklärung");
+
+    public static string DescriptionTip => T("patchUi.description.tip", "Was das Rezept tut, in einfachen Worten. Eine KI schreibt sie beim Erstellen hierher; du kannst sie ändern. Die Erklärung ändert nichts an der Mod.");
+
+    public static string AiOpen => T("patchUi.ai.open", "Mit KI erstellen");
+
+    public static string AiOpenTip => T("patchUi.ai.open.tip", "Stellt einen Auftrag für eine KI deiner Wahl zusammen (Anleitung, Beispiel-Dateien aus Mod und Spiel, deine Beschreibung) und übernimmt ihre Antwort als Rezept. Du prüfst das Ergebnis an der Erklärung und an der Vorschau.");
+
+    public static string AiTitle => T("patchUi.ai.title", "Rezept mit KI erstellen");
+
+    public static string AiTaskIntro => T("patchUi.ai.taskIntro", "1. Mod wählen und Beispiel-Dateien anhaken: was du bisher nach jedem Update von Hand änderst, aus der Mod (dein Ergebnis) und aus dem Spiel (die Vanilla-Vorlage). Oder unter „Codeblöcke“ nur die passenden Stellen einfügen. 2. Beschreiben, was dein Feature tut und welche Arbeit sich nach jedem Vanilla-Update wiederholt. 3. Auftrag kopieren und in eine KI einfügen, oder als Ordner für eine KI mit Dateizugriff speichern. 4. Die Antwort unter „Ergebnis“ einfügen.");
+
+    public static string AiResultIntro => T("patchUi.ai.resultIntro", "Die komplette Antwort der KI einfügen und „Übernehmen“ drücken, oder den Ordner wählen, in den eine KI recipe.json geschrieben hat. PMT prüft das Rezept, speichert es bei der gewählten Mod, zeigt seine Erklärung und berechnet die Vorschau. In die Mod geschrieben wird erst mit „Anwenden“ im Fenster Patch-Rezepte.");
+
+    public static string AiDescriptionTip => T("patchUi.ai.description.tip", "Was soll das Rezept tun? Beschreibe dein Feature, die Arbeit, die sich nach jedem Update wiederholt, und was am Ende in der Mod stehen soll. Beispiel: „Meine Mod macht aus Special Buildings normale Gebäude. Nach jedem Update kommentiere ich die Slot-Zeilen in der History aus und kopiere die Gebäude neu.“");
+
+    public static string AiWithRecipe => T("patchUi.ai.withRecipe", "Offenes Rezept mitgeben (ändern statt neu erstellen)");
+
+    public static string AiWithRecipeTip => T("patchUi.ai.withRecipe.tip", "Gibt das im Fenster Patch-Rezepte gewählte Rezept samt Gedächtnis mit; die KI ändert es und behält Kennung und Regel-Kennungen, damit deine Handänderungen erhalten bleiben. Nur möglich, wenn oben die Mod dieses Fensters gewählt ist.");
+
+    public static string AiModTip => T("patchUi.ai.mod.tip", "Mod, zu der das Rezept gehört; dort wird es gespeichert. Vorgewählt ist die Mod des Fensters Patch-Rezepte.");
+
+    public static string AiChooseModMessage => T("patchUi.ai.chooseMod.message", "Mod wählen, zu der das Rezept gehört. Die Mod des Fensters Patch-Rezepte steht oben.");
+
+    public static string AiFilesTip => T("patchUi.ai.files.tip", "Beispiel-Dateien anhaken: aus der Mod das, was du bisher von Hand änderst, aus dem Spiel die Vanilla-Vorlage dazu. Bilder werden nur genannt, nicht mitgeschickt.");
+
+    public static string AiCopyTextTip => T("patchUi.ai.copyText.tip", "Anleitung, Beispielrezept, Auftrag und Dateien als ein Text in die Zwischenablage, zum Einfügen in eine Chat-KI.");
+
+    public static string AiSaveFolderTip => T("patchUi.ai.saveFolder.tip", "Für KIs mit Dateizugriff: Anleitung, task.md mit den Befehlen für pmt-patch.exe (Prüfen und Probelauf ohne Schreiben), die Beispiel-Dateien in example/mod/ und example/game/ und das offene Rezept samt Gedächtnis in recipe/.");
+
+    public static string AiAnswerTip => T("patchUi.ai.answer.tip", "Die ganze Antwort einfügen; PMT sucht den Block zwischen <<<FILE recipe.json>>> und <<<END>>>. Andere Dateien sind nicht erlaubt.");
+
+    public static string AiApplyTip => T("patchUi.ai.apply.tip", "Liest recipe.json, prüft das Rezept und speichert es bei der gewählten Mod; danach zeigt das Fenster Patch-Rezepte Erklärung und Vorschau. In die Mod wird nichts geschrieben.");
+
+    public static string AiImportFolderTip => T("patchUi.ai.importFolder.tip", "Ordner mit recipe.json wählen, z. B. den, in den eine KI mit Dateizugriff das Rezept geschrieben hat.");
+
+    public static string AiSnippetsIntro => T("patchUi.ai.snippetsIntro", "Je Block eine Stelle aus der Mod oder dem Spiel einfügen und angeben, aus welcher Datei sie stammt. „Ausschnitt“ heißt: Die Datei hat noch mehr Inhalt, der bleiben muss.");
+
+    public static string AiSnippetWholeFileTip => T("patchUi.ai.snippetWholeFile.tip", "Der Block ist die ganze Datei.");
+
+    public static string AiSnippetExcerptTip => T("patchUi.ai.snippetExcerpt.tip", "Der Block ist nur ein Teil der Datei; der Rest bleibt, eine Regel darf ihn nicht ersetzen oder löschen.");
+
+    public static string AiSnippetNoteTip => T("patchUi.ai.snippetNote.tip", "Optional: was die KI über diesen Block wissen muss, z. B. „so sieht es nach meiner Änderung aus“ oder „wiederholt sich je Gebäude“.");
+
+    public static string AiNoMod => T("patchUi.ai.noMod", "Keine Mod gewählt: unter „Auftrag“ die Mod wählen, zu der das Rezept gehört.");
+
+    public static string AiIssueError(string where, string message) => F("patchUi.ai.issueError", "Fehler – {0}: {1}", where, message);
+
+    public static string AiIssueWarning(string where, string message) => F("patchUi.ai.issueWarning", "Warnung – {0}: {1}", where, message);
+
+    public static string AiStoppedErrors => T("patchUi.ai.stoppedErrors", "Nichts gespeichert: Das Rezept hat Fehler. „Fehler für die KI kopieren“ gibt sie der KI zurück.");
+
+    public static string AiIdReset(string id) => F("patchUi.ai.idReset", "Die KI hat die Kennung des Rezepts geändert. PMT hat sie auf „{0}“ zurückgesetzt, damit erzeugte Bereiche und Gedächtnis weiter passen.", id);
+
+    public static string AiIdConflict(string name, string id) => F("patchUi.ai.idConflict", "Es gibt schon ein Rezept mit der Kennung „{1}“ („{0}“).\n\nJa: ersetzen. Das Gedächtnis bleibt, deine Handänderungen in erzeugten Bereichen bleiben erhalten.\nNein: als neues Rezept unter neuer Kennung speichern, das alte bleibt.\nAbbrechen: nichts speichern.", name, id);
+
+    public static string AiNewId(string id) => F("patchUi.ai.newId", "Als neues Rezept unter der Kennung „{0}“ gespeichert.", id);
+
+    public static string AiDroppedConfirm(string list) => F("patchUi.ai.droppedConfirm", "Diese Regeln des bisherigen Rezepts fehlen in der Antwort, haben aber schon Text in der Mod erzeugt:\n{0}\n\nDer Text, den diese Regeln erzeugt haben, bleibt in der Mod und muss von Hand entfernt werden. Trotzdem speichern?\n\nNein: nichts speichern, das bisherige Rezept bleibt unverändert.", list);
+
+    public static string AiDroppedRule(string name, string id) => F("patchUi.ai.droppedRule", "Regel „{0}“ ({1})", name, id);
+
+    public static string AiDropped(string rules) => F("patchUi.ai.dropped", "Entfallene Regeln, deren Text in der Mod bleibt und von Hand entfernt werden muss: {0}", rules);
+
+    public static string AiNotSaved => T("patchUi.ai.notSaved", "Nichts gespeichert; das bisherige Rezept bleibt unverändert.");
+
+    public static string AiSaved(string name) => F("patchUi.ai.saved", "Rezept „{0}“ gespeichert und im Fenster Patch-Rezepte gewählt.", name);
+
+    public static string AiPlanReady(int count) => F("patchUi.ai.planReady", "Vorschau berechnet: {0} Dateien würden sich ändern.", count);
+
+    public static string AiNoPlan(string reason) => F("patchUi.ai.noPlan", "Vorschau nicht berechnet: {0}", reason);
+
+    public static string AiPlanConflict(string file, string unit, string messages) => F("patchUi.ai.planConflict", "Konflikt in {0}, Baustein {1}: {2}", file, unit, messages);
+
+    public static string AiStatusHint => T("patchUi.ai.statusHint", "Prüfe die Erklärung und die Vorschau im Fenster Patch-Rezepte. In die Mod geschrieben wird erst mit „Anwenden“.");
+
     private static string T(string key, string german) => UiText.Get(key, german);
 
     private static string F(string key, string german, params object?[] args) => UiText.Format(key, german, args);

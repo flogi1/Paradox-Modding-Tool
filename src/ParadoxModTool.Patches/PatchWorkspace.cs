@@ -149,7 +149,12 @@ public sealed class PatchWorkspace
     }
 
     /// <summary>Ein führender Schrägstrich (z. B. im Ziel einer Regel) zählt nicht: sonst gäbe es dieselbe Datei zweimal im Plan.</summary>
-    private static string Normalize(string rel) => rel.Replace('\\', '/').TrimStart('/');
+    private static string Normalize(string rel)
+    {
+        rel = (rel ?? string.Empty).Replace('\\', '/').TrimStart('/');
+        // Rückhalt: die Regeln werden schon vor dem Lauf geprüft (RecipePaths); hier kommt nichts durch, was Mod- oder Spielordner verlässt.
+        return PathSafety.IsSafeRelative(rel) ? rel : throw new UnsafePathException(rel);
+    }
 
     private static string FullPath(string root, string rel) => Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
 }

@@ -6,7 +6,7 @@ namespace ParadoxModTool.Patches;
 /// <summary>Hilfen für das Bearbeiten von Rezepten im Fenster: Ids, neue Regeln, Reihenfolge, Warnungen, Spaltennamen, Einzel-Vorschau.</summary>
 public static class RecipeEditing
 {
-    private static readonly Regex ColumnName = new("^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.CultureInvariant);
+    private static readonly Regex ColumnName = new(@"\A[A-Za-z_][A-Za-z0-9_]*\z", RegexOptions.CultureInvariant);
 
     /// <summary>Dateinamen-sichere Id aus dem Namen (Kleinbuchstaben, ASCII-Buchstaben und Ziffern, sonst <c>_</c>), eindeutig per Zähler.</summary>
     public static string NewId(string name, IEnumerable<string> existingIds)

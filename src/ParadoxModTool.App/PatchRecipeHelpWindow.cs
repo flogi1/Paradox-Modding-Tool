@@ -1,3 +1,4 @@
+using System.Windows;
 using ParadoxModTool.Localization;
 
 namespace ParadoxModTool.App;
@@ -22,6 +23,15 @@ public sealed class PatchRecipeHelpWindow : GuideWindow
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.steps.list", "1. Rezept: Mod wählen, dann „Neues Rezept“.\n2. Tabelle: eine Zeile pro Ding, das du ändern willst (zum Beispiel pro Gebäude), mit Spalten für alles, was je Zeile anders ist.\n3. Regeln: was mit jeder Zeile passieren soll.\n4. Vorschau: die Regeln probeweise laufen lassen, das Ergebnis prüfen, dann „Anwenden“.")),
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.steps.safety", "Bis zum Anwenden schreibt PMT nichts. Vor dem Anwenden sichert PMT die Mod. Im Hauptfenster nimmt „Rückgängig“ den ganzen Lauf in einem Schritt zurück.")),
 
+        new GuideBlock(GuideBlockKind.Heading, T("patchhelp.ai.heading", "Mit KI erstellen"), "patchhelp.ai"),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.intro", "Ein Rezept von Hand zu bauen heißt: deine Arbeit in Spalten, Zeilen und Regeln übersetzen. „Mit KI erstellen“ (neben „Neues Rezept“) gibt genau diese Übersetzung an eine KI deiner Wahl ab. Du musst das Rezept nicht lesen können: Du beurteilst es an seiner Erklärung und an der Vorschau, die zeigt, was es in deiner Mod ändern würde.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.steps", "In fünf Schritten:\n1. Mod wählen und Beispiel-Dateien anhaken: was du bisher von Hand änderst, aus der Mod (dein Ergebnis) und mit dem Umschalter „Spieldateien“ die Vanilla-Vorlage dazu. Bei großen Dateien unter „Codeblöcke“ nur die passenden Stellen einfügen.\n2. Beschreiben, was dein Feature tut und welche Arbeit sich nach jedem Vanilla-Update wiederholt.\n3. „Als Text kopieren“ und in eine Chat-KI einfügen, „Als Datei speichern“ zum Hochladen oder „Als Ordner speichern“ für eine KI mit Dateizugriff.\n4. Die Antwort der KI unter „Ergebnis“ einfügen und „Übernehmen“ drücken (oder „Aus Ordner importieren“).\n5. PMT prüft und speichert das Rezept, zeigt oben seine Erklärung und öffnet die Vorschau. Gefällt dir, was sich ändern würde, drückst du „Anwenden“. Sonst „Fehler für die KI kopieren“ und der KI zurückgeben.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.result", "Fehler im Rezept stoppen den Import, dann wird nichts gespeichert. Warnungen, übersprungene Zeilen und Konflikte der Vorschau stehen in den Meldungen. „Fehler für die KI kopieren“ gibt sie der KI als einen Text zurück; sie korrigiert dann das ganze Rezept.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.explanation", "Die Erklärung steht oben im Fenster Patch-Rezepte unter „Erklärung“. Die KI schreibt dort in deiner Sprache, was das Rezept tut, wie sie die Zeilen gefunden hat und was die Mechanik nicht kann. Du kannst sie ändern; sie ändert nichts an der Mod.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.handOver", "Mit „Offenes Rezept mitgeben“ ändert die KI das gewählte Rezept, statt ein neues zu bauen. Sie muss dabei die Kennung des Rezepts und die Kennungen der Regeln behalten, denn daran hängen die erzeugten Bereiche und deine Handänderungen. Beim Übernehmen der Antwort zählt, ob das Häkchen gesetzt und ein Rezept derselben Mod im Fenster Patch-Rezepte gewählt ist, auch in einem neu geöffneten KI-Fenster. Trägt die Antwort die Kennung eines Rezepts dieser Mod, gilt sie als neue Fassung dieses Rezepts, auch wenn inzwischen ein anderes gewählt ist; eine unbekannte Kennung setzt PMT auf die des gewählten Rezepts zurück. Dann schlägt PMT „Ersetzen“ vor. Fehlen Regeln, die schon Text in der Mod erzeugt haben, fragt PMT nach: Dieser Text bliebe in der Mod und müsste von Hand entfernt werden. „Nein“ lässt das bisherige Rezept unverändert.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.tips", "Tipps:\n• Die wiederkehrende Arbeit beschreiben, nicht die Rezept-Technik: was du nach jedem Update tust und was am Ende in der Mod stehen soll.\n• Ein fertiges Beispiel mitgeben, z. B. ein Gebäude, das du schon von Hand umgebaut hast, und die Vanilla-Datei dazu.\n• Klein anfangen: erst eine Regel oder wenige Zeilen, dann erweitern.\n• Nach der Vorschau urteilen: Jede Datei zeigt links den aktuellen Text und rechts das Ergebnis. Erst „Anwenden“ schreibt, und „Rückgängig“ nimmt den ganzen Lauf zurück.\n• Sagt die KI in der Erklärung, dass etwas nicht geht, ist das ehrlich gemeint: Diesen Teil erledigst du weiter von Hand.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.ai.cli", "Für KIs mit Dateizugriff liegt pmt-patch.exe im Programmordner. Die Datei task.md im Auftragsordner nennt die Befehle mit den echten Pfaden: check prüft das Rezept, plan zeigt, was es in der Mod ändern würde. Beide schreiben nichts in Mod, Spiel oder Rezeptordner.")),
+
         new GuideBlock(GuideBlockKind.Heading, T("patchhelp.table.heading", "Die Tabelle")),
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.table.key", "Jede Zeile hat einen Schlüssel (Spalte key), zum Beispiel angkor_wat_01. Er muss eindeutig sein.")),
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.table.own", "Eigene Spalten legst du unter „Spalten“ an: Name, Art (Text, Zahl oder Liste) und Standardwert. Eine leere Zelle nutzt den Standardwert, er steht grau in der Zelle. Die Werte einer Liste trennst du mit Kommas.")),
@@ -35,9 +45,9 @@ public sealed class PatchRecipeHelpWindow : GuideWindow
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.table.skip", "Rote Zeilen überspringt PMT bei allen Regeln mit Geltung „pro Zeile“. Was diese Zeilen früher erzeugt haben, bleibt stehen. Alle anderen Zeilen laufen normal. „Nur Einträge mit Fehlern“ zeigt nur die roten Zeilen.")),
 
         new GuideBlock(GuideBlockKind.Heading, T("patchhelp.placeholders.heading", "Platzhalter")),
-        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.placeholders.intro", "In Suchen, Pfaden und Texten setzt PMT für jede Zeile die Werte ein:")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.placeholders.intro", "In den Feldern Suche, Block, Text, Liste (Pfad) und Eintrag setzt PMT für jede Zeile die Werte ein. Dateien, Quelle, Ziel, Innerhalb und Ersatz bleiben, wie sie stehen:")),
         new GuideBlock(GuideBlockKind.Example, T("patchhelp.placeholders.box", "{key}                    Schlüssel der Zeile\n{spalte}                 Wert der Spalte, zum Beispiel {barony}\n{?spalte}Text{/spalte}   Text nur, wenn die Spalte einen Wert hat\n{!spalte}Text{/spalte}   Text nur, wenn die Spalte leer ist")),
-        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.placeholders.list", "Eine Listen-Spalte in einem Pfad oder Listen-Eintrag erzeugt je Wert ein Ziel. Mit holdings = castle_holding, city_holding wirkt {holdings}/buildings auf beide Holdings.")),
+        new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.placeholders.list", "Eine Listen-Spalte in Liste (Pfad), Eintrag, Suche oder im Text einer Vorlage erzeugt je Wert ein eigenes Ziel; in Block und Bearbeitungen steht dagegen die ganze Liste. Mit holdings = castle_holding, city_holding wirkt {holdings}/buildings auf beide Holdings.")),
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.placeholders.repeat", "{*spalte}Text{/spalte} wiederholt den Text einmal je Listenwert, darin steht {spalte} für den einzelnen Wert. Die Vorlage nutzt das für OR = { barony = title:… }.")),
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.placeholders.empty", "Ein unbekannter Platzhalter ist ein Fehler im Regel-Editor. Ist ein Wert leer, überspringt die Regel diese Zeile. Die Vorschau nennt den Grund („leerer Wert für …“).")),
 
@@ -112,9 +122,31 @@ public sealed class PatchRecipeHelpWindow : GuideWindow
         new GuideBlock(GuideBlockKind.Paragraph, T("patchhelp.trouble.list", "• Eine Datei fehlt in der Vorschau: Prüfe das Dateien-Muster. Pfade beginnen im Spielordner (common/…), ** schließt Unterordner ein.\n• Eine Zeile ist rot: Der Grund steht in der Spalte „Hinweis“.\n• „bereits definiert in …“: Der Schlüssel steht schon an anderer Stelle der Mod. PMT erzeugt ihn nicht doppelt. Nutze „Bestehende Blöcke übernehmen“ (Knopf in der Vorschau): PMT holt deinen Block in den erzeugten Bereich, baut ihn um und behält deine Änderungen.\n• Eine Regel ändert nichts: Ist „Aktiv“ angehakt? Suchart „Text“ trifft nur ganze Wörter.\n• „leerer Wert für …“: Die Zeile hat in einer benutzten Spalte keinen Wert und auch keinen Standardwert.\n• Im Zweifel: „Ergebnis zeigen“ für eine einzelne Zeile.")),
     };
 
-    public PatchRecipeHelpWindow()
+    private static PatchRecipeHelpWindow? _open;
+
+    private PatchRecipeHelpWindow()
         : base(T("patchhelp.title", "Anleitung: Patch-Rezepte"), Blocks, withNavigation: true)
     {
+    }
+
+    /// <summary>Höchstens ein Anleitungsfenster; ein offenes wird nach vorn geholt. Mit <paramref name="section"/> springt es zum Kapitel (z. B. F1 im KI-Fenster).</summary>
+    public static void Show(Window owner, string? section)
+    {
+        if (_open is null)
+        {
+            _open = new PatchRecipeHelpWindow { Owner = owner };
+            _open.Closed += (_, _) => _open = null;
+            _open.Show();
+        }
+        else
+        {
+            _open.Activate();
+        }
+
+        if (section is not null)
+        {
+            _open.ShowSection(section);
+        }
     }
 
     // Nur UiText.Get, kein Format: die Texte enthalten geschweifte Klammern ({key}, buildings = { … }).

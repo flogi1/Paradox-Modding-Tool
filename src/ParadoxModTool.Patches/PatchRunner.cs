@@ -32,6 +32,29 @@ public static class PatchRunner
         }
     }
 
+    private static void ApplyRule(PatchRule rule, RuleRunContext ctx)
+    {
+        switch (rule)
+        {
+            case LineRule line:
+                ctx.Warnings.AddRange(LineRuleValidation.Warnings(line));
+                LineRuleApplier.Apply(line, ctx);
+                break;
+            case BlockCopyRule copy:
+                BlockCopyApplier.Apply(copy, ctx);
+                break;
+            case TemplateRule template:
+                TemplateRuleApplier.Apply(template, ctx);
+                break;
+            case ListEntryRule list:
+                ListEntryApplier.Apply(list, ctx);
+                break;
+            case BlockEditRule blockEdit:
+                BlockEditApplier.Apply(blockEdit, ctx);
+                break;
+        }
+    }
+
     private static (PatchPlan Plan, IReadOnlySet<string> ErrorRows) PlanOnce(
         PatchContext context, PatchRecipe recipe, IReadOnlyDictionary<string, SkippedRow> forced, CancellationToken ct, IProgress<(int Done, int Total)>? progress)
     {
@@ -46,24 +69,26 @@ public static class PatchRunner
         for (var i = 0; i < rules.Count; i++)
         {
             ct.ThrowIfCancellationRequested();
-            switch (rules[i])
+            // Pfade mit .. oder absolut: die Regel läuft nicht, nichts außerhalb von Mod und Spiel wird gelesen oder geschrieben.
+            if (RecipePaths.UnsafePaths(rules[i]) is { Count: > 0 } unsafePaths)
             {
-                case LineRule line:
-                    ctx.Warnings.AddRange(LineRuleValidation.Warnings(line));
-                    LineRuleApplier.Apply(line, ctx);
-                    break;
-                case BlockCopyRule copy:
-                    BlockCopyApplier.Apply(copy, ctx);
-                    break;
-                case TemplateRule template:
-                    TemplateRuleApplier.Apply(template, ctx);
-                    break;
-                case ListEntryRule list:
-                    ListEntryApplier.Apply(list, ctx);
-                    break;
-                case BlockEditRule blockEdit:
-                    BlockEditApplier.Apply(blockEdit, ctx);
-                    break;
+                ctx.Skipped.Add(new SkippedRow(rules[i].Id, "global", PatchTexts.UnsafePath(unsafePaths[0])));
+            }
+            else if (RecipePaths.TargetOf(rules[i]) is { } target && RecipePaths.IsNotSingleFile(target))
+            {
+                // "x.txt;" schriebe sonst eine Datei dieses Namens, "*" oder "?" scheiterte erst beim Schreiben.
+                ctx.Skipped.Add(new SkippedRow(rules[i].Id, "global", PatchTexts.TargetNotSingleFile(target)));
+            }
+            else
+            {
+                try
+                {
+                    ApplyRule(rules[i], ctx);
+                }
+                catch (UnsafePathException ex)
+                {
+                    ctx.Skipped.Add(new SkippedRow(rules[i].Id, "global", PatchTexts.UnsafePath(ex.Path)));
+                }
             }
 
             progress?.Report((i + 1, rules.Count));

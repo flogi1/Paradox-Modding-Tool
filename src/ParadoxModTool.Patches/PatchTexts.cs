@@ -78,6 +78,10 @@ public static class PatchTexts
 
     public static string SkippedWithRule(string rule, string reason) => F("patch.skip.withRule", "ausgelassen wie in Regel {0}: {1}", rule, reason);
 
+    public static string UnsafePath(string path) => F("patch.skip.unsafePath", "Pfad „{0}“ ist nicht erlaubt (nur relative Pfade in Mod und Spiel, ohne ..)", path);
+
+    public static string TargetNotSingleFile(string path) => F("patch.skip.targetNotSingleFile", "Ziel „{0}“ ist kein Pfad zu einer einzelnen Datei (nicht erlaubt: ; * ? \" < > |, leere Ordnernamen, Leerzeichen am Rand oder Punkt am Ende eines Namens)", path);
+
     public static string AlreadyDefined(string file, int line) => F("patch.skip.alreadyDefined", "bereits definiert in {0}:{1}", file, line);
 
     public static string VariableMissing(string name, string file) => F("patch.warn.variableMissing", "@{0} ist in {1} nicht definiert", name, file);
@@ -117,6 +121,58 @@ public static class PatchTexts
     public static string WatchOutdatedFailed(string message) => F("patch.watch.outdatedFailed", "„veraltet“ konnte nicht bestimmt werden: {0}", message);
 
     public static string WatchPlanFailed(string message) => F("patch.watch.planFailed", "Vorschau für den Wächter fehlgeschlagen, „abgedeckt“ ist daher unsicher: {0}", message);
+
+    public static string CheckRecipeIdInvalid(string id) => F("patch.check.recipeIdInvalid", "Die Rezept-Id „{0}“ ist leer oder ungültig (nur a-z, 0-9 und _)", id);
+
+    public static string CheckRuleIdInvalid(string id) => F("patch.check.ruleIdInvalid", "Die Regel-Id „{0}“ ist leer oder ungültig (nur Buchstaben, Ziffern und _)", id);
+
+    public static string CheckRuleIdDuplicate(string id) => F("patch.check.ruleIdDuplicate", "Die Regel-Id „{0}“ kommt mehrfach vor", id);
+
+    public static string CheckMarkerLine(string field) => F("patch.check.markerLine", "Feld „{0}“ enthält eine Zeile, die mit # PMT- beginnt (für PMT reserviert)", field);
+
+    public static string CheckColumnName(string name, string problem) => F("patch.check.columnName", "Spaltenname „{0}“: {1}", name, problem);
+
+    public static string CheckLookupFilesEmpty => T("patch.check.lookupFilesEmpty", "Die Nachschlage-Regel hat keine Dateien (files)");
+
+    public static string CheckLookupMatchEmpty => T("patch.check.lookupMatchEmpty", "Die Nachschlage-Regel hat keine Anweisung (match)");
+
+    public static string CheckRowKeyEmpty => T("patch.check.rowKeyEmpty", "Der Schlüssel der Zeile ist leer");
+
+    public static string CheckRowKeyDuplicate(string key) => F("patch.check.rowKeyDuplicate", "Der Zeilenschlüssel „{0}“ kommt mehrfach vor", key);
+
+    public static string CheckRowUnknownColumn(string column) => F("patch.check.rowUnknownColumn", "Wert für „{0}“, aber das ist keine eigene Spalte", column);
+
+    public static string CheckFieldEmpty(string field) => F("patch.check.fieldEmpty", "Pflichtfeld „{0}“ ist leer", field);
+
+    public static string CheckFilesEmpty => T("patch.check.filesEmpty", "Feld „files“ ist leer: Die Regel tut nichts, bis Dateien eingetragen sind");
+
+    public static string CheckRegexInvalid(string field, string message) => F("patch.check.regexInvalid", "Feld „{0}“ ist kein gültiger regulärer Ausdruck: {1}", field, message);
+
+    public static string CheckSectionProblem(string field, string section) => F("patch.check.sectionProblem", "Feld „{0}“: Abschnitt „{1}“ hat keinen passenden Anfang oder kein passendes Ende", field, section);
+
+    public static string CheckPresetUnknown(string preset) => F("patch.check.presetUnknown", "Unbekannte Vorlage „{0}“", preset);
+
+    public static string CheckIdChanged(string id, string previous) => F("patch.check.idChanged", "Die Rezept-Id „{0}“ weicht von der bisherigen „{1}“ ab; das Gedächtnis und die erzeugten Bereiche gehören zur alten Id", id, previous);
+
+    public static string CheckDroppedRule(string id) => F("patch.check.droppedRule", "Regel „{0}“ fehlt im neuen Rezept, hat aber schon Ausgabe in der Mod (Gedächtnis, Listeneinträge oder erzeugter Bereich); sie müsste bleiben", id);
+
+    public static string CheckUnknownProperty(string property) => F("patch.check.unknownProperty", "Unbekannte Eigenschaft „{0}“ wird ignoriert", property);
+
+    public static string CheckGlobNoMatch(string pattern) => F("patch.check.globNoMatch", "„{0}“ trifft keine Datei in Mod oder Spiel", pattern);
+
+    public static string AiNoFiles => T("patch.ai.noFiles", "Die Antwort enthält keine Dateiblöcke (<<<FILE pfad>>> ... <<<END>>>).");
+
+    public static string AiNoRecipeJson => T("patch.ai.noRecipeJson", "Die Antwort enthält kein recipe.json.");
+
+    public static string AiBlockWithoutEnd(string path) => F("patch.ai.blockWithoutEnd", "Der Block für \"{0}\" endet nicht mit <<<END>>>.", path);
+
+    public static string AiFileNotAllowed(string path) => F("patch.ai.fileNotAllowed", "Datei \"{0}\" ist nicht erlaubt (nur recipe.json).", path);
+
+    public static string AiFileDuplicate(string path) => F("patch.ai.fileDuplicate", "Datei \"{0}\" kommt doppelt vor.", path);
+
+    public static string AiFolderNoRecipeJson(string folder) => F("patch.ai.folderNoRecipeJson", "Im Ordner \"{0}\" liegt kein recipe.json.", folder);
+
+    public static string AiJsonProblem(string message) => F("patch.ai.jsonProblem", "recipe.json: {0}", message);
 
     private static string T(string key, string german) => UiText.Get(key, german);
 

@@ -304,6 +304,18 @@ public sealed class PatchWatcherTests
     }
 
     [Fact]
+    public void Fingerprint_ignores_the_description()
+    {
+        // Die Erklärung ändert kein Ergebnis: Tippen darin darf den Scan nicht veralten lassen (wie Regelnamen).
+        var recipe = WatchRecipe("angkor_wat_01");
+        var before = PatchWatcher.Fingerprint(recipe);
+
+        recipe.Description = "Neue Erklärung";
+
+        Assert.Equal(before, PatchWatcher.Fingerprint(recipe));
+    }
+
+    [Fact]
     public void Scanned_files_skip_excluded_segments()
     {
         Assert.True(PatchWatcher.IsScannedFile("common/buildings/a.txt"));

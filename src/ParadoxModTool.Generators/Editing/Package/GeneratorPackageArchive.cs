@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ParadoxModTool.Localization;
+using ParadoxModTool.Patches;
 
 namespace ParadoxModTool.Generators.Editing.Package;
 
@@ -280,7 +281,7 @@ public static class GeneratorPackageArchive
             Directory.Delete(templates, recursive: true);
         }
 
-        PackageStore.CopyTree(Path.Combine(source, "templates"), templates);
+        FolderCopy.CopyTree(Path.Combine(source, "templates"), templates);
         Directory.CreateDirectory(templates);
 
         var newStates = Path.Combine(source, "states");
@@ -301,7 +302,7 @@ public static class GeneratorPackageArchive
             }
         }
 
-        PackageStore.CopyTree(Path.Combine(source, "assets"), Path.Combine(target, "assets"));
+        FolderCopy.CopyTree(Path.Combine(source, "assets"), Path.Combine(target, "assets"));
     }
 
     private static JsonObject ReadPackageJson(ZipArchive zip)

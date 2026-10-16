@@ -466,6 +466,7 @@ public static class SettingsTexts
         "patch.nextDiff" => T("settings.hotkey.patch.nextDiff", "Nächster Unterschied"),
         "patch.previousDiff" => T("settings.hotkey.patch.previousDiff", "Vorheriger Unterschied"),
         "patch.undoTake" => T("settings.hotkey.patch.undoTake", "Letzte Zurücknahme rückgängig machen"),
+        "aiRecipe.guide" => T("settings.hotkey.aiRecipe.guide", "Anleitung beim Kapitel \"Mit KI erstellen\" öffnen (Rezept mit KI erstellen)"),
         "generator.applyCount" => T("settings.hotkey.generator.applyCount", "Eingegebene Anzahl übernehmen (im Anzahl-Feld)"),
         "generator.take" => T("settings.hotkey.generator.take", "Markierte Zeilen in der Vorschau zurücknehmen"),
         "generator.clearMarks" => T("settings.hotkey.generator.clearMarks", "Markierung aufheben"),

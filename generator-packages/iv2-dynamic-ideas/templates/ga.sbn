@@ -77,6 +77,9 @@ iv2_ga_select_national_idea_{{ id }} = {
 					add = iv2_progress_cost_increase
 				}
 			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
+			}
 		}
 	}
 }
@@ -139,6 +142,9 @@ iv2_ga_select_national_idea_{{ id }}{{ sfx l.index }} = {
 					name = iv2_var_national_idea_innovation_cost_expensive_{{ category }}
 					add = iv2_innovation_cost_increase
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}
@@ -203,6 +209,9 @@ iv2_ga_deselect_nat_idea_{{ id }} = {
 					name = iv2_var_national_idea_current
 					subtract = 1
 				}
+			}
+			hidden_effect = {
+				if = { limit = { is_ai = no } iv2_recalc_alerts = yes }
 			}
 		}
 	}

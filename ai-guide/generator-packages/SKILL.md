@@ -47,7 +47,7 @@ Answer in the modder's language. Keep file contents (keys, paths, templates) in 
    Use `{{ tag }}` (your key field id) and loops like `{{ for i in ideas }}`. Watch whitespace: `~}}` removes the
    following line break *and* the next line's indentation, so start indented lines with an expression or keep the tag
    on the same line (see the example templates).
-6. **Optional:** a `read` section so PMT can read existing sets back from the mod ("Aus Mod einlesen", and the
+6. **Optional:** a `read` section so PMT can read existing sets back from the mod ("Read from mod" / "Aus Mod einlesen", and the
    `roundtrip` check below), and `lookups` when names should come from a database. Both are described in
    `reference.md`. Add `read` whenever the example contains the elements in one file with numbered block keys:
    it is the best way to prove the package is right.
@@ -60,9 +60,10 @@ Answer in the modder's language. Keep file contents (keys, paths, templates) in 
        match and what they read.
      - `pmt-generator roundtrip <package folder> <mod folder> <key>` — reads the set from the mod, generates it again and
        compares every file. Goal: every line `same`. Fix templates until it is.
-   - If you cannot run programs, ask the modder to import your answer in PMT ("Paket mit KI erstellen", tab
-     "Ergebnis"), press "Prüfen", run "Probelauf" in the "Einlesen" mask and "Im Generator testen", and to paste the
-     messages back to you ("Fehler für die KI kopieren").
+   - If you cannot run programs, ask the modder to import your answer in PMT ("Create package with AI", tab
+     "Result"), press "Check", run "Probe run" in the "Read back" mask and "Test in generator", and to paste the
+     messages back to you ("Copy errors for the AI"). German UI: "Paket mit KI erstellen", "Ergebnis", "Prüfen",
+     "Probelauf", "Einlesen", "Im Generator testen", "Fehler für die KI kopieren".
 8. **Check before you answer**, even when you cannot run programs:
    - Every name inside `{{ }}` is the id of a field or level you defined, a loop variable, or a built-in name from
      `reference.md` ("Templates"). A name that exists nowhere (for example `groupName` without a field `groupName`)

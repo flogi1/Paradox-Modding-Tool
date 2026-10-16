@@ -2,7 +2,10 @@ using ParadoxModTool.Localization;
 
 namespace ParadoxModTool.App;
 
-/// <summary>Texte des Fensters "Paket mit KI erstellen" (Keys <c>aiPackage.*</c>); der deutsche Text ist der Rückfall.</summary>
+/// <summary>
+/// Texte des Fensters "Paket mit KI erstellen" (Keys <c>aiPackage.*</c>); der deutsche Text ist der Rückfall.
+/// Die allgemeinen Texte nutzt auch das KI-Fenster anderer Arten (<see cref="AiTaskWindow"/>).
+/// </summary>
 internal static class AiPackageTexts
 {
     public static string Title => T("aiPackage.title", "Paket mit KI erstellen");
@@ -43,6 +46,18 @@ internal static class AiPackageTexts
     public static string ChosenTip => T("aiPackage.chosen.tip", "Häkchen entfernen nimmt die Datei wieder aus dem Auftrag.");
 
     public static string ChosenNone => T("aiPackage.chosen.none", "Noch keine Datei angehakt.");
+
+    public static string FilesFromMod => T("aiPackage.filesFromMod", "Mod-Dateien");
+
+    public static string FilesFromModTip => T("aiPackage.filesFromMod.tip", "Zeigt die Dateien der gewählten Mod.");
+
+    public static string FilesFromGame => T("aiPackage.filesFromGame", "Spieldateien");
+
+    public static string FilesFromGameTip => T("aiPackage.filesFromGame.tip", "Zeigt die Textdateien des Spiels; das erste Lesen dauert einige Sekunden.");
+
+    public static string ChosenModPrefix => T("aiPackage.chosenModPrefix", "Mod: ");
+
+    public static string ChosenGamePrefix => T("aiPackage.chosenGamePrefix", "Spiel: ");
 
     public static string ClearChosen => T("aiPackage.clearChosen", "Alle abwählen");
 
@@ -192,6 +207,9 @@ internal static class AiPackageTexts
         "Für KIs mit Dateizugriff: Anleitung, task.md mit den Prüfbefehlen, die Vorbild-Dateien in example/ und das offene Paket in package/.");
 
     public static string Copied => T("aiPackage.copied", "Auftrag in die Zwischenablage kopiert.");
+
+    public static string GameFilesDropped(string files) => F("aiPackage.gameFilesDropped",
+        "Der Spielordner hat sich geändert. Diese angehakten Spieldateien gibt es im neuen Ordner nicht, sie sind jetzt abgewählt:\n\n{0}\n\nBitte die Auswahl prüfen und den Auftrag dann noch einmal kopieren oder speichern.", files);
 
     public static string Saved(string path) => F("aiPackage.saved", "Gespeichert: {0}", path);
 

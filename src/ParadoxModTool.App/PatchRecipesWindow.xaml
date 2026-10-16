@@ -27,9 +27,14 @@
             </Button>
             <TextBlock Grid.Column="3" Text="{x:Static local:PatchRecipeTexts.RecipeLabel}" VerticalAlignment="Center" Margin="0,0,4,0" />
             <ComboBox Grid.Column="4" x:Name="RecipeBox" DisplayMemberPath="Name" MinWidth="280" SelectionChanged="RecipeBox_SelectionChanged" />
-            <Button Grid.Column="5" x:Name="NewRecipeButton" Click="NewRecipe_Click" Padding="8,2" Margin="6,0,0,0">
-                <TextBlock Text="{x:Static local:PatchRecipeTexts.NewRecipe}" />
-            </Button>
+            <StackPanel Grid.Column="5" Orientation="Horizontal">
+                <Button x:Name="NewRecipeButton" Click="NewRecipe_Click" Padding="8,2" Margin="6,0,0,0">
+                    <TextBlock Text="{x:Static local:PatchRecipeTexts.NewRecipe}" />
+                </Button>
+                <Button x:Name="AiRecipeButton" Click="AiRecipe_Click" Padding="8,2" Margin="4,0,0,0" ToolTip="{x:Static local:PatchRecipeTexts.AiOpenTip}">
+                    <TextBlock Text="{x:Static local:PatchRecipeTexts.AiOpen}" />
+                </Button>
+            </StackPanel>
             <Button Grid.Column="6" x:Name="RenameRecipeButton" Click="RenameRecipe_Click" Padding="8,2" Margin="4,0,0,0">
                 <TextBlock Text="{x:Static local:PatchRecipeTexts.Rename}" />
             </Button>
@@ -41,6 +46,15 @@
                 <TextBlock Text="{x:Static local:PatchRecipeTexts.Guide}" />
             </Button>
         </Grid>
+        <!-- Erklärung des Rezepts in einfachen Worten (von der KI oder von Hand); aufgeklappt, sobald das Rezept eine hat. -->
+        <Expander DockPanel.Dock="Top" x:Name="DescriptionExpander" Margin="0,0,0,6" ToolTip="{x:Static local:PatchRecipeTexts.DescriptionTip}">
+            <Expander.Header>
+                <TextBlock Text="{x:Static local:PatchRecipeTexts.Description}" FontWeight="SemiBold" />
+            </Expander.Header>
+            <TextBox x:Name="DescriptionBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="200"
+                     VerticalScrollBarVisibility="Auto" Margin="0,4,0,0" TextChanged="DescriptionBox_TextChanged"
+                     ToolTip="{x:Static local:PatchRecipeTexts.DescriptionTip}" />
+        </Expander>
         <TextBlock DockPanel.Dock="Bottom" x:Name="StatusText" Margin="2,6,2,0" TextTrimming="CharacterEllipsis" />
         <TabControl x:Name="Tabs">
             <TabItem x:Name="TableTab">
