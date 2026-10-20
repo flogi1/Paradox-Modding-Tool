@@ -263,4 +263,76 @@ public class EffectiveEntryResolverTests : CompatchTestBase
         cts.Cancel();
         Assert.ThrowsAny<OperationCanceledException>(() => EffectiveEntryResolver.Resolve(Input(), null, cts.Token));
     }
+
+    private CompatchInput StellarisInput(bool lastWinsInLoadOrder = true) => new()
+    {
+        VanillaFolder = VanillaDir,
+        ModAFolder = ADir,
+        ModBFolder = BDir,
+        Rules = new OverrideRules(new[] { new OverrideRule("common/buildings", OverrideBehavior.LastWins) }) { LastWinsInLoadOrder = lastWinsInLoadOrder },
+        KeyOperators = Array.Empty<string>(),
+    };
+
+    private static EntryAddress StellarisFarm => EntryAddress.ForKey("common/buildings", "farm");
+
+    // Stellaris (Wiki "Modding"): Dateien laden nach Namen über Vanilla und Mods; bei LIOS gilt die zuletzt geladene Datei.
+    [Fact]
+    public void Stellaris_last_loaded_file_wins_over_playset_order()
+    {
+        PutA("common/buildings/zz_a.txt", "farm = { cost = 1 }\n");
+        PutB("common/buildings/00_b.txt", "farm = { cost = 2 }\n");
+
+        Assert.Equal(MergeSide.A, EffectiveEntryResolver.Resolve(StellarisInput()).Addresses[StellarisFarm].NoPatch.Side);
+        Assert.Equal(MergeSide.B, EffectiveEntryResolver.Resolve(StellarisInput(lastWinsInLoadOrder: false)).Addresses[StellarisFarm].NoPatch.Side);
+    }
+
+    [Fact]
+    public void Stellaris_vanilla_in_a_later_file_stays_in_effect()
+    {
+        PutVanilla("common/buildings/zz_vanilla.txt", "farm = { cost = 10 }\n");
+        PutA("common/buildings/00_a.txt", "farm = { cost = 1 }\n");
+        PutB("common/buildings/01_b.txt", "farm = { cost = 2 }\n");
+
+        var info = EffectiveEntryResolver.Resolve(StellarisInput()).Addresses[StellarisFarm];
+
+        Assert.Equal(MergeSide.Vanilla, info.A.Side);
+        Assert.Equal(MergeSide.Vanilla, info.NoPatch.Side);
+    }
+
+    // Stellaris-Mods binden auf oberster Ebene Skripte ein (inline_script = { … }); das ist keine Definition und kein eigener Eintrag.
+    [Fact]
+    public void Top_level_inline_script_is_no_key_address()
+    {
+        PutA("common/buildings/a.txt", "inline_script = { script = x }\nfarm = { cost = 1 }\n");
+        PutB("common/buildings/b.txt", "inline_script = { script = y }\nfarm = { cost = 2 }\n");
+
+        var resolved = EffectiveEntryResolver.Resolve(StellarisInput());
+
+        Assert.Contains(StellarisFarm, resolved.Addresses.Keys);
+        Assert.DoesNotContain(EntryAddress.ForKey("common/buildings", "inline_script"), resolved.Addresses.Keys);
+    }
+
+    // Stellaris: einzelne Defines folgen derselben Dateireihenfolge wie "zuletzt geladen gewinnt" (Mod-Kompatibilität und Kompatch einig).
+    [Theory]
+    [InlineData(false, MergeSide.B)]
+    [InlineData(true, MergeSide.A)]
+    public void Stellaris_defines_follow_the_file_load_order(bool caseSensitive, MergeSide expected)
+    {
+        var input = new CompatchInput
+        {
+            VanillaFolder = VanillaDir,
+            ModAFolder = ADir,
+            ModBFolder = BDir,
+            Rules = new OverrideRules(new[] { new OverrideRule("common/defines", OverrideBehavior.PartialKeys) }) { LastWinsInLoadOrder = true, LoadOrderCaseSensitive = caseSensitive },
+            KeyOperators = Array.Empty<string>(),
+        };
+        PutA("common/defines/_a.txt", "NGameplay = { POLICY_YEARS = 5 }\n");
+        PutB("common/defines/Zz.txt", "NGameplay = { POLICY_YEARS = 7 }\n");
+
+        var resolved = EffectiveEntryResolver.Resolve(input);
+        var info = resolved.Addresses.Values.Single(a => a.Address.Scope == "common/defines" && a.Address.Kind == AddressKind.Key);
+
+        // ASCII in Kleinschreibung: "_a.txt" lädt vor "zz.txt", also gilt B. Mit Groß-/Kleinschreibung (Stellaris, gemessen 2026-10-16) lädt "Zz" vor "_", also gilt A.
+        Assert.Equal(expected, info.NoPatch.Side);
+    }
 }

@@ -23,7 +23,11 @@ public sealed record GuiPropertyRow(
     int OverriddenCount,
     bool Unresolved,
     bool IsBlock,
-    ResolvedProperty Source);
+    ResolvedProperty Source)
+{
+    /// <summary>Bedingung des <c>if_resolution</c>-Blocks (EU IV), aus dem der Wert kommt; sonst <see langword="null"/>.</summary>
+    public string? Condition { get; init; }
+}
 
 /// <summary>Zeilen für das Eigenschaftenfeld: wirksamer Wert, Gruppe und Herkunft ("hier gesetzt", "geerbt von …").</summary>
 public static class GuiPropertyRows
@@ -97,7 +101,7 @@ public static class GuiPropertyRows
             .Select(x => x.Row)
             .ToList();
 
-    private static GuiPropertyRow ToRow(ResolvedProperty property)
+    internal static GuiPropertyRow ToRow(ResolvedProperty property)
     {
         var value = property.Role switch
         {

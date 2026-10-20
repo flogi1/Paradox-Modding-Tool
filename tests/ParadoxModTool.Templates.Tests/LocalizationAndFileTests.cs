@@ -290,6 +290,38 @@ public class TemplateFileWriterTests : IDisposable
         Assert.NotEqual(0xEF, bytes[0]);
         Assert.Equal("a = 1\n\nb = 2\n", File.ReadAllText(path));
     }
+
+    [Fact]
+    public void New_code_files_use_the_given_encoding()
+    {
+        // Stellaris: neue Skriptdateien ohne BOM (Spielprofil "utf-8")
+        var path = Path.Combine(_dir, "common", "x.txt");
+
+        TemplateFileWriter.AppendCodeToFile(path, "b = 2", new UTF8Encoding(false));
+
+        Assert.NotEqual(0xEF, File.ReadAllBytes(path)[0]);
+    }
+
+    [Fact]
+    public void New_code_files_without_given_encoding_keep_the_bom()
+    {
+        var path = Path.Combine(_dir, "y.txt");
+
+        TemplateFileWriter.AppendCodeToFile(path, "b = 2");
+
+        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, File.ReadAllBytes(path).Take(3));
+    }
+
+    [Fact]
+    public void Existing_files_ignore_the_given_encoding()
+    {
+        var path = Path.Combine(_dir, "z.txt");
+        File.WriteAllText(path, "a = 1\n", new UTF8Encoding(true));
+
+        TemplateFileWriter.AppendCodeToFile(path, "b = 2", new UTF8Encoding(false));
+
+        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, File.ReadAllBytes(path).Take(3));
+    }
 }
 
 public class TemplateStoreTests : IDisposable

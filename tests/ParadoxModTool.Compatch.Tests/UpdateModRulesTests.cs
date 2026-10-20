@@ -14,6 +14,22 @@ public class UpdateModRulesTests : UpdateModTestBase
     }
 
     [Fact]
+    public void Update_rules_keep_last_wins_load_order()
+    {
+        var rules = new ParadoxModTool.ModCompat.OverrideRules(new[] { new ParadoxModTool.ModCompat.OverrideRule("common/buildings", ParadoxModTool.ModCompat.OverrideBehavior.LastWins) }) { LastWinsInLoadOrder = true };
+
+        Assert.True(UpdateModRules.From(rules).LastWinsInLoadOrder);
+    }
+
+    [Fact]
+    public void Update_rules_keep_case_sensitive_load_order()
+    {
+        var rules = new ParadoxModTool.ModCompat.OverrideRules(new[] { new ParadoxModTool.ModCompat.OverrideRule("common/buildings", ParadoxModTool.ModCompat.OverrideBehavior.LastWins) }) { LoadOrderCaseSensitive = true };
+
+        Assert.True(UpdateModRules.From(rules).LoadOrderCaseSensitive);
+    }
+
+    [Fact]
     public void Comments_and_namespace_stay_byte_identical()
     {
         const string Events = "in_game/events/test.txt";

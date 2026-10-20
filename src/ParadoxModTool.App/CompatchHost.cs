@@ -58,5 +58,5 @@ public sealed record CompatchHost(
 
     /// <summary>Kodierung PMT-eigener Dateien je Endung aus dem Spielprofil (Ruling 13).</summary>
     public string EncodingFor(string extension) =>
-        Profile?.FileTypes.FirstOrDefault(f => string.Equals(f.Extension, extension, StringComparison.OrdinalIgnoreCase))?.DefaultEncoding ?? "utf-8-bom";
+        ParadoxModTool.GameProfiles.ModFileEncoding.NewFileEncodingName(Profile, extension);
 }

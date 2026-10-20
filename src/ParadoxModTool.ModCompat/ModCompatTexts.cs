@@ -47,6 +47,8 @@ public static class ModCompatTexts
 
     public static string KindPrefixActsAsReplace => T("modcompat.kind.prefixActsAsReplace", "INJECT wirkt wie REPLACE");
 
+    public static string KindLosesToVanilla => T("modcompat.kind.losesToVanilla", "Verliert gegen Vanilla");
+
     public static string SuggestionNeedsCompatch => T("modcompat.suggestion.needsCompatch", "Kompatibilitätspatch nötig");
 
     public static string SuggestionReviewBothSides => T("modcompat.suggestion.reviewBothSides", "Beide Seiten prüfen");
@@ -98,6 +100,10 @@ public static class ModCompatTexts
     public static string FindingReplacePathNoEffect(string mod, string entry, string root, string rest) => F("modcompat.finding.replacePathNoEffect", "Der replace_path-Eintrag {1} der Mod \"{0}\" wirkt im Spiel nicht, weil replace_path die Ordner ohne {2}/ davor nennt. Schreibe {3}.", mod, entry, root, rest);
 
     public static string FindingPrefix(string mod, string message) => F("modcompat.finding.prefix", "Mod \"{0}\": {1}", mod, message);
+
+    public static string FindingLosesToVanillaLater(string mod, string key, string modPath, string vanillaPath, string example) => F("modcompat.finding.losesToVanillaLater", "Die Definition von \"{1}\" in der Mod \"{0}\" ({2}) wirkt nicht: Vanilla definiert den Schlüssel in {3}, und diese Datei lädt später; die zuletzt geladene Definition gewinnt. Benenne die Datei der Mod so, dass sie danach lädt (z. B. {4}), oder gib ihr den Namen der Vanilla-Datei; dann ersetzt sie die ganze Vanilla-Datei und muss deren übrige Einträge mit enthalten.", mod, key, modPath, vanillaPath, example);
+
+    public static string FindingLosesToVanillaEarlier(string mod, string key, string modPath, string vanillaPath, string example) => F("modcompat.finding.losesToVanillaEarlier", "Die Definition von \"{1}\" in der Mod \"{0}\" ({2}) wirkt nicht: Vanilla definiert den Schlüssel in {3}, und diese Datei lädt früher; die zuerst geladene Definition gewinnt. Benenne die Datei der Mod so, dass sie davor lädt (z. B. {4}), oder gib ihr den Namen der Vanilla-Datei; dann ersetzt sie die ganze Vanilla-Datei und muss deren übrige Einträge mit enthalten.", mod, key, modPath, vanillaPath, example);
 
     public static string PrefixNoEffect(string prefix, string folder, string key) => F("modcompat.prefix.noEffect", "{0} wirkt im Ordner {1} nicht: Das Spiel kennt dort keine Präfixe und liest \"{2}\" als eigenen Schlüssel.", prefix, folder, key);
 

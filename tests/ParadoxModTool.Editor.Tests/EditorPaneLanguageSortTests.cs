@@ -20,6 +20,11 @@ public sealed class EditorPaneLanguageSortTests
     public void RestoringAfterALanguageChangeSortsByTheNewCategoryNames() => Sta.Run(() =>
     {
         var locales = FindLocales();
+
+        // Danach gilt wieder die Sprache von vorher, nicht Deutsch. War noch nichts geladen (leere Tabelle: Rückfalltexte aus dem Code), bleibt es so:
+        // dieselbe Sprache aus einem Ordner ohne Sprachdateien ergibt eine ebenso leere Tabelle.
+        var previous = UiText.Current;
+        var restoreFrom = ReferenceEquals(previous, UiTextTable.Empty) ? Path.Combine(locales, "_no_locales_" + Guid.NewGuid().ToString("N")) : locales;
         try
         {
             UiText.Load(locales, "de");
@@ -33,7 +38,7 @@ public sealed class EditorPaneLanguageSortTests
         }
         finally
         {
-            UiText.Load(locales, UiText.SourceLanguage);
+            UiText.Load(restoreFrom, previous.Language);
         }
     });
 

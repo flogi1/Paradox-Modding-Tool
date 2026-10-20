@@ -16,6 +16,12 @@ public sealed record PatchContext(
     IReadOnlyList<string>? HiddenVanillaFolders = null,
     IReadOnlyCollection<string>? ReplacePathRoots = null)
 {
+    /// <summary>
+    /// Ob ganz neue Dateien mit dieser Endung (mit Punkt) ein BOM bekommen, aus dem Spielprofil (Stellaris: Skript, .gui und .gfx ohne).
+    /// Ohne Angabe bekommen sie eins; siehe <see cref="PatchWorkspace.HasBomOf"/>.
+    /// </summary>
+    public Func<string, bool>? NewFileHasBom { get; init; }
+
     public string EffectiveRecipesFolder => RecipesFolder ?? PatchRecipeStore.Folder(ModRoot);
 }
 

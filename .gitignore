@@ -31,3 +31,6 @@ obj/
 
 # Verknuepfung auf die gebaute exe (create-shortcut.ps1, lokal erzeugt)
 /ParadoxModTool.lnk
+
+# Python-Bytecode (Probe-Skripte unter docs)
+__pycache__/

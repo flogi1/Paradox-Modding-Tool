@@ -54,6 +54,9 @@ public partial class ScriptDocsWindow : Window
             KindPanel.Children.Add(box);
         }
 
+        // Dynamic Variables gibt es nur bei Hearts of Iron IV; der Schalter erscheint erst, wenn die Datenbank welche enthält.
+        _kindBoxes[ScriptDocKind.DynamicVariable].Visibility = Visibility.Collapsed;
+
         // Tippen im Suchfeld filtert erst kurz nach der letzten Eingabe, damit die Liste nicht bei jedem Zeichen neu aufgebaut wird.
         _filterTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         _filterTimer.Tick += (_, _) =>
@@ -80,6 +83,8 @@ public partial class ScriptDocsWindow : Window
         {
             var result = await _service.RefreshAsync();
             _database = result.Database;
+            _kindBoxes[ScriptDocKind.DynamicVariable].Visibility =
+                _database.Entries.Any(e => e.Kind == ScriptDocKind.DynamicVariable) ? Visibility.Visible : Visibility.Collapsed;
             ClearDetails();
             FillScopeCombo();
             _loading = false;
@@ -132,7 +137,9 @@ public partial class ScriptDocsWindow : Window
 
         HintText.Text = result.Folder is null
             ? MiscWindowTexts.ScriptDocsHintFolderUnknown
-            : MiscWindowTexts.ScriptDocsHintNoLogs(result.Folder);
+            : result.IsInstallSourced
+                ? MiscWindowTexts.ScriptDocsHintNoInstallDocs(result.Folder)
+                : MiscWindowTexts.ScriptDocsHintNoLogs(result.Folder);
         HintBorder.Visibility = Visibility.Visible;
     }
 

@@ -39,8 +39,20 @@ public static class GuiContexts
     public static string GuiFolder(string modRoot, string context) => Path.Combine(modRoot, context, "gui");
 
     /// <summary>Liegt die Datei im Installationsordner des Spiels (<c>game</c>, <c>jomini</c> oder <c>clausewitz</c>)?</summary>
-    public static bool IsVanillaPath(string installDirectory, string path)
+    public static bool IsVanillaPath(string installDirectory, string path) => IsVanillaPath(installDirectory, path, GuiLayout.Default);
+
+    /// <summary>
+    /// Klassisch (HOI IV, EU IV): alles unter dem Installationsordner ist Vanilla (auch <c>interface/</c> direkt darin und DLC-Ordner); Jomini wie
+    /// bisher <c>game</c>, <c>jomini</c> und <c>clausewitz</c>.
+    /// </summary>
+    public static bool IsVanillaPath(string installDirectory, string path, GuiLayout layout)
     {
+        if (layout.IsClassic)
+        {
+            return Path.GetFullPath(path).StartsWith(
+                Path.GetFullPath(installDirectory).TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+
         var full = Path.GetFullPath(path);
         return new[] { "game", "jomini", "clausewitz" }.Any(folder =>
             full.StartsWith(Path.GetFullPath(Path.Combine(installDirectory, folder)).TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));

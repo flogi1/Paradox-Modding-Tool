@@ -154,7 +154,9 @@ public partial class ModCompatWindow
         }
 
         var participants = BuildParticipants();
-        if (participants.Count(p => !p.IsVanilla) < 2)
+        // Stellaris: auch eine einzelne Mod kann gegen eine Vanilla-Datei verlieren, die nach Ladereihenfolge gewinnt (Fundart LosesToVanilla).
+        var minimum = _host.Profile is { LastWinsInLoadOrder: true } ? 1 : 2;
+        if (participants.Count(p => !p.IsVanilla) < minimum)
         {
             StatusText.Text = ModCompatWindowTexts.NeedTwoMods;
             return;

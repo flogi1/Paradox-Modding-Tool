@@ -17,16 +17,32 @@ public sealed class ScopeService
     private readonly ScopeRulesStore _store;
     private readonly Func<IReadOnlyList<string>> _getVanillaRoots;
     private readonly Func<string?> _getDefaultEventType;
+    private readonly Func<IReadOnlyDictionary<string, string>?> _getEventBlockScopes;
+    private readonly Func<bool> _getNumericKeysChangeScope;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private ScopeRules? _rules;
 
     /// <param name="getDefaultEventType">Art der Events ohne <c>type</c> aus dem Spielprofil (CK III: character_event), sonst <see langword="null"/>.</param>
-    public ScopeService(string rulesFilePath, Func<IReadOnlyList<string>> getVanillaRoots, Func<string?>? getDefaultEventType = null)
+    /// <param name="getEventBlockScopes">Event-Blöcke mit Root-Scope aus dem Spielprofil (Stellaris: country_event → country), sonst <see langword="null"/>.</param>
+    /// <param name="getNumericKeysChangeScope">Zahlen als Blockschlüssel wechseln den Scope (Spielprofil <c>numericKeysChangeScope</c>).</param>
+    public ScopeService(
+        string rulesFilePath,
+        Func<IReadOnlyList<string>> getVanillaRoots,
+        Func<string?>? getDefaultEventType = null,
+        Func<IReadOnlyDictionary<string, string>?>? getEventBlockScopes = null,
+        Func<bool>? getNumericKeysChangeScope = null)
     {
         _store = new ScopeRulesStore(rulesFilePath);
         _getVanillaRoots = getVanillaRoots;
         _getDefaultEventType = getDefaultEventType ?? (() => null);
+        _getEventBlockScopes = getEventBlockScopes ?? (() => null);
+        _getNumericKeysChangeScope = getNumericKeysChangeScope ?? (() => false);
     }
+
+    /// <summary>Gleichen die gelernten Event-Blöcke denen des Profils? Reihenfolge egal; fehlend und leer gelten als gleich.</summary>
+    private static bool SameEventBlocks(IReadOnlyDictionary<string, string> learned, IReadOnlyDictionary<string, string>? profile) =>
+        learned.Count == (profile?.Count ?? 0)
+        && (profile is null || profile.All(p => learned.TryGetValue(p.Key, out var scope) && scope == p.Value));
 
     /// <summary>Namen der Vanilla-Script-Values aus den aktuellen Regeln (Wert-Vorschläge im Scope Finder); leer, solange keine Regeln geladen sind.</summary>
     public IReadOnlyList<string> ScriptValues => _rules?.ScriptValues ?? (IReadOnlyList<string>)Array.Empty<string>();
@@ -49,7 +65,10 @@ public sealed class ScopeService
             _rules ??= await Task.Run(_store.TryLoad);
 
             var defaultEventType = _getDefaultEventType();
-            var learn = canLearn && (force || _rules is null || _rules.DocsImportId != importId || _rules.DefaultEventType != defaultEventType);
+            var eventBlockScopes = _getEventBlockScopes();
+            var numericKeys = _getNumericKeysChangeScope();
+            var learn = canLearn && (force || _rules is null || _rules.DocsImportId != importId || _rules.DefaultEventType != defaultEventType
+                || !SameEventBlocks(_rules.EventBlockScopes, eventBlockScopes) || _rules.NumericKeysChangeScope != numericKeys);
             if (canLearn && !learn && _rules is not null)
             {
                 var current = await Task.Run(() => ScopeRuleLearner.ComputeFingerprint(ScopeRuleLearner.EnumerateFiles(roots)));
@@ -60,7 +79,7 @@ public sealed class ScopeService
             var learned = false;
             if (learn)
             {
-                var result = await Task.Run(() => ScopeRuleLearner.Learn(roots, db, importId, DateTime.UtcNow, cancellation, progress, defaultEventType), cancellation);
+                var result = await Task.Run(() => ScopeRuleLearner.Learn(roots, db, importId, DateTime.UtcNow, cancellation, progress, defaultEventType, eventBlockScopes, numericKeys), cancellation);
                 _rules = result.Rules;
                 duration = result.Duration;
                 learned = true;

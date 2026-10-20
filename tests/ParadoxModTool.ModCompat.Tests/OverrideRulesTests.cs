@@ -124,6 +124,19 @@ public class OverrideRulesTests : TempDirTests
     }
 
     [Fact]
+    public void Stellaris_profile_names_the_root_scope_of_each_event_block()
+    {
+        var profile = GameProfileLoader.LoadFromFile(RepoFile("profiles/stellaris.json"));
+
+        Assert.Null(profile.DefaultEventType);
+        Assert.Equal("country", profile.EventBlockScopes!["country_event"]);
+        Assert.Equal("galactic_object", profile.EventBlockScopes["system_event"]);
+        Assert.Equal("none", profile.EventBlockScopes["event"]);
+        Assert.False(profile.EventBlockScopes.ContainsKey("inline_script"));
+        Assert.Null(GameProfileLoader.LoadFromFile(RepoFile("profiles/ck3.json")).EventBlockScopes);
+    }
+
+    [Fact]
     public void Ck3_profile_ships_the_wiki_table()
     {
         var profile = GameProfileLoader.LoadFromFile(RepoFile("profiles/ck3.json"));
@@ -266,5 +279,96 @@ public class OverrideRulesTests : TempDirTests
         var match = rules.Match("common/scripted_effects/x.txt");
         Assert.Equal(OverrideBehavior.LastWins, match.Behavior);
         Assert.Equal(new[] { "REPLACE" }, match.Operators);
+    }
+
+    [Fact]
+    public void Stellaris_profile_maps_the_wiki_overwrite_table()
+    {
+        var rules = OverrideRules.FromProfile(GameProfileLoader.LoadFromFile(RepoFile("profiles/stellaris.json")));
+
+        Assert.True(rules.LastWinsInLoadOrder);
+        Assert.True(rules.FirstWinsInLoadOrder);
+        Assert.True(rules.LoadOrderCaseSensitive);
+        var buildings = rules.Match("common/buildings/x.txt");
+        Assert.Equal(OverrideBehavior.LastWins, buildings.Behavior);
+        Assert.True(buildings.Certain);
+        Assert.Empty(buildings.Operators ?? Array.Empty<string>());
+        Assert.Equal(OverrideBehavior.FirstWins, rules.Match("common/governments/authorities/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.LastWins, rules.Match("common/governments/civics/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.FirstWins, rules.Match("common/scripted_variables/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.WholeFile, rules.Match("common/traits/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.AppendOnly, rules.Match("common/on_actions/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.AppendOnly, rules.Match("common/random_names/base/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.PartialKeys, rules.Match("common/defines/x.txt").Behavior);
+        Assert.Equal(OverrideBehavior.LastWins, rules.Match("common/diplomacy_economy/x.txt").Behavior);
+
+        // Gemessen 2026-10-16 mit PMT Order Probe A/B und PMT RP Gui Probe.
+        var profile = GameProfileLoader.LoadFromFile(RepoFile("profiles/stellaris.json"));
+        Assert.True(profile.ReplacePathHidesEarlierMods);
+        Assert.Empty(profile.ReplacePathGuiCrashRoots);
+        Assert.Equal("errorlog/stellaris.json", profile.ErrorLogRules);
+        Assert.All(profile.FileTypes.Where(f => f.Extension != ".yml"), f => Assert.Equal("utf-8", f.DefaultEncoding));
+        Assert.Equal("utf-8-bom", profile.FileTypes.Single(f => f.Extension == ".yml").DefaultEncoding);
+
+        var unlisted = rules.Match("common/astral_rifts/x.txt");
+        Assert.Equal("common/astral_rifts", unlisted.Scope);
+        Assert.Equal(OverrideBehavior.LastWins, unlisted.Behavior);
+        Assert.False(unlisted.Certain);
+
+        var events = rules.Match("events/x.txt");
+        Assert.Equal(OverrideBehavior.FirstWins, events.Behavior);
+        Assert.Equal("id", events.KeyField);
+        var gui = rules.Match("interface/x.gui");
+        Assert.Equal(OverrideBehavior.LastWins, gui.Behavior);
+        Assert.False(gui.Certain);
+        Assert.Contains("guiTypes", gui.Unwrap);
+        Assert.Equal(OverrideBehavior.LocalizationKeys, rules.Match("localisation/english/x_l_english.yml").Behavior);
+    }
+
+    /// <summary>Stellaris-Ordner, deren Einträge alle gleich heißen (<c>component_set = { key = … }</c>): der Name steht im Feld (gezählt in 4.5.2).</summary>
+    [Theory]
+    [InlineData("common/component_sets/x.txt", "key")]
+    [InlineData("common/component_templates/x.txt", "key")]
+    [InlineData("common/message_types/x.txt", "key")]
+    [InlineData("common/special_projects/x.txt", "key")]
+    [InlineData("common/global_ship_designs/x.txt", "name")]
+    [InlineData("common/scripted_loc/x.txt", "name")]
+    [InlineData("common/ship_behaviors/x.txt", "name")]
+    public void Stellaris_folders_with_one_block_name_take_the_key_from_a_field(string path, string field)
+    {
+        var rules = OverrideRules.FromProfile(GameProfileLoader.LoadFromFile(RepoFile("profiles/stellaris.json")));
+
+        Assert.Equal(field, rules.Match(path).KeyField);
+    }
+
+    [Fact]
+    public void Stellaris_start_screen_messages_count_as_whole_files()
+    {
+        var rules = OverrideRules.FromProfile(GameProfileLoader.LoadFromFile(RepoFile("profiles/stellaris.json")));
+
+        Assert.Equal(OverrideBehavior.WholeFile, rules.Match("common/start_screen_messages/x.txt").Behavior);
+    }
+
+    /// <summary>
+    /// Stellaris-Unterordner mit eigener Objektart (Lebensstandards, Ratsmitglieder, Fokuskarten …): eigener Bereich, damit der Kompatch dort schreibt,
+    /// wo das Spiel liest; die Reihenfolge der Unterordner ist nicht gemessen, also unsicher.
+    /// </summary>
+    [Theory]
+    [InlineData("common/species_rights/living_standards/x.txt")]
+    [InlineData("common/species_rights/citizenship_types/x.txt")]
+    [InlineData("common/governments/councilors/x.txt")]
+    [InlineData("common/country_focus/focus_cards/x.txt")]
+    [InlineData("common/patrons/callings/x.txt")]
+    [InlineData("common/star_classes/randomizers/x.txt")]
+    [InlineData("common/technology_ages/preftl/x.txt")]
+    public void Stellaris_subfolders_with_their_own_object_type_are_their_own_uncertain_scope(string path)
+    {
+        var rules = OverrideRules.FromProfile(GameProfileLoader.LoadFromFile(RepoFile("profiles/stellaris.json")));
+
+        var match = rules.Match(path);
+
+        Assert.Equal(path[..path.LastIndexOf('/')], match.Scope);
+        Assert.Equal(OverrideBehavior.LastWins, match.Behavior);
+        Assert.False(match.Certain);
     }
 }

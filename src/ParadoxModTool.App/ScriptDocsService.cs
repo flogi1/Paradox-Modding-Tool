@@ -14,7 +14,8 @@ public sealed record ScriptDocsRefreshResult(
     string? Folder,
     bool IsWikiSourced,
     DateTime? WikiFetchedUtc,
-    bool WikiFileFound = true);
+    bool WikiFileFound = true,
+    bool IsInstallSourced = false);
 
 /// <summary>
 /// Hält die Script-Datenbank des geöffneten Spiels (Ablage <c>games\&lt;id&gt;\script-docs</c>) und liest sie bei Bedarf neu ein: aus den
@@ -85,14 +86,15 @@ public sealed class ScriptDocsService
         }
 
         var folder = DocsFolder;
+        var fileNames = profile?.ScriptDocsFiles;
         var result = await Task.Run(() =>
         {
             var database = Storage.Load();
-            var hasLogs = folder is not null && Directory.Exists(folder) && ScriptDocImporter.ReadWriteTicks(folder).Count > 0;
+            var hasLogs = folder is not null && Directory.Exists(folder) && ScriptDocImporter.ReadWriteTicks(folder, fileNames).Count > 0;
             var imported = false;
-            if (hasLogs && ScriptDocImporter.NeedsImport(database, folder!))
+            if (hasLogs && ScriptDocImporter.NeedsImport(database, folder!, fileNames))
             {
-                if (ScriptDocImporter.Import(database, folder!, DateTime.UtcNow) is not null)
+                if (ScriptDocImporter.Import(database, folder!, DateTime.UtcNow, fileNames) is not null)
                 {
                     try
                     {
@@ -107,7 +109,8 @@ public sealed class ScriptDocsService
                 }
             }
 
-            return new ScriptDocsRefreshResult(database, imported, hasLogs, folder, IsWikiSourced: false, WikiFetchedUtc: null);
+            return new ScriptDocsRefreshResult(
+                database, imported, hasLogs, folder, IsWikiSourced: false, WikiFetchedUtc: null, IsInstallSourced: profile?.ScriptDocsBase == "install");
         });
 
         Database = result.Database;

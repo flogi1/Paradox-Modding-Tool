@@ -33,11 +33,20 @@ public partial class MainWindow
         return new GuiBlockLibrary(shipped, game, mod);
     }
 
-    /// <summary>Fenster "Bausteine" für den aktiven Arbeitsbereich; nur mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 10).</summary>
+    /// <summary>
+    /// Fenster "Bausteine" für den aktiven Arbeitsbereich; nur mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 10). Klassisch (HOI IV, EU IV) ein Hinweis
+    /// statt des Fensters (Menü, Kachel, Strg+Umschalt+B): die Bausteine sind Jomini-Code.
+    /// </summary>
     private void OpenGuiBlocks()
     {
         if (!GuiSettings.ToolsEnabled)
         {
+            return;
+        }
+
+        if (!GuiSettings.BlocksOffered)
+        {
+            MessageBox.Show(this, GuiTexts.ClassicBlocksLater, GuiTexts.MenuBlocks, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

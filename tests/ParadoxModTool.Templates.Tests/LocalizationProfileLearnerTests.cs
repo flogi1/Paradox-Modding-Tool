@@ -81,6 +81,18 @@ public class LocalizationProfileLearnerTests : IDisposable
     }
 
     [Fact]
+    public void British_localisation_folder_is_listed()
+    {
+        Write("localisation/english/ideas_l_english.yml", "l_english:\n");
+        Write("localisation/german/ideas_l_german.yml", "l_german:\n");
+
+        var files = LocalizationProfileLearner.EnumerateLocalizationFiles(new[] { _dir }, "english");
+
+        var file = Assert.Single(files);
+        Assert.EndsWith("ideas_l_english.yml", file.Path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Learning_finds_object_and_field_profiles()
     {
         Fixture();

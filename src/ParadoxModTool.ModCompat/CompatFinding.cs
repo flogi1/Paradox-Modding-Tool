@@ -28,6 +28,7 @@ public enum CompatKind
     ReplacePathGuiCrash,
     PrefixNoEffect,
     PrefixActsAsReplace,
+    LosesToVanilla,
 }
 
 public enum CompatSuggestion

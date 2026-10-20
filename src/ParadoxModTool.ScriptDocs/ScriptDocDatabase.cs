@@ -106,7 +106,7 @@ public sealed class ScriptDocDatabase
     /// Ist seit dem letzten Import ein Log neu oder geändert (andere Schreibzeit), oder wurde eine Art noch nie gelesen?
     /// <paramref name="currentWriteTicks"/> enthält die Schreibzeit jeder aktuell vorhandenen Log-Datei.
     /// </summary>
-    public bool NeedsImport(IReadOnlyDictionary<ScriptDocKind, long> currentWriteTicks)
+    public bool NeedsImport(IReadOnlyDictionary<ScriptDocKind, long> currentWriteTicks, IReadOnlyDictionary<string, string>? fileNames = null)
     {
         if (currentWriteTicks.ContainsKey(ScriptDocKind.EventTarget)
             && Imports.Where(i => i.Kinds.Contains(ScriptDocKind.EventTarget)).MaxBy(i => i.Id) is { } eventTargets
@@ -119,7 +119,7 @@ public sealed class ScriptDocDatabase
         {
             var lastImport = Imports.Where(i => i.Kinds.Contains(kind)).OrderByDescending(i => i.Id).FirstOrDefault();
             if (lastImport is null
-                || !lastImport.SourceWriteTicks.TryGetValue(ScriptDocLogFiles.FileNameOf(kind), out var known)
+                || !lastImport.SourceWriteTicks.TryGetValue(ScriptDocLogFiles.FileNameOf(kind, fileNames), out var known)
                 || known != ticks)
             {
                 return true;

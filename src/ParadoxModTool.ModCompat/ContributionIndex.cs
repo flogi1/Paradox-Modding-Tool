@@ -78,7 +78,9 @@ public static class ContributionExtractor
             return result;
         }
 
-        if (GuiUnits.Applies(rule, relativePath))
+        // Klassisches interface (EU IV, Stellaris, HOI IV: guiTypes = { containerWindowType = { name = … } }) hat Hüllen und Namensfeld in der Regel und
+        // geht vor die Jomini-GUI-Einheiten, wie im Kompatch (KeyPartReader); Jomini-GUI-Regeln haben weder Hülle noch Namensfeld.
+        if (GuiUnits.Applies(rule, relativePath) && !RuleKeys.Applies(rule))
         {
             // Je GUI-Typ und Template ein Beitrag; oberste Fenster und Widgets sind keine Schlüssel (zwei eigene Fenster widersprechen sich nicht).
             foreach (var gui in GuiUnits.Read(parsed.Root).Keys)
@@ -102,7 +104,7 @@ public static class ContributionExtractor
         {
             foreach (var keyed in RuleKeys.Read(parsed.Root, rule))
             {
-                result.Add(Make(p, relativePath, fullPath, rule, new OverrideKey(OverrideOperator.None, keyed.Key), keyed.Statement, parsed.Text));
+                result.Add(Make(p, relativePath, fullPath, rule, new OverrideKey(OverrideOperator.None, keyed.IdentityKey), keyed.Statement, parsed.Text));
             }
 
             return result;
@@ -110,7 +112,9 @@ public static class ContributionExtractor
 
         foreach (var statement in parsed.Root.Entries.OfType<ScriptStatement>())
         {
-            if (statement.Key.StartsWith('@') || (rule.Behavior == OverrideBehavior.FirstWins && statement.Key == "namespace"))
+            // inline_script auf oberster Ebene bindet ein Skript ein (Stellaris-Mods in districts, pop_jobs); was es definiert, steht erst in der
+            // eingebundenen Datei. Als Schlüssel "inline_script" gäbe es nur Scheinkonflikte; die Definitionen darin vergleicht PMT nicht.
+            if (statement.Key.StartsWith('@') || statement.Key == "inline_script" || (rule.Behavior == OverrideBehavior.FirstWins && statement.Key == "namespace"))
             {
                 continue;
             }

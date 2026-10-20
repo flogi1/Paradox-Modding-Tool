@@ -64,7 +64,19 @@ dotnet sln "!SLNFILE!" add "src\ParadoxModTool.Desync\ParadoxModTool.Desync.cspr
 dotnet sln "!SLNFILE!" add "tests\ParadoxModTool.Desync.Tests\ParadoxModTool.Desync.Tests.csproj" >nul
 echo.
 
-echo [1/3] dotnet clean ...
+rem Erst wiederherstellen, dann bereinigen: nach einem Wechsel des Zielframeworks (z. B. GuiDesign auf net8.0-windows)
+rem passt das alte obj\project.assets.json nicht mehr, und "dotnet clean" bricht mit NETSDK1005 ab.
+echo [1/4] dotnet restore ...
+dotnet restore "!SLNFILE!"
+if errorlevel 1 (
+    echo.
+    echo FEHLER beim "dotnet restore" - siehe Ausgabe oben.
+    pause
+    exit /b 1
+)
+
+echo.
+echo [2/4] dotnet clean ...
 dotnet clean "!SLNFILE!"
 if errorlevel 1 (
     echo.
@@ -74,7 +86,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [2/3] dotnet build ...
+echo [3/4] dotnet build ...
 dotnet build "!SLNFILE!"
 if errorlevel 1 (
     echo.
@@ -85,7 +97,7 @@ if errorlevel 1 (
 powershell -NoProfile -ExecutionPolicy Bypass -File "create-shortcut.ps1"
 
 echo.
-echo [3/3] Alle Tests ...
+echo [4/4] Alle Tests ...
 set FAILED=0
 call :run_test tests\ParadoxModTool.ErrorLog.Tests
 call :run_test tests\ParadoxModTool.VersionManager.Tests

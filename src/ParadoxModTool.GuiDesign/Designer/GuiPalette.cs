@@ -36,7 +36,10 @@ public sealed record GuiPaletteEntry(
     /// Code zum Einfügen als Widget; null bei Templates (sie kommen als <c>using</c> in die Auswahl) und Bausteinen (Code aus dem Fenster
     /// "Bausteine").
     /// </summary>
-    public string? Snippet => Kind is GuiPaletteKind.Template or GuiPaletteKind.Block ? null : $"{Name} = {{ }}";
+    public string? Snippet => Kind is GuiPaletteKind.Template or GuiPaletteKind.Block ? null : ClassicSnippet ?? $"{Name} = {{ }}";
+
+    /// <summary>Klassisch: mehrzeiliger Code mit Name und Position statt <c>Schlüssel = { }</c>.</summary>
+    public string? ClassicSnippet { get; init; }
 }
 
 /// <summary>
@@ -47,12 +50,19 @@ public static class GuiPalette
 {
     public static IReadOnlyList<GuiPaletteEntry> Entries(GuiIndex index, GuiResolver resolver, GuiPropertyCatalog catalog, CancellationToken cancellation = default)
     {
+        // Klassisch (HOI IV, EU IV): nur die Elementtypen, keine Typen und Templates.
+        if (index.Layout.IsClassic)
+        {
+            return Classic.ClassicPalette.Entries(catalog);
+        }
+
         var engine = new List<GuiPaletteEntry>();
         var engineNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var widget in catalog.Widgets.Values.OrderByDescending(w => w.Count).ThenBy(w => w.Name, StringComparer.Ordinal))
         {
-            var normalized = GuiWidgetKinds.Normalize(widget.Name);
-            var name = normalized != widget.Name && resolver.IsType(normalized) ? normalized : widget.Name;
+            var widgetName = widget.Name;
+            var normalized = GuiWidgetKinds.Normalize(widgetName);
+            var name = normalized != widgetName && resolver.IsType(normalized) ? normalized : widgetName;
             if (engineNames.Add(name))
             {
                 engine.Add(new GuiPaletteEntry(
@@ -61,7 +71,7 @@ public static class GuiPalette
                     string.Empty,
                     GuiLayer.Vanilla,
                     widget.Count,
-                    GuiWidgetKinds.CategoryOf(widget.Name),
+                    GuiWidgetKinds.CategoryOf(widgetName),
                     index.Find(name, GuiDefinitionKind.Type)));
             }
         }

@@ -27,18 +27,39 @@ public partial class MainWindow
         var version = ++_modifierFormatsVersion;
         var settings = _activeProfile?.ModifierFormats;
         var (gameRoots, modRoots) = CollectOriginRoots();
-        var wiki = settings?.Source == "wiki" && _scriptDocsService is { } service
-            ? service.Database.Entries
+        var wiki = settings?.Source switch
+        {
+            "wiki" when _scriptDocsService is { } service => service.Database.Entries
                 .Where(entry => entry.Kind == ScriptDocKind.Modifier && entry.Extra.TryGetValue("Effect type", out _))
                 .Select(entry => (entry.Name, entry.Extra["Effect type"]))
-                .ToList()
-            : new List<(string, string)>();
+                .ToList(),
+            // Format aus der Namensendung (Stellaris): alle Modifier der Script-Datenbank, mit ihrer Kategorie.
+            "suffix" when _scriptDocsService is { } service => service.Database.Entries
+                .Where(entry => entry.Kind == ScriptDocKind.Modifier)
+                .Select(entry => (entry.Name, entry.Extra.GetValueOrDefault("Category") ?? string.Empty))
+                .ToList(),
+            _ => new List<(string, string)>(),
+        };
+
+        // Hearts of Iron IV: Nachkommastellen je Modifier aus der Doku ("Number with N decimal places").
+        var docDecimals = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        if (settings?.Source == "suffix" && _scriptDocsService is { } docs)
+        {
+            foreach (var entry in docs.Database.Entries.Where(e => e.Kind == ScriptDocKind.Modifier))
+            {
+                if (entry.Extra.TryGetValue("Decimals", out var text)
+                    && int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var decimals))
+                {
+                    docDecimals[entry.Name] = decimals;
+                }
+            }
+        }
 
         var languages = ModifierNameIndex.GameLanguages(UiText.Current.Language);
 
         try
         {
-            var (index, scriptValues) = await Task.Run(() => (ModifierFormatIndex.Build(settings, gameRoots, modRoots, wiki), ScriptValueIndex.Build(gameRoots, modRoots)));
+            var (index, scriptValues) = await Task.Run(() => (ModifierFormatIndex.Build(settings, gameRoots, modRoots, wiki, docDecimals), ScriptValueIndex.Build(gameRoots, modRoots)));
             if (version != _modifierFormatsVersion)
             {
                 return;

@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "code": "EFF-002",
+      "name": { "de": "Unbekannter Effekt (Folgezeile)", "en": "Unknown effect (follow-up line)" },
+      "severity": "info",
+      "pattern": "^Error: \\\"Unknown effect-type: (?<name>[^,\\s]+), near line: \\d+\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Zweite Zeile zur Meldung \"Invalid effect\" davor: dieselbe Stelle, aus Sicht des Datei-Lesers.",
+        "en": "Second line for the \"Invalid effect\" message before it: the same place, from the file reader's view."
+      },
+      "fixes": [],
+      "attachToPrevious": true
+    },
+    {
+      "code": "TRG-003",
+      "name": { "de": "Unbekannter Trigger (Folgezeile)", "en": "Unknown trigger (follow-up line)" },
+      "severity": "info",
+      "pattern": "^Error: \\\"Unknown trigger-type: (?<name>[^,\\s]+), near line: \\d+\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Zweite Zeile zur Meldung \"Invalid trigger\" davor: dieselbe Stelle, aus Sicht des Datei-Lesers.",
+        "en": "Second line for the \"Invalid trigger\" message before it: the same place, from the file reader's view."
+      },
+      "fixes": [],
+      "attachToPrevious": true
+    },
+    {
+      "code": "DEC-002",
+      "name": { "de": "Entscheidung ohne Kategorie (Folgezeile)", "en": "Decision without category (follow-up line)" },
+      "severity": "info",
+      "pattern": "^Error: \\\"Unknown category for : (?<name>\\S+) It will be ignored",
+      "explain": {
+        "de": "Die Entscheidung steht in einer Kategorie, die es nicht gibt, und wird deshalb nicht geladen.",
+        "en": "The decision sits in a category that does not exist, so it is not loaded."
+      },
+      "fixes": [],
+      "attachToPrevious": true
+    },
+    {
+      "code": "EVT-006",
+      "name": { "de": "Doppelte Event-ID (Name)", "en": "Duplicate event id (name)" },
+      "severity": "info",
+      "pattern": "^Reverse id lookup: id \\d+ = (?<name>\\S+)",
+      "explain": {
+        "de": "Zweite Zeile zur doppelten Event-ID davor: der Name des Events zur Zahl.",
+        "en": "Second line for the duplicate event id before it: the event name for the number."
+      },
+      "fixes": [],
+      "attachToPrevious": true
+    },
+    {
+      "code": "RUL-002",
+      "name": { "de": "Bedingung ungültig (Folgezeile)", "en": "Condition not valid (follow-up line)" },
+      "severity": "info",
+      "pattern": "^Trigger failed to validate: (?<file>[^:\\s][^:]*\\.txt):(?<line>\\d+): (?<name>\\S+)",
+      "explain": {
+        "de": "Zweite Zeile zur Meldung davor: Die Bedingung an dieser Stelle ist ungültig und gilt als nicht erfüllt.",
+        "en": "Second line for the message before it: the condition at this place is not valid and counts as false."
+      },
+      "fixes": [],
+      "attachToPrevious": true
+    },
+    {
+      "code": "IDE-001",
+      "name": { "de": "Doppelte Idee", "en": "Duplicate idea" },
+      "severity": "warning",
+      "pattern": "^Duplicate idea\\. (?<name>\\S+) is a duplicate\\.",
+      "explain": {
+        "de": "Dieselbe Idee (nationaler Geist, Berater, Gesetz …) ist zweimal definiert, in Vanilla und Mods zusammen. Nur eine der beiden Fassungen gilt; die Meldung nennt die Datei nicht.",
+        "en": "The same idea (national spirit, advisor, law …) is defined twice, counting vanilla and mods together. Only one of the two versions counts; the message does not name the file."
+      },
+      "tips": {
+        "de": [ "Eine Idee überschreiben: die ganze Vanilla-Datei mit gleichem Namen ersetzen, statt die Idee in einer neuen Datei noch einmal zu definieren.", "PMT: Mod-Kompatibilität zeigt, welche Mods die Idee definieren." ],
+        "en": [ "To override an idea, replace the whole vanilla file with the same name instead of defining the idea again in a new file.", "PMT: mod compatibility shows which mods define the idea." ]
+      },
+      "fixes": [ "findDefinition", "suppress" ]
+    },
+    {
+      "code": "EFF-001",
+      "name": { "de": "Unbekannter Effekt", "en": "Unknown effect" },
+      "severity": "error",
+      "pattern": "^Invalid effect '(?<name>[^']+)' in (?<file>.+?) line : (?<line>\\d+)",
+      "explain": {
+        "de": "Der Effekt ist weder ein Effekt des Spiels noch ein bekannter scripted_effect. Hearts of Iron IV ignoriert die Zeile. Steht hier ein Länder-Tag (z. B. tag = GER) in einem Effekt-Block, gehört er in einen Trigger-Block (limit, trigger, available …).",
+        "en": "The effect is neither a game effect nor a known scripted_effect. Hearts of Iron IV ignores the line. If this is a country tag check (e.g. tag = GER) inside an effect block, it belongs in a trigger block (limit, trigger, available …)."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen; die gültigen Effekte stehen in documentation/effects_documentation.md der Installation (PMT: Script-Datenbank).",
+          "Stammt der Effekt aus einer anderen Mod, muss diese Mod im Playset sein."
+        ],
+        "en": [
+          "Check the spelling; the valid effects are listed in documentation/effects_documentation.md in the install folder (PMT: script database).",
+          "If the effect comes from another mod, that mod must be in the playset."
+        ]
+      },
+      "fixes": [ "jump", "findDefinition", "replaceWithCandidate", "addModToPlayset", "suppress" ]
+    },
+    {
+      "code": "TRG-001",
+      "name": { "de": "Unbekannter Trigger", "en": "Unknown trigger" },
+      "severity": "error",
+      "pattern": "^Invalid trigger '(?<name>[^']+)' in (?<file>.+?) line : (?<line>\\d+)",
+      "explain": {
+        "de": "Der Trigger ist weder ein Trigger des Spiels noch ein bekannter scripted_trigger. Hearts of Iron IV ignoriert die Bedingung; der Block kann dadurch immer oder nie erfüllt sein.",
+        "en": "The trigger is neither a game trigger nor a known scripted_trigger. Hearts of Iron IV ignores the condition, so the block may always or never be true."
+      },
+      "tips": {
+        "de": [
+          "Schreibweise prüfen; die gültigen Trigger stehen in documentation/triggers_documentation.md der Installation (PMT: Script-Datenbank).",
+          "Stammt der Trigger aus einer anderen Mod, muss diese Mod im Playset sein."
+        ],
+        "en": [
+          "Check the spelling; the valid triggers are listed in documentation/triggers_documentation.md in the install folder (PMT: script database).",
+          "If the trigger comes from another mod, that mod must be in the playset."
+        ]
+      },
+      "fixes": [ "jump", "findDefinition", "replaceWithCandidate", "addModToPlayset", "suppress" ]
+    },
+    {
+      "code": "SCP-001",
+      "name": { "de": "Effekt oder Trigger im falschen Scope", "en": "Effect or trigger in the wrong scope" },
+      "severity": "error",
+      "pattern": "^Invalid scope type for (?:effect|trigger) (?<name>\\S+) in (?<file>.+?) line : (?<line>\\d+)",
+      "explain": {
+        "de": "Beim Lesen erkennt das Spiel, dass der Effekt oder Trigger im Scope an dieser Stelle nicht gilt (z. B. ein Staats-Effekt direkt im Land).",
+        "en": "While reading, the game sees that the effect or trigger does not work in the scope at this place (e.g. a state effect directly in a country)."
+      },
+      "tips": {
+        "de": [
+          "Erst in den passenden Scope wechseln, z. B. mit capital_scope, random_owned_state oder einer Staats-ID (123 = { … }).",
+          "Welche Scopes ein Effekt oder Trigger annimmt, zeigt die Script-Datenbank (Supported Scopes)."
+        ],
+        "en": [
+          "Switch to the right scope first, e.g. with capital_scope, random_owned_state or a state id (123 = { … }).",
+          "The script database shows which scopes an effect or trigger accepts (Supported Scopes)."
+        ]
+      },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "SCP-002",
+      "name": { "de": "Falscher Scope beim Ausführen", "en": "Wrong scope at run time" },
+      "severity": "error",
+      "pattern": "^(?<file>[^:\\s][^:]*\\.txt):(?<line>\\d+): (?<name>\\S+): Invalid Scope, (?<detail>supported: .+)$",
+      "explain": {
+        "de": "Beim Ausführen lief der Effekt oder Trigger in einem Scope, den er nicht unterstützt; er hat nichts bewirkt. Die Meldung nennt den erwarteten und den tatsächlichen Scope.",
+        "en": "At run time the effect or trigger ran in a scope it does not support, so it did nothing. The message names the expected and the actual scope."
+      },
+      "tips": {
+        "de": [ "Mit einem Scope-Wechsel (z. B. owner, controller, ROOT) in den erwarteten Scope gehen." ],
+        "en": [ "Switch to the expected scope first (e.g. owner, controller, ROOT)." ]
+      },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "MDF-001",
+      "name": { "de": "Unbekannter Modifier", "en": "Unknown modifier" },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unknown modifier: (?<name>[^,\\s]+), near line: \\d+\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Den Modifier gibt es nicht. Hearts of Iron IV ignoriert die Zeile. Eigene Modifier müssen in common/modifier_definitions stehen.",
+        "en": "The modifier does not exist. Hearts of Iron IV ignores the line. Custom modifiers have to be defined in common/modifier_definitions."
+      },
+      "tips": {
+        "de": [ "Schreibweise prüfen; die gültigen Namen stehen in documentation/modifiers_documentation.md der Installation (PMT: Script-Datenbank)." ],
+        "en": [ "Check the spelling; the valid names are listed in documentation/modifiers_documentation.md in the install folder (PMT: script database)." ]
+      },
+      "fixes": [ "jump", "replaceWithCandidate", "suppress" ]
+    },
+    {
+      "code": "DEC-001",
+      "name": { "de": "Unbekannte Entscheidungs-Kategorie", "en": "Unknown decision category" },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unknown category: (?<name>[^:\\s]+): [\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Die Entscheidungen stehen in einer Kategorie, die nicht in common/decisions/categories definiert ist. Alle Entscheidungen darin werden nicht geladen.",
+        "en": "The decisions sit in a category that is not defined in common/decisions/categories. None of the decisions in it are loaded."
+      },
+      "tips": {
+        "de": [ "Die Kategorie in common/decisions/categories anlegen oder den Namen an eine vorhandene Kategorie anpassen." ],
+        "en": [ "Define the category in common/decisions/categories, or rename it to an existing category." ]
+      },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+    {
+      "code": "EVT-005",
+      "name": { "de": "Doppelte Event-ID", "en": "Duplicate event id" },
+      "severity": "error",
+      "pattern": "^Failed to create id (?<detail>\\d+ \\d+)\\. Already exists in game\\.(?:[\\s\\S]*?Reverse id lookup: id \\d+ = (?<name>\\S+))?",
+      "explain": {
+        "de": "Dieselbe Event-ID ist zweimal vergeben. Hearts of Iron IV rechnet die ID intern in eine Zahl um (Namespace × 1 000 000 + Nummer) und meldet nur diese; welches Event gemeint ist, steht nicht in der Zeile. Laut Wiki kann das Spiel daran abstürzen.",
+        "en": "The same event id is used twice. Hearts of Iron IV turns the id into a number internally (namespace × 1,000,000 + number) and reports only that number; the line does not say which event. According to the wiki, this can crash the game."
+      },
+      "tips": {
+        "de": [
+          "In den eigenen Eventdateien nach doppelten id = namespace.N suchen (PMT: Mod-Kompatibilität findet doppelte IDs über Mods hinweg).",
+          "Event-IDs müssen eine Zahl nach dem Punkt haben; namespace.abc wird zu namespace.0."
+        ],
+        "en": [
+          "Search your event files for duplicate id = namespace.N (PMT: mod compatibility finds duplicate ids across mods).",
+          "Event ids need a number after the dot; namespace.abc becomes namespace.0."
+        ]
+      },
+      "fixes": [ "suppress" ]
+    },
+    {
+      "code": "RUL-001",
+      "name": { "de": "Unbekannte Spielregel", "en": "Unknown game rule" },
+      "severity": "warning",
+      "pattern": "^(?<file>[^:\\s][^:]*\\.txt):(?<line>\\d+): has_game_rule: game rule (?<name>\\S+) does not exist",
+      "explain": {
+        "de": "has_game_rule fragt eine Spielregel ab, die es nicht gibt (in common/game_rules nicht definiert). Die Bedingung ist nie erfüllt. Vanilla schreibt einige solche Zeilen selbst.",
+        "en": "has_game_rule checks a game rule that does not exist (not defined in common/game_rules). The condition is never true. Vanilla writes some of these lines itself."
+      },
+      "tips": {
+        "de": [ "Den Regelnamen mit common/game_rules vergleichen." ],
+        "en": [ "Compare the rule name with common/game_rules." ]
+      },
+      "fixes": [ "jump", "findDefinition", "suppress" ]
+    },
+    {
+      "code": "PAR-003",
+      "name": { "de": "Unerwarteter Eintrag", "en": "Unexpected token" },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unexpected token: (?<name>[^,\\s]+), near line: \\d+\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "An dieser Stelle erwartet das Spiel den Eintrag nicht (Tippfehler, falscher Block, Eigenschaft, die es in diesem Element nicht gibt). Hearts of Iron IV überspringt ihn.",
+        "en": "The game does not expect this entry here (typo, wrong block, a property this element does not have). Hearts of Iron IV skips it."
+      },
+      "tips": {
+        "de": [ "Schreibweise und Klammern prüfen; bei .gui-Dateien die Eigenschaften mit einer Vanilla-Datei derselben Art vergleichen." ],
+        "en": [ "Check spelling and braces; for .gui files compare the properties with a vanilla file of the same kind." ]
+      },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "PAR-004",
+      "name": { "de": "Unerwartetes Zeichen", "en": "Unexpected character" },
+      "severity": "error",
+      "pattern": "^Error: unexpected token in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+) \\( (?<name>.+?) \\)",
+      "explain": {
+        "de": "Der Datei-Leser ist an dieser Stelle auf ein Zeichen gestoßen, das dort nicht stehen darf (in Klammern), meist eine Klammer zu viel oder zu wenig oder ein leerer Block, den die Datei nicht erlaubt. Der Rest der Datei kann dadurch falsch gelesen werden.",
+        "en": "The file reader found a character at this place that must not be there (in brackets), usually one brace too many or too few, or an empty block the file does not allow. The rest of the file may be read wrongly because of it."
+      },
+      "tips": {
+        "de": [ "Klammern zählen (PMT: Editor zeigt das passende Gegenstück); mit einer Vanilla-Datei desselben Ordners vergleichen." ],
+        "en": [ "Count the braces (PMT: the editor shows the matching brace); compare with a vanilla file from the same folder." ]
+      },
+      "fixes": [ "jump", "suppress" ]
+    },
+    {
+      "code": "PAR-001",
+      "name": { "de": "Lesefehler in Datei", "en": "Parsing error in file" },
+      "severity": "error",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]*)\\\" in file: \\\"(?:(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)|\\\")",
+      "explain": {
+        "de": "Das Spiel konnte die Datei an dieser Stelle nicht lesen (Syntax, unbekannter Wert, falscher Typ).",
+        "en": "The game could not read the file at this location (syntax, unknown value, wrong type)."
+      },
+      "tips": {
+        "de": [ "Die Meldung in Anführungszeichen nennt den Grund." ],
+        "en": [ "The quoted message states the reason." ]
+      },
+      "fixes": [ "jump", "suppress" ]
+    }
+  ]
+}

@@ -1,19 +1,24 @@
+using ParadoxModTool.GuiDesign.Imaging;
+
 namespace ParadoxModTool.GuiDesign.Layout;
 
-/// <summary>Findet Texturpfade wie <c>gfx/interface/x.dds</c> in Mod, Abhängigkeits-Mods und Vanilla und merkt sich ihre Größe.</summary>
-public sealed class GuiTextureLocator
+/// <summary>
+/// Findet Texturpfade wie <c>gfx/interface/x.dds</c> in Mod, Abhängigkeits-Mods, DLCs und Vanilla und merkt sich ihren Kopf (Größe, Format). Suche,
+/// Merkliste und Köpfe siehe <see cref="TextureLocator"/>; hier ohne <c>.tga</c>→<c>.dds</c>-Ersatz.
+/// </summary>
+public sealed class GuiTextureLocator : TextureLocator
 {
     private static readonly string[] Contexts = { "in_game", "main_menu", "loading_screen" };
-    private readonly IReadOnlyList<string> _roots;
-    private readonly Dictionary<string, (int Width, int Height)?> _sizes = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _gate = new();
 
-    public GuiTextureLocator(IEnumerable<string> contextRoots) => _roots = contextRoots.ToList();
+    public GuiTextureLocator(IEnumerable<string> contextRoots)
+        : base(contextRoots.ToList(), tgaFallsBackToDds: false)
+    {
+    }
 
-    /// <summary>Kontextordner (…\in_game, …\main_menu, …\loading_screen) in Suchreihenfolge; Texturpfade sind relativ zu ihnen.</summary>
-    public IReadOnlyList<string> Roots => _roots;
-
-    /// <summary>Suchreihenfolge: aktuelle Mod, Abhängigkeits-Mods, dann game, jomini, clausewitz; darin je in_game, main_menu, loading_screen.</summary>
+    /// <summary>
+    /// Suchreihenfolge: aktuelle Mod, Abhängigkeits-Mods, jedes <c>game/dlc/&lt;name&gt;</c>, dann game, jomini, clausewitz; darin je in_game, main_menu,
+    /// loading_screen.
+    /// </summary>
     public static IReadOnlyList<string> ContextRootsFor(string installDirectory, IEnumerable<string> dependencyMods, string? modRoot) =>
         ContextRootsFor(installDirectory, dependencyMods, modRoot, Contexts);
 
@@ -29,44 +34,33 @@ public sealed class GuiTextureLocator
         }
 
         bases.AddRange(dependencyMods);
+
+        // Annahme: Ein DLC schlägt game, und ein späteres DLC (nach Namen) schlägt ein früheres, wie in JominiLocalisation. Es zählt nur bei den
+        // wenigen Victoria-3-Pfaden, die in game und in einem DLC (oder in zwei DLCs) liegen.
+        bases.AddRange(DlcFolders(installDirectory));
         bases.AddRange(new[] { "game", "jomini", "clausewitz" }.Select(folder => Path.Combine(installDirectory, folder)));
         return (contexts.Count == 0 ? bases : bases.SelectMany(b => contexts.Select(c => Path.Combine(b, c)))).Where(Directory.Exists).ToList();
     }
 
-    public string? Locate(string texturePath)
+    /// <summary>Die Ordner <c>game/dlc/&lt;name&gt;</c> nach Namen absteigend (das späteste DLC zuerst); leer ohne <c>dlc</c>-Ordner.</summary>
+    private static IEnumerable<string> DlcFolders(string installDirectory)
     {
-        var relative = texturePath.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
-        foreach (var root in _roots)
+        var dlc = Path.Combine(installDirectory, "game", "dlc");
+        if (!Directory.Exists(dlc))
         {
-            var full = Path.Combine(root, relative);
-            if (File.Exists(full))
-            {
-                return full;
-            }
+            return Array.Empty<string>();
         }
 
-        return null;
-    }
-
-    /// <summary>Größe einer Textur aus ihrem DDS-Header, gemerkt je Pfad. Parallel aufrufbar (Vorschau rechnet im Hintergrund).</summary>
-    public (int Width, int Height)? SizeOf(string texturePath)
-    {
-        lock (_gate)
+        try
         {
-            if (_sizes.TryGetValue(texturePath, out var cached))
-            {
-                return cached;
-            }
+            var directories = Directory.GetDirectories(dlc);
+            Array.Sort(directories, StringComparer.OrdinalIgnoreCase);
+            Array.Reverse(directories);
+            return directories;
         }
-
-        (int Width, int Height)? size = Locate(texturePath) is { } full && DdsHeader.TryReadSize(full, out var width, out var height)
-            ? (width, height)
-            : null;
-        lock (_gate)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _sizes[texturePath] = size;
+            return Array.Empty<string>();
         }
-
-        return size;
     }
 }

@@ -445,6 +445,7 @@ public static class SettingsTexts
         "designer.paletteInsert" => T("settings.hotkey.designer.paletteInsert", "In der Palette: gewählten Eintrag einfügen"),
         "designer.propertyApply" => T("settings.hotkey.designer.propertyApply", "Im Eigenschaftenfeld: Wert übernehmen"),
         "designer.propertyReset" => T("settings.hotkey.designer.propertyReset", "Im Eigenschaftenfeld: Eingabe verwerfen"),
+        "designer.previewSizeApply" => T("settings.hotkey.designer.previewSizeApply", "Klassische Vorschau, Feld für eigene Auflösung oder UI-Skalierung: Wert übernehmen"),
         "explorer.pin" => T("settings.hotkey.explorer.pin", "Gewählten Eintrag als Favorit anheften"),
         "explorer.clearSearch" => T("settings.hotkey.explorer.clearSearch", "Im Suchfeld: Suche leeren"),
         "explorer.searchNow" => T("settings.hotkey.explorer.searchNow", "Im Suchfeld: sofort suchen"),

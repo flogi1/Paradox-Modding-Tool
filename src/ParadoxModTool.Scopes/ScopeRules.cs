@@ -51,6 +51,24 @@ public sealed class ScopeRules
     /// </summary>
     public string? DefaultEventType { get; set; }
 
+    /// <summary>
+    /// Events, deren Art im Blocknamen steht (Spielprofil <c>eventBlockScopes</c>, Stellaris: <c>country_event = { … }</c>): Blockname auf Root-Scope;
+    /// "none" = Event ohne Root-Scope. Leer = keine solchen Events. Mitgelernt, damit ein geänderter Wert im Profil neu lernen lässt.
+    /// </summary>
+    public Dictionary<string, string> EventBlockScopes { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Wert in <see cref="EventBlockScopes"/>: Der Blockname ist die Event-Art, der Root-Scope kommt aus den gelernten Regeln wie bei Events mit
+    /// <c>type</c> (Hearts of Iron IV, EU IV: Charakter- und Länder-Schlüssel in Events wechseln den Scope, ein fester Root-Scope gälte auch darunter).
+    /// </summary>
+    public const string LearnedRootScope = "learned";
+
+    /// <summary>
+    /// Zahlen als Blockschlüssel wechseln den Scope (Spielprofil <c>numericKeysChangeScope</c>: Staats-IDs in HOI IV, Provinz-IDs in EU IV), außer in
+    /// <c>random_list</c>. Mitgelernt, damit eine geänderte Einstellung neu lernen lässt.
+    /// </summary>
+    public bool NumericKeysChangeScope { get; set; }
+
     public Dictionary<string, FieldRule> Fields { get; set; } = new(StringComparer.Ordinal);
 
     public Dictionary<string, DiscriminatorRule> Discriminators { get; set; } = new(StringComparer.Ordinal);

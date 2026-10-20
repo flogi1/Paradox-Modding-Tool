@@ -90,12 +90,12 @@ public static class ScriptDocImporter
     }
 
     /// <summary>Schreibzeit (UTC-Ticks) jeder vorhandenen Log-Datei; fehlende Dateien fehlen im Ergebnis.</summary>
-    public static Dictionary<ScriptDocKind, long> ReadWriteTicks(string docsFolder)
+    public static Dictionary<ScriptDocKind, long> ReadWriteTicks(string docsFolder, IReadOnlyDictionary<string, string>? fileNames = null)
     {
         var result = new Dictionary<ScriptDocKind, long>();
         foreach (var kind in AllKinds)
         {
-            var path = Path.Combine(docsFolder, ScriptDocLogFiles.FileNameOf(kind));
+            var path = Path.Combine(docsFolder, ScriptDocLogFiles.FileNameOf(kind, fileNames));
             if (File.Exists(path))
             {
                 result[kind] = File.GetLastWriteTimeUtc(path).Ticks;
@@ -106,10 +106,10 @@ public static class ScriptDocImporter
     }
 
     /// <summary>Ist ein Import nötig? Ohne jede Log-Datei nie.</summary>
-    public static bool NeedsImport(ScriptDocDatabase database, string docsFolder)
+    public static bool NeedsImport(ScriptDocDatabase database, string docsFolder, IReadOnlyDictionary<string, string>? fileNames = null)
     {
-        var ticks = ReadWriteTicks(docsFolder);
-        return ticks.Count > 0 && database.NeedsImport(ticks);
+        var ticks = ReadWriteTicks(docsFolder, fileNames);
+        return ticks.Count > 0 && database.NeedsImport(ticks, fileNames);
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ public static class ScriptDocImporter
     /// (leer oder in unbekanntem Format), zählt nicht als gelesen - sonst würden alle Einträge dieser Art fälschlich als veraltet gelten.
     /// Gibt <see langword="null"/> zurück, wenn nichts gelesen werden konnte.
     /// </summary>
-    public static ImportRecord? Import(ScriptDocDatabase database, string docsFolder, DateTime nowUtc)
+    public static ImportRecord? Import(ScriptDocDatabase database, string docsFolder, DateTime nowUtc, IReadOnlyDictionary<string, string>? fileNames = null)
     {
         var parsed = new List<ScriptDocEntry>();
         var kinds = new List<ScriptDocKind>();
@@ -125,7 +125,7 @@ public static class ScriptDocImporter
 
         foreach (var kind in AllKinds)
         {
-            var fileName = ScriptDocLogFiles.FileNameOf(kind);
+            var fileName = ScriptDocLogFiles.FileNameOf(kind, fileNames);
             var path = Path.Combine(docsFolder, fileName);
             if (!File.Exists(path))
             {

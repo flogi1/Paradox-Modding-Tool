@@ -1,4 +1,3 @@
-using System.Text;
 using ParadoxModTool.VersionManager;
 
 namespace ParadoxModTool.VanillaDiff;
@@ -9,12 +8,10 @@ namespace ParadoxModTool.VanillaDiff;
 /// <see cref="ConflictResolution"/>): <see cref="ComputeMerge"/> liest nur und merged;
 /// <see cref="WriteMergedResult"/> legt den Sicherheits-Snapshot der alten Moddatei an
 /// (Wiederverwendung von <see cref="ModVersionManager.CreateSnapshot"/>, Abschnitt 6) und
-/// schreibt das Ergebnis als UTF-8-mit-BOM in den Mod-Ordner.
+/// schreibt das Ergebnis als UTF-8 in den Mod-Ordner (mit BOM, wenn die Moddatei eins hatte oder kein gültiges UTF-8 war).
 /// </summary>
 public static class VanillaMergeWorkflow
 {
-    private static readonly UTF8Encoding Utf8WithBom = new(encoderShouldEmitUTF8Identifier: true);
-
     public static MergeResult ComputeMerge(string oldVanillaFilePath, string newVanillaFilePath, string modFilePath)
     {
         var oldVanilla = ScriptDocument.Parse(File.ReadAllText(oldVanillaFilePath));
@@ -29,7 +26,8 @@ public static class VanillaMergeWorkflow
         versionManager.CreateSnapshot($"vor-merge_{Path.GetFileName(modFilePath)}");
 
         var mergedText = ScriptWriter.Write(finalRoot, preferSourceVerbatim, new ScriptWriteOptions { UseTabs = true });
-        File.WriteAllText(modFilePath, mergedText, Utf8WithBom);
+        // Die Mod-Datei behält ihr BOM (Stellaris liest Skriptdateien mit BOM falsch); ohne BOM nur, wenn sie gültiges UTF-8 ohne BOM ist
+        File.WriteAllText(modFilePath, mergedText, ParadoxModTool.GameProfiles.ModFileEncoding.ForWrite(null, modFilePath));
     }
 
     public static MergeResult MergeFileIntoMod(

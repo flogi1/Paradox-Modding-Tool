@@ -59,6 +59,29 @@ public class ErrorLogLocationsTests
     }
 
     [Fact]
+    public void Runs_without_debug_log_still_lists_error_log()
+    {
+        using var tree = new TempTree(
+            ("logs/error.log", "[15:29:27][no_game_date][triggerimplementation.cpp:9803]: a\n[15:29:30][1936.01.01.12][effect.cpp:445]: b\n"));
+
+        var run = Assert.Single(ErrorLogLocations.Runs(tree.PathOf("logs")));
+        var read = LogReader.ReadRun(run);
+
+        Assert.Equal(new[] { "a", "b" }, read.Lines.Select(l => l.Message));
+    }
+
+    [Fact]
+    public void Runs_of_eu4_lines_without_time_list_error_log()
+    {
+        using var tree = new TempTree(("logs/error.log", "[dlc.cpp:254]: a\n[persistent.cpp:48]: b\n"));
+
+        var run = Assert.Single(ErrorLogLocations.Runs(tree.PathOf("logs")));
+        var read = LogReader.ReadRun(run);
+
+        Assert.Equal(new[] { "a", "b" }, read.Lines.Select(l => l.Message));
+    }
+
+    [Fact]
     public void RunsUseTheDebugLogStartForTheCurrentRun()
     {
         using var tree = new TempTree(

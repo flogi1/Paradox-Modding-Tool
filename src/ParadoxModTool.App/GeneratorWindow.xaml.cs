@@ -22,7 +22,7 @@ namespace ParadoxModTool.App;
 
 /// <summary>
 /// Was das Fenster vom Hauptfenster braucht: aktive Mod, Spiel, PMT-Datenordner des Spiels, Sprachen des Spielprofils und das Schreiben eines Plans
-/// über den Aktionsverlauf (Prüfung auf ungespeicherte Dokumente, Rückgängig, Neuladen offener Tabs).
+/// über den Aktionsverlauf (Prüfung auf ungespeicherte Dokumente, Rückgängig, Neuladen offener Tabs). <see cref="NewFileHasBom"/>: BOM neuer Dateien je Endung aus dem Spielprofil.
 /// </summary>
 public sealed record GeneratorWindowHost(
     Func<string?> ModRoot,
@@ -37,7 +37,8 @@ public sealed record GeneratorWindowHost(
     Action<string?, bool> OpenEditor,
     Action OpenAi,
     Func<string, IReadOnlyList<CandidateSource>> CandidateSources,
-    Func<IReadOnlyList<string>, string, IReadOnlyDictionary<string, string>> ModifierNames);
+    Func<IReadOnlyList<string>, string, IReadOnlyDictionary<string, string>> ModifierNames,
+    Func<string, bool>? NewFileHasBom = null);
 
 /// <summary>Fenster "Generator-Pakete" (Spec 2026-10-03-generator-packages-core): Paket und Arbeitsstand wählen, Formular ausfüllen, Vorschau, Erzeugen.</summary>
 public partial class GeneratorWindow : Window

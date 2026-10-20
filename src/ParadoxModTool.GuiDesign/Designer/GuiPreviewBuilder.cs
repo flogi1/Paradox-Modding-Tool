@@ -1,3 +1,4 @@
+using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Layout;
 using ParadoxModTool.GuiDesign.Resolve;
 using ParadoxModTool.GuiDesign.Syntax;
@@ -42,9 +43,30 @@ public sealed record GuiPreview(GuiNode Target, ResolvedElement? Element, GuiSch
 
 public static class GuiPreviewBuilder
 {
-    /// <summary>Nächste umschließende Typ- oder Template-Definition, sonst das Widget auf oberster Dateiebene; null außerhalb davon.</summary>
-    public static GuiNode? PreviewTarget(GuiNode node)
+    /// <summary>Nächste umschließende Typ- oder Template-Definition, sonst das Widget auf oberster Dateiebene; null außerhalb davon (Jomini).</summary>
+    public static GuiNode? PreviewTarget(GuiNode node) => PreviewTarget(node, GuiLayout.Default);
+
+    /// <summary>
+    /// Wie <see cref="PreviewTarget(GuiNode)"/>; klassisch (HOI IV, EU IV) das Fenster direkt unter <c>guiTypes</c> (beliebige Schreibweise) auf oberster
+    /// Dateiebene, das den Knoten enthält oder selbst ist. Außerhalb eines Fensters (z.B. in <c>spriteTypes</c>) null.
+    /// </summary>
+    public static GuiNode? PreviewTarget(GuiNode node, GuiLayout layout)
     {
+        if (layout.IsClassic)
+        {
+            for (var current = node; current.Parent is not null; current = current.Parent)
+            {
+                if (current.Kind == GuiNodeKind.KeyedBlock
+                    && current.Parent is { Kind: GuiNodeKind.KeyedBlock, Parent.Kind: GuiNodeKind.Document } holder
+                    && string.Equals(holder.Name, "guiTypes", StringComparison.OrdinalIgnoreCase))
+                {
+                    return current;
+                }
+            }
+
+            return null;
+        }
+
         for (var current = node; current.Parent is not null; current = current.Parent)
         {
             if (current.Kind is GuiNodeKind.TypeDefinition or GuiNodeKind.TemplateDefinition)
@@ -61,14 +83,18 @@ public static class GuiPreviewBuilder
         return null;
     }
 
-    /// <summary>Löst das Ziel auf und berechnet das Layout. Läuft im Hintergrund; <paramref name="createEngine"/> liefert je Lauf eine neue Engine.</summary>
+    /// <summary>
+    /// Löst das Ziel auf und berechnet das Layout. Läuft im Hintergrund; <paramref name="createEngine"/> liefert je Lauf eine neue Engine.
+    /// <paramref name="viewedFile"/> (angesehene Datei) und das Ziel als Vorschau-Wurzel bilden den Anfang der Schlüssel bedingter Elemente.
+    /// </summary>
     public static GuiPreview Build(
         GuiResolver resolver,
-        Func<GuiLayoutEngine> createEngine,
+        Func<IGuiLayoutEngine> createEngine,
         GuiDocument document,
         GuiNode target,
         LayoutOptions options,
-        CancellationToken cancellation = default)
+        CancellationToken cancellation = default,
+        string? viewedFile = null)
     {
         if (target.Kind == GuiNodeKind.TemplateDefinition)
         {
@@ -81,23 +107,25 @@ public static class GuiPreviewBuilder
             return new GuiPreview(target, null, null, GuiTexts.PreviewImpossible);
         }
 
-        return Layout(element, target, document, createEngine, options, cancellation);
+        return Layout(element, target, document, createEngine, options, cancellation, viewedFile);
     }
 
     /// <summary>
     /// Layout eines schon aufgelösten Elements. Der Inspektor nutzt dieselben <see cref="ResolvedElement"/>-Objekte für Baum und Vorschau
     /// (ein Klick in der Vorschau findet so seinen Baumeintrag) und rechnet bei geänderten Vorschau-Schaltern nur das Layout neu.
+    /// <paramref name="viewedFile"/> und <paramref name="target"/> gehen als angesehene Datei und Vorschau-Wurzel in die Optionen (Schlüssel bedingter Elemente).
     /// </summary>
     public static GuiPreview Layout(
         ResolvedElement element,
         GuiNode target,
         GuiDocument document,
-        Func<GuiLayoutEngine> createEngine,
+        Func<IGuiLayoutEngine> createEngine,
         LayoutOptions options,
-        CancellationToken cancellation = default)
+        CancellationToken cancellation = default,
+        string? viewedFile = null)
     {
         cancellation.ThrowIfCancellationRequested();
-        var box = createEngine().Layout(element, options);
+        var box = createEngine().Layout(element, options.With(viewedFile ?? options.ViewedFile, target));
         cancellation.ThrowIfCancellationRequested();
         var scene = new GuiSchematicScene(box, node => ReferenceEquals(node.Root, document.Root), target);
         return new GuiPreview(target, element, scene, null);

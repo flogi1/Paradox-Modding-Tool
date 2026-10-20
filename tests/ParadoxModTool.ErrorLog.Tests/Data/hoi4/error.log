@@ -1,0 +1,22 @@
+[18:15:34][no_game_date][persistent.cpp:67]: Error: "Unexpected token: pmt_probe_unknown_property, near line: 6" in file: "interface/pmt_probe.gui" near line: 6
+[18:15:58][no_game_date][persistent.cpp:67]: Error: "Unknown modifier: pmt_probe_unknown_modifier, near line: 6" in file: "common/ideas/pmt_probe_ideas.txt" near line: 6
+[18:15:58][no_game_date][persistent.cpp:67]: Error: "Unknown category: pmt_probe_missing_category: {, near line: 1" in file: "common/decisions/pmt_probe_decisions.txt" near line: 3
+[18:15:58][no_game_date][gameitemdatabasehelper.h:149]: Error: "Unknown category for : pmt_probe_decision It will be ignored: }, near line: 6" in file: "common/decisions/pmt_probe_decisions.txt" near line: 7
+[18:16:03][no_game_date][trigger.cpp:700]: Invalid trigger 'pmt_probe_unknown_trigger_in_scripted' in common/scripted_triggers/pmt_probe_triggers.txt line : 2
+[18:16:03][no_game_date][trigger.cpp:568]: Error: "Unknown trigger-type: pmt_probe_unknown_trigger_in_scripted, near line: 2" in file: "common/scripted_triggers/pmt_probe_triggers.txt" near line: 3
+[18:16:04][no_game_date][effect.cpp:445]: Invalid effect 'pmt_probe_unknown_effect' in events/pmt_probe_events.txt line : 9
+[18:16:04][no_game_date][persistent.cpp:67]: Error: "Unknown effect-type: pmt_probe_unknown_effect, near line: 9" in file: "events/pmt_probe_events.txt" near line: 9
+[18:16:04][no_game_date][effect.cpp:435]: Invalid scope type for effect add_building_construction in events/pmt_probe_events.txt line : 10
+[18:16:04][no_game_date][effect.cpp:445]: Invalid effect 'tag' in events/pmt_probe_events.txt line : 12
+[18:16:04][no_game_date][persistent.cpp:67]: Error: "Unknown effect-type: tag, near line: 12" in file: "events/pmt_probe_events.txt" near line: 12
+[18:16:04][no_game_date][trigger.cpp:700]: Invalid trigger 'pmt_probe_unknown_trigger' in events/pmt_probe_events.txt line : 17
+[18:16:04][no_game_date][trigger.cpp:568]: Error: "Unknown trigger-type: pmt_probe_unknown_trigger, near line: 17" in file: "events/pmt_probe_events.txt" near line: 20
+[18:16:04][no_game_date][id.cpp:104]: Failed to create id 44000001 50. Already exists in game. This might crash the game.
+[18:16:04][no_game_date][effect.cpp:435]: Invalid scope type for effect add_political_power in events/pmt_probe_events.txt line : 52
+[18:16:09][no_game_date][triggerimplementation.cpp:9803]: common/scripted_effects/BLT_scripted_effects.txt:77: has_game_rule: game rule LIT_ai_behavior does not exist
+[18:16:09][no_game_date][triggerimplementation.cpp:9803]: common/scripted_effects/BLT_scripted_effects.txt:83: has_game_rule: game rule LIT_ai_behavior does not exist
+[18:16:09][no_game_date][triggerimplementation.cpp:9803]: common/scripted_effects/BLT_scripted_effects.txt:213: has_game_rule: game rule EST_ai_behavior does not exist
+[18:16:09][no_game_date][triggerimplementation.cpp:9803]: common/scripted_effects/BLT_scripted_effects.txt:219: has_game_rule: game rule EST_ai_behavior does not exist
+[18:16:12][1936.01.01.12][effect.cpp:445]: Invalid effect 'IRQ_kamil_shabib' in history/countries/IRQ - Iraq.txt line : 116
+[18:16:12][1936.01.01.12][effect.cpp:358]: Error: "Unknown effect-type: IRQ_kamil_shabib, near line: 116" in file: "history/countries/IRQ - Iraq.txt" near line: 127
+[18:17:47][1936.01.02.13][effect.cpp:555]: events/pmt_probe_events.txt:52: add_political_power: Invalid Scope, supported: Country, provided: State

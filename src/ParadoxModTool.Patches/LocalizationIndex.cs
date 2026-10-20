@@ -16,8 +16,7 @@ public sealed class LocalizationIndex
     public static LocalizationIndex LoadVanilla(string vanillaRoot, string language)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
-        var folder = Path.Combine(vanillaRoot, "localization", language);
-        if (Directory.Exists(folder))
+        foreach (var folder in ParadoxModTool.GameProfiles.LocalizationFolders.Existing(vanillaRoot).Select(f => Path.Combine(f, language)).Where(Directory.Exists))
         {
             foreach (var path in Directory.EnumerateFiles(folder, "*_l_" + language + ".yml", SearchOption.AllDirectories).Order(StringComparer.OrdinalIgnoreCase))
             {

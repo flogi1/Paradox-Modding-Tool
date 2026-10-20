@@ -211,6 +211,9 @@ public sealed class ScopeEngine
         public Dictionary<string, string?> Saved = new(StringComparer.Ordinal);
         public List<ScopeFrame>? Frames;
 
+        // Schlüssel des zuletzt betretenen Blocks (für Zahlen in random_list).
+        public string? BlockKey;
+
         public WalkState Clone()
         {
             var copy = (WalkState)MemberwiseClone();
@@ -238,6 +241,16 @@ public sealed class ScopeEngine
     public static string? DefaultTypeFor(string? objectKey, string? defaultEventType) =>
         objectKey is not null && objectKey.Contains('.') ? defaultEventType : null;
 
+    /// <summary>
+    /// Die Art eines Events nach seinem Blocknamen (Stellaris: <c>country_event = { id = x.1 … }</c>): der Name selbst, wenn das Spielprofil ihn als
+    /// Event-Block nennt; sonst <see langword="null"/> (etwa <c>inline_script</c>).
+    /// </summary>
+    public static string? BlockEventType(string? objectKey, IReadOnlyDictionary<string, string>? eventBlockScopes) =>
+        objectKey is not null && eventBlockScopes is not null && eventBlockScopes.ContainsKey(objectKey) ? objectKey : null;
+
+    /// <summary>Die Art des Events in einem Pfad <c>events/&lt;Art&gt;/…</c>.</summary>
+    private static string EventKindOf(string path) => path.Split('/')[1];
+
     private bool TryObjectPath(string folder, string? objectKey, IReadOnlyDictionary<string, string> scalars, out string path, out string? problem)
     {
         problem = null;
@@ -247,8 +260,10 @@ public sealed class ScopeEngine
             return true;
         }
 
-        // Ohne type gilt der Standard des Spiels (CK III: character_event), sofern die Regeln einen kennen.
-        if ((scalars.GetValueOrDefault("type") ?? DefaultTypeFor(objectKey, _rules?.DefaultEventType)) is { } eventType)
+        // Ohne type gilt der Blockname (Stellaris) oder der Standard des Spiels (CK III: character_event), sofern die Regeln einen kennen.
+        if ((scalars.GetValueOrDefault("type")
+                ?? BlockEventType(objectKey, _rules?.EventBlockScopes)
+                ?? DefaultTypeFor(objectKey, _rules?.DefaultEventType)) is { } eventType)
         {
             path = $"events/{eventType}";
             return true;
@@ -286,7 +301,8 @@ public sealed class ScopeEngine
             return;
         }
 
-        var kind = KeyClassifier.Classify(node.Key, _db);
+        var kind = KeyClassifier.Classify(node.Key, _db, KeyClassifier.NumericChangesScope(_rules?.NumericKeysChangeScope == true, state.BlockKey));
+        state.BlockKey = node.Key;
         if (state.Structural && kind == KeyKind.Structural)
         {
             state.Path += "/" + node.Key;
@@ -341,7 +357,9 @@ public sealed class ScopeEngine
 
         foreach (var child in children)
         {
-            var kind = child.Key is null ? KeyKind.Transparent : KeyClassifier.Classify(child.Key, _db);
+            var kind = child.Key is null
+                ? KeyKind.Transparent
+                : KeyClassifier.Classify(child.Key, _db, KeyClassifier.NumericChangesScope(_rules?.NumericKeysChangeScope == true, parent.BlockKey));
 
             // Ein Name, der auch ein Modifier ist, kann in einem Modifier-Feld stehen (country_modifier = { … }) und bleibt darum ungeprüft.
             if (depth >= 2 && parent.Sure && parent.Current is not null && child.Key is not null && kind is KeyKind.Parameter or KeyKind.Iterator
@@ -434,6 +452,24 @@ public sealed class ScopeEngine
             return _db.IsScopeType(rootScope) ? (ScopeName.Normalize(rootScope), 1.0) : (null, 0);
         }
 
+        // Ein Event-Block mit festem Root-Scope laut Spielprofil (Stellaris: planet_event → planet) gilt ebenso überall in diesem Scope. Ausnahme: Die
+        // Vanilla-Events selbst widersprechen an diesem Feld (unter 90 % Zustimmung wie pre_triggers, die den Besitzer prüfen, oder ein anderer
+        // gelernter Scope); dann bleibt der Scope unbekannt statt falscher Warnungen.
+        if (path.StartsWith("events/", StringComparison.Ordinal) && _rules!.EventBlockScopes.TryGetValue(EventKindOf(path), out var blockScope)
+            && blockScope != ScopeRules.LearnedRootScope)
+        {
+            if (!_db.IsScopeType(blockScope))
+            {
+                return (null, 0);
+            }
+
+            var fixedScope = ScopeName.Normalize(blockScope);
+            return _rules.Fields.TryGetValue(path, out var learned)
+                && (learned.Support < ScopeRules.ConfidentSupport || (learned.Scope is not null && learned.Scope != fixedScope))
+                ? (null, learned.Support)
+                : (fixedScope, 1.0);
+        }
+
         if (_rules!.Discriminators.TryGetValue(path, out var discriminator))
         {
             // Der Scope hängt vom Geschwisterfeld ab: ein Wert, den die Vanilla-Dateien nicht eindeutig einem Scope zuordnen, bleibt unbekannt.
@@ -459,8 +495,17 @@ public sealed class ScopeEngine
             && !first.Equals("fromfrom", StringComparison.OrdinalIgnoreCase);
     }
 
-    private string UnresolvedReason(string path) =>
-        _rules!.Fields.ContainsKey(path) ? ScopeTexts.StartScopeAmbiguous(path) : ScopeTexts.NoRule(path);
+    private string UnresolvedReason(string path)
+    {
+        if (path.StartsWith("events/", StringComparison.Ordinal)
+            && _rules!.EventBlockScopes.TryGetValue(EventKindOf(path), out var blockScope) && blockScope != ScopeRules.LearnedRootScope
+            && !_db.IsScopeType(blockScope))
+        {
+            return ScopeTexts.EventWithoutRootScope(EventKindOf(path));
+        }
+
+        return _rules!.Fields.ContainsKey(path) ? ScopeTexts.StartScopeAmbiguous(path) : ScopeTexts.NoRule(path);
+    }
 
     /// <summary>Scope und Grund beim Betreten eines Blocks.</summary>
     private (string? Scope, string? Reason) Enter(
@@ -497,6 +542,8 @@ public sealed class ScopeEngine
                 return Output(key, current);
             case KeyKind.Parameter:
                 return (null, ScopeTexts.ParameterBlock(key));
+            case KeyKind.NumericScope:
+                return (null, ScopeTexts.UnknownBlock(key));
             default:
                 return (null, ScopeTexts.UnknownBlock(key));
         }
@@ -513,6 +560,7 @@ public sealed class ScopeEngine
         var parts = key.Split('.');
         string? scope;
         string? reason = null;
+        var passOn = false;
         var first = parts[0];
 
         if (first.StartsWith("scope:", StringComparison.Ordinal))
@@ -554,11 +602,14 @@ public sealed class ScopeEngine
         else
         {
             (scope, reason) = Output(first, current);
+            passOn = PassesOn(first);
         }
 
-        for (var i = 1; i < parts.Length && scope is not null; i++)
+        // root, prev, from und scope:x mit unbekanntem Scope beenden die Kette; nur ein Event-Target mit Ergebnis "various" reicht weiter.
+        for (var i = 1; i < parts.Length && (scope is not null || passOn); i++)
         {
             (scope, reason) = Output(parts[i], scope);
+            passOn = PassesOn(parts[i]);
         }
 
         return (scope, scope is null ? reason ?? ScopeTexts.ChainUnresolved : null);
@@ -571,8 +622,19 @@ public sealed class ScopeEngine
             return (null, ScopeTexts.UnknownTarget(name));
         }
 
+        if (target.Outputs.Count == 0 && target.VariousOutputs)
+        {
+            return (null, ScopeTexts.VariousOutputScopes(name));
+        }
+
         return target.Outputs.Count == 1 ? (target.Outputs.First(), null) : (null, ScopeTexts.SeveralOutputScopes(name));
     }
+
+    /// <summary>
+    /// Ein Kettenglied mit Ergebnis "various" (<c>target</c> in <c>target.owner</c>): sein Scope ist unbekannt, das nächste Glied führt aber trotzdem weiter,
+    /// weil <see cref="Output"/> den Ausgangs-Scope nicht braucht.
+    /// </summary>
+    private bool PassesOn(string link) => _db.GetTarget(link) is { VariousOutputs: true, Outputs.Count: 0 };
 
     /// <summary>Merkt <c>save_scope_as = name</c> aus den Anweisungen von <paramref name="siblings"/> vor <paramref name="until"/> (bzw. vor dem Cursor).</summary>
     private static void CollectSaved(IEnumerable<ScriptNode> siblings, ScriptNode? until, string? scopeAtLevel, Dictionary<string, string?> saved, int caret = int.MaxValue)

@@ -86,6 +86,28 @@ public class ContributionIndexTests : CompatTestBase
         Assert.Equal(OverrideBehavior.FirstWins, index.KeyGroups["in_game/events|my.1"].Behavior);
     }
 
+    /// <summary>Eine Einbindung auf oberster Ebene (Stellaris-Mods in districts, pop_jobs) ist keine Definition und damit kein Schlüssel.</summary>
+    [Fact]
+    public void Top_level_inline_script_is_no_key()
+    {
+        var a = Mod("A", 1);
+        Put(a, "in_game/common/building_types/a.txt", "inline_script = { script = x }\nfarm = { cost = 1 }\n");
+        var index = Build(new[] { a });
+        Assert.Contains("in_game/common/building_types|farm", index.KeyGroups.Keys);
+        Assert.DoesNotContain("in_game/common/building_types|inline_script", index.KeyGroups.Keys);
+    }
+
+    [Fact]
+    public void Top_level_inline_script_is_no_key_with_a_key_field()
+    {
+        var a = Mod("A", 1);
+        Put(a, "events/e.txt", "inline_script = { script = x }\ncountry_event = { id = my.1 }\n");
+        var rules = new OverrideRules(new[] { new OverrideRule("events", OverrideBehavior.FirstWins, KeyField: "id") });
+        var index = ContributionIndex.Build(new[] { a }, rules, new ParseCache(), null, CancellationToken.None);
+        Assert.Contains("events|my.1", index.KeyGroups.Keys);
+        Assert.Single(index.KeyGroups.Keys, k => k.StartsWith("events|", StringComparison.Ordinal));
+    }
+
     [Fact]
     public void Defines_use_top_and_child_key()
     {

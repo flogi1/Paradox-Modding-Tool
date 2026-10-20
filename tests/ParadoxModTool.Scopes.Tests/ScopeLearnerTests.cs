@@ -101,6 +101,84 @@ public sealed class ScopeLearnerTests : IDisposable
         Assert.Equal(5, rule.Total);
     }
 
+    private static readonly Dictionary<string, string> EventBlocks = new() { ["country_event"] = "country", ["event"] = "none" };
+
+    [Fact]
+    public void Event_block_names_from_the_profile_map_form_the_path()
+    {
+        Write("events\\e.txt", "country_event = { id = a.1 immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
+
+        var rules = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, eventBlockScopes: EventBlocks).Rules;
+
+        Assert.Equal("country", rules.Fields["events/country_event/immediate"].Scope);
+        Assert.Equal(EventBlocks, rules.EventBlockScopes);
+    }
+
+    [Fact]
+    public void Event_blocks_without_root_scope_and_unmapped_blocks_do_not_vote()
+    {
+        Write("events\\e.txt",
+            "event = { id = a.2 immediate = { is_capital = yes is_capital = no is_capital = yes is_capital = no is_capital = yes } }\n" +
+            "inline_script = { immediate = { is_capital = yes is_capital = no is_capital = yes is_capital = no is_capital = yes } }\n");
+
+        var rules = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, eventBlockScopes: EventBlocks).Rules;
+
+        Assert.DoesNotContain(rules.Fields.Keys, k => k.StartsWith("events/", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Event_block_names_are_skipped_without_the_profile_map()
+    {
+        Write("events\\e.txt", "country_event = { id = a.1 immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
+
+        var rules = Learn();
+
+        Assert.DoesNotContain(rules.Fields.Keys, k => k.StartsWith("events/", StringComparison.Ordinal));
+        Assert.Empty(rules.EventBlockScopes);
+    }
+
+    [Fact]
+    public void Learner_takes_classic_block_key_as_event_type()
+    {
+        Write("events\\e.txt",
+            "namespace = a\n" +
+            "country_event = { id = a.1 immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
+
+        var rules = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, eventBlockScopes: new Dictionary<string, string> { ["country_event"] = "country" }).Rules;
+        var learned = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, eventBlockScopes: new Dictionary<string, string> { ["country_event"] = ScopeRules.LearnedRootScope }).Rules;
+
+        // Mit "learned" stimmen die Events ab wie mit einem festen Scope; der Root-Scope kommt dann aus diesen Stimmen.
+        Assert.Equal("country", learned.Fields["events/country_event/immediate"].Scope);
+
+        Assert.Equal("country", rules.Fields["events/country_event/immediate"].Scope);
+        Assert.Equal("country", rules.EventBlockScopes["country_event"]);
+    }
+
+    [Fact]
+    public void Statements_in_numeric_blocks_do_not_vote_when_numeric_keys_change_scope()
+    {
+        Write("common\\foci\\a.txt",
+            "f1 = { available = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 763 = { is_capital = yes is_capital = no } } }\n");
+
+        var rules = ScopeRuleLearner.Learn(new[] { _root }, TestData.Db(), 1, T0, numericKeysChangeScope: true).Rules;
+        var plain = Learn();
+
+        Assert.Equal(5, rules.Fields["foci/*/available"].Total);
+        Assert.True(rules.NumericKeysChangeScope);
+        Assert.Equal(7, plain.Fields["foci/*/available"].Total);
+    }
+
+    [Fact]
+    public void Classic_event_blocks_are_skipped_without_event_block_types()
+    {
+        Write("events\\e.txt", "country_event = { id = a.1 immediate = { add_gold = 1 add_prestige = 1 add_gold = 2 add_prestige = 2 add_gold = 3 } }\n");
+
+        var rules = Learn();
+
+        Assert.DoesNotContain(rules.Fields.Keys, k => k.StartsWith("events/", StringComparison.Ordinal));
+        Assert.Empty(rules.EventBlockScopes);
+    }
+
     [Fact]
     public void Events_without_type_are_skipped_without_default()
     {

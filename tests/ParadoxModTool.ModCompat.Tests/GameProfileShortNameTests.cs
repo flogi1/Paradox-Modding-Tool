@@ -19,6 +19,8 @@ public sealed class GameProfileShortNameTests
     [InlineData("eu4.json", "EU IV")]
     [InlineData("eu5.json", "EU V")]
     [InlineData("vic3.json", "Vic 3")]
+    [InlineData("stellaris.json", "Stellaris")]
+    [InlineData("hoi4.json", "HOI IV")]
     public void ShippedProfilesCarryShortNames(string file, string expected)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

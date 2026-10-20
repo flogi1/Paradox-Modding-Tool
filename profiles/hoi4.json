@@ -1,0 +1,111 @@
+{
+  "id": "hoi4",
+  "steamAppId": "394360",
+  "playsetLoadFile": "dlc_load.json",
+  "displayName": "Hearts of Iron IV",
+  "shortName": "HOI IV",
+  "releaseDate": "2016-06-06",
+  "engineFamily": "clausewitz",
+  "defaultModRootTemplate": "%USERPROFILE%/Documents/Paradox Interactive/Hearts of Iron IV/mod",
+  "metadataFile": "*.mod",
+  "replacePathHidesEarlierMods": true,
+  "loadOrderRule": "alphabetical-filename-wins",
+  "eventBlockScopes": { "country_event": "learned", "news_event": "learned", "state_event": "learned", "unit_leader_event": "learned", "operative_leader_event": "learned" },
+  "numericKeysChangeScope": true,
+  "errorLogRules": "errorlog/hoi4.json",
+  "scriptDocsBase": "install",
+  "scriptDocsFolder": "documentation",
+  "scriptDocsFiles": {
+    "Effect": "effects_documentation.md",
+    "Trigger": "triggers_documentation.md",
+    "Modifier": "modifiers_documentation.md",
+    "DynamicVariable": "dynamic_variables_documentation.md"
+  },
+  "modifierFormats": {
+    "source": "suffix",
+    "suffixes": { "_factor": "percent" },
+    "folders": [ "common/modifier_definitions" ],
+    "defaultDecimals": 2,
+    "trimTrailingZeros": true,
+    "nameLocFolders": [ "localisation" ],
+    "nameKeys": [ "MODIFIER_{name}", "MODIFIERS_{name}", "{name}" ]
+  },
+  "vanillaHistoryFolderName": "HOI IV Vanilla History",
+  "saveGames": {
+    "folder": "save games",
+    "extension": ".hoi4",
+    "textMarker": { "prefix": "HOI4", "offset": 4, "value": "txt" },
+    "metadataBlock": "",
+    "dateField": "date",
+    "objectKinds": [
+      { "path": "countries/*", "labelKey": "saveexplorer.kind.country", "label": "Länder", "nameSource": "id" },
+      { "path": "states/*", "labelKey": "saveexplorer.kind.state", "label": "Staaten", "nameSource": "id" }
+    ]
+  },
+  "localizationLanguages": [ "english", "braz_por", "french", "german", "polish", "russian", "spanish", "japanese", "simp_chinese", "korean" ],
+  "folderCategories": [
+    { "path": "common", "labelKey": "profiles.folder.common", "label": "Common", "defaultColor": "#4A90D9", "descriptionKey": "profiles.folder.common.description", "description": "Kernspielregeln" },
+    { "path": "events", "labelKey": "profiles.folder.events", "label": "Events", "defaultColor": "#4AD98E" },
+    { "path": "interface", "labelKey": "profiles.folder.interface", "label": "Interface", "defaultColor": "#D98E4A", "descriptionKey": "profiles.folder.interface.description", "description": "Interface-Layout-Dateien (.gui), entspricht \"gui\" bei anderen Spielen" },
+    { "path": "gfx", "labelKey": "profiles.folder.graphics", "label": "Grafik", "defaultColor": "#7A4AD9" },
+    { "path": "localisation", "labelKey": "profiles.folder.localization", "label": "Lokalisierung", "defaultColor": "#D94A4A", "descriptionKey": "profiles.folder.localisation.description", "description": "YAML-Lokalisierungsdateien (.yml), britische Schreibweise beachten" },
+    { "path": "history", "labelKey": "profiles.folder.history", "label": "Historie", "defaultColor": "#B08AD9" },
+    { "path": "map", "labelKey": "profiles.folder.map", "label": "Karte", "defaultColor": "#4AC7D9" },
+    { "path": "music", "labelKey": "profiles.folder.music", "label": "Musik", "defaultColor": "#8A8A8A" },
+    { "path": "sound", "labelKey": "profiles.folder.sound", "label": "Sound", "defaultColor": "#8A8A8A" }
+  ],
+  "fileTypes": [
+    { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8" },
+    { "extension": ".gui", "parser": "jomini-gui", "defaultEncoding": "utf-8" },
+    { "extension": ".gfx", "parser": "jomini-gfx", "defaultEncoding": "utf-8" },
+    { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".lua", "parser": "jomini-script", "defaultEncoding": "utf-8" }
+  ],
+  "launchOptions": [
+    { "labelKey": "menu.launch.normal", "label": "Normal", "args": "" },
+    { "labelKey": "menu.launch.debug", "label": "Debug-Modus", "args": "-debug_mode" }
+  ],
+  "keyOperators": [],
+  "firstWinsInLoadOrder": true,
+  "lastWinsInLoadOrder": true,
+  "loadOrderCaseSensitive": true,
+  "overrideRules": [
+    { "folder": "common", "behavior": "LastWins", "certain": false },
+    { "folder": "common/*", "behavior": "LastWins", "certain": false },
+    { "folder": "common/defines", "behavior": "PartialKeys", "certain": true },
+    { "folder": "common/ideas", "behavior": "FirstWins", "certain": true, "unwrap": [ "ideas/*" ] },
+    { "folder": "common/decisions", "behavior": "PerKey", "certain": false, "unwrap": [ "*" ] },
+    { "folder": "common/decisions/categories", "behavior": "LastWins", "certain": false },
+    { "folder": "common/characters", "behavior": "PerKey", "certain": false, "unwrap": [ "characters" ] },
+    { "folder": "common/technologies", "behavior": "PerKey", "certain": false, "unwrap": [ "*" ] },
+    { "folder": "common/national_focus", "behavior": "PerKey", "certain": false, "keyField": "id" },
+    { "folder": "common/on_actions", "behavior": "AppendOnly", "certain": true },
+    { "folder": "common/scripted_effects", "behavior": "AppendOnly", "certain": true },
+    { "folder": "common/scripted_triggers", "behavior": "LastWins", "certain": true },
+    { "folder": "common/scripted_localisation", "behavior": "LastWins", "certain": false, "keyField": "name" },
+    { "folder": "common/scripted_guis", "behavior": "LastWins", "certain": false, "unwrap": [ "scripted_gui" ] },
+    { "folder": "common/country_tags", "behavior": "LastWins", "certain": false },
+    { "folder": "events", "behavior": "FirstWins", "certain": true, "keyField": "id" },
+    { "folder": "interface", "behavior": "LastWins", "certain": false, "unwrap": [ "guiTypes", "spriteTypes", "objectTypes" ], "keyField": "name" },
+    { "folder": "localisation", "behavior": "LocalizationKeys", "certain": false },
+    { "folder": "history/states", "behavior": "FirstWins", "certain": true, "keyField": "id" },
+    { "folder": "history", "behavior": "WholeFile", "certain": false },
+    { "folder": "gfx", "behavior": "WholeFile", "certain": false },
+    { "folder": "map", "behavior": "WholeFile", "certain": false },
+    { "folder": "music", "behavior": "WholeFile", "certain": false },
+    { "folder": "sound", "behavior": "WholeFile", "certain": false },
+    { "folder": "portraits", "behavior": "WholeFile", "certain": false }
+  ],
+  "gui": {
+    "dialect": "classic",
+    "contexts": [],
+    "typeOverride": "lastWins",
+    "spriteOverride": "lastWins",
+    "modsBeforeVanilla": false,
+    "vanillaRoots": [ "", "integrated_dlc/*", "dlc/*" ],
+    "structuredBlocks": [ "position", "show_position", "hide_position", "size", "borderSize", "margin", "slotsize", "if_resolution", "spacing" ],
+    "widgetHolders": [],
+    "layoutHolders": []
+  },
+  "notes": "Startprofil, geprüft gegen die echte Installation (C:\\Program Files (x86)\\Steam, AppID 394360, Version 1.19.3.0) und hoi4.paradoxwikis.com (Seiten Modding, Mod structure, Defines, Localisation, Event modding; Stand Mai 2026), 2026-10-16. Script-Datenbank: PMT liest die Doku, die das Spiel im Installationsordner mitbringt (documentation/*_documentation.md: Effects, Triggers, Modifier mit Nachkommastellen und Kategorien, Dynamic Variables); hoi4doc.dev spiegelt dieselben Dateien. Keine Doku für Event-Targets, Scope-Wechsel (ROOT, FROM, owner, capital_scope …) und On-Actions: die Scope-Verfolgung kennt den Scope hinter solchen Wechseln nicht und zeigt dort ? statt zu warnen; Staats-IDs (763 = { … }) gelten ebenso als unbekannter Scope. Modifier-Werte: Nachkommastellen aus der Doku (Anzeigegenauigkeit), Prozent nur geschätzt nach der Endung _factor; common/modifier_definitions (value_type, precision) ist sicher und geht vor. Override-Regeln: sicher laut Wiki sind nur common/defines (einzelne NDefines-Zeilen in eigener .lua-Datei) und history/states (doppelte State-ID, der erste gewinnt); gleicher Dateipfad = die später geladene Datei gilt, Dateien werden nie zusammengeführt; Sprites: der zuletzt ausgewertete gewinnt. Gemessen 2026-10-16 mit PMT Order Probe A/B und PMT Replace Probe C/D (Mod-Ordner, bleiben für weitere Messungen): die Dateien eines Ordners laden nach Dateiname über Vanilla und alle Mods hinweg, Groß- vor Kleinbuchstaben (setup.log: WUW_Hungary vor WarJustification vor debug_events; loadOrderCaseSensitive); bei gleichem Schlüssel in verschiedenen Dateien gewinnt bei Ideen und Events die zuerst geladene Datei, bei scripted_triggers die zuletzt geladene; doppelte scripted_effects laufen beide, in Ladereihenfolge; on_actions werden angehängt; replace_path blendet Vanilla und früher geladene Mods aus, nicht spätere. Das Spiel lud die Mods in beiden Playset-Reihenfolgen gleich (A, B, C, D, laut Wiki nach dem Namen der .mod-Datei); PMT rechnet bei gleichem Pfad weiter mit der Playset-Reihenfolge. Ideen und Entscheidungen vergleicht die Mod-Kompatibilität nur nach dem Namen (ideas > X, GER_dec), auch wenn eine Mod sie in eine andere Kategorie stellt (Florian 2026-10-17; das Spiel meldet Duplicate idea ohne Kategorie); der Kompatch führt nur Einträge derselben Kategorie zusammen. Hüllen mit Werten (Gesetze mit law = yes, technologies mit @-Konstanten) zerlegt der Kompatch nicht in einzelne Einträge, er behandelt sie als Dateirest. Nicht gemessen (unsicher): Entscheidungen, Charaktere, Technologien, Fokusbäume, GUI-Typen. Kein INJECT/REPLACE. Skriptdateien (.txt, .gui, .gfx, .lua) schreibt PMT neu ohne BOM: Vanilla hat in common/ und interface/ fast nie ein BOM (Events meist schon), und die Probe-Mods ohne BOM luden überall (2026-10-16); ob HOI IV ein BOM in common/ falsch liest, ist nicht gemessen. Fehlerkatalog errorlog/hoi4.json aus dem Probelauf \"PMT Error Probe\" (2026-10-16; Hearts of Iron IV schreibt manche Fehler zweimal, z. B. Invalid effect plus Unknown effect-type, die zweite Zeile hängt an der ersten; doppelte Event-IDs nur als Zahl, ohne Namen). Fehler, die der Lauf nicht geschrieben hat (fehlende Lokalisierung, Datei ohne BOM, fehlende Textur, unbekannter Define, unbekannte Idee/Fokus), stehen nicht im Katalog. Bekannte Lücken: GUI-Editor für das klassische Format: Vorschau (Plan 1) und Bearbeiten (Plan 2: Eigenschaftsfenster mit Erklärungen und Vanilla-Beispielen, Vanilla-Fenster in die Mod übernehmen (nur geänderte Fenster, in zz_<Mod>_overrides.gui im Ordner der Vanilla-Datei, nach der gemessenen Ladereihenfolge), Sprites in einer .gfx-Datei der Mod anlegen); für Plan 3 offen (HOI IV und EU IV): Prüfungen, Scripted GUIs, Bausteine, Mod-Kompatibilität für .gui, und für EU IV der Fehlerkatalog; Spielstand-Explorer nur für Text-Stände (settings.txt: save_as_binary=no; Kopfzeile HOI4txt, kein Metadaten-Block, Variablen flach als name=wert und Listen als name^0 …, gemessen an einem Stand vom 2026-10-16); Ironman- und Binär-Stände (HOI4bin) bleiben unlesbar, Charaktere (character_manager, ohne eigene Kennung im Pfad) und Werttypen fehlen, Werte erscheinen roh; Desync-Regeln, Patch-Vorlagen, Generator-Pakete. Alte Workshop-Mods im Archivformat (archive=\"…zip\" in der .mod-Datei) liest PMT nicht aus; sie bleiben im Playset und in dlc_load.json, die Mod-Kompatibilität sieht nur die zip-Datei. Interface-Ladereihenfolge (gemessen 2026-10-17): zuerst die Dateien direkt in interface/ nach Dateinamen, Vanilla und Mods gemischt, danach die Unterordner; bei doppeltem Fensternamen und doppeltem Sprite-Namen gewinnt die zuletzt geladene Definition und das Fenster wird ganz ersetzt."
+}

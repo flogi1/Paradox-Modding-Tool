@@ -1,3 +1,4 @@
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Edit;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Syntax;
@@ -31,7 +32,7 @@ public static class GuiDraft
         var edits = new GuiTextEdits(document);
         var changes = new List<TextEdit>();
         var names = new List<string>();
-        foreach (var node in Definitions(document))
+        foreach (var node in Definitions(document, index.Layout))
         {
             if (ModDefinition(index, node) is not { } mod)
             {
@@ -42,7 +43,7 @@ public static class GuiDraft
             if (replacement != document.TextOf(node))
             {
                 changes.Add(new TextEdit(node.Span.Start, node.Span.Length, replacement));
-                names.Add(node.Name);
+                names.Add(NameOf(node, index.Layout));
             }
         }
 
@@ -67,16 +68,30 @@ public static class GuiDraft
     /// Zeile in einer Mod-Kopie, die der Stelle <paramref name="offset"/> im Vanilla-Text entspricht (3b-Nacharbeit): dasselbe Element über seinen
     /// Pfad, sonst die gleichnamige äußerste Definition, sonst 1.
     /// </summary>
-    public static int LineInCopy(GuiDocument vanilla, int offset, GuiDocument copy)
+    public static int LineInCopy(GuiDocument vanilla, int offset, GuiDocument copy) => LineInCopy(vanilla, offset, copy, GuiLayout.Default);
+
+    /// <summary>
+    /// Wie die Fassung ohne Layout. Klassisch ist die Definition das oberste Fenster, gesucht über seinen <c>name</c>. Der Pfad allein trifft dort
+    /// das falsche Fenster, wenn die Kopie die Fenster anders ordnet (alle heißen gleich, zählen nur der Reihe nach); er gilt nur im selben Fenster.
+    /// </summary>
+    public static int LineInCopy(GuiDocument vanilla, int offset, GuiDocument copy, GuiLayout layout)
     {
         if (vanilla.Text.Length == 0 || vanilla.FindDeepestAt(Math.Clamp(offset, 0, vanilla.Text.Length - 1)) is not { } node)
         {
             return 1;
         }
 
-        if (GuiNodePath.Of(node).FindExact(copy) is { } same)
+        var classicWindow = layout.IsClassic ? ClassicWindows.EnclosingOf(node) : null;
+        if (GuiNodePath.Of(node).FindExact(copy) is { } same
+            && (classicWindow is null || ClassicWindows.EnclosingOf(same) is { } sameWindow && ClassicWindows.NameOf(sameWindow) == ClassicWindows.NameOf(classicWindow)))
         {
             return same.Line;
+        }
+
+        if (classicWindow is not null)
+        {
+            var name = ClassicWindows.NameOf(classicWindow);
+            return ClassicWindows.Of(copy).FirstOrDefault(w => ClassicWindows.NameOf(w) == name)?.Line ?? 1;
         }
 
         var definition = new[] { node }.Concat(node.Ancestors())
@@ -93,8 +108,20 @@ public static class GuiDraft
                 && !n.Ancestors().Any(a => a.Kind is GuiNodeKind.TypeDefinition or GuiNodeKind.TemplateDefinition))
             .ToList();
 
+    /// <summary>Die Definitionen eines Entwurfs: klassisch die obersten Fenster, sonst die äußersten types und templates.</summary>
+    public static IReadOnlyList<GuiNode> Definitions(GuiDocument document, GuiLayout layout) =>
+        layout.IsClassic ? ClassicWindows.Of(document) : Definitions(document);
+
     public static GuiDefinitionKind KindOf(GuiNode definition) =>
         definition.Kind == GuiNodeKind.TypeDefinition ? GuiDefinitionKind.Type : GuiDefinitionKind.Template;
+
+    /// <summary>Klassisch sind Fenster benannte Widgets (<see cref="GuiDefinitionKind.NamedWidget"/>).</summary>
+    public static GuiDefinitionKind KindOf(GuiNode definition, GuiLayout layout) =>
+        layout.IsClassic ? GuiDefinitionKind.NamedWidget : KindOf(definition);
+
+    /// <summary>Name der Definition: klassisch der Wert von <c>name</c> (<c>Name</c> des Knotens wäre der Schlüssel, z.B. containerWindowType).</summary>
+    public static string NameOf(GuiNode definition, GuiLayout layout) =>
+        layout.IsClassic ? ClassicWindows.NameOf(definition) : definition.Name;
 
     /// <summary>
     /// Wirksame Mod-Definition gleicher Art und gleichen Namens: in der Mod die zuletzt geladene, sonst in einer Abhängigkeits-Mod (Spec: Mod vor
@@ -102,6 +129,11 @@ public static class GuiDraft
     /// </summary>
     public static GuiDefinition? ModDefinition(GuiIndex index, GuiNode definition)
     {
+        if (index.Layout.IsClassic)
+        {
+            return ClassicModDefinition(index, ClassicWindows.NameOf(definition));
+        }
+
         var all = index.FindAll(definition.Name, KindOf(definition));
         if (index.Layout is { FirstWins: true, ModsBeforeVanilla: false })
         {
@@ -116,5 +148,16 @@ public static class GuiDraft
         }
 
         return all.LastOrDefault(d => d.File.Layer == GuiLayer.Mod) ?? all.LastOrDefault(d => d.File.Layer == GuiLayer.Dependency);
+    }
+
+    /// <summary>
+    /// Klassisch: die Fassung des Fensters, die der Entwurf zeigt. Unter den obersten Fenstern der Ebene Mod das, das die Regel des Spiels wählt, sonst
+    /// unter denen der Ebene Abhängigkeit. Eine Mod-Fassung, die im Spiel verliert, wird trotzdem gezeigt; der Planer verschiebt sie (Task 10).
+    /// </summary>
+    private static GuiDefinition? ClassicModDefinition(GuiIndex index, string name)
+    {
+        var windows = ClassicWindows.FindAll(index, name);
+        return ClassicWindows.Pick(index.Layout, windows.Where(d => d.File.Layer == GuiLayer.Mod))
+            ?? ClassicWindows.Pick(index.Layout, windows.Where(d => d.File.Layer == GuiLayer.Dependency));
     }
 }

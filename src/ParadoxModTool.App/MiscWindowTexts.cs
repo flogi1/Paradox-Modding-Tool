@@ -268,6 +268,8 @@ public static class MiscWindowTexts
 
     public static string ScriptDocsHintFolderUnknown => T("scriptdocs.hint.folderUnknown", "Der Ordner mit den Doku-Logs des Spiels ist unbekannt. Wähle ihn über \"Ordner wählen\".");
 
+    public static string ScriptDocsHintNoInstallDocs(string folder) => F("scriptdocs.hint.noInstallDocs", "Im Ordner {0} liegt keine Doku des Spiels (effects_documentation.md, triggers_documentation.md …). Das Spiel bringt sie in seinem Installationsordner mit: Prüfe die Spieldateien in Steam, oder wähle den richtigen Ordner über \"Ordner wählen\".", folder);
+
     public static string ScriptDocsHintNoLogs(string folder) => F("scriptdocs.hint.noLogs", "Im Ordner {0} liegen keine Doku-Logs (modifiers.log, triggers.log, effects.log …). Das Spiel schreibt diese Dateien selbst: Starte es einmal (bei Europa Universalis V ggf. im Debug-Modus) und klicke danach auf \"Neu einlesen\", oder wähle den richtigen Ordner über \"Ordner wählen\".", folder);
 
     public static string ScriptDocsCount(int shown, int total) => F("scriptdocs.count", "{0:N0} von {1:N0} Einträgen", shown, total);

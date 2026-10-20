@@ -36,12 +36,14 @@ public sealed class ModifierFormatIndex
     /// <param name="settings">Profilabschnitt; <see langword="null"/> = leerer Index.</param>
     /// <param name="gameRoots">Spielinhalt-Ordner (z. B. <c>…/game</c>), zuerst gelesen.</param>
     /// <param name="modRoots">Mod-Ordner, danach gelesen.</param>
-    /// <param name="wikiModifiers">Modifier-Name und Wiki-Typ ("Multiplicative", "Additive", …) für <c>source = wiki</c>.</param>
+    /// <param name="wikiModifiers">Modifier-Name und Wiki-Typ ("Multiplicative", "Additive", …) für <c>source = wiki</c>; bei <c>source = suffix</c> alle Modifier der Script-Datenbank mit ihrer Kategorie.</param>
+    /// <param name="docDecimals">Bei <c>source = suffix</c>: Nachkommastellen je Modifier aus der Doku des Spiels (Hearts of Iron IV: "Number with N decimal places").</param>
     public static ModifierFormatIndex Build(
         ModifierFormatSettings? settings,
         IEnumerable<string> gameRoots,
         IEnumerable<string> modRoots,
-        IEnumerable<(string Name, string EffectType)> wikiModifiers)
+        IEnumerable<(string Name, string EffectType)> wikiModifiers,
+        IReadOnlyDictionary<string, int>? docDecimals = null)
     {
         var formats = new Dictionary<string, ModifierFormat>(StringComparer.OrdinalIgnoreCase);
         var traits = new Dictionary<string, ModifierTraits>(StringComparer.OrdinalIgnoreCase);
@@ -69,6 +71,37 @@ public sealed class ModifierFormatIndex
                     if (percent is { } isPercent)
                     {
                         formats[name] = new ModifierFormat(isPercent, false, settings.DefaultDecimals, 1, false, settings.TrimTrailingZeros, Estimated: true);
+                    }
+                }
+
+                break;
+            case "suffix":
+                // Stellaris hat keine Definitionsdateien; die Endung verrät das Format meist (_mult Prozent, _add Zahl), sicher ist es nicht.
+                var suffixes = settings.Suffixes.OrderByDescending(s => s.Key.Length).ToList();
+                foreach (var (name, category) in wikiModifiers)
+                {
+                    // Jeder Modifier zählt (Namen, Suche), auch ohne Format; die Kategorie stammt aus modifiers.log.
+                    traits[name] = new ModifierTraits(false, false, category.Trim());
+                    var match = suffixes.FirstOrDefault(s => s.Key.Length > 0 && name.EndsWith(s.Key, StringComparison.OrdinalIgnoreCase));
+                    var percent = match.Value?.Trim() switch
+                    {
+                        "percent" => true,
+                        "number" => false,
+                        _ => (bool?)null,
+                    };
+                    if (percent is { } isPercent)
+                    {
+                        var decimals = docDecimals is not null && docDecimals.TryGetValue(name, out var fromDocs) ? fromDocs : settings.DefaultDecimals;
+                        formats[name] = new ModifierFormat(isPercent, false, decimals, 1, false, settings.TrimTrailingZeros, Estimated: true);
+                    }
+                }
+
+                // Hearts of Iron IV: eigene Modifier in common/modifier_definitions (value_type, precision) sind sicher und gehen vor die Schätzung.
+                foreach (var root in gameRoots.Concat(modRoots))
+                {
+                    foreach (var folder in settings.Folders)
+                    {
+                        ReadFolder(Path.Combine(root, folder.Replace('/', Path.DirectorySeparatorChar)), settings, formats, traits);
                     }
                 }
 

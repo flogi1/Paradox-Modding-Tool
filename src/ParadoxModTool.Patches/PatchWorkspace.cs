@@ -17,10 +17,14 @@ public sealed class PatchWorkspace
     private readonly Dictionary<string, List<string>> _notes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<string>> _conflicts = new(StringComparer.OrdinalIgnoreCase);
 
-    public PatchWorkspace(string modRoot, string vanillaRoot)
+    private readonly Func<string, bool>? _newFileHasBom;
+
+    /// <param name="newFileHasBom">BOM ganz neuer Dateien je Endung (mit Punkt) aus dem Spielprofil; ohne Angabe bekommen sie eins.</param>
+    public PatchWorkspace(string modRoot, string vanillaRoot, Func<string, bool>? newFileHasBom = null)
     {
         _modRoot = modRoot;
         _vanillaRoot = vanillaRoot;
+        _newFileHasBom = newFileHasBom;
     }
 
     public string ModRoot => _modRoot;
@@ -68,8 +72,17 @@ public sealed class PatchWorkspace
 
     public string NewLineOf(string rel) => Format(rel)?.NewLine ?? "\r\n";
 
-    /// <summary>Neue Dateien bekommen ein BOM; Kopien aus Vanilla übernehmen Zeilenende, BOM und Kodierung der Vanilla-Datei.</summary>
-    public bool HasBomOf(string rel) => Format(rel)?.HasBom ?? true;
+    /// <summary>
+    /// Neue Dateien bekommen ein BOM, wenn das Spielprofil es will (Stellaris liest Skriptdateien mit BOM falsch), Lokalisierung immer; Kopien aus
+    /// Vanilla übernehmen Zeilenende, BOM und Kodierung der Vanilla-Datei.
+    /// </summary>
+    public bool HasBomOf(string rel) => Format(rel)?.HasBom ?? NewFileHasBom(rel);
+
+    private bool NewFileHasBom(string rel)
+    {
+        var extension = Path.GetExtension(rel).ToLowerInvariant();
+        return extension == ".yml" || (_newFileHasBom?.Invoke(extension) ?? true);
+    }
 
     public string EncodingNameOf(string rel) => Format(rel)?.EncodingName ?? TextFile.Utf8;
 

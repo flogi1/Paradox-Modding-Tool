@@ -68,6 +68,21 @@ public sealed class PatchRunnerTests
     private static PlannedFile File(PatchPlan plan, string rel) => plan.Files.Single(f => f.RelativePath == rel);
 
     [Fact]
+    public void New_files_follow_the_profile_encoding_and_vanilla_copies_keep_theirs()
+    {
+        // Stellaris: neue Skriptdateien ohne BOM; Kopien aus Vanilla übernehmen das BOM der Vanilla-Datei
+        using var mod = new TempMod();
+        WriteVanilla(mod);
+        var context = Context(mod) with { NewFileHasBom = extension => extension != ".txt" };
+
+        var plan = PatchRunner.Plan(context, Recipe("angkor_wat_01", "borobudur_01"));
+
+        Assert.False(File(plan, Generated).HasBom);
+        Assert.True(File(plan, Specials).CreatedFromVanilla);
+        Assert.Equal(TextFile.Read(Path.Combine(mod.VanillaRoot, Specials)).HasBom, File(plan, Specials).HasBom);
+    }
+
+    [Fact]
     public void Special_buildings_recipe_end_to_end()
     {
         using var mod = new TempMod();

@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.IO;
-using System.Text;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ParadoxModTool.Categories;
+using ParadoxModTool.GuiDesign.Index;
 
 namespace ParadoxModTool.Editor;
 
@@ -324,10 +324,13 @@ public sealed class OpenDocument : INotifyPropertyChanged
     public static OpenDocument NewEmpty(IHighlightingDefinition? highlighting) =>
         new(null, string.Empty, highlighting);
 
-    /// <summary>Lädt eine Datei standardmäßig als UTF-8 (siehe Architektur-Spezifikation, Abschnitt 5h).</summary>
+    /// <summary>
+    /// Lädt eine Datei standardmäßig als UTF-8 (siehe Architektur-Spezifikation, Abschnitt 5h); <c>.gui</c> und <c>.gfx</c> fallen bei ungültigem UTF-8 auf
+    /// Windows-1252 zurück (<see cref="GuiTextReader.ReadFile"/>), <c>ModFileEncoding.ForWrite</c> schreibt sie dann auch wieder so.
+    /// </summary>
     public static OpenDocument LoadFromFile(string path, IHighlightingDefinition? highlighting)
     {
-        var text = File.ReadAllText(path, Encoding.UTF8);
+        var text = GuiTextReader.ReadFile(path);
         var document = new OpenDocument(path, text, highlighting);
         document.RefreshDiskStamp();
         return document;
@@ -359,7 +362,7 @@ public sealed class OpenDocument : INotifyPropertyChanged
             return;
         }
 
-        var text = File.ReadAllText(FilePath, Encoding.UTF8);
+        var text = GuiTextReader.ReadFile(FilePath);
         Document.Text = text;
         MarkSaved();
         RefreshDiskStamp();

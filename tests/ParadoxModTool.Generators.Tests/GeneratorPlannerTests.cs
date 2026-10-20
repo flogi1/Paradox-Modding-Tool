@@ -14,6 +14,31 @@ public sealed class GeneratorPlannerTests : IDisposable
     private static GeneratorPlannedFile File(GeneratorPlan plan, string relative) => plan.Files.Single(f => f.RelativePath == relative);
 
     [Fact]
+    public void New_files_follow_the_profile_encoding_but_localisation_keeps_its_bom()
+    {
+        // Stellaris: Skript- und .gui-Dateien ohne BOM; Lokalisierung braucht immer eins, bestehende Dateien behalten ihres
+        var target = new GeneratorTarget(_slice.ModRoot, null, SlicePackage.Languages) { NewFileHasBom = extension => extension != ".txt" };
+
+        var plan = GeneratorPlanner.Plan(_slice.Package, _slice.State("BYZ", 2, 1), target);
+
+        Assert.False(File(plan, "in_game/common/scripted_guis/02_IV2_sgui_BYZ.txt").HasBom);
+        Assert.True(File(plan, "main_menu/localization/english/04_IV2_BYZ_l_english.yml").HasBom);
+        var existing = File(plan, "in_game/common/scripted_triggers/setup.txt");
+        Assert.Equal(PlannedFileStatus.Changed, existing.Status);
+        Assert.Equal(TextFile.Read(Path.Combine(_slice.ModRoot, "in_game/common/scripted_triggers/setup.txt")).HasBom, existing.HasBom);
+    }
+
+    [Fact]
+    public void Localisation_gets_a_bom_even_when_the_profile_says_otherwise()
+    {
+        var target = new GeneratorTarget(_slice.ModRoot, null, SlicePackage.Languages) { NewFileHasBom = _ => false };
+
+        var plan = GeneratorPlanner.Plan(_slice.Package, _slice.State("BYZ", 2, 1), target);
+
+        Assert.True(File(plan, "main_menu/localization/german/04_IV2_BYZ_l_german.yml").HasBom);
+    }
+
+    [Fact]
     public void First_run_creates_all_files_and_patches_base_files()
     {
         var plan = _slice.Plan(_slice.State("BYZ", 2, 1));

@@ -1,16 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ParadoxModTool.GuiDesign</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- UseWPF nimmt System.IO aus den impliziten usings (Konflikt mit System.Windows.Shapes.Path); der Code hier braucht es weiter. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Storage\ParadoxModTool.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParadoxModTool.GuiDesign.Tests" />
   </ItemGroup>
 
 </Project>

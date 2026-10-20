@@ -9,7 +9,8 @@ public sealed record KeyIndexProgress(string Root, int Done, int Total);
 /// </summary>
 public sealed class LocalizationKeyIndex
 {
-    private static readonly string[] Parts = { "main_menu", "in_game" };
+    // Leerer Teil: flache Spiele (Hearts of Iron IV, EU IV) mit localisation/ direkt im Spielordner.
+    private static readonly string[] Parts = { "main_menu", "in_game", "" };
 
     /// <summary>Je gebautem Teil (ein <see cref="Build"/>) die Schlüssel nach Hash; <see cref="Combine"/> reiht Teile aneinander, ohne sie zu kopieren.</summary>
     private readonly IReadOnlyList<Dictionary<uint, List<string>>> _parts;
@@ -34,13 +35,8 @@ public sealed class LocalizationKeyIndex
         {
             var root = rootList[i];
             ct.ThrowIfCancellationRequested();
-            foreach (var part in Parts)
+            foreach (var folder in Parts.SelectMany(part => ParadoxModTool.GameProfiles.LocalizationFolders.Existing(Path.Combine(root, part))))
             {
-                var folder = Path.Combine(root, part, "localization");
-                if (!Directory.Exists(folder))
-                {
-                    continue;
-                }
 
                 foreach (var file in YmlFiles(folder, ct))
                 {

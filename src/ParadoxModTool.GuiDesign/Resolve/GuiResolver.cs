@@ -148,6 +148,8 @@ public sealed class GuiResolver
             BaseWidget = chain[^1],
             TypeChain = chain,
             Origin = OriginAt(inherited, node),
+            TemplateLookup = FindTemplate,
+            FilePathLookup = FilePathOf,
         };
         element.Issues.AddRange(issues);
 
@@ -337,6 +339,30 @@ public sealed class GuiResolver
         }
 
         return value;
+    }
+
+    /// <summary>
+    /// <c>@name</c> → Wert der Konstante aus den umschließenden Gültigkeitsbereichen derselben Datei, gesehen von <paramref name="at"/> aus
+    /// (für Werte in strukturierten Blöcken, die der Resolver als Rohtext lässt). <see langword="null"/>, wenn <paramref name="value"/> keine
+    /// Konstante nennt oder es sie nicht gibt.
+    /// </summary>
+    public static string? SubstituteConstant(string value, GuiNode at) =>
+        value.Length > 1 && value[0] == '@' && value[1] != '[' ? LookupConstant(value[1..], at, 0) : null;
+
+    /// <summary>
+    /// Wert mit aufgelösten Konstanten, gesehen von <paramref name="at"/> aus: <c>@name</c> → Wert der Konstante, <c>@[Ausdruck]</c> → berechnete Zahl,
+    /// alles andere unverändert. <see langword="null"/>, wenn eine Konstante fehlt oder der Ausdruck nicht auswertbar ist.
+    /// </summary>
+    public static string? SubstituteValue(string value, GuiNode at)
+    {
+        if (value.StartsWith("@[", StringComparison.Ordinal) && value.EndsWith(']'))
+        {
+            return GuiExpression.TryEvaluate(value[2..^1], name => ParseNumber(LookupConstant(name, at, 0)), out var result)
+                ? GuiExpression.Format(result)
+                : null;
+        }
+
+        return value.Length > 1 && value[0] == '@' ? LookupConstant(value[1..], at, 0) : value;
     }
 
     /// <summary>Konstante im nächsten umschließenden Gültigkeitsbereich derselben Datei (Konstanten sind dateilokal).</summary>

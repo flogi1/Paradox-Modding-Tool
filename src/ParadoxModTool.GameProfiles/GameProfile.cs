@@ -68,7 +68,11 @@ public sealed class OverrideRuleEntry
     public string Behavior { get; set; } = "PerKey";
     public bool Certain { get; set; } = true;
 
-    /// <summary>Hüllen-Blöcke, deren Einträge einzeln zählen (EU IV: <c>country_decisions</c>, <c>spriteTypes</c>). Der Schlüssel lautet dann <c>Hülle &gt; Name</c>.</summary>
+    /// <summary>
+    /// Hüllen-Blöcke, deren Einträge einzeln zählen (EU IV: <c>country_decisions</c>, <c>spriteTypes</c>). Der Schlüssel lautet dann <c>Hülle &gt; Name</c>.
+    /// <c>hülle/*</c> = zwei Ebenen (HOI IV <c>ideas/*</c>: <c>ideas &gt; country &gt; GER_x</c>), <c>*</c> = jeder Block der obersten Ebene ist eine Hülle
+    /// (HOI IV-Entscheidungen in Kategorien); in diesen beiden Formen zählen Werte in der Hülle nicht.
+    /// </summary>
     public List<string>? Unwrap { get; set; }
 
     /// <summary>Feld im Block, das den Schlüssel liefert (EU IV: <c>id</c> bei Events, <c>name</c> bei GUI-Typen). Leer = der Blockname.</summary>
@@ -156,6 +160,26 @@ public sealed class GameProfile
     /// </summary>
     public bool FirstWinsInLoadOrder { get; set; }
 
+    /// <summary>
+    /// Bei "zuletzt geladen gewinnt" zählen Vanilla und Mods gemeinsam in Ladereihenfolge der Dateien (<see cref="GameLoadOrder"/>), die Playset-Reihenfolge
+    /// nur bei gleichem Pfad (Stellaris, laut Wiki "Modding": Dateien laden nach ihrem Namen; eine Mod-Datei <c>00_x.txt</c> verliert gegen Vanilla in
+    /// <c>zz_y.txt</c>). Ohne Angabe: Playset-Rang, dann Dateiname (bisheriges Verhalten).
+    /// </summary>
+    public bool LastWinsInLoadOrder { get; set; }
+
+    /// <summary>
+    /// Die Ladereihenfolge der Dateinamen vergleicht ASCII mit Groß-/Kleinschreibung (Großbuchstaben vor "_" vor Kleinbuchstaben; Stellaris, gemessen
+    /// 2026-10-16). Ohne Angabe: ASCII in Kleinschreibung (Victoria 3), siehe <see cref="GameLoadOrder"/>.
+    /// </summary>
+    public bool LoadOrderCaseSensitive { get; set; }
+
+    /// <summary>
+    /// <c>supported_version</c> im Mod-Deskriptor gilt nur als genaue Version (<c>v4.5.2</c>) oder Hauptversion.Nebenversion.* (<c>v4.5.*</c>);
+    /// <c>*</c>, <c>v4.*</c> und <c>v4.*.*</c> meldet das Spiel als "Invalid supported_version" (Stellaris, gemessen 2026-10-16). Ein neuer
+    /// Kompatch nimmt dann die installierte Version, siehe <c>NewCompatch.SupportedVersion</c>.
+    /// </summary>
+    public bool SupportedVersionMajorMinor { get; set; }
+
     /// <summary>Steam-AppID des Spiels (für den Workshop-Upload); ohne Angabe ist das Veröffentlichen auf Steam für dieses Spiel gesperrt.</summary>
     public string? SteamAppId { get; set; }
 
@@ -169,10 +193,35 @@ public sealed class GameProfile
     public string ScriptDocsFolder { get; set; } = "docs";
 
     /// <summary>
+    /// Worauf sich <see cref="ScriptDocsFolder"/> bezieht: "user" (Standard, Spieldatenordner des Nutzers) oder "install" (Installationsordner des
+    /// Spiels). Hearts of Iron IV liefert seine Doku als Markdown im Installationsordner (<c>documentation/*.md</c>).
+    /// </summary>
+    public string ScriptDocsBase { get; set; } = "user";
+
+    /// <summary>
+    /// Abweichende Namen der Doku-Logs je Eintragsart (Schlüssel = Name der Art, z. B. <c>EventTarget</c>). Stellaris schreibt die Scope-Wechsel nach
+    /// <c>scopes.log</c>. Ohne Angabe gelten die üblichen Namen (<c>modifiers.log</c>, <c>event_targets.log</c> …).
+    /// </summary>
+    public Dictionary<string, string>? ScriptDocsFiles { get; set; }
+
+    /// <summary>
     /// Art der Events ohne Feld <c>type</c> für die Scope-Verfolgung (CK III laut <c>game/events/_events.info</c>: <c>character_event</c>).
     /// <see langword="null"/>, wenn das Spiel <c>type</c> verlangt (EU V) oder es nicht geprüft ist.
     /// </summary>
     public string? DefaultEventType { get; set; }
+
+    /// <summary>
+    /// Events, deren Art im Blocknamen steht statt im Feld <c>type</c> (Stellaris: <c>country_event = { id = x.1 … }</c>), für die Scope-Verfolgung:
+    /// Blockname auf Root-Scope, "none" für Events ohne Root-Scope (Stellaris: <c>event</c>), "learned" für einen gelernten Root-Scope (Hearts of Iron IV,
+    /// EU IV). <see langword="null"/> bei Spielen mit <c>type</c>.
+    /// </summary>
+    public Dictionary<string, string>? EventBlockScopes { get; set; }
+
+    /// <summary>
+    /// Zahlen als Blockschlüssel wechseln den Scope (HOI IV: Staats-ID <c>763 = { … }</c>, EU IV: Provinz-ID), außer in <c>random_list</c>. Die
+    /// Scope-Verfolgung kennt den Scope dahinter nicht und warnt dort nicht. Ohne Angabe gelten Zahlen als Gewichte (bisheriges Verhalten).
+    /// </summary>
+    public bool NumericKeysChangeScope { get; set; }
 
     /// <summary>
     /// <c>replace_path</c> einer Mod blendet auch die Dateien der Mods aus, die im Playset vor ihr laden, nicht nur Vanilla (Crusader Kings III,
@@ -210,6 +259,9 @@ public sealed class GameProfile
 
     /// <summary>Woher die Anzeigeformate der Modifier-Werte kommen (Hover "Im Spiel: +10 %"). Null = keine Anzeige.</summary>
     public ModifierFormatSettings? ModifierFormats { get; set; }
+
+    /// <summary>Profiler-Fakten für den Performance-Check (Konsolenbefehle, Dump-Datei, Monatszeile). Null = Spiel ohne Profiler-Unterstützung.</summary>
+    public PerformanceSettings? Performance { get; set; }
 }
 
 /// <summary>
@@ -217,7 +269,7 @@ public sealed class GameProfile
 /// </summary>
 public sealed class ModifierFormatSettings
 {
-    /// <summary>"definitions" (Definitionsdateien des Spiels), "wiki" (Script-Datenbank aus der Wiki, geschätzt) oder "none".</summary>
+    /// <summary>"definitions" (Definitionsdateien des Spiels), "wiki" (Script-Datenbank aus der Wiki, geschätzt), "suffix" (aus der Namensendung, geschätzt) oder "none".</summary>
     public string Source { get; set; } = "none";
 
     /// <summary>Ordner der Definitionsdateien, relativ zum Spielinhalt (<c>game/</c>) und genauso relativ zum Mod-Ordner.</summary>
@@ -240,6 +292,12 @@ public sealed class ModifierFormatSettings
 
     /// <summary>Lokalisierungsschlüssel eines Begriffs oder Verweises im Namen (<c>[levy|E]</c>, <c>$nobles$</c>) in Rangfolge; <c>{id}</c> steht für den Begriff, z. B. <c>game_concept_{id}</c>.</summary>
     public List<string> NameRefKeys { get; set; } = new() { "{id}" };
+
+    /// <summary>
+    /// Bei <c>source = suffix</c>: Namensendung → "percent" oder "number" (Stellaris: <c>_mult</c> Prozent, <c>_add</c> Zahl). Die längste passende Endung gilt;
+    /// Modifier ohne passende Endung bekommen kein Format.
+    /// </summary>
+    public Dictionary<string, string> Suffixes { get; set; } = new(StringComparer.Ordinal);
 }
 
 /// <summary>Faktor, mit dem der Wert eines Sonderformats multipliziert wird (z. B. 1000 für Werte, die das Spiel in Tausend speichert).</summary>
@@ -263,7 +321,7 @@ public sealed class SaveGameSettings
     /// <summary>Woran ein lesbarer Text-Stand erkannt wird.</summary>
     public SaveTextMarker TextMarker { get; set; } = new();
 
-    /// <summary>Name des Metadaten-Blocks nach der Kopfzeile (EU V: "metadata", Crusader Kings III: "meta_data").</summary>
+    /// <summary>Name des Metadaten-Blocks nach der Kopfzeile (EU V: "metadata", Crusader Kings III: "meta_data"); leer = Werte auf oberster Ebene vor dem ersten Block (Hearts of Iron IV).</summary>
     public string MetadataBlock { get; set; } = "metadata";
 
     /// <summary>Feld mit dem Spieldatum im Metadaten-Block (EU V: "date", Crusader Kings III: "meta_date").</summary>
@@ -357,4 +415,46 @@ public sealed class GuiProfileSettings
     /// in Ladereihenfolge (Victoria 3, gemessen 2026-10-11: ein Mod-Typ in gui/shared/zz_… verliert gegen Vanilla in gui/shared/button_icons.gui).
     /// </summary>
     public bool ModsBeforeVanilla { get; set; } = true;
+
+    /// <summary>Format der .gui-Dateien: <c>jomini</c> (Standard: CK III, EU V, Victoria 3) oder <c>classic</c> (HOI IV, EU IV: guiTypes, containerWindowType).</summary>
+    public string Dialect { get; set; } = "jomini";
+
+    /// <summary>Nur klassisch, welche Sprite-Definition gilt: <c>lastWins</c> oder <c>firstWins</c>; <see langword="null"/> = lastWins. <see cref="TypeOverride"/> gilt dort für Fenster.</summary>
+    public string? SpriteOverride { get; set; }
+
+    /// <summary>
+    /// Nur klassisch: Ordner relativ zur Installation, deren <c>interface/</c> Vanilla ist. <c>""</c> = die Installation selbst, ein <c>/*</c> am Ende = jeder
+    /// direkte Unterordner (z. B. <c>dlc/*</c>). Leer = nicht angegeben.
+    /// </summary>
+    public List<string> VanillaRoots { get; set; } = new();
+}
+
+/// <summary>
+/// Fakten des eingebauten Skript-Profilers eines Spiels (siehe docs/superpowers/specs/2026-10-20-performance-checker-design.md, Abschnitt "Spiele und Fakten").
+/// </summary>
+public sealed class PerformanceSettings
+{
+    /// <summary>Konsolenbefehl, der den Profiler zurücksetzt und neu startet (z. B. <c>Script.Profiling.Restart</c>).</summary>
+    public string RestartCommand { get; set; } = string.Empty;
+
+    /// <summary>Konsolenbefehl, der den Profiler-Dump schreibt (z. B. <c>Script.Profiling.Dump</c>).</summary>
+    public string DumpCommand { get; set; } = string.Empty;
+
+    /// <summary>Dateimuster des Dumps im Logs-Ordner des Spiels (z. B. <c>profiling*.csv</c>); null = noch nicht gemessen, die Funktion bleibt für dieses Spiel gesperrt.</summary>
+    public string? DumpFilePattern { get; set; }
+
+    /// <summary>Datei im Spieldatenordner, die den letzten Spielstand für den Direktstart nennt.</summary>
+    public string ContinueGameFile { get; set; } = "continue_game.json";
+
+    /// <summary>Startargument, das den letzten Spielstand lädt (z. B. <c>-continuelastsave</c>); null = unbekannt.</summary>
+    public string? ContinueSaveArgs { get; set; }
+
+    /// <summary>Vollständiger Zeilenschlüssel der Zeile, die genau einmal im Monat läuft; Grundlage, um Aufrufzahlen auf Monate umzurechnen.</summary>
+    public string? MonthlyPulseRow { get; set; }
+
+    /// <summary>Namen der täglichen On-Actions (für die Aufrufzahl pro Tag).</summary>
+    public List<string> DailyOnActions { get; set; } = new();
+
+    /// <summary>Die Funktion ist für das Spiel nutzbar, sobald Dump-Befehl und Dateimuster gemessen sind.</summary>
+    public bool IsUsable => !string.IsNullOrEmpty(DumpFilePattern) && !string.IsNullOrEmpty(DumpCommand);
 }

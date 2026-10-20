@@ -26,7 +26,11 @@ public sealed class GuiSchematicScene
         Visit(root, null, 0, boxes);
         Boxes = boxes;
 
-        var visible = boxes.Where(b => b.Box.Width > 0 && b.Box.Height > 0).ToList();
+        // Umriss für "Einpassen": ohne Kästen, die ganz neben dem Bildschirm liegen (klassisch versteckt Vanilla Elemente bei x = 99512); ein Kasten,
+        // der nur hinausragt (die HOI-IV-Leiste oben), zählt mit. Liegen alle daneben, zählen alle.
+        var withArea = boxes.Where(b => b.Box.Width > 0 && b.Box.Height > 0).ToList();
+        var onScreen = withArea.Where(b => !b.Box.OffScreen).ToList();
+        var visible = onScreen.Count > 0 ? onScreen : withArea;
         if (visible.Count > 0)
         {
             Left = visible.Min(b => b.Box.X);
@@ -48,13 +52,13 @@ public sealed class GuiSchematicScene
 
     public double Height { get; }
 
-    /// <summary>Oberster (zuletzt gezeichneter) Kasten mit Fläche an dieser Stelle.</summary>
+    /// <summary>Oberster (zuletzt gezeichneter) Kasten mit Fläche an dieser Stelle; beschnittene Teile (Scrollbereich, <c>scissor</c>) zählen nicht.</summary>
     public LayoutBox? HitTest(double x, double y)
     {
         for (var i = Boxes.Count - 1; i >= 0; i--)
         {
             var box = Boxes[i].Box;
-            if (box.Width > 0 && box.Height > 0 && x >= box.X && x < box.X + box.Width && y >= box.Y && y < box.Y + box.Height)
+            if (Contains(box.X, box.Y, box.Width, box.Height, x, y) && (box.Clip is not { } clip || Contains(clip.X, clip.Y, clip.Width, clip.Height, x, y)))
             {
                 return box;
             }
@@ -62,6 +66,9 @@ public sealed class GuiSchematicScene
 
         return null;
     }
+
+    private static bool Contains(double left, double top, double width, double height, double x, double y) =>
+        width > 0 && height > 0 && x >= left && x < left + width && y >= top && y < top + height;
 
     public GuiNode? SelectableNode(LayoutBox box)
     {

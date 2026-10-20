@@ -31,14 +31,19 @@ public sealed class GuiRules
 
     public GuiRules(IEnumerable<string> structuredBlocks, IEnumerable<string> widgetHolders, IEnumerable<string> layoutHolders, GuiLayout layout)
     {
-        StructuredBlocks = new HashSet<string>(structuredBlocks, StringComparer.Ordinal);
-        WidgetHolders = new HashSet<string>(widgetHolders, StringComparer.Ordinal);
-        LayoutHolders = new HashSet<string>(layoutHolders, StringComparer.Ordinal);
+        // Klassisch: Blocknamen unterscheiden sich im Spiel nicht nach Groß-/Kleinschreibung (Position, position).
+        var comparer = layout.IsClassic ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        StructuredBlocks = new HashSet<string>(structuredBlocks, comparer);
+        WidgetHolders = new HashSet<string>(widgetHolders, comparer);
+        LayoutHolders = new HashSet<string>(layoutHolders, comparer);
         Layout = layout;
     }
 
     /// <summary>Kontextordner und Überschreib-Reihenfolge des Spiels.</summary>
     public GuiLayout Layout { get; }
+
+    /// <summary>Format der .gui-Dateien des Spiels (Jomini oder klassisch).</summary>
+    public GuiDialect Dialect => Layout.Dialect;
 
     public static GuiRules Empty { get; } = new(Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
 
@@ -48,17 +53,27 @@ public sealed class GuiRules
 
     public IReadOnlySet<string> LayoutHolders { get; }
 
-    public static GuiRules FromProfile(GameProfile profile) =>
-        profile.Gui is { } gui
-            ? new GuiRules(
-                gui.StructuredBlocks,
-                gui.WidgetHolders,
-                gui.LayoutHolders,
-                new GuiLayout(
-                    gui.Contexts is { } contexts ? contexts.ToList() : GuiLayout.Default.Contexts,
-                    string.Equals(gui.TypeOverride, "firstWins", StringComparison.OrdinalIgnoreCase),
-                    gui.ModsBeforeVanilla))
-            : Empty;
+    public static GuiRules FromProfile(GameProfile profile)
+    {
+        if (profile.Gui is not { } gui)
+        {
+            return Empty;
+        }
+
+        var classic = string.Equals(gui.Dialect, "classic", StringComparison.OrdinalIgnoreCase);
+        return new GuiRules(
+            gui.StructuredBlocks,
+            gui.WidgetHolders,
+            gui.LayoutHolders,
+            new GuiLayout(
+                gui.Contexts is { } contexts ? contexts.ToList() : GuiLayout.Default.Contexts,
+                string.Equals(gui.TypeOverride, "firstWins", StringComparison.OrdinalIgnoreCase),
+                gui.ModsBeforeVanilla,
+                classic ? GuiDialect.Classic : GuiDialect.Jomini,
+                string.Equals(gui.SpriteOverride, "firstWins", StringComparison.OrdinalIgnoreCase),
+                classic && profile.LoadOrderCaseSensitive,
+                gui.VanillaRoots.Count == 0 ? null : gui.VanillaRoots.ToList()));
+    }
 
     /// <summary>
     /// Einordnung: Typname → Typ-Instanz; Profilliste → strukturierter Block bzw. Widget-Halter; nur Listeneinträge → Wertblock;

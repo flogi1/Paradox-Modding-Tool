@@ -1,3 +1,4 @@
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Syntax;
 
@@ -19,6 +20,12 @@ public enum GuiDesignerActionKind
     DeriveType,
     ExtractType,
     Retype,
+
+    /// <summary>Klassisch: ein Paar-Block (<c>position</c>, <c>size</c>, …) mit beiden Werten setzen; <see cref="GuiDesignerAction.Node"/> ist der Block oder das Element.</summary>
+    SetPair,
+
+    /// <summary>Klassisch: die Zeile direkt im Element ändern, nie die in einem <c>if_resolution</c>-Block ("Grundwert ändern").</summary>
+    SetBaseValue,
 }
 
 /// <summary>
@@ -47,6 +54,15 @@ public sealed record GuiDesignerAction(GuiDesignerActionKind Kind, GuiNode? Node
 
     /// <summary>SetProperty und SetValue: der Wert als Code; DeriveType und ExtractType: Name eines neu anzulegenden types-Containers.</summary>
     public string? Value { get; init; }
+
+    /// <summary>SetPair: der zweite Wert des Paars (<see cref="Value"/> ist der erste).</summary>
+    public string? Value2 { get; init; }
+
+    /// <summary>
+    /// SetPair: die inneren Schlüssel, wie das Eigenschaftenfeld sie zeigt (<see cref="Value"/> gehört zu <c>First</c>, <see cref="Value2"/> zu <c>Second</c>).
+    /// Hat der Zielblock beide Namen, gelten die Werte nach Namen; fehlt er, wird er mit diesen Schlüsseln angelegt; null = Schlüssel des Blocks nach Position.
+    /// </summary>
+    public ClassicPairKeys? PairKeys { get; init; }
 
     /// <summary>
     /// Die Aktion gilt dem gewählten Element (Tasten im Baum, Einfügen aus der Palette an der Auswahl). Stammt der Knoten noch aus dem Stand

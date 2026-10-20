@@ -49,6 +49,21 @@ public class SaveProfileTests
     }
 
     [Fact]
+    public void Hoi4_profile_save_section()
+    {
+        var saves = Profiles.Hoi4.SaveGames!;
+
+        Assert.Equal(".hoi4", saves.Extension);
+        Assert.Equal(("HOI4", 4, "txt"), (saves.TextMarker.Prefix, saves.TextMarker.Offset, saves.TextMarker.Value));
+        Assert.Null(saves.TextMarker.CompressedValue);
+        Assert.Equal((string.Empty, "date"), (saves.MetadataBlock, saves.DateField));
+        Assert.Equal(new[] { "countries/*", "states/*" }, saves.ObjectKinds.Select(k => k.Path));
+        var german = ParadoxModTool.Localization.UiTextTable.Read(RepoFiles.PathOf("locales/de.json"));
+        var english = ParadoxModTool.Localization.UiTextTable.Read(RepoFiles.PathOf("locales/en.json"));
+        Assert.All(saves.ObjectKinds, k => Assert.True(german.ContainsKey(k.LabelKey) && english.ContainsKey(k.LabelKey), k.LabelKey));
+    }
+
+    [Fact]
     public void ProfileWithoutSaveGamesBlockHasNoSettings() =>
         Assert.Null(GameProfileLoader.LoadFromJson("""{ "id": "x" }""").SaveGames);
 }
@@ -59,4 +74,6 @@ internal static class Profiles
     public static GameProfile Eu5 { get; } = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", "eu5.json"));
 
     public static GameProfile Ck3 { get; } = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", "ck3.json"));
+
+    public static GameProfile Hoi4 { get; } = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", "hoi4.json"));
 }

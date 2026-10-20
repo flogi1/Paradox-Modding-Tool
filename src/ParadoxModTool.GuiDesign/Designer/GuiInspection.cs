@@ -125,7 +125,10 @@ public sealed class GuiInspection
         new(usage.Kind == GuiUsageKind.Using && usage.Node.Parent is { } host ? host : usage.Node, index.DocumentOf(usage.File), usage.File.FullPath);
 
     /// <summary>Kurzbeschreibung der Umgebung einer Stelle: die umschließende Definition bzw. das Widget auf oberster Dateiebene.</summary>
-    public static string ContextOf(GuiNode node) => GuiElementTree.LabelOf(GuiPreviewBuilder.PreviewTarget(node) ?? node);
+    public static string ContextOf(GuiNode node) => ContextOf(node, GuiLayout.Default);
+
+    /// <summary>Wie <see cref="ContextOf(GuiNode)"/>; klassisch das Fenster unter <c>guiTypes</c> (siehe <see cref="GuiPreviewBuilder.PreviewTarget(GuiNode, GuiLayout)"/>).</summary>
+    public static string ContextOf(GuiNode node, GuiLayout layout) => GuiElementTree.LabelOf(GuiPreviewBuilder.PreviewTarget(node, layout) ?? node);
 
     private static IReadOnlyList<GuiUsage> UsagesOf(GuiIndex index, string subject, GuiDefinitionKind kind) =>
         index.UsagesOf(subject)

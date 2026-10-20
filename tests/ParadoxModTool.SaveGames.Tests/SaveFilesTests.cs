@@ -21,6 +21,32 @@ public class SaveFilesTests
         Assert.Equal(new FileInfo(path).Length, info.Length);
     }
 
+    private static readonly SaveTextMarker Hoi4Marker = new() { Prefix = "HOI4", Offset = 4, Value = "txt" };
+
+    [Fact]
+    public void Hoi4_header_without_metadata_block_reads_date_and_version()
+    {
+        var path = SaveText.Write(
+            "player=\"GER\"\r\nideology=fascism\r\ndate=\"1936.1.1.12\"\r\nversion=\"Operation Postern v1.19.3.0.c01a (5632)\"\r\n" +
+            "player_countries={\r\n\tGER={\r\n\t\tdate=\"1999.1.1\"\r\n\t}\r\n}\r\n",
+            "HOI4txt\r");
+
+        var info = SaveFiles.Inspect(path, Hoi4Marker, string.Empty, "date");
+
+        Assert.True(info.Readable);
+        Assert.False(info.Compressed);
+        Assert.Equal("1936.1.1.12", info.GameDate);
+        Assert.Equal("Operation Postern v1.19.3.0.c01a (5632)", info.Version);
+    }
+
+    [Fact]
+    public void Hoi4_binary_save_is_not_readable()
+    {
+        var path = SaveText.Write("binary", "HOI4bin");
+
+        Assert.False(SaveFiles.Inspect(path, Hoi4Marker, string.Empty, "date").Readable);
+    }
+
     private static readonly SaveTextMarker Ck3Marker = new() { Prefix = "SAV", Offset = 5, Value = "00", CompressedValue = "02" };
 
     [Fact]

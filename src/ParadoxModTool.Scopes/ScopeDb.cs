@@ -40,7 +40,16 @@ public sealed class ScopeDb
         public bool DataForm { get; set; }
 
         public HashSet<string> DataInputs { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Die Doku-Logs nennen als Ergebnis nur "various" (Stellaris: <c>target</c>, <c>prevprev</c>, <c>fromfromfrom</c>): der Scope dahinter hängt vom
+        /// Kontext ab. "various" steht darum nicht in <see cref="Outputs"/>.
+        /// </summary>
+        public bool VariousOutputs { get; set; }
     }
+
+    /// <summary>So schreibt Stellaris einen Ergebnis-Scope, der vom Kontext abhängt.</summary>
+    private const string Various = "various";
 
     private static readonly Regex IteratorName = new("^(any|every|random|ordered)_", RegexOptions.Compiled);
 
@@ -112,6 +121,7 @@ public sealed class ScopeDb
         }
 
         target.Inputs.UnionWith(inputs);
+        target.VariousOutputs |= outputs.Remove(Various);
         target.Outputs.UnionWith(outputs);
         target.RequiresData |= requiresData;
 

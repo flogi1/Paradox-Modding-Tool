@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
     <ProjectReference Include="..\..\src\ParadoxModTool.Modifiers\ParadoxModTool.Modifiers.csproj" />
+    <ProjectReference Include="..\..\src\ParadoxModTool.ScriptDocs\ParadoxModTool.ScriptDocs.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +31,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\profiles\vic3.json" Link="profiles\vic3.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\stellaris.json" Link="profiles\stellaris.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\hoi4.json" Link="profiles\hoi4.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

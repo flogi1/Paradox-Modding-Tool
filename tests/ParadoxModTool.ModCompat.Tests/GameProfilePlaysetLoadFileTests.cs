@@ -10,6 +10,8 @@ public sealed class GameProfilePlaysetLoadFileTests
     [InlineData("ck3.json", "dlc_load.json")]
     [InlineData("eu4.json", "dlc_load.json")]
     [InlineData("vic3.json", "content_load.json")]
+    [InlineData("stellaris.json", "dlc_load.json")]
+    [InlineData("hoi4.json", "dlc_load.json")]
     [InlineData("eu5.json", null)]
     public void ShippedProfilesNameTheLoadFile(string file, string? expected)
     {

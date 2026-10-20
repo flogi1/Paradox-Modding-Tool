@@ -20,6 +20,8 @@ internal static class ScopeTexts
 
     public static string EventWithoutType => T("scope.reason.eventWithoutType", "Ereignis ohne type");
 
+    public static string EventWithoutRootScope(string kind) => F("scope.reason.eventWithoutRootScope", "Ereignis ohne Root-Scope ({0})", kind);
+
     public static string StartScopeAmbiguous(string path) => F("scope.reason.startScopeAmbiguous", "Start-Scope von {0} nicht eindeutig", path);
 
     public static string NoRule(string path) => F("scope.reason.noRule", "keine Regel für {0}", path);
@@ -43,6 +45,8 @@ internal static class ScopeTexts
     public static string UnknownTarget(string name) => F("scope.reason.unknownTarget", "unbekanntes Ziel {0}", name);
 
     public static string SeveralOutputScopes(string name) => F("scope.reason.severalOutputScopes", "{0} hat mehrere Ergebnis-Scopes", name);
+
+    public static string VariousOutputScopes(string name) => F("scope.reason.variousOutputScopes", "{0} führt je nach Kontext zu verschiedenen Scopes", name);
 
     private static string T(string key, string german) => UiText.Get(key, german);
 

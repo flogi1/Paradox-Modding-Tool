@@ -88,7 +88,15 @@
     },
     "notes": "Quelle: Debug-Spielstand des Nutzers (2026-09-26, Spielversion 1.3.99). Ab dem nächsten Hauptrelease von EU V zählen Datumswerte keine Stunden mehr; dann ticksPerDay anpassen."
   },
-  "notes": "Quelle für loadOrderRule und launchOptions: https://eu5.paradoxwikis.com/Modding sowie reale Error-Logs des Nutzers (siehe Architektur-Spezifikation Abschnitt 9). Quelle für overrideRules: https://eu5.paradoxwikis.com/Mod_compatibility. replace_paths nennt die Ordner ohne in_game/, main_menu/ oder loading_screen/ davor (common/x blendet in_game/common/x aus; in_game/common/x und main_menu/gui/x wirken nicht). Es blendet Vanilla und die Mods aus, die im Playset davor laden; spätere Mods bleiben (gemessen 2026-09-30 mit zwei Test-Mods in beiden Reihenfolgen). Einmal fehlte dabei auch die eigene Datei der zuerst ladenden Mod im eigenen Ordner; PMT bildet das nicht nach.",
+  "performance": {
+    "restartCommand": "Script.Profiling.Restart",
+    "dumpCommand": "Script.Profiling.DumpAll",
+    "dumpFilePattern": "profiling*.csv",
+    "continueSaveArgs": "-continuelastsave",
+    "monthlyPulseRow": "on_actions (on_actions) @ common/on_action/location_pulses.txt:38",
+    "dailyOnActions": [ "on_daily_pulse", "on_country_daily_pulse", "on_character_daily_pulse" ]
+  },
+  "notes": "Quelle für loadOrderRule und launchOptions: https://eu5.paradoxwikis.com/Modding sowie reale Error-Logs des Nutzers (siehe Architektur-Spezifikation Abschnitt 9). Quelle für overrideRules: https://eu5.paradoxwikis.com/Mod_compatibility. replace_paths nennt die Ordner ohne in_game/, main_menu/ oder loading_screen/ davor (common/x blendet in_game/common/x aus; in_game/common/x und main_menu/gui/x wirken nicht). Es blendet Vanilla und die Mods aus, die im Playset davor laden; spätere Mods bleiben (gemessen 2026-09-30 mit zwei Test-Mods in beiden Reihenfolgen). Einmal fehlte dabei auch die eigene Datei der zuerst ladenden Mod im eigenen Ordner; PMT bildet das nicht nach. Profiler-Fakten (performance): Quelle ist die Spezifikation 2026-10-20-performance-checker-design.md, Abschnitt \"Spiele und Fakten\", und der Probelauf 2026-10-20 (probe-notes.md): DumpAll schreibt logs/profiling_roots.csv (81 717 Zeilen, Monatspuls-Zeile 12 Aufrufe), -continuelastsave mit einem Strich lädt den letzten Stand.",
   "gui": {
     "structuredBlocks": [
       "modify_texture", "glow", "state", "animation", "start_sound", "end_sound",

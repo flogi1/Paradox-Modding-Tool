@@ -41,6 +41,25 @@ public class LoadFileWriterTests : IDisposable
     }
 
     [Fact]
+    public void Dlc_load_keeps_an_archive_mod()
+    {
+        // Alte Workshop-Mods von HOI IV: die .mod-Datei nennt nur archive=, der Launcher führt den Ordner des Archivs als dirPath.
+        var folder = Path.Combine(_root, "workshop", "699397350");
+        Directory.CreateDirectory(folder);
+        File.WriteAllText(Path.Combine(folder, "no_mans_land.zip"), "zip");
+        File.WriteAllText(
+            Path.Combine(_modFolder, "ugc_699397350.mod"),
+            "name=\"No Mans Land\"\nsupported_version=\"1.5.2\"\narchive=\"" + Path.Combine(folder, "no_mans_land.zip").Replace('\\', '/') + "\"\nremote_file_id=\"699397350\"\n");
+        var other = AddModFile("ugc_1.mod", Path.Combine(_root, "workshop", "1"));
+        var file = Path.Combine(_root, "dlc_load.json");
+
+        var result = LoadFileWriter.Write(file, Playset(Mod(folder), Mod(other)), _modFolder);
+
+        Assert.True(result.Success);
+        Assert.Equal("{\"enabled_mods\":[\"mod/ugc_699397350.mod\",\"mod/ugc_1.mod\"],\"disabled_dlcs\":[]}", File.ReadAllText(file));
+    }
+
+    [Fact]
     public void Dlc_load_resolves_a_relative_path_in_the_mod_file_against_the_game_folder()
     {
         var folder = Path.Combine(_modFolder, "Rel");

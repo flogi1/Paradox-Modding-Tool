@@ -782,7 +782,13 @@ public partial class MainWindow : Window
             }
             else
             {
-                MessageBox.Show(this, GuiTexts.DraftSaveVanilla, GuiTexts.DraftTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                // "Für Mod bearbeiten" gibt es in beiden Formaten (klassisch seit Plan 2).
+                MessageBox.Show(
+                    this,
+                    GuiTexts.DraftSaveVanilla,
+                    GuiTexts.DraftTitle,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
 
             return;
@@ -811,7 +817,8 @@ public partial class MainWindow : Window
             var action = new FileWriteUndoableAction(
                 MainTexts.SaveUndoName(Path.GetFileName(targetPath)),
                 targetPath,
-                pane.CurrentText);
+                pane.CurrentText,
+                ModFileEncodingFor(targetPath));
 
             _history.Execute(action);
             pane.SetCurrentFilePath(targetPath);
@@ -849,8 +856,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Strg+Umschalt+D: GUI-Daten-Helfer (nur mit eingeschalteten GUI-Werkzeugen).
-        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D && GuiSettings.ToolsEnabled)
+        // Strg+Umschalt+D: GUI-Daten-Helfer (nur mit eingeschalteten GUI-Werkzeugen und im Jomini-Format).
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D && GuiSettings.DataHelperOffered)
         {
             _ = OpenGuiDataHelperAsync();
             e.Handled = true;
@@ -1652,7 +1659,7 @@ public partial class MainWindow : Window
         {
             var actions = plans
                 .Select(plan => (IUndoableAction)new FileWriteUndoableAction(
-                    MainTexts.ReplaceUndoName(Path.GetFileName(plan.FilePath)), plan.FilePath, plan.NewContent))
+                    MainTexts.ReplaceUndoName(Path.GetFileName(plan.FilePath)), plan.FilePath, plan.NewContent, ModFileEncodingFor(plan.FilePath)))
                 .ToList();
 
             _history.Execute(new CompositeUndoableAction(description, actions));
@@ -1780,7 +1787,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var action = new FileWriteUndoableAction(MainTexts.NewFileUndoName(e.FileName), targetPath, string.Empty);
+            var action = new FileWriteUndoableAction(MainTexts.NewFileUndoName(e.FileName), targetPath, string.Empty, ModFileEncodingFor(targetPath));
             _history.Execute(action);
         }
         catch (Exception ex)
@@ -2032,7 +2039,9 @@ public partial class MainWindow : Window
                 if (!File.Exists(filePath))
                 {
                     // Eine .gui-Datei ist verschwunden (z.B. Rückgängig einer Übernahme in die Mod): GUI-Index danach einmal neu aufbauen.
-                    if (filePath.EndsWith(".gui", StringComparison.OrdinalIgnoreCase))
+                    // Klassisch gilt das auch für eine .gfx-Datei (Rückgängig von "Sprite anlegen"): Sonst bliebe das Sprite in der Tabelle.
+                    if (filePath.EndsWith(".gui", StringComparison.OrdinalIgnoreCase)
+                        || (filePath.EndsWith(".gfx", StringComparison.OrdinalIgnoreCase) && CurrentGuiLayout.IsClassic))
                     {
                         rebuildGuiIndex = true;
                     }
@@ -2040,7 +2049,8 @@ public partial class MainWindow : Window
                     continue;
                 }
 
-                var content = File.ReadAllText(filePath, System.Text.Encoding.UTF8);
+                // Dieselbe Regel wie beim Öffnen: .gui/.gfx in Windows-1252 (EU IV) sonst als Ersatzzeichen in Tab und GUI-Index.
+                var content = ParadoxModTool.GuiDesign.Index.GuiTextReader.ReadFile(filePath);
                 LeftEditor.ReloadIfOpen(filePath, content);
                 RightEditor.ReloadIfOpen(filePath, content);
 

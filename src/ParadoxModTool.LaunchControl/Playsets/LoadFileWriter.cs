@@ -18,6 +18,9 @@ public static partial class LoadFileWriter
     [GeneratedRegex("^\\s*path\\s*=\\s*\"([^\"]*)\"", RegexOptions.Multiline)]
     private static partial Regex PathLine();
 
+    [GeneratedRegex("^\\s*archive\\s*=\\s*\"([^\"]*)\"", RegexOptions.Multiline)]
+    private static partial Regex ArchiveLine();
+
     /// <summary>Schreibt <paramref name="loadFilePath"/> für das Playset; Mods in der Reihenfolge der Liste, ausgeschaltete entfallen.</summary>
     public static PlaysetResult Write(string loadFilePath, PlaysetData playset, string gameModFolder)
     {
@@ -92,7 +95,15 @@ public static partial class LoadFileWriter
 
         foreach (var file in Directory.EnumerateFiles(gameModFolder, "*.mod"))
         {
-            var match = PathLine().Match(File.ReadAllText(file));
+            var text = File.ReadAllText(file);
+            var match = PathLine().Match(text);
+            if (!match.Success && ArchiveLine().Match(text) is { Success: true } archive && Path.GetDirectoryName(archive.Groups[1].Value) is { Length: > 0 } archiveFolder)
+            {
+                // Alte Workshop-Mods (HOI IV) nennen nur archive="…/x.zip"; der Launcher führt den Ordner des Archivs als Mod-Ordner.
+                result.TryAdd(PlaysetGuard.NormalizePath(archiveFolder).Replace('/', '\\'), "mod/" + Path.GetFileName(file));
+                continue;
+            }
+
             if (match.Success)
             {
                 // Ein relativer Pfad in der .mod-Datei (z. B. "mod/Name", wie EU IV und PMT selbst ihn schreiben) gilt ab dem Spielordner, dem Elternordner des Mod-Ordners.

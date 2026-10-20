@@ -765,7 +765,8 @@ public partial class ExplorerPanel : UserControl
     private static string? GuessPreferredExtension(string folderName) => folderName.ToLowerInvariant() switch
     {
         "gui" => ".gui",
-        "localization" => ".yml",
+        "interface" => ".gui",
+        "localization" or "localisation" => ".yml",
         _ => null,
     };
 

@@ -26,6 +26,12 @@ internal enum KeyKind
 
     /// <summary>Ein Feld der Datei (Schlüssel, den das Spiel nicht als Trigger, Effect oder Event-Target kennt).</summary>
     Structural,
+
+    /// <summary>
+    /// Eine Zahl als Scope-Wechsel (Hearts of Iron IV: Staats-ID <c>763 = { … }</c>, EU IV: Provinz-ID); nur mit Spielprofil
+    /// <c>numericKeysChangeScope</c> und nicht direkt in <c>random_list</c>. Der Scope dahinter gilt als unbekannt.
+    /// </summary>
+    NumericScope,
 }
 
 internal static class KeyClassifier
@@ -36,9 +42,15 @@ internal static class KeyClassifier
         "trigger_if", "trigger_else", "trigger_else_if", "hidden_effect", "show_as_tooltip", "random_list",
     };
 
-    public static KeyKind Classify(string key, ScopeDb db)
+    /// <param name="numericChangesScope">Zahlen wechseln den Scope (Spielprofil <c>numericKeysChangeScope</c>, außerhalb von <c>random_list</c>).</param>
+    public static KeyKind Classify(string key, ScopeDb db, bool numericChangesScope = false)
     {
-        if (TransparentKeys.Contains(key) || double.TryParse(key, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+        if (double.TryParse(key, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+        {
+            return numericChangesScope ? KeyKind.NumericScope : KeyKind.Transparent;
+        }
+
+        if (TransparentKeys.Contains(key))
         {
             return KeyKind.Transparent;
         }
@@ -77,5 +89,9 @@ internal static class KeyClassifier
 
     /// <summary>Wechselt der Scope beim Betreten des Blocks (die Anweisungen darin zählen nicht zum umgebenden Feld)?</summary>
     public static bool ChangesScope(KeyKind kind) =>
-        kind is KeyKind.Root or KeyKind.This or KeyKind.Prev or KeyKind.From or KeyKind.Chain or KeyKind.Iterator or KeyKind.EventTarget;
+        kind is KeyKind.Root or KeyKind.This or KeyKind.Prev or KeyKind.From or KeyKind.Chain or KeyKind.Iterator or KeyKind.EventTarget or KeyKind.NumericScope;
+
+    /// <summary>Wechselt eine Zahl in einem Block mit dem Schlüssel <paramref name="parentKey"/> den Scope? Nie in <c>random_list</c> (Gewichte).</summary>
+    public static bool NumericChangesScope(bool numericKeysChangeScope, string? parentKey) =>
+        numericKeysChangeScope && !string.Equals(parentKey, "random_list", StringComparison.OrdinalIgnoreCase);
 }

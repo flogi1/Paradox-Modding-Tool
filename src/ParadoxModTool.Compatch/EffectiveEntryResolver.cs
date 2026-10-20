@@ -99,10 +99,10 @@ public static class EffectiveEntryResolver
                     Behavior = rule.Behavior,
                     Certain = rule.Certain,
                     Operators = rule.Operators,
-                    Vanilla = KeyEffective(address, indexV, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
-                    A = KeyEffective(address, indexA, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
-                    B = KeyEffective(address, indexB, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
-                    NoPatch = KeyEffective(address, indexN, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder),
+                    Vanilla = KeyEffective(address, indexV, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
+                    A = KeyEffective(address, indexA, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
+                    B = KeyEffective(address, indexB, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
+                    NoPatch = KeyEffective(address, indexN, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
                 };
                 continue;
             }
@@ -300,7 +300,8 @@ public static class EffectiveEntryResolver
         return index;
     }
 
-    private static Effective KeyEffective(EntryAddress address, Dictionary<EntryAddress, List<(KeyPart Part, int Rank)>> index, RuleMatch rule, bool injectAppends, bool firstWinsInLoadOrder)
+    private static Effective KeyEffective(EntryAddress address, Dictionary<EntryAddress, List<(KeyPart Part, int Rank)>> index, RuleMatch rule, bool injectAppends, bool firstWinsInLoadOrder,
+        bool lastWinsInLoadOrder = false, GameLoadOrder? loadOrder = null)
     {
         if (!index.TryGetValue(address, out var list))
         {
@@ -308,10 +309,12 @@ public static class EffectiveEntryResolver
         }
 
         // Victoria 3: Bei "zuerst geladen gewinnt" zählt die Ladereihenfolge der Pfade über Vanilla und Mods, nicht der Playset-Rang (gemessen
-        // 2026-10-11); gleicher Pfad = die später geladene Mod ersetzt die Datei. GUI-Typen/Templates (LastWins, EU V): laut Wiki zählt nur die
-        // Mod-Ladereihenfolge, Dateinamen nicht. Sonst zuerst der Dateiname.
+        // 2026-10-11); gleicher Pfad = die später geladene Mod ersetzt die Datei. Stellaris (Wiki): bei "zuletzt geladen gewinnt" und einzelnen Defines ebenso, die zuletzt
+        // geladene Datei gilt. GUI-Typen/Templates (LastWins, EU V): laut Wiki zählt nur die Mod-Ladereihenfolge, Dateinamen nicht. Sonst zuerst der Dateiname.
         var ordered = (rule.Behavior == OverrideBehavior.FirstWins && firstWinsInLoadOrder
-                ? list.OrderBy(x => x.Part.RelativePath, GameLoadOrder.Instance).ThenByDescending(x => x.Rank)
+                ? list.OrderBy(x => x.Part.RelativePath, loadOrder ?? GameLoadOrder.Instance).ThenByDescending(x => x.Rank)
+                : (lastWinsInLoadOrder && (rule.Behavior is OverrideBehavior.LastWins or OverrideBehavior.PartialKeys))
+                ? list.OrderBy(x => x.Part.RelativePath, loadOrder ?? GameLoadOrder.Instance).ThenBy(x => x.Rank)
                 : rule.Behavior == OverrideBehavior.LastWins
                 ? list.OrderBy(x => x.Rank).ThenBy(x => Path.GetFileName(x.Part.RelativePath), StringComparer.Ordinal)
                 : list.OrderBy(x => Path.GetFileName(x.Part.RelativePath), StringComparer.Ordinal).ThenBy(x => x.Rank))

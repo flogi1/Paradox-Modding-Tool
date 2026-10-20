@@ -9,7 +9,11 @@ internal static class KeyClassifier
     /// <param name="firstWinsInLoadOrder">Victoria 3: bei "zuerst geladen gewinnt" zählt die Ladereihenfolge der Pfade, nicht der Playset-Rang (gemessen 2026-10-11).</param>
     /// <param name="injectAppends">INJECT hängt an (Victoria 3): gleiche Teilschlüssel zweier INJECTs haben keinen bekannten Gewinner.</param>
     /// <param name="vanillaFirst">Victoria 3: die zuerst geladene Vanilla-Definition des Schlüssels; lädt sie vor allen Mods, gewinnt sie.</param>
-    public static CompatFinding? Classify(KeyGroup group, bool firstWinsInLoadOrder = false, bool injectAppends = false, CompatContribution? vanillaFirst = null)
+    /// <param name="lastWinsInLoadOrder">Stellaris: bei "zuletzt geladen gewinnt" zählt die Ladereihenfolge der Dateien, der Playset-Rang nur bei gleichem Pfad (Wiki).</param>
+    /// <param name="vanillaLast">Stellaris: die zuletzt geladene Vanilla-Definition des Schlüssels; lädt sie nach allen Mods, gewinnt sie.</param>
+    /// <param name="loadOrder">Reihenfolge der Pfade (Stellaris mit Groß-/Kleinschreibung); ohne Angabe <see cref="GameLoadOrder.Instance"/>.</param>
+    public static CompatFinding? Classify(KeyGroup group, bool firstWinsInLoadOrder = false, bool injectAppends = false, CompatContribution? vanillaFirst = null,
+        bool lastWinsInLoadOrder = false, CompatContribution? vanillaLast = null, GameLoadOrder? loadOrder = null)
     {
         var all = group.Contributions
             .OrderBy(c => c.Participant.Rank)
@@ -23,6 +27,7 @@ internal static class KeyClassifier
         var path = all[^1].RelativePath;
         var names = Names(all);
         var uncertain = !group.Certain;
+        var order = loadOrder ?? GameLoadOrder.Instance;
 
         CompatFinding Make(CompatKind kind, CompatSeverity severity, string message, CompatContribution? winner = null, CompatSuggestion suggestion = CompatSuggestion.None, bool extraUncertain = false) => new()
         {
@@ -47,9 +52,9 @@ internal static class KeyClassifier
             case OverrideBehavior.FirstWins:
             {
                 var first = firstWinsInLoadOrder
-                    ? all.OrderBy(c => c.RelativePath, GameLoadOrder.Instance).ThenByDescending(c => c.Participant.Rank).First()
+                    ? all.OrderBy(c => c.RelativePath, order).ThenByDescending(c => c.Participant.Rank).First()
                     : all[0];
-                if (vanillaFirst is not null && GameLoadOrder.Instance.Compare(vanillaFirst.RelativePath, first.RelativePath) < 0)
+                if (vanillaFirst is not null && order.Compare(vanillaFirst.RelativePath, first.RelativePath) < 0)
                 {
                     first = vanillaFirst;
                 }
@@ -58,7 +63,17 @@ internal static class KeyClassifier
             }
             case OverrideBehavior.LastWins:
             case OverrideBehavior.PartialKeys:
-                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingLastWins(group.Key, names, all[^1].Participant.Name), all[^1], CompatSuggestion.NeedsCompatch);
+            {
+                var last = lastWinsInLoadOrder
+                    ? all.OrderBy(c => c.RelativePath, order).ThenBy(c => c.Participant.Rank).Last()
+                    : all[^1];
+                if (vanillaLast is not null && order.Compare(vanillaLast.RelativePath, last.RelativePath) > 0)
+                {
+                    last = vanillaLast;
+                }
+
+                return Make(CompatKind.KeyConflict, CompatSeverity.Conflict, ModCompatTexts.FindingLastWins(group.Key, names, last.Participant.Name), last, CompatSuggestion.NeedsCompatch);
+            }
             case OverrideBehavior.AppendOnly:
                 return Make(CompatKind.KeyCombinable, CompatSeverity.Hint, ModCompatTexts.FindingAppendOnly(group.Key, names), extraUncertain: true);
             case OverrideBehavior.LocalizationKeys:
@@ -126,7 +141,7 @@ internal static class KeyClassifier
     private static string Names(IEnumerable<CompatContribution> contributions) =>
         string.Join(", ", contributions.Select(c => "\"" + c.Participant.Name + "\"").Distinct());
 
-    private static bool SameContent(CompatContribution a, CompatContribution b) =>
+    internal static bool SameContent(CompatContribution a, CompatContribution b) =>
         a.Statement is not null && b.Statement is not null
             ? ScriptStructuralComparer.ValueEquals(a.Statement.Value, b.Statement.Value)
             : string.Equals(a.Text?.Trim(), b.Text?.Trim(), StringComparison.Ordinal);

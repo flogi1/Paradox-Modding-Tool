@@ -1,4 +1,5 @@
 using System.IO;
+using ParadoxModTool.GameProfiles;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -1435,7 +1436,7 @@ public partial class TemplateGeneratorWindow : Window
             }
             else
             {
-                TemplateFileWriter.AppendCodeToFile(path, code);
+                TemplateFileWriter.AppendCodeToFile(path, code, _host.NewFileEncoding?.Invoke(Path.GetExtension(path)));
                 StatusText.Text = TemplateWindowTexts.AppendedTo(path);
             }
         }
@@ -1448,7 +1449,7 @@ public partial class TemplateGeneratorWindow : Window
     private void LocAppend_Click(object sender, RoutedEventArgs e)
     {
         var entries = Entries();
-        if (entries.Count == 0 || PickFile(TemplateWindowTexts.AppendLocTitle, TemplateWindowTexts.LocFileFilter, "localization") is not { } path)
+        if (entries.Count == 0 || PickFile(TemplateWindowTexts.AppendLocTitle, TemplateWindowTexts.LocFileFilter, LocFolderName()) is not { } path)
         {
             return;
         }
@@ -1502,6 +1503,25 @@ public partial class TemplateGeneratorWindow : Window
         {
             MessageBox.Show(this, TemplateWindowTexts.WriteFailed(ex.Message), TemplateWindowTexts.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    /// <summary>Lokalisierungsordner der Mod als Startordner: <c>localisation</c> bei Spielen mit britischer Schreibweise, sonst <c>localization</c>.</summary>
+    private string LocFolderName()
+    {
+        try
+        {
+            if (_host.ModRoot() is { Length: > 0 } root
+                && LocalizationFolders.Existing(Path.GetFullPath(Environment.ExpandEnvironmentVariables(root))).FirstOrDefault() is { } folder)
+            {
+                return Path.GetFileName(folder);
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or IOException or System.Security.SecurityException)
+        {
+            // Rückfall unten.
+        }
+
+        return LocalizationFolders.Names[0];
     }
 
     private string? PickFile(string title, string filter, string? subfolder)

@@ -29,6 +29,7 @@ public sealed class GuiInspectorWindow : Window
     private readonly Stack<GuiInspectTarget> _forward = new();
     private readonly Button _back = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 4, 0), IsEnabled = false };
     private readonly Button _forwardButton = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 8, 0), IsEnabled = false };
+    private readonly Button _pick = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 8, 0) };
     private readonly Button _showInCode = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(8, 0, 0, 0) };
     private readonly Button _openInDesigner = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(8, 0, 0, 0) };
     private readonly Button _takeOverAsType = new() { Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(8, 0, 0, 0) };
@@ -63,6 +64,15 @@ public sealed class GuiInspectorWindow : Window
     private readonly CheckBox _showHidden = new() { Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly ComboBox _listCount = new() { Width = 50, Margin = new Thickness(0, 2, 8, 2) };
     private readonly Dictionary<ResolvedElement, TreeViewItem> _treeItems = new();
+
+    // Bedingte Elemente: Banner über der Vorschau, Schlüssel der gezeigten Vorschau (auch ausgeblendete), gezeigte Marke je Baumeintrag
+    // (false = bedingt, true = ausgeblendet; fehlt = nicht bedingt).
+    private readonly TextBlock _conditionalBannerText = new();
+    private readonly Button _conditionalBannerButton = new();
+    private readonly Border _conditionalBanner;
+    private readonly ContextMenu _treeMenu = new();
+    private IReadOnlyDictionary<ResolvedElement, string> _conditionalKeys = new Dictionary<ResolvedElement, string>();
+    private readonly Dictionary<ResolvedElement, bool> _treeMarks = new();
     private IReadOnlyList<UsageRow> _usageRows = Array.Empty<UsageRow>();
     private Dictionary<GuiUsage, UsageRow> _rowByUsage = new(ReferenceEqualityComparer.Instance);
     private GuiInspectTarget? _target;
@@ -101,6 +111,10 @@ public sealed class GuiInspectorWindow : Window
                 Load(_forward.Pop());
             }
         };
+        // "Element wählen…": öffnet das Suchfenster (Hauptfenster); seine Auswahl kommt über Inspect hierher zurück.
+        _pick.Content = GuiTexts.InspectorPick;
+        _pick.ToolTip = GuiTexts.InspectorPickTip;
+        _pick.Click += (_, _) => PickElementRequested?.Invoke(this, EventArgs.Empty);
         _showInCode.Content = GuiTexts.InspectorShowInCode;
         _showInCode.ToolTip = GuiTexts.InspectorShowInCodeTip;
         _showInCode.Click += (_, _) => OpenLocation(_target?.FilePath, _target?.Node.Line ?? 1);
@@ -129,6 +143,8 @@ public sealed class GuiInspectorWindow : Window
         titleRow.Children.Add(_back);
         DockPanel.SetDock(_forwardButton, Dock.Left);
         titleRow.Children.Add(_forwardButton);
+        DockPanel.SetDock(_pick, Dock.Left);
+        titleRow.Children.Add(_pick);
         DockPanel.SetDock(_openInDesigner, Dock.Right);
         titleRow.Children.Add(_openInDesigner);
         DockPanel.SetDock(_takeOverAsType, Dock.Right);
@@ -151,6 +167,16 @@ public sealed class GuiInspectorWindow : Window
             if (e.NewValue is TreeViewItem { Tag: ResolvedElement element })
             {
                 ShowElement(element);
+            }
+        };
+        // Rechtsklick im Baum: bedingte Elemente aus- und wieder einblenden (nur mit Dateipfad, die Schlüssel hängen an der Datei).
+        _tree.ContextMenu = _treeMenu;
+        _tree.ContextMenuOpening += (_, e) =>
+        {
+            BuildTreeMenu(GuiDesignerView.FindTreeItem(e.OriginalSource as DependencyObject)?.Tag as ResolvedElement);
+            if (_treeMenu.Items.Count == 0)
+            {
+                e.Handled = true;
             }
         };
         _tree.MouseDoubleClick += (_, e) =>
@@ -271,15 +297,38 @@ public sealed class GuiInspectorWindow : Window
         previewBar.Children.Add(_showHidden);
         previewBar.Children.Add(new TextBlock { Text = GuiTexts.DesignerListCount, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
         previewBar.Children.Add(_listCount);
+        // Überstand standardmäßig nur am gewählten Element rot umranden (wie im Designer, gemeinsamer Wert der Sitzung; beide Formate).
+        var markOverflow = new CheckBox
+        {
+            Content = GuiTexts.DesignerMarkOverflow,
+            ToolTip = GuiTexts.DesignerMarkOverflowTip,
+            IsChecked = GuiSettings.MarkAllOverflow,
+            Margin = new Thickness(8, 0, 8, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        markOverflow.Click += (_, _) => _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow = markOverflow.IsChecked == true;
+        _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow;
+        previewBar.Children.Add(markOverflow);
         previewBar.Children.Add(fit);
         _previewMessage.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
         _canvas.BoxClicked += (_, box) => SelectElement(box.Element);
         var previewArea = new Grid();
         previewArea.Children.Add(_canvas);
         previewArea.Children.Add(_previewMessage);
+        _conditionalBannerButton.Click += (_, _) =>
+        {
+            if (_target?.FilePath is { } file)
+            {
+                GuiSettings.ShowAllConditionals(file);
+                UpdateConditionalState();
+            }
+        };
+        _conditionalBanner = GuiDesignerView.ConditionalBanner(_conditionalBannerText, _conditionalBannerButton);
         var previewPanel = new DockPanel();
         DockPanel.SetDock(previewBar, Dock.Top);
         previewPanel.Children.Add(previewBar);
+        DockPanel.SetDock(_conditionalBanner, Dock.Top);
+        previewPanel.Children.Add(_conditionalBanner);
         previewPanel.Children.Add(previewArea);
 
         var main = new Grid { Margin = new Thickness(6, 0, 6, 6) };
@@ -308,9 +357,13 @@ public sealed class GuiInspectorWindow : Window
         Content = root;
 
         GuiSettings.Changed += OnSettingsChanged;
+        GuiSettings.HiddenConditionalsChanged += OnHiddenConditionalsChanged;
+        GuiSettings.PreviewLanguageChanged += OnPreviewLanguageChanged;
         Closed += (_, _) =>
         {
             GuiSettings.Changed -= OnSettingsChanged;
+            GuiSettings.HiddenConditionalsChanged -= OnHiddenConditionalsChanged;
+            GuiSettings.PreviewLanguageChanged -= OnPreviewLanguageChanged;
             _run?.Cancel();
             _layoutRun?.Cancel();
         };
@@ -318,18 +371,39 @@ public sealed class GuiInspectorWindow : Window
 
     public event EventHandler<GuiLocationEventArgs>? OpenLocationRequested;
 
+    /// <summary>"Element wählen…": das Suchfenster "GUI-Element inspizieren" öffnen.</summary>
+    public event EventHandler? PickElementRequested;
+
     /// <summary>"Im Designer öffnen": Datei und Zeile der gezeigten Definition (Vanilla wird dabei zum Entwurf).</summary>
     public event EventHandler<GuiLocationEventArgs>? OpenInDesignerRequested;
 
     /// <summary>"Als neuen Typ in Mod übernehmen" für das gezeigte Element (Plan 3c Ruling 7).</summary>
     public event EventHandler<GuiInspectTarget>? TakeOverAsTypeRequested;
 
-    private LayoutOptions PreviewOptions => new()
+    /// <summary>
+    /// Vorschau-Einstellungen mit Auflösung und UI-Skalierung aus den Spieleinstellungen (<see cref="GuiPreviewScreen.FromGame"/>), sonst
+    /// <see cref="GuiPreviewScreen.Fallback"/> (klassisch 1920×1080, Jomini der Hauptbildschirm; Skalierung 1).
+    /// </summary>
+    internal LayoutOptions PreviewOptions
     {
-        ShowConditional = _showConditional.IsChecked == true,
-        ShowHidden = _showHidden.IsChecked == true,
-        ListSampleCount = _listCount.SelectedItem is int count ? count : 3,
-    };
+        get
+        {
+            var (width, height, scale) = GuiPreviewScreen.FromGame() ?? GuiPreviewScreen.Fallback();
+            return new LayoutOptions
+            {
+                ShowConditional = _showConditional.IsChecked == true,
+                ShowHidden = _showHidden.IsChecked == true,
+                ListSampleCount = _listCount.SelectedItem is int count ? count : 3,
+                ScreenWidth = width,
+                ScreenHeight = height,
+                UiScale = scale,
+                // Kopie: das Layout läuft im Hintergrund, die Menge kann sich währenddessen ändern.
+                HiddenConditionals = new HashSet<string>(GuiSettings.HiddenConditionals, StringComparer.Ordinal),
+                // Der Inspektor hat keinen eigenen Umschalter: Sprache des Spiels oder die im Designer gewählte.
+                Language = GuiSettings.PreviewLanguage ?? GuiPreviewScreen.GameLanguage(),
+            };
+        }
+    }
 
     /// <summary>Zeigt ein Element; das bisher gezeigte kommt in den Verlauf für "Zurück", der Verlauf für "Vorwärts" wird verworfen (wie im Browser).</summary>
     public void Inspect(GuiInspectTarget target)
@@ -352,10 +426,96 @@ public sealed class GuiInspectorWindow : Window
         }
     }
 
+    /// <summary>Gezeigte Vorschau-Szene (für Tests).</summary>
+    internal GuiSchematicScene? PreviewScene { get; private set; }
+
+    /// <summary>Elemente des aufgelösten Baums (für Tests).</summary>
+    internal IEnumerable<ResolvedElement> TreeElements => _treeItems.Keys;
+
+    /// <summary>Text des Banners für ausgeblendete bedingte Elemente; null, solange es nicht zu sehen ist (für Tests).</summary>
+    internal string? ConditionalBannerText => _conditionalBanner.Visibility == Visibility.Visible ? _conditionalBannerText.Text : null;
+
+    /// <summary>"Element wählen…" (für Tests).</summary>
+    internal Button PickButton => _pick;
+
+    /// <summary>"Alle einblenden" im Banner (für Tests).</summary>
+    internal Button ConditionalBannerButton => _conditionalBannerButton;
+
+    /// <summary>Gezeigte Marke des Baumeintrags: null nicht bedingt, false bedingt, true ausgeblendet (für Tests).</summary>
+    internal bool? TreeMark(ResolvedElement element) => _treeMarks.TryGetValue(element, out var hidden) ? hidden : null;
+
+    /// <summary>Baut das Kontextmenü des Baumeintrags wie beim Rechtsklick (für Tests).</summary>
+    internal ContextMenu TreeMenuFor(ResolvedElement element)
+    {
+        BuildTreeMenu(element);
+        return _treeMenu;
+    }
+
+    /// <summary>Kontextmenü eines Baumeintrags: "Bedingtes Element ausblenden" bzw. "Wieder einblenden", nur mit Dateipfad (Schlüssel hängen an der Datei).</summary>
+    private void BuildTreeMenu(ResolvedElement? element)
+    {
+        _treeMenu.Items.Clear();
+        if (element is null || _target?.FilePath is null || !_conditionalKeys.TryGetValue(element, out var key))
+        {
+            return;
+        }
+
+        var hidden = GuiSettings.HiddenConditionals.Contains(key);
+        var item = new MenuItem { Header = new TextBlock { Text = hidden ? GuiTexts.DesignerUnhideConditional : GuiTexts.DesignerHideConditional } };
+        item.Click += (_, _) =>
+        {
+            GuiSettings.SetConditionalHidden(key, !hidden);
+            UpdateConditionalState();
+        };
+        _treeMenu.Items.Add(item);
+    }
+
+    /// <summary>Ein Schlüssel kam hinzu oder fiel weg (auch aus einem Designer): Marken und Banner sofort, das Layout neu.</summary>
+    private void OnHiddenConditionalsChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            UpdateConditionalState();
+            Relayout();
+        });
+
+    /// <summary>Die Vorschausprache wurde im Designer gewählt: das Layout neu rechnen (die Texte ändern sich).</summary>
+    private void OnPreviewLanguageChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(Relayout);
+
+    /// <summary>Baummarken und Banner (Zahl der ausgeblendeten Schlüssel der Datei des gezeigten Elements) zum aktuellen Stand.</summary>
+    private void UpdateConditionalState()
+    {
+        foreach (var (element, treeItem) in _treeItems)
+        {
+            bool? mark = _conditionalKeys.TryGetValue(element, out var key) ? GuiSettings.HiddenConditionals.Contains(key) : null;
+            bool? shown = _treeMarks.TryGetValue(element, out var current) ? current : null;
+            if (mark == shown)
+            {
+                continue;
+            }
+
+            treeItem.Header = HeaderFor(element, mark);
+            if (mark is { } hidden)
+            {
+                _treeMarks[element] = hidden;
+            }
+            else
+            {
+                _treeMarks.Remove(element);
+            }
+        }
+
+        var count = _target?.FilePath is { } file ? GuiSettings.HiddenCount(file) : 0;
+        _conditionalBannerText.Text = count > 0 ? GuiTexts.DesignerHiddenConditionals(count) : string.Empty;
+        _conditionalBanner.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void Load(GuiInspectTarget target)
     {
         _target = target;
         _inspection = null;
+
+        // Banner gleich zur neuen Datei: schlägt der Lauf fehl, bliebe sonst das der vorigen Datei stehen (und "Alle einblenden" träfe die neue).
+        UpdateConditionalState();
         _back.IsEnabled = _history.Count > 0;
         _forwardButton.IsEnabled = _forward.Count > 0;
         _run?.Cancel();
@@ -368,12 +528,15 @@ public sealed class GuiInspectorWindow : Window
         var index = _index;
         var resolver = workspace?.CreateResolver(target.Document, target.FilePath)
             ?? new GuiResolver(GuiIndex.Empty, GuiRules.Empty, target.Document, target.FilePath);
-        var createEngine = EngineFactory(workspace);
+        var createEngine = GuiSettings.LayoutEngineFactory(workspace);
         var options = PreviewOptions;
 
         _title.Text = GuiElementTree.LabelOf(target.Node);
         _openInDesigner.IsEnabled = target.FilePath is { } file && file.EndsWith(".gui", StringComparison.OrdinalIgnoreCase);
-        _takeOverAsType.IsEnabled = GuiTypeEdits.CopySource(index, target, workspace?.Rules ?? GuiRules.Empty) is not null;
+        // Klassisch (HOI IV, EU IV) gibt es keine Typen: gesperrt, der Tooltip sagt warum.
+        _takeOverAsType.IsEnabled = GuiSettings.TypeCopyOffered && GuiTypeEdits.CopySource(index, target, workspace?.Rules ?? GuiRules.Empty) is not null;
+        _takeOverAsType.ToolTip = GuiSettings.TypeCopyOffered ? GuiTexts.InspectorTakeOverAsTypeTip : GuiTexts.ClassicNoTypes;
+        ToolTipService.SetShowOnDisabled(_takeOverAsType, true);
         Title = GuiTexts.InspectorTitleWith(_title.Text);
         FillLocation(target);
         _chain.Inlines.Clear();
@@ -385,7 +548,7 @@ public sealed class GuiInspectorWindow : Window
                 var inspection = GuiInspection.Create(resolver, index, target, run.Token);
                 var preview = inspection.Element is null
                     ? null
-                    : GuiPreviewBuilder.Layout(inspection.Element, target.Node, target.Document, createEngine, options, run.Token);
+                    : GuiPreviewBuilder.Layout(inspection.Element, target.Node, target.Document, createEngine, options, run.Token, target.FilePath);
 
                 // Zeilen der Verwendungsliste im Hintergrund: Grundtypen wie hbox oder button haben zehntausende Verwendungen.
                 var rows = inspection.Usages.Select(usage => new UsageRow(usage, UsageText(usage))).ToList();
@@ -411,15 +574,18 @@ public sealed class GuiInspectorWindow : Window
                 }
 
                 Fill(task.Result.Inspection, task.Result.Preview, task.Result.Rows);
-                _status.Text = workspace is null ? GuiSettings.Status : string.Empty;
+                _status.Text = GuiSettings.PreviewStatus;
+
+                // Während des Laufs aus- oder eingeblendet: Relayout kam zu früh (noch kein Element), jetzt mit dem aktuellen Stand nachholen.
+                if (!options.HiddenConditionals.SetEquals(GuiSettings.HiddenConditionals))
+                {
+                    Relayout();
+                }
             },
             CancellationToken.None,
             TaskContinuationOptions.None,
             TaskScheduler.FromCurrentSynchronizationContext());
     }
-
-    private static Func<GuiLayoutEngine> EngineFactory(GuiWorkspace? workspace) =>
-        workspace is not null ? workspace.CreateLayoutEngine : () => new GuiLayoutEngine(GuiRules.Empty, _ => null);
 
     private void Fill(GuiInspection inspection, GuiPreview? preview, IReadOnlyList<UsageRow> rows)
     {
@@ -483,6 +649,7 @@ public sealed class GuiInspectorWindow : Window
     private void FillTree(ResolvedElement? root)
     {
         _treeItems.Clear();
+        _treeMarks.Clear();
         _tree.Items.Clear();
         _properties.ItemsSource = null;
         if (root is null)
@@ -498,7 +665,7 @@ public sealed class GuiInspectorWindow : Window
 
     private TreeViewItem CreateTreeItem(ResolvedElement element, int depth)
     {
-        var item = new TreeViewItem { Header = HeaderFor(element), Tag = element, IsExpanded = depth < 2 };
+        var item = new TreeViewItem { Header = HeaderFor(element, null), Tag = element, IsExpanded = depth < 2 };
         _treeItems.TryAdd(element, item);
         foreach (var child in element.Children)
         {
@@ -508,7 +675,8 @@ public sealed class GuiInspectorWindow : Window
         return item;
     }
 
-    private static FrameworkElement HeaderFor(ResolvedElement element)
+    /// <param name="conditional">null: nicht bedingt; false: bedingt und gezeigt; true: ausgeblendet.</param>
+    private static FrameworkElement HeaderFor(ResolvedElement element, bool? conditional)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
         panel.Children.Add(new Border
@@ -519,7 +687,8 @@ public sealed class GuiInspectorWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
             Background = new SolidColorBrush(GuiSchematicCanvas.ColorOf(GuiWidgetKinds.CategoryOf(element.BaseWidget))),
         });
-        panel.Children.Add(new TextBlock { Text = element.Name is { Length: > 0 } name ? $"{element.Key} \"{name}\"" : element.Key });
+        var label = new TextBlock { Text = element.Name is { Length: > 0 } name ? $"{element.Key} \"{name}\"" : element.Key };
+        panel.Children.Add(label);
         if (element.Role == GuiRole.TypeInstance)
         {
             var detail = new TextBlock { Text = "  " + GuiWidgetKinds.Normalize(element.BaseWidget), FontStyle = FontStyles.Italic };
@@ -527,6 +696,7 @@ public sealed class GuiInspectorWindow : Window
             panel.Children.Add(detail);
         }
 
+        GuiDesignerView.MarkConditional(panel, label, conditional);
         return panel;
     }
 
@@ -650,12 +820,17 @@ public sealed class GuiInspectorWindow : Window
     }
 
     private static string UsageText(GuiUsage usage) =>
-        $"{usage.File.RelativePath}:{usage.Node.Line}   {GuiInspection.ContextOf(usage.Node)}"
+        $"{usage.File.RelativePath}:{usage.Node.Line}   {GuiInspection.ContextOf(usage.Node, GuiSettings.Layout)}"
         + (usage.File.Layer == GuiLayer.Vanilla ? string.Empty : $"   [{usage.File.Label}]");
 
     private void ShowPreview(GuiPreview? preview, bool keepView)
     {
-        _canvas.SetScene(preview?.Scene, keepView);
+        _canvas.DarkBackground = _workspace is { } workspace && !workspace.Rules.Layout.IsClassic;
+        GuiSchematicCanvas.ApplyMessageForeground(_previewMessage, _canvas.DarkBackground);
+        _canvas.SetScene(preview?.Scene, keepView, _workspace?.Classic?.Fonts);
+        PreviewScene = preview?.Scene;
+        _conditionalKeys = preview?.Scene?.Root.ConditionalKeys ?? new Dictionary<ResolvedElement, string>();
+        UpdateConditionalState();
         _previewMessage.Text = preview?.Scene is not null
             ? string.Empty
             : _inspection?.Kind == GuiInspectKind.Template ? GuiTexts.PreviewTemplate : GuiTexts.PreviewImpossible;
@@ -665,6 +840,9 @@ public sealed class GuiInspectorWindow : Window
         }
     }
 
+    /// <summary>Anzahl der gestarteten Layout-Neuberechnungen (für Tests).</summary>
+    internal int LayoutRuns { get; private set; }
+
     private void Relayout()
     {
         if (_inspection?.Element is not { } element || _target is not { } target)
@@ -672,12 +850,13 @@ public sealed class GuiInspectorWindow : Window
             return;
         }
 
+        LayoutRuns++;
         _layoutRun?.Cancel();
         var run = new CancellationTokenSource();
         _layoutRun = run;
-        var createEngine = EngineFactory(_workspace);
+        var createEngine = GuiSettings.LayoutEngineFactory(_workspace);
         var options = PreviewOptions;
-        Task.Run(() => GuiPreviewBuilder.Layout(element, target.Node, target.Document, createEngine, options, run.Token), run.Token).ContinueWith(
+        Task.Run(() => GuiPreviewBuilder.Layout(element, target.Node, target.Document, createEngine, options, run.Token, target.FilePath), run.Token).ContinueWith(
             task =>
             {
                 if (!run.IsCancellationRequested && task.IsCompletedSuccessfully)

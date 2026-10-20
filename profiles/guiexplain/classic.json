@@ -1,0 +1,1701 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "kind": "topic",
+      "key": "anchor-formula",
+      "text": {
+        "de": "Lage eines Elements: x = position.x + Elternbreite × orientation.x − eigene Breite × origo.x, für y ebenso. orientation wählt den Ankerpunkt im Elternelement, origo den Punkt des Elements, der auf diesem Anker sitzt; position verschiebt von dort in Bildschirmrichtung (+x rechts, +y unten).",
+        "en": "Position of an element: x = position.x + parent width × orientation.x − own width × origo.x, likewise for y. orientation picks the anchor point in the parent, origo the point of the element that sits on that anchor; position moves from there in screen direction (+x right, +y down)."
+      },
+      "pitfalls": {
+        "de": [
+          "position wird nie gespiegelt: bei LOWER_RIGHT heißt x = -20 20 Pixel nach links.",
+          "Gemessen sind orientation UPPER_LEFT, UPPER_RIGHT, LOWER_RIGHT und CENTER sowie origo UPPER_LEFT und LOWER_RIGHT; LOWER_LEFT, CENTER_UP, CENTER_LEFT und CENTER_RIGHT stammen nur aus HOI4 Mod Utilities."
+        ],
+        "en": [
+          "position is never mirrored: with LOWER_RIGHT, x = -20 means 20 pixels to the left.",
+          "Measured are orientation UPPER_LEFT, UPPER_RIGHT, LOWER_RIGHT and CENTER plus origo UPPER_LEFT and LOWER_RIGHT; LOWER_LEFT, CENTER_UP, CENTER_LEFT and CENTER_RIGHT come only from HOI4 Mod Utilities."
+        ]
+      },
+      "sketch": "anchors",
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding: orientation = Anker im Eltern-/Bildschirm, origo = Anker im Element" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Plan 1, Messung: pmt_render_probe (LOWER_RIGHT, position -236/-330) gegen Bild hoi4-probe-run2-2026-10-17.jpg" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe make_gui_probes.py, Lauf 2 (HOI IV 1.19.3), Bild hoi4-probe-run2-2026-10-17.jpg: mainmenu_panel_upperright (upper_right), change_background (lower_right, Origo lower_right) mit change_background_button (center); Test ClassicProbeLayoutTests" },
+        { "kind": "vanilla", "note": "HOI IV: 124 von 153 x-Werten nahe LOWER_RIGHT sind negativ" },
+        { "kind": "unsure", "note": "Faktoren für LOWER_LEFT, CENTER_UP, CENTER_LEFT und CENTER_RIGHT nur aus HOI4 Mod Utilities (Quelltext calculateBBox), nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "topic",
+      "key": "percent",
+      "text": {
+        "de": "Größen in Prozent: N% ist ein Anteil der Elterngröße. N%% ist ein Anteil von (Elterngröße − eigene Position), das Element reicht also bis zum Rand. Vanilla nutzt Prozent fast nur in HOI IV.",
+        "en": "Sizes in percent: N% is a share of the parent size. N%% is a share of (parent size − own position), so the element reaches the edge. Vanilla uses percent almost only in HOI IV."
+      },
+      "pitfalls": {
+        "de": [
+          "N%% füllt bis zum Rand, N% nicht: 100% bei x = 60 ragt 60 Pixel über das Elternelement hinaus.",
+          "Negative Größen kommen in Vanilla vor; dass sie Elterngröße plus Wert bedeuten, ist nicht gemessen."
+        ],
+        "en": [
+          "N%% fills to the edge, N% does not: 100% at x = 60 sticks out of the parent by 60 pixels.",
+          "Negative sizes occur in vanilla; that they mean parent size plus the value is not measured."
+        ]
+      },
+      "sketch": "percent",
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): Balken 100%% und 100% bei x = 60" },
+        { "kind": "vanilla", "note": "HOI IV außerhalb equipmentdesigner/: %% 828-mal, % 426-mal; EU IV: 100% 4-mal" },
+        { "kind": "unsure", "note": "Negative Größe = Elterngröße + Wert: HOI4 Mod Utilities, nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "topic",
+      "key": "frames",
+      "text": {
+        "de": "Ein Sprite mit noOfFrames enthält mehrere Bilder; frame wählt eines davon und zählt ab 1. frame = 0 und ein fehlendes frame zeigen beide das erste Bild.",
+        "en": "A sprite with noOfFrames holds several images; frame picks one of them and counts from 1. frame = 0 and a missing frame both show the first image."
+      },
+      "pitfalls": {
+        "de": [
+          "frame zählt ab 1, nicht ab 0: frame = 2 ist das zweite Bild.",
+          "Dass die Bilder waagerecht nebeneinander liegen (Bildbreite ÷ noOfFrames), stammt aus HOI4 Mod Utilities und ist nicht gemessen."
+        ],
+        "en": [
+          "frame counts from 1, not from 0: frame = 2 is the second image.",
+          "That the images sit side by side horizontally (image width ÷ noOfFrames) comes from HOI4 Mod Utilities and is not measured."
+        ]
+      },
+      "sketch": "frames",
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): Icons mit frame 0, 1, ohne und 2" },
+        { "kind": "vanilla", "note": "HOI IV: 143 Elemente nutzen frame = N bei einem Sprite mit N Bildern, keines frame > N" },
+        { "kind": "unsure", "note": "Waagerechter Streifen: HOI4 Mod Utilities (sprite.ts), nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "topic",
+      "key": "nine-slice",
+      "text": {
+        "de": "Ein corneredTileSpriteType wird laut HOI4 Mod Utilities mit borderSize in neun Teile geteilt, damit er auf jede Größe passt. Gemessen ist: ist die gewünschte Fläche kleiner als 2 × borderSize, zeichnet das Spiel ihn größer; in welche Richtung er wächst, ist nicht klar. PMT zeichnet dann 2 × borderSize um die Mitte der Fläche und markiert das Element als angenähert.",
+        "en": "According to HOI4 Mod Utilities a corneredTileSpriteType is split into nine parts by borderSize so that it fits any size. Measured: if the requested area is smaller than 2 × borderSize, the game draws it larger; the direction it grows in is not clear. PMT then draws 2 × borderSize around the centre of the area and marks the element as approximate."
+      },
+      "pitfalls": {
+        "de": [
+          "Unter 2 × borderSize wird größer gezeichnet: ein 20 Pixel hoher Balken mit borderSize 64 war im Spiel etwa 85 bis 116 Pixel hoch.",
+          "Dass die Ecken fest bleiben und Ränder und Mitte gekachelt werden (tilingCenter), stammt aus HOI4 Mod Utilities und ist nicht gemessen."
+        ],
+        "en": [
+          "Below 2 × borderSize it is drawn larger: a 20 pixel high bar with borderSize 64 was about 85 to 116 pixels high in game.",
+          "That the corners stay fixed while edges and centre are tiled (tilingCenter) comes from HOI4 Mod Utilities and is not measured."
+        ]
+      },
+      "sketch": "nineSlice",
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Läufe 1 und 2 (HOI IV 1.19.3): 20 hohe Balken mit GFX_tiled_window (borderSize 64), etwa 85 bis 116 Pixel hoch" },
+        { "kind": "unsure", "note": "Neun Teile, Ecken fest, Ränder gekachelt: HOI4 Mod Utilities, nicht gemessen; Wachstumsrichtung nicht klar (Plan 1 las im Bild hoi4-probe-run2-2026-10-17.jpg etwa ein Wachstum um die Mitte ab)" }
+      ]
+    },
+    {
+      "kind": "topic",
+      "key": "load-order",
+      "text": {
+        "de": "Ladereihenfolge in interface/ (beide Spiele): erst alle Dateien direkt im Ordner nach Dateinamen, Vanilla und Mods gemischt, dann die Dateien aus Unterordnern. HOI IV: bei gleichem Fenster- oder Sprite-Namen gewinnt die letzte Definition, das Fenster wird ganz ersetzt. EU IV: bei Fenstern gewinnt die erste Definition, bei Sprites die letzte.",
+        "en": "Load order in interface/ (both games): first all files directly in the folder by file name, vanilla and mods mixed, then the files from subfolders. HOI IV: for a duplicate window or sprite name the last definition wins, and the window is replaced whole. EU IV: for windows the first definition wins, for sprites the last."
+      },
+      "pitfalls": {
+        "de": [
+          "Mods gewinnen nicht automatisch: in HOI IV verlor eine Datei 00_… gegen Vanilla, eine Datei zz_… gewann.",
+          "HOI IV: eine Datei im Hauptordner verliert immer gegen ein Fenster aus einem Vanilla-Unterordner.",
+          "EU IV schreibt für jede spätere Kopie eines Fensters Already Defined ins error.log, auch für die Vanilla-Datei; HOI IV meldet Doppelte gar nicht."
+        ],
+        "en": [
+          "Mods do not win automatically: in HOI IV a file 00_… lost against vanilla, a file zz_… won.",
+          "HOI IV: a file in the main folder always loses against a window from a vanilla subfolder.",
+          "EU IV writes Already Defined to error.log for every later copy of a window, also for the vanilla file; HOI IV does not report duplicates at all."
+        ]
+      },
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a/_b, Läufe 1 und 2 (HOI IV 1.19.3)" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe PMT GUI Probe A/B (EU IV 1.37.5), Reihenfolge der Already-Defined-Zeilen in error.log" },
+        { "kind": "unsure", "note": "Reihenfolge mehrerer Unterordner untereinander und Lage der DLC-Ordner nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "containerWindowType",
+      "games": [ "hoi4" ],
+      "text": {
+        "de": "Der Container von HOI IV (Vanilla 9090-mal): fasst Elemente zusammen und kann scrollen und animieren. Ein containerWindowType direkt unter guiTypes ist ein Fenster; sein Name muss eindeutig sein.",
+        "en": "The container of HOI IV (9090 times in vanilla): groups elements and can scroll and animate. A containerWindowType directly under guiTypes is a window; its name must be unique."
+      },
+      "pitfalls": {
+        "de": [ "Ein oberstes Fenster erscheint nur, wenn es eingehängt ist (Scripted GUI oder Spielcode); verschachtelte Container erscheinen mit ihrem Elternfenster." ],
+        "en": [ "A top-level window only shows when it is hooked in (scripted GUI or game code); nested containers show with their parent window." ]
+      },
+      "children": [ "iconType", "instantTextBoxType", "buttonType", "containerWindowType", "gridBoxType" ],
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 9090-mal, EU IV 30-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "containerWindowType",
+      "text": {
+        "de": "Container für Elemente. EU IV nutzt ihn selten (30-mal) und baut seine Fenster mit windowType (887-mal). Ein containerWindowType direkt unter guiTypes ist ein Fenster; sein Name muss eindeutig sein.",
+        "en": "Container for elements. EU IV rarely uses it (30 times) and builds its windows with windowType (887 times). A containerWindowType directly under guiTypes is a window; its name must be unique."
+      },
+      "pitfalls": {
+        "de": [ "Ein oberstes Fenster erscheint nur, wenn es eingehängt ist; verschachtelte Container erscheinen mit ihrem Elternfenster." ],
+        "en": [ "A top-level window only shows when it is hooked in; nested containers show with their parent window." ]
+      },
+      "children": [ "iconType", "instantTextBoxType", "guiButtonType", "windowType" ],
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "EU IV containerWindowType 30-mal, windowType 887-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "windowType",
+      "games": [ "eu4" ],
+      "text": {
+        "de": "Das Fenster von EU IV (Vanilla 887-mal): Container für Elemente. Ein windowType direkt unter guiTypes ist ein Fenster des Spiels.",
+        "en": "The window of EU IV (887 times in vanilla): a container for elements. A windowType directly under guiTypes is a window of the game."
+      },
+      "pitfalls": {
+        "de": [ "Bei doppeltem Fensternamen gewinnt in EU IV die erste Definition; jede spätere Kopie meldet Already Defined im error.log." ],
+        "en": [ "For a duplicate window name EU IV keeps the first definition; every later copy reports Already Defined in error.log." ]
+      },
+      "children": [ "iconType", "instantTextBoxType", "guiButtonType", "listboxType", "windowType" ],
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe PMT GUI Probe A/B (EU IV 1.37.5), error.log" },
+        { "kind": "vanilla", "note": "EU IV 887-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "windowType",
+      "text": {
+        "de": "Fenster im Stil von EU IV, in HOI IV selten (83-mal); HOI IV baut auf containerWindowType. Typische Schlüssel sind backGround, fullScreen, moveable und dontRender.",
+        "en": "Window in the style of EU IV, rare in HOI IV (83 times); HOI IV builds on containerWindowType. Typical keys are backGround, fullScreen, moveable and dontRender."
+      },
+      "pitfalls": {
+        "de": [ "Mit fullScreen = yes richten sich die Kinder am Bildschirm aus, der Ursprung bleibt die linke obere Ecke des Fensters (gemessen in EU IV)." ],
+        "en": [ "With fullScreen = yes the children align to the screen, while the origin stays at the window's top left (measured in EU IV)." ]
+      },
+      "children": [ "guiButtonType", "instantTextBoxType", "iconType", "checkboxType" ],
+      "sources": [
+        { "kind": "vanilla", "note": "HOI IV windowType 83-mal, containerWindowType 9090-mal" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe PMT GUI Probe A/B (EU IV 1.37.5), Bild eu4-probe-run-2026-10-17.jpg: mainmenu (fullscreen = yes) mit mainmenu_panel_bottom (CENTER_DOWN); Test RealClassicGuiTests.Eu4_main_menu_bottom_panel_against_the_probe_screenshot" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "buttonType",
+      "text": {
+        "de": "Knopf mit Sprite und optionaler Beschriftung (buttonText, buttonFont). In HOI IV der übliche Knopf (2425-mal), in EU IV selten (36-mal).",
+        "en": "Button with a sprite and an optional label (buttonText, buttonFont). The usual button in HOI IV (2425 times), rare in EU IV (36 times)."
+      },
+      "pitfalls": {
+        "de": [ "Was ein Klick tut, steht nicht in der .gui: Vanilla-Knöpfe steuert der Spielcode, eigene brauchen ein Scripted GUI (HOI IV) oder custom_gui (EU IV)." ],
+        "en": [ "What a click does is not in the .gui: vanilla buttons are driven by game code, your own need a scripted GUI (HOI IV) or custom_gui (EU IV)." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 2425-mal, EU IV 36-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "guiButtonType",
+      "text": {
+        "de": "Knopf wie buttonType. Laut Wiki ein älterer Name dafür; EU IV nutzt ihn als Standardknopf (1993-mal), HOI IV 352-mal, davon 136 als Teile von Scrollleisten.",
+        "en": "Button like buttonType. According to the wiki an older name for it; EU IV uses it as its standard button (1993 times), HOI IV 352 times, 136 of them as scrollbar parts."
+      },
+      "pitfalls": {
+        "de": [ "EU IV schreibt tooltip, tooltipText und delayedTooltipText an fast jeden guiButtonType, meist leer; ihre Wirkung ist nicht dokumentiert." ],
+        "en": [ "EU IV puts tooltip, tooltipText and delayedTooltipText on almost every guiButtonType, mostly empty; their effect is not documented." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (guiButtonType = buttonType)" },
+        { "kind": "vanilla", "note": "EU IV 1993-mal, HOI IV 352-mal (davon 136 Scrollleisten-Teile)" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "iconType",
+      "text": {
+        "de": "Zeigt ein Sprite (spriteType oder quadTextureSprite), bei mehreren Bildern das mit frame gewählte. Frei mit Skript nutzbar.",
+        "en": "Shows a sprite (spriteType or quadTextureSprite), for several images the one picked with frame. Freely usable with script."
+      },
+      "pitfalls": {
+        "de": [ "frame zählt ab 1; frame = 0 und ein fehlendes frame zeigen das erste Bild." ],
+        "en": [ "frame counts from 1; frame = 0 and a missing frame show the first image." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): Icons mit frame 0, 1, ohne und 2" },
+        { "kind": "vanilla", "note": "HOI IV 6726-mal, EU IV 2370-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "instantTextBoxType",
+      "text": {
+        "de": "Textfeld: zeigt den Lokalisierungstext aus text in der Schrift font; die Größe geben maxWidth und maxHeight an (laut HOI4 Mod Utilities, nicht gemessen). Frei mit Skript nutzbar.",
+        "en": "Text box: shows the localisation text from text in the font font; maxWidth and maxHeight give its size (according to HOI4 Mod Utilities, not measured). Freely usable with script."
+      },
+      "pitfalls": {
+        "de": [ "EU IV braucht font: ohne Schrift schreibt das Spiel einen Fehler ins error.log." ],
+        "en": [ "EU IV needs font: without a font the game writes an error to error.log." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding (font Pflicht)" },
+        { "kind": "vanilla", "note": "HOI IV 3565-mal (instantTextboxType 2420, instantTextBoxType 1145), EU IV 2499-mal" },
+        { "kind": "unsure", "note": "Größe = maxWidth × maxHeight: HOI4 Mod Utilities, nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "textBoxType",
+      "text": {
+        "de": "Textfeld; laut Wiki ein älterer Name für instantTextBoxType.",
+        "en": "Text box; according to the wiki an older name for instantTextBoxType."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla nutzt fast immer instantTextBoxType (HOI IV 3565-mal, EU IV 2499-mal), textBoxType nur selten." ],
+        "en": [ "Vanilla almost always uses instantTextBoxType (HOI IV 3565 times, EU IV 2499 times), textBoxType only rarely." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (textBoxType = instantTextBoxType)" },
+        { "kind": "vanilla", "note": "HOI IV 23-mal, EU IV 54-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "checkboxType",
+      "text": {
+        "de": "Ankreuzfeld, aufgebaut wie ein Knopf (Sprite, buttonText, frame). Was es schaltet, regelt der Spielcode.",
+        "en": "Checkbox, built like a button (sprite, buttonText, frame). What it switches is handled by game code."
+      },
+      "pitfalls": {
+        "de": [ "Laut Wiki fest im Spielcode verdrahtet: ein neues checkboxType bekommt keine Daten." ],
+        "en": [ "According to the wiki hardcoded: a new checkboxType gets no data." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 181-mal, EU IV 179-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "editBoxType",
+      "text": {
+        "de": "Laut Name ein Eingabefeld für Text, mit text, font, size und borderSize. Laut Wiki steuert es der Spielcode.",
+        "en": "By its name an input field for text, with text, font, size and borderSize. According to the wiki it is driven by game code."
+      },
+      "pitfalls": {
+        "de": [ "Laut Wiki fest im Spielcode verdrahtet: ein neues editBoxType bekommt keine Daten." ],
+        "en": [ "According to the wiki hardcoded: a new editBoxType gets no data." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 103-mal, EU IV 104-mal" },
+        { "kind": "unsure", "note": "Eingabefeld nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "gridBoxType",
+      "text": {
+        "de": "Raster, das für jeden Eintrag einen Container klont (HOI IV 681-mal). Vanilla nutzt dazu slotsize, max_slots_horizontal, max_slots_vertical und format; was diese genau tun, ist nicht gemessen.",
+        "en": "Grid that clones a container for each entry (681 times in HOI IV). Vanilla uses slotsize, max_slots_horizontal, max_slots_vertical and format with it; what exactly they do is not measured."
+      },
+      "pitfalls": {
+        "de": [ "Ohne Daten bleibt das Raster leer: die Einträge liefert der Spielcode oder ein Scripted GUI mit dynamic_lists." ],
+        "en": [ "Without data the grid stays empty: entries come from game code or from a scripted GUI with dynamic_lists." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, hoi4.paradoxwikis.com/Scripted_GUI_modding (dynamic_lists)" },
+        { "kind": "vanilla", "note": "HOI IV 681-mal (gridBoxType 355, gridboxtype 312, gridboxType 14), EU IV 18-mal" },
+        { "kind": "unsure", "note": "Wirkung von slotsize, max_slots_* und format: HOI4 Mod Utilities bzw. Name, nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "listboxType",
+      "text": {
+        "de": "Liste, deren Einträge Container sind, die der Spielcode einhängt. Mit size, spacing, scrollbartype und borderSize.",
+        "en": "List whose entries are containers the game code links in. With size, spacing, scrollbartype and borderSize."
+      },
+      "pitfalls": {
+        "de": [ "Laut Wiki fest im Spielcode verdrahtet: eine neue Liste bleibt leer." ],
+        "en": [ "According to the wiki hardcoded: a new list stays empty." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "EU IV 243-mal, HOI IV 30-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "smoothListboxType",
+      "text": {
+        "de": "Liste wie listboxType, deren Einträge der Spielcode als Container einhängt.",
+        "en": "List like listboxType whose entries the game code links in as containers."
+      },
+      "pitfalls": {
+        "de": [ "Laut Wiki fest im Spielcode verdrahtet: eine neue Liste bleibt leer." ],
+        "en": [ "According to the wiki hardcoded: a new list stays empty." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 29-mal, EU IV 35-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "OverlappingElementsBoxType",
+      "text": {
+        "de": "Laut Wiki wie eine Liste ohne Scrollleiste, dazu format (left, center, right). Dass sich die Einträge überlappen dürfen, ist nur aus dem Namen geschlossen.",
+        "en": "According to the wiki like a list without a scrollbar, plus format (left, center, right). That the entries may overlap is only inferred from the name."
+      },
+      "pitfalls": {
+        "de": [ "Laut Wiki fest im Spielcode verdrahtet: ein neues Element bleibt leer." ],
+        "en": [ "According to the wiki hardcoded: a new element stays empty." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 55-mal, EU IV 83-mal" },
+        { "kind": "unsure", "note": "Überlappen nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "scrollbarType",
+      "text": {
+        "de": "Scrollleiste mit den Teilen slider, track, leftbutton und rightbutton (guiButtonType im Inneren) sowie minValue, maxValue und stepSize.",
+        "en": "Scrollbar with the parts slider, track, leftbutton and rightbutton (guiButtonType inside) plus minValue, maxValue and stepSize."
+      },
+      "pitfalls": {
+        "de": [ "Eine Scrollleiste in einem Container gehört fest zu ihm; nur eine oberste Scrollleiste kann man per Name wiederverwenden." ],
+        "en": [ "A scrollbar inside a container belongs to it; only a top-level scrollbar can be reused by name." ]
+      },
+      "children": [ "guiButtonType" ],
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 34-mal, EU IV 27-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "extendedScrollbarType",
+      "text": {
+        "de": "Scrollleiste mit Rollenblöcken slider, track, decreaseButton und increaseButton. Container und Listen verweisen per Name auf sie (verticalScrollbar, scrollbartype).",
+        "en": "Scrollbar with the role blocks slider, track, decreaseButton and increaseButton. Containers and lists refer to it by name (verticalScrollbar, scrollbartype)."
+      },
+      "pitfalls": {
+        "de": [ "Scrollen klappt laut Wiki nur, wenn der Container in Scrollrichtung eine Pixelgröße, clipping und einen Hintergrund hat." ],
+        "en": [ "According to the wiki scrolling only works when the container has a pixel size in the scroll direction, clipping and a background." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 31-mal, EU IV 2-mal; alle 469 HOI-IV-Verweise auf Scrollleisten lösen auf" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "positionType",
+      "text": {
+        "de": "Benannte Position ohne Bild (nur name und position). Das Wiki beschreibt den Typ nicht; Vanilla-Kommentare deuten an, dass der Spielcode die Werte liest.",
+        "en": "Named position without an image (only name and position). The wiki does not describe the type; vanilla comments suggest that game code reads the values."
+      },
+      "pitfalls": {
+        "de": [ "Zeichnet nichts; wofür der Spielcode die Position nutzt, ist nicht dokumentiert." ],
+        "en": [ "Draws nothing; what game code uses the position for is not documented." ]
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 211-mal, EU IV 110-mal, Kommentare wie 'only Y is used'" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "dropDownBoxType",
+      "text": {
+        "de": "Nur HOI IV (43-mal), immer mit den Rollenblöcken expandButton und expandedWindow; laut Name eine Aufklappliste. Das Wiki beschreibt den Typ nicht.",
+        "en": "HOI IV only (43 times), always with the role blocks expandButton and expandedWindow; by its name a drop-down list. The wiki does not describe the type."
+      },
+      "pitfalls": {
+        "de": [ "In EU IV kommt der Typ in Vanilla nicht vor." ],
+        "en": [ "In EU IV the type does not occur in vanilla." ]
+      },
+      "children": [ "expandButton", "expandedWindow" ],
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 43-mal mit expandedWindow 43, expandButton 40; EU IV 0" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "eu3dialogtype",
+      "text": {
+        "de": "Fenster; laut Wiki ein älterer Name für windowType. Nur EU IV (54-mal), mit denselben Schlüsseln wie windowType.",
+        "en": "Window; according to the wiki an older name for windowType. EU IV only (54 times), with the same keys as windowType."
+      },
+      "pitfalls": {
+        "de": [ "shieldtype gibt es nur innerhalb von eu3dialogtype." ],
+        "en": [ "shieldtype only exists inside eu3dialogtype." ]
+      },
+      "children": [ "shieldtype", "guiButtonType", "instantTextBoxType", "iconType" ],
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "EU IV 54-mal" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "shieldtype",
+      "text": {
+        "de": "Laut Name ein Wappenschild, mit name, spriteType und position, nur innerhalb von eu3dialogtype (EU IV 70-mal). Laut Wiki steuert ihn der Spielcode.",
+        "en": "By its name a shield, with name, spriteType and position, only inside eu3dialogtype (70 times in EU IV). According to the wiki it is driven by game code."
+      },
+      "pitfalls": {
+        "de": [ "Laut Wiki fest im Spielcode verdrahtet: ein neues shieldtype bekommt keine Daten." ],
+        "en": [ "According to the wiki hardcoded: a new shieldtype gets no data." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "EU IV 70-mal" },
+        { "kind": "unsure", "note": "Wappenschild nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "element",
+      "key": "background",
+      "text": {
+        "de": "Hintergrund eines Containers: background = { name = … spriteType oder quadTextureSprite = … }. Laut Wiki nötig, damit der Container scrollen kann.",
+        "en": "Background of a container: background = { name = … spriteType or quadTextureSprite = … }. According to the wiki needed for the container to scroll."
+      },
+      "pitfalls": {
+        "de": [ "Ist ein Hintergrund da, ist clipping laut Wiki standardmäßig an." ],
+        "en": [ "If there is a background, clipping is on by default according to the wiki." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 1494-mal (background 1463, Background 31), EU IV 23-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "orientation",
+      "text": {
+        "de": "Ankerpunkt im Elternelement (bei obersten Fenstern im Bildschirm): von dieser Ecke, Kante oder der Mitte aus wird position gerechnet. Gültig sind UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT, CENTER, CENTER_UP (auch CENTER_UPPER), CENTER_DOWN (auch CENTER_LOWER), CENTER_LEFT und CENTER_RIGHT, in beliebiger Schreibweise.",
+        "en": "Anchor point in the parent (for top-level windows in the screen): position is counted from this corner, edge or the centre. Valid are UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT, CENTER, CENTER_UP (also CENTER_UPPER), CENTER_DOWN (also CENTER_LOWER), CENTER_LEFT and CENTER_RIGHT, in any case."
+      },
+      "default": "UPPER_LEFT",
+      "pitfalls": {
+        "de": [
+          "Kinder erben orientation nicht: ein Kind ohne eigene orientation sitzt oben links im Container, anders als das Wiki schreibt.",
+          "Schlüssel gelten ohne Rücksicht auf Groß-/Kleinschreibung, die Vanilla-Schreibweisen sind verschieden: Orientation und orientation stehen nebeneinander.",
+          "Vanilla enthält auch Werte wie left, center_middle, bottom_left oder UPPERL_LEFT; PMT zeigt sie markiert und ändert sie nicht."
+        ],
+        "en": [
+          "Children do not inherit orientation: a child without its own orientation sits at the top left of its container, unlike the wiki says.",
+          "Keys apply ignoring case, and vanilla spellings differ: Orientation and orientation are used side by side.",
+          "Vanilla also has values like left, center_middle, bottom_left or UPPERL_LEFT; PMT shows them marked and does not change them."
+        ]
+      },
+      "sketch": "anchors",
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding: Ankerpunkt und gültige Werte (CENTER_UPPER, CENTER_LOWER als andere Namen)" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): pmt_inherit_icon ohne orientation" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe make_gui_probes.py, Lauf 2 (HOI IV 1.19.3), Bild hoi4-probe-run2-2026-10-17.jpg: mainmenu_panel_upperright (upper_right), change_background (lower_right, Origo lower_right) mit change_background_button (center); Test ClassicProbeLayoutTests" },
+        { "kind": "vanilla", "note": "HOI IV 3215-mal (Orientation 2043, orientation 1172), EU IV 3212-mal (Orientation 2629, orientation 583)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "origo",
+      "text": {
+        "de": "Ankerpunkt im Element selbst: welcher Punkt des Elements auf dem mit orientation und position berechneten Punkt sitzt. Gleiche Werte wie orientation.",
+        "en": "Anchor point in the element itself: which point of the element sits on the point computed from orientation and position. Same values as orientation."
+      },
+      "default": "UPPER_LEFT",
+      "pitfalls": {
+        "de": [
+          "Ohne origo sitzt die linke obere Ecke des Elements auf dem Anker.",
+          "Vanilla schreibt origo und Origo; beides gilt."
+        ],
+        "en": [
+          "Without origo the element's top left corner sits on the anchor.",
+          "Vanilla writes origo and Origo; both work."
+        ]
+      },
+      "sketch": "anchors",
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding: origo = Anker im Container selbst" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Plan 1, Messung: pmt_render_probe ohne origo, linke obere Ecke am Anker (Bild hoi4-probe-run2-2026-10-17.jpg)" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe make_gui_probes.py, Lauf 2 (HOI IV 1.19.3), Bild hoi4-probe-run2-2026-10-17.jpg: mainmenu_panel_upperright (upper_right), change_background (lower_right, Origo lower_right) mit change_background_button (center); Test ClassicProbeLayoutTests" },
+        { "kind": "vanilla", "note": "HOI IV 207-mal (origo 138, Origo 69), fast nur in containerWindowType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "position",
+      "text": {
+        "de": "Verschiebung in Pixeln vom Ankerpunkt (orientation) aus, als { x = … y = … }; +x nach rechts, +y nach unten.",
+        "en": "Offset in pixels from the anchor point (orientation), as { x = … y = … }; +x to the right, +y down."
+      },
+      "pitfalls": {
+        "de": [
+          "position wird nie gespiegelt: bei LOWER_RIGHT heißt x = -20 20 Pixel nach links.",
+          "EU IV versteckt Elemente mit riesigen Werten wie x = 99512 (topbar.gui)."
+        ],
+        "en": [
+          "position is never mirrored: with LOWER_RIGHT, x = -20 means 20 pixels to the left.",
+          "EU IV hides elements with huge values like x = 99512 (topbar.gui)."
+        ]
+      },
+      "sketch": "anchors",
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Plan 1, Messung: pmt_render_probe (LOWER_RIGHT, position -236/-330) gegen Bild hoi4-probe-run2-2026-10-17.jpg" },
+        { "kind": "vanilla", "note": "HOI IV 23531-mal, EU IV 8620-mal; 124 von 153 x-Werten nahe LOWER_RIGHT negativ" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "size",
+      "text": {
+        "de": "Breite und Höhe, als { width = … height = … } (meist HOI IV) oder { x = … y = … } (meist EU IV). In Pixeln oder in Prozent des Elternelements, bei obersten Fenstern des Bildschirms.",
+        "en": "Width and height, as { width = … height = … } (mostly HOI IV) or { x = … y = … } (mostly EU IV). In pixels or in percent of the parent, for top-level windows of the screen."
+      },
+      "pitfalls": {
+        "de": [
+          "N%% füllt bis zum Rand: es zählt die Elterngröße minus eigene Position, N% dagegen die ganze Elterngröße.",
+          "Negative Größen kommen in Vanilla vor; dass sie Elterngröße plus Wert bedeuten, ist nicht gemessen."
+        ],
+        "en": [
+          "N%% fills to the edge: it counts the parent size minus the own position, while N% counts the whole parent size.",
+          "Negative sizes occur in vanilla; that they mean parent size plus the value is not measured."
+        ]
+      },
+      "sketch": "percent",
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding: Pixel oder % des Elternelements" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): Balken 100%% und 100% bei x = 60" },
+        { "kind": "vanilla", "note": "HOI IV 9981-mal (width/height 9490, x/y 475), EU IV 1451-mal (x/y 1401, width/height 50)" },
+        { "kind": "unsure", "note": "Negative Größe = Elterngröße + Wert: HOI4 Mod Utilities, nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "centerPosition",
+      "text": {
+        "de": "Laut HOI4 Mod Utilities markiert position mit centerPosition = yes die Mitte des Sprites statt seiner linken oberen Ecke. Im Spiel nicht gemessen, das Wiki beschreibt den Schlüssel nicht.",
+        "en": "According to HOI4 Mod Utilities, with centerPosition = yes position marks the centre of the sprite instead of its top left corner. Not measured in game, and the wiki does not describe the key."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt centerposition und centerPosition; beides gilt." ],
+        "en": [ "Vanilla writes centerposition and centerPosition; both work." ]
+      },
+      "sources": [
+        { "kind": "unsure", "note": "HOI4 Mod Utilities (Quelltext); Vanilla HOI IV 678-mal (centerposition 613, centerPosition 65)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "margin",
+      "text": {
+        "de": "Rand eines Containers als { top = … bottom = … left = … right = … }. Laut Wiki ein Randbereich, der beim Scrollen stehen bleibt. Dass er die Fläche der Kinder verkleinert und sie verschiebt, stammt aus HOI4 Mod Utilities und ist nicht gemessen.",
+        "en": "Border of a container as { top = … bottom = … left = … right = … }. According to the wiki a border area that does not move when scrolling. That it shrinks the children's area and moves them comes from HOI4 Mod Utilities and is not measured."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 258-mal" },
+        { "kind": "unsure", "note": "Wirkung auf die Kinder: HOI4 Mod Utilities, nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "scale",
+      "text": {
+        "de": "Laut HOI4 Mod Utilities ein Faktor für die gezeichnete Sprite-Größe (Icons, Knöpfe). Das Wiki nennt den Schlüssel nur, im Spiel ist die Wirkung nicht gemessen.",
+        "en": "According to HOI4 Mod Utilities a factor for the drawn sprite size (icons, buttons). The wiki only names the key; its effect is not measured in game."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "HOI4 Mod Utilities (Quelltext); Wiki nennt scale ohne Beschreibung; Vanilla HOI IV 633-mal, EU IV 432-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "show_position",
+      "text": {
+        "de": "Lage eines Fensters nach dem Einblenden. Im Messlauf standen die Hauptmenü-Fenster bei show_position, nicht bei position; die Vorschau nutzt deshalb show_position.",
+        "en": "Position of a window after it slides in. In the measurement run the main menu windows stood at show_position, not at position; the preview therefore uses show_position."
+      },
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe-Lauf HOI IV 1.19.3: Hauptmenü-Panels mainmenu_panel_* standen bei show_position" },
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (Animationsschlüssel)" },
+        { "kind": "vanilla", "note": "HOI IV 148-mal, EU IV 52-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "hide_position",
+      "text": {
+        "de": "Das Wiki führt hide_position bei den Animationsschlüsseln, beschreibt aber nicht, was es tut. Laut Name die Lage im ausgeblendeten Zustand; nicht dokumentiert.",
+        "en": "The wiki lists hide_position with the animation keys but does not say what it does. By its name the position when hidden; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 45-mal (z. B. topbar: show_position y -1, hide_position y -165), HOI IV 6-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "fullScreen",
+      "text": {
+        "de": "fullScreen = yes: die Kinder des Fensters richten sich am Bildschirm aus statt an der Fenstergröße; der Ursprung bleibt die linke obere Ecke des Fensters (gemessen in EU IV).",
+        "en": "fullScreen = yes: the window's children align to the screen instead of the window size; the origin stays at the window's top left corner (measured in EU IV)."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt fullScreen und fullscreen; beides gilt." ],
+        "en": [ "Vanilla writes fullScreen and fullscreen; both work." ]
+      },
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe PMT GUI Probe A/B (EU IV 1.37.5), Bild eu4-probe-run-2026-10-17.jpg: mainmenu (fullscreen = yes) mit mainmenu_panel_bottom (CENTER_DOWN); Test RealClassicGuiTests.Eu4_main_menu_bottom_panel_against_the_probe_screenshot" },
+        { "kind": "vanilla", "note": "EU IV 633-mal (fullScreen 509, fullscreen 124), HOI IV 67-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "name",
+      "text": {
+        "de": "Name des Elements. Oberste Fenster brauchen einen eindeutigen Namen. Scripted GUIs (HOI IV) und custom_gui (EU IV) finden Elemente über ihren Namen.",
+        "en": "Name of the element. Top-level windows need a unique name. Scripted GUIs (HOI IV) and custom_gui (EU IV) find elements by their name."
+      },
+      "pitfalls": {
+        "de": [
+          "Vanilla-Namen nicht umbenennen: der Spielcode sucht viele davon (877 von 1830 obersten HOI-IV-Fenstern und 574 von 696 in EU IV stehen in der Exe).",
+          "Verschachtelte Namen dürfen sich wiederholen, z. B. background oder close_button."
+        ],
+        "en": [
+          "Do not rename vanilla names: game code looks many of them up (877 of 1830 top-level HOI IV windows and 574 of 696 in EU IV appear in the exe).",
+          "Nested names may repeat, for example background or close_button."
+        ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, hoi4.paradoxwikis.com/Scripted_GUI_modding, eu4.paradoxwikis.com/Interface_modding (custom_gui)" },
+        { "kind": "vanilla", "note": "Exe-Suche 2026-10-17: HOI IV 877/1830, EU IV 574/696; HOI IV 25339-mal, EU IV 8825-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "spriteType",
+      "text": {
+        "de": "Name des Sprites (GFX_…) aus einer .gfx-Datei, das das Element zeigt.",
+        "en": "Name of the sprite (GFX_…) from a .gfx file that the element shows."
+      },
+      "pitfalls": {
+        "de": [ "Ist ein Sprite-Name mehrfach definiert, gilt die zuletzt geladene Definition (beide Spiele)." ],
+        "en": [ "If a sprite name is defined more than once, the definition loaded last applies (both games)." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, hoi4.paradoxwikis.com/Graphical_asset_modding" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a/_b (HOI IV 1.19.3) und PMT GUI Probe A/B (EU IV 1.37.5): GFX_frontend_game_logo" },
+        { "kind": "vanilla", "note": "HOI IV 7405-mal, EU IV 2498-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "quadTextureSprite",
+      "text": {
+        "de": "Wie spriteType der Name eines Sprites (GFX_…). Vanilla nutzt ihn vor allem für Knöpfe und Hintergründe. Worin er sich von spriteType unterscheidet, beschreibt das Wiki nicht.",
+        "en": "Like spriteType the name of a sprite (GFX_…). Vanilla mostly uses it for buttons and backgrounds. The wiki does not describe how it differs from spriteType."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding: background = { name spriteType|quadTextureSprite }, Knopf-Schlüssel" },
+        { "kind": "vanilla", "note": "HOI IV 3869-mal (buttonType 1751), EU IV 2161-mal (guiButtonType 1861)" },
+        { "kind": "unsure", "note": "Unterschied zu spriteType nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "frame",
+      "text": {
+        "de": "Welches Bild eines Sprites mit mehreren Bildern (noOfFrames) gezeigt wird. Scripted GUIs (HOI IV) können frame über properties aus einer Variable setzen.",
+        "en": "Which image of a sprite with several images (noOfFrames) is shown. Scripted GUIs (HOI IV) can set frame from a variable through properties."
+      },
+      "default": "1",
+      "pitfalls": {
+        "de": [ "frame zählt ab 1: frame = 0 und ein fehlendes frame zeigen beide das erste Bild, frame = 2 das zweite." ],
+        "en": [ "frame counts from 1: frame = 0 and a missing frame both show the first image, frame = 2 the second." ]
+      },
+      "sketch": "frames",
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): Icons mit frame 0, 1, ohne und 2" },
+        { "kind": "vanilla", "note": "HOI IV 836-mal, EU IV 213-mal; 143 HOI-IV-Elemente mit frame = N bei N Bildern, keines frame > N" },
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Scripted_GUI_modding (properties: frame)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "noOfFrames",
+      "text": {
+        "de": "Schlüssel eines Sprites in der .gfx: wie viele Bilder das Bild enthält. Ein Element wählt mit frame eines davon, gezählt ab 1.",
+        "en": "Key of a sprite in the .gfx: how many images the picture holds. An element picks one of them with frame, counted from 1."
+      },
+      "pitfalls": {
+        "de": [ "Dass die Bilder waagerecht nebeneinander liegen (Bildbreite ÷ noOfFrames), stammt aus HOI4 Mod Utilities und ist nicht gemessen." ],
+        "en": [ "That the images sit side by side horizontally (image width ÷ noOfFrames) comes from HOI4 Mod Utilities and is not measured." ]
+      },
+      "sketch": "frames",
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Graphical_asset_modding" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): Icons mit frame 0, 1, ohne und 2" },
+        { "kind": "vanilla", "note": "HOI IV spriteType 1637-mal, EU IV 773-mal" },
+        { "kind": "unsure", "note": "Waagerechter Streifen: HOI4 Mod Utilities (sprite.ts), nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "background",
+      "text": {
+        "de": "Als Wert (backGround = \"\") steht der Schlüssel vor allem in windowType und listboxType, meist leer; was ein gefüllter Wert dort tut, ist nicht dokumentiert. Als Block background = { … } ist er der Hintergrund eines Containers, laut Wiki nötig fürs Scrollen.",
+        "en": "As a value (backGround = \"\") the key appears mostly in windowType and listboxType, usually empty; what a filled value does there is not documented. As a block background = { … } it is a container's background, needed for scrolling according to the wiki."
+      },
+      "pitfalls": {
+        "de": [ "Für Listen nennt das HOI4-Wiki background ungenutzt; EU IV verlangt laut Wiki für moveable einen guiButtonType als Hintergrund." ],
+        "en": [ "For lists the HOI4 wiki calls background unused; according to the EU4 wiki moveable needs a guiButtonType as background." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "EU IV 993-mal (backGround 978), HOI IV 93-mal als Wert; als Block HOI IV 1494-mal" },
+        { "kind": "unsure", "note": "Wirkung eines gefüllten Werts in windowType nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "alwaysTransparent",
+      "text": {
+        "de": "Das Wiki führt den Schlüssel bei fast allen Elementtypen, beschreibt aber nicht, was er tut. Wirkung nicht dokumentiert.",
+        "en": "The wiki lists the key for almost every element type but does not say what it does. Effect not documented."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt alwaystransparent und alwaysTransparent; in corneredTileSpriteType steht achtmal die Tippfehler-Form allwaystransparent." ],
+        "en": [ "Vanilla writes alwaystransparent and alwaysTransparent; corneredTileSpriteType uses the misspelling allwaystransparent eight times." ]
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 2813-mal (alwaystransparent 2358, alwaysTransparent 455), EU IV 410-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "clipping",
+      "text": {
+        "de": "Beschneiden am Rand des Containers. Laut Wiki standardmäßig an, wenn der Container einen Hintergrund hat, und Pflicht fürs Scrollen.",
+        "en": "Clipping at the container's edge. According to the wiki on by default when the container has a background, and required for scrolling."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding" },
+        { "kind": "vanilla", "note": "HOI IV 929-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "textureFile",
+      "text": {
+        "de": "In einem Sprite (.gfx) der Pfad des Bildes, relativ zum Spielordner. In instantTextBoxType nennt das HOI4-Wiki textureFile ungenutzt; was der Schlüssel in editBoxType und in EU IV tut, ist nicht dokumentiert.",
+        "en": "In a sprite (.gfx) the path of the image, relative to the game folder. In instantTextBoxType the HOI4 wiki calls textureFile unused; what the key does in editBoxType and in EU IV is not documented."
+      },
+      "pitfalls": {
+        "de": [ "585 EU-IV-Sprites zeigen auf eine .tga, die es nur als .dds gibt; PMT nimmt dann die .dds gleichen Namens." ],
+        "en": [ "585 EU IV sprites point to a .tga that only exists as .dds; PMT then uses the .dds of the same name." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Graphical_asset_modding (Pfade), hoi4.paradoxwikis.com/Interface_modding (textureFile in instantTextBoxType ungenutzt)" },
+        { "kind": "vanilla", "note": "In .gui: HOI IV 699-mal, EU IV 1462-mal (fast nur Textfelder); 585 EU-IV-Sprites mit .tga-Pfad, die es nur als .dds gibt" },
+        { "kind": "unsure", "note": "Wirkung in editBoxType und in EU IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "borderSize",
+      "text": {
+        "de": "Paar { x = … y = … }. In einem corneredTileSpriteType laut HOI4 Mod Utilities die Randbreite des 9-Slice; gemessen ist, dass das Spiel unter 2 × borderSize größer zeichnet als angegeben. In instantTextBoxType laut HOI4 Mod Utilities ein Innenabstand, nicht gemessen. In Listen und Scrollleisten ist die Wirkung nicht dokumentiert.",
+        "en": "Pair { x = … y = … }. In a corneredTileSpriteType the border width of the 9-slice according to HOI4 Mod Utilities; measured is that below 2 × borderSize the game draws larger than requested. In instantTextBoxType an inner padding according to HOI4 Mod Utilities, not measured. In lists and scrollbars the effect is not documented."
+      },
+      "pitfalls": {
+        "de": [ "Ein 20 Pixel hoher Balken mit borderSize 64 war im Spiel etwa 85 bis 116 Pixel hoch." ],
+        "en": [ "A 20 pixel high bar with borderSize 64 was about 85 to 116 pixels high in game." ]
+      },
+      "sketch": "nineSlice",
+      "sources": [
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe pmt_order_probe_a, Lauf 1 (HOI IV 1.19.3): 20 hohe Balken mit GFX_tiled_window (borderSize 64)" },
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Graphical_asset_modding (corneredTileSpriteType), hoi4.paradoxwikis.com/Interface_modding (Textfeld-Schlüssel)" },
+        { "kind": "vanilla", "note": "In .gui: HOI IV 1104-mal, EU IV 2548-mal" },
+        { "kind": "unsure", "note": "9-Slice-Rand und Innenabstand in instantTextBoxType: HOI4 Mod Utilities, nicht gemessen; Listen und Scrollleisten nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "hide",
+      "text": {
+        "de": "Nicht im Wiki. Ein Vanilla-Kommentar neben hide = yes (Remove this line to show CIC bank info) legt nahe, dass hide = yes das Element ausblendet; nicht dokumentiert.",
+        "en": "Not on the wiki. A vanilla comment next to hide = yes (Remove this line to show CIC bank info) suggests that hide = yes hides the element; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nur aus einem Vanilla-Kommentar geschlossen; Vanilla HOI IV 82-mal (iconType 69)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "rotation",
+      "text": {
+        "de": "Laut EU4-Wiki die Drehung des Sprites im Bogenmaß. Für HOI IV, wo Vanilla den Schlüssel nutzt, ist das nicht dokumentiert.",
+        "en": "According to the EU4 wiki the rotation of the sprite in radians. For HOI IV, where vanilla uses the key, this is not documented."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding (iconType rotation, Bogenmaß)" },
+        { "kind": "vanilla", "note": "HOI IV 53-mal" },
+        { "kind": "unsure", "note": "Für HOI IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "text",
+      "text": {
+        "de": "Lokalisierungsschlüssel des angezeigten Textes. Fehlt der Schlüssel in der Lokalisierung, zeigt das Spiel den Schlüssel selbst.",
+        "en": "Localisation key of the shown text. If the key is missing from the localisation, the game shows the key itself."
+      },
+      "pitfalls": {
+        "de": [ "Datenbindungen wie [GetName] oder [?var] löst erst das Spiel auf; die Vorschau zeigt sie als Platzhalter." ],
+        "en": [ "Data bindings like [GetName] or [?var] are resolved only by the game; the preview shows them as placeholders." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, hoi4.paradoxwikis.com/Localisation" },
+        { "kind": "measured", "date": "2026-10-17", "note": "Probe-Lauf HOI IV 1.19.3: Text PMT_WIN_S000 ohne Lokalisierung erschien als Schlüssel" },
+        { "kind": "vanilla", "note": "HOI IV 3151-mal, EU IV 2566-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "font",
+      "text": {
+        "de": "Name einer Schrift aus einem bitmapfont-Eintrag in einer .gfx-Datei, z. B. hoi_18mbs (HOI IV) oder vic_18 (EU IV).",
+        "en": "Name of a font from a bitmapfont entry in a .gfx file, for example hoi_18mbs (HOI IV) or vic_18 (EU IV)."
+      },
+      "pitfalls": {
+        "de": [
+          "EU IV braucht font in Textfeldern: ohne Schrift schreibt das Spiel einen Fehler ins error.log.",
+          "Nicht jede Schrift hat alle Zeichen; fehlende erscheinen als ?."
+        ],
+        "en": [
+          "EU IV needs font in text boxes: without a font the game writes an error to error.log.",
+          "Not every font has all characters; missing ones show as ?."
+        ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding (font Pflicht), HOI4-Wiki Schriftliste (Interface_modding/Localisation)" },
+        { "kind": "vanilla", "note": "HOI IV 4012-mal, EU IV 2671-mal; Namen aus bitmapfonts in .gfx" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "format",
+      "text": {
+        "de": "In Textfeldern und Knöpfen die waagerechte Ausrichtung: left, center oder right; Vanilla schreibt auch centre. In gridBoxType legt format laut HOI4 Mod Utilities die Füllrichtung der Plätze fest; das ist nicht gemessen.",
+        "en": "In text boxes and buttons the horizontal alignment: left, center or right; vanilla also writes centre. In gridBoxType format sets the fill direction of the slots according to HOI4 Mod Utilities; that is not measured."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla enthält Ausreißer wie left; und UPPER_LEFT; PMT zeigt sie markiert und ändert sie nicht." ],
+        "en": [ "Vanilla has odd values like left; and UPPER_LEFT; PMT shows them marked and does not change them." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding: format(left|center|right)" },
+        { "kind": "vanilla", "note": "HOI IV 3861-mal (left 1385, center 1321, centre 293, right 251), EU IV 2326-mal (left 813, centre 736, right 477, center 283)" },
+        { "kind": "unsure", "note": "gridBoxType-Füllrichtung: HOI4 Mod Utilities, nicht gemessen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "maxWidth",
+      "text": {
+        "de": "Laut HOI4 Mod Utilities die Breite des Textfelds in Pixeln; das Wiki nennt den Schlüssel nur. Die Vorschau bricht längeren Text an Wortgrenzen um; die Regel des Spiels ist nicht gemessen.",
+        "en": "According to HOI4 Mod Utilities the width of the text box in pixels; the wiki only names the key. The preview wraps longer text at word boundaries; the game's rule is not measured."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt maxWidth und maxwidth; beides gilt." ],
+        "en": [ "Vanilla writes maxWidth and maxwidth; both work." ]
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Kasten = maxWidth × maxHeight: HOI4 Mod Utilities; Zeilenumbruch nur in der PMT-Vorschau, im Spiel nicht gemessen; Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 3548-mal (maxWidth 3472, maxwidth 76), EU IV 2536-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "maxHeight",
+      "text": {
+        "de": "Laut HOI4 Mod Utilities die Höhe des Textfelds in Pixeln; das Wiki nennt den Schlüssel nur. HOI IV schreibt auch 100%%. Was mit Text geschieht, der nicht hineinpasst, ist nicht dokumentiert.",
+        "en": "According to HOI4 Mod Utilities the height of the text box in pixels; the wiki only names the key. HOI IV also writes 100%%. What happens to text that does not fit is not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Kasten = maxWidth × maxHeight: HOI4 Mod Utilities; Überlauf nicht dokumentiert; Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 3030-mal (100%% 22-mal), EU IV 2519-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "buttonText",
+      "text": {
+        "de": "Lokalisierungsschlüssel der Knopfbeschriftung. EU IV kennt dafür auch text.",
+        "en": "Localisation key of the button label. EU IV also accepts text for it."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt buttonText und buttontext; beides gilt." ],
+        "en": [ "Vanilla writes buttonText and buttontext; both work." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding (text als Alias)" },
+        { "kind": "vanilla", "note": "HOI IV 732-mal (buttonText 689, buttontext 43), EU IV 628-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "buttonFont",
+      "text": {
+        "de": "Schrift der Knopfbeschriftung, ein bitmapfont-Name wie bei font. EU IV kennt dafür auch font.",
+        "en": "Font of the button label, a bitmapfont name as for font. EU IV also accepts font for it."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding, eu4.paradoxwikis.com/Interface_modding (font als Alias)" },
+        { "kind": "vanilla", "note": "HOI IV 1017-mal, EU IV 1039-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "fixedsize",
+      "text": {
+        "de": "Das Wiki führt fixedsize bei Text- und Eingabefeldern, beschreibt aber nicht, was es tut. Wirkung nicht dokumentiert.",
+        "en": "The wiki lists fixedsize for text boxes and edit boxes but does not say what it does. Effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 1050-mal, EU IV 842-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "multiline",
+      "text": {
+        "de": "Nicht im Wiki; Wirkung nicht dokumentiert. Die Vorschau bricht die Beschriftung von Knöpfen mit multiline = yes um; im Spiel ist das nicht gemessen.",
+        "en": "Not on the wiki; effect not documented. The preview wraps the label of buttons with multiline = yes; this is not measured in game."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Zeilenumbruch nur in der PMT-Vorschau, im Spiel nicht gemessen; Vanilla HOI IV 181-mal (instantTextBoxType 178, buttonType 3)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "vertical_alignment",
+      "text": {
+        "de": "Laut EU4-Wiki die senkrechte Ausrichtung des Textes im Textfeld: top, centre oder bottom. HOI IV schreibt meist center; für HOI IV ist der Schlüssel nicht dokumentiert.",
+        "en": "According to the EU4 wiki the vertical alignment of the text in the text box: top, centre or bottom. HOI IV mostly writes center; for HOI IV the key is not documented."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding: vertical_alignment (top|centre|bottom)" },
+        { "kind": "vanilla", "note": "HOI IV 159-mal (center 130, bottom 22, top 4)" },
+        { "kind": "unsure", "note": "Für HOI IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "text_color_code",
+      "text": {
+        "de": "Laut EU4-Wiki die Textfarbe als Buchstabe aus den textcolors in core.gfx. HOI IV nutzt Werte wie L, b oder g; für HOI IV ist der Schlüssel nicht dokumentiert.",
+        "en": "According to the EU4 wiki the text colour as a letter from the textcolors in core.gfx. HOI IV uses values like L, b or g; for HOI IV the key is not documented."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding: text_color_code (Farben aus core.gfx)" },
+        { "kind": "vanilla", "note": "HOI IV 148-mal (L 119, b 21, g 4)" },
+        { "kind": "unsure", "note": "Für HOI IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "truncate",
+      "text": {
+        "de": "Das EU4-Wiki führt truncate bei Textfeldern, beschreibt aber nicht, was es tut. Laut Name wird zu langer Text gekürzt; nicht dokumentiert.",
+        "en": "The EU4 wiki lists truncate for text boxes but does not say what it does. By its name too long text is cut off; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 57-mal, EU IV 89-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "context_aware_text",
+      "text": {
+        "de": "Nur HOI IV: Text mit Datenbindung, als Lokalisierungsschlüssel oder [ScriptedLoc]. Wie er sich von text unterscheidet, ist nicht dokumentiert.",
+        "en": "HOI IV only: text with a data binding, as a localisation key or [ScriptedLoc]. How it differs from text is not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 40-mal, Werte Lokalisierungsschlüssel oder [ScriptedLocName]" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "instantTextBoxType",
+      "text": {
+        "de": "In editBoxType ein Schalter instantTextBoxType = yes/no. Was er bewirkt, ist nicht dokumentiert.",
+        "en": "Inside editBoxType a switch instantTextBoxType = yes/no. What it does is not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 35-mal, EU IV 30-mal, nur in editBoxType, Werte yes/no" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "if_resolution",
+      "text": {
+        "de": "Nur EU IV: die Werte im Block gelten nur, wenn die Bildschirmhöhe zu min_height und max_height passt, z. B. if_resolution = { max_height = 867 size = { x = 243 y = 160 } }.",
+        "en": "EU IV only: the values in the block apply only when the screen height matches min_height and max_height, for example if_resolution = { max_height = 867 size = { x = 243 y = 160 } }."
+      },
+      "pitfalls": {
+        "de": [ "Eine Änderung geht in den Block, aus dem die Vorschau den Wert nimmt; Grundwert ändern schreibt stattdessen außerhalb." ],
+        "en": [ "An edit goes into the block the preview takes the value from; Change base value writes outside it instead." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding (custom_gui: if_resolution mit max_height/min_height)" },
+        { "kind": "vanilla", "note": "EU IV 267 Blöcke (max_height 187, min_height 150, position 202, size 43)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "clicksound",
+      "text": {
+        "de": "Das Wiki führt clicksound bei Knöpfen, beschreibt es aber nicht. Laut Name der Klang beim Klick; die Werte sind Klangnamen wie click_default (HOI IV) oder click (EU IV). Nicht dokumentiert.",
+        "en": "The wiki lists clicksound for buttons but does not describe it. By its name the sound on click; the values are sound names like click_default (HOI IV) or click (EU IV). Not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 1912-mal (click_default 813), EU IV 356-mal (click 102)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "oversound",
+      "text": {
+        "de": "Das Wiki führt oversound bei Knöpfen, beschreibt es aber nicht. Laut Name der Klang, wenn die Maus über den Knopf fährt; nicht dokumentiert.",
+        "en": "The wiki lists oversound for buttons but does not describe it. By its name the sound when the mouse moves over the button; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 305-mal (ui_menu_over 293)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "no_clicksound",
+      "text": {
+        "de": "Das EU4-Wiki führt no_clicksound bei Knöpfen, beschreibt es aber nicht. Laut Name schaltet es den Klickklang ab; nicht dokumentiert.",
+        "en": "The EU4 wiki lists no_clicksound for buttons but does not describe it. By its name it turns the click sound off; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 27-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "shortcut",
+      "text": {
+        "de": "Das Wiki führt shortcut bei Knöpfen, beschreibt es aber nicht. Die Vanilla-Werte sind Tastennamen wie ESCAPE, F1 oder shift+k, also vermutlich ein Tastenkürzel; nicht dokumentiert.",
+        "en": "The wiki lists shortcut for buttons but does not describe it. The vanilla values are key names like ESCAPE, F1 or shift+k, so probably a keyboard shortcut; not documented."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt shortcut und shortCut; beides gilt." ],
+        "en": [ "Vanilla writes shortcut and shortCut; both work." ]
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 486-mal, EU IV 361-mal, Werte wie ESCAPE, F1, shift+k" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "extra_shortcut",
+      "text": {
+        "de": "Nur EU IV: das Wiki führt extra_shortcut bei Knöpfen, beschreibt es aber nicht. Laut Name ein zweites Tastenkürzel; nicht dokumentiert.",
+        "en": "EU IV only: the wiki lists extra_shortcut for buttons but does not describe it. By its name a second keyboard shortcut; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 108-mal, nur guiButtonType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "pdx_tooltip",
+      "text": {
+        "de": "Lokalisierungsschlüssel des Tooltips. Für checkboxType nennt das Wiki pdx_tooltip die kurze und pdx_tooltip_delayed die ausführliche Fassung.",
+        "en": "Localisation key of the tooltip. For checkboxType the wiki calls pdx_tooltip the short and pdx_tooltip_delayed the full version."
+      },
+      "pitfalls": {
+        "de": [ "pdx_tooltip löst $-Verschachtelung nicht auf." ],
+        "en": [ "pdx_tooltip does not resolve $ nesting." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (checkboxType: kurz/voll), hoi4.paradoxwikis.com/Localisation ($-Verschachtelung)" },
+        { "kind": "vanilla", "note": "HOI IV 852-mal, EU IV 110-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "pdx_tooltip_delayed",
+      "text": {
+        "de": "Lokalisierungsschlüssel eines Tooltips. Für checkboxType nennt das Wiki pdx_tooltip_delayed die ausführliche und pdx_tooltip die kurze Fassung.",
+        "en": "Localisation key of a tooltip. For checkboxType the wiki calls pdx_tooltip_delayed the full and pdx_tooltip the short version."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (checkboxType: kurz/voll)" },
+        { "kind": "vanilla", "note": "HOI IV 45-mal, EU IV 51-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "tooltip",
+      "text": {
+        "de": "Für Knöpfe nennt das HOI4-Wiki tooltip ungenutzt. EU IV schreibt ihn zusammen mit tooltipText und delayedTooltipText an fast jeden guiButtonType, meist leer; was er dort tut, ist nicht dokumentiert.",
+        "en": "For buttons the HOI4 wiki calls tooltip unused. EU IV puts it together with tooltipText and delayedTooltipText on almost every guiButtonType, mostly empty; what it does there is not documented."
+      },
+      "pitfalls": {
+        "de": [ "Für einen sichtbaren Tooltip nutzt Vanilla pdx_tooltip." ],
+        "en": [ "For a visible tooltip vanilla uses pdx_tooltip." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (buttonType: tooltip ungenutzt)" },
+        { "kind": "vanilla", "note": "HOI IV 175-mal, EU IV 853-mal (guiButtonType 785)" },
+        { "kind": "unsure", "note": "Wirkung in EU IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "tooltipText",
+      "text": {
+        "de": "Für Knöpfe nennt das HOI4-Wiki tooltipText ungenutzt. EU IV schreibt ihn an fast jeden guiButtonType, meist leer; was er dort tut, ist nicht dokumentiert.",
+        "en": "For buttons the HOI4 wiki calls tooltipText unused. EU IV puts it on almost every guiButtonType, mostly empty; what it does there is not documented."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (buttonType: tooltipText ungenutzt)" },
+        { "kind": "vanilla", "note": "EU IV 856-mal (guiButtonType 788)" },
+        { "kind": "unsure", "note": "Wirkung in EU IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "delayedTooltipText",
+      "text": {
+        "de": "Für Knöpfe nennt das HOI4-Wiki delayedTooltipText ungenutzt. EU IV schreibt ihn an fast jeden guiButtonType, meist leer; was er dort tut, ist nicht dokumentiert.",
+        "en": "For buttons the HOI4 wiki calls delayedTooltipText unused. EU IV puts it on almost every guiButtonType, mostly empty; what it does there is not documented."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (buttonType: delayedTooltipText ungenutzt)" },
+        { "kind": "vanilla", "note": "EU IV 851-mal (guiButtonType 781)" },
+        { "kind": "unsure", "note": "Wirkung in EU IV nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "context_aware_tooltip",
+      "text": {
+        "de": "Nur HOI IV: Tooltip mit Datenbindung, als Lokalisierungsschlüssel oder [ScriptedLoc]. Wie er sich von pdx_tooltip unterscheidet, ist nicht dokumentiert.",
+        "en": "HOI IV only: tooltip with a data binding, as a localisation key or [ScriptedLoc]. How it differs from pdx_tooltip is not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 48-mal, Werte Lokalisierungsschlüssel oder [ScriptedLocName]" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "hint_tag",
+      "text": {
+        "de": "Das Wiki führt hint_tag bei Icons und Knöpfen, beschreibt es aber nicht. Wirkung nicht dokumentiert.",
+        "en": "The wiki lists hint_tag for icons and buttons but does not describe it. Effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 256-mal (iconType 183)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "web_link",
+      "text": {
+        "de": "Das HOI4-Wiki führt web_link bei Knöpfen, beschreibt es aber nicht. Die Vanilla-Werte sind Webadressen; dass ein Klick sie öffnet, ist nicht dokumentiert.",
+        "en": "The HOI4 wiki lists web_link for buttons but does not describe it. The vanilla values are web addresses; that a click opens them is not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 81-mal, nur buttonType, Werte wie https://www.paradoxplaza.com/privacy" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "moveable",
+      "text": {
+        "de": "Das Wiki führt moveable bei Fenstern, beschreibt es aber nicht; laut Name kann man das Fenster dann verschieben. Nicht dokumentiert. Laut EU4-Wiki braucht es in EU IV einen guiButtonType als Hintergrund.",
+        "en": "The wiki lists moveable for windows but does not describe it; by its name the window can then be moved. Not documented. According to the EU4 wiki it needs a guiButtonType as background in EU IV."
+      },
+      "pitfalls": {
+        "de": [ "EU IV schreibt meist moveable = 0 oder 1 statt no oder yes." ],
+        "en": [ "EU IV mostly writes moveable = 0 or 1 instead of no or yes." ]
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wirkung nicht beschrieben; eu4.paradoxwikis.com/Interface_modding: braucht guiButtonType-Hintergrund; Vanilla EU IV 880-mal (870 als Zahl), HOI IV 323-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "click_to_front",
+      "text": {
+        "de": "Nur HOI IV, in Containern. Nicht im Wiki; laut Name holt ein Klick das Fenster nach vorn. Nicht dokumentiert.",
+        "en": "HOI IV only, in containers. Not on the wiki; by its name a click brings the window to the front. Not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 144-mal, nur containerWindowType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "scripted",
+      "text": {
+        "de": "Nur EU IV: scripted = yes verbindet das Element mit einem Eintrag gleichen Namens in common/custom_gui (custom_button, custom_icon, …).",
+        "en": "EU IV only: scripted = yes links the element to an entry of the same name in common/custom_gui (custom_button, custom_icon, …)."
+      },
+      "pitfalls": {
+        "de": [ "Wirkt nur innerhalb bestimmter Vanilla-Fenster; die Liste steht in common/custom_gui/example.txt." ],
+        "en": [ "Only works inside certain vanilla windows; the list is in common/custom_gui/example.txt." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "eu4.paradoxwikis.com/Interface_modding (custom_gui, ab 1.37)" },
+        { "kind": "vanilla", "note": "EU IV 33-mal (countrymissionsview.gui mit mission_previews.txt); Fensterliste in common/custom_gui/example.txt" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "upsound",
+      "text": {
+        "de": "Nur EU IV: das Wiki führt upsound bei Fenstern, beschreibt es aber nicht. Laut Name ein Klang beim Öffnen; nicht dokumentiert.",
+        "en": "EU IV only: the wiki lists upsound for windows but does not describe it. By its name a sound on opening; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 82-mal, Werte wie tab_government" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "downsound",
+      "text": {
+        "de": "Nur EU IV: das Wiki führt downsound bei Fenstern, beschreibt es aber nicht. Laut Name ein Klang beim Schließen; nicht dokumentiert.",
+        "en": "EU IV only: the wiki lists downsound for windows but does not describe it. By its name a sound on closing; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 63-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "verticalScrollbar",
+      "text": {
+        "de": "Name der Scrollleiste für senkrechtes Scrollen im Container, z. B. right_vertical_slider. Sie muss als oberstes scrollbarType oder extendedScrollbarType definiert sein.",
+        "en": "Name of the scrollbar for vertical scrolling in the container, for example right_vertical_slider. It must be defined as a top-level scrollbarType or extendedScrollbarType."
+      },
+      "pitfalls": {
+        "de": [ "Scrollen klappt nur mit Pixelgröße in Scrollrichtung, clipping und einem Hintergrund; sonst scheitert es still." ],
+        "en": [ "Scrolling only works with a pixel size in the scroll direction, clipping and a background; otherwise it fails silently." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (Scrollen)" },
+        { "kind": "vanilla", "note": "HOI IV 341-mal; right_vertical_slider 317-mal; alle Verweise lösen auf" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "horizontalScrollbar",
+      "text": {
+        "de": "Name der Scrollleiste für waagerechtes Scrollen im Container. Die Scrollleiste muss horizontal = yes haben.",
+        "en": "Name of the scrollbar for horizontal scrolling in the container. The scrollbar must have horizontal = yes."
+      },
+      "pitfalls": {
+        "de": [ "Scrollen klappt nur mit Pixelgröße in Scrollrichtung, clipping und einem Hintergrund; sonst scheitert es still." ],
+        "en": [ "Scrolling only works with a pixel size in the scroll direction, clipping and a background; otherwise it fails silently." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (Scrollen)" },
+        { "kind": "vanilla", "note": "HOI IV 27-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "scroll_wheel_factor",
+      "text": {
+        "de": "Das Wiki führt scroll_wheel_factor bei den Scroll-Schlüsseln (Beispiel 40), beschreibt aber nicht, was es tut. Laut Name die Scrollweite je Mausradschritt; nicht dokumentiert.",
+        "en": "The wiki lists scroll_wheel_factor with the scroll keys (example 40) but does not say what it does. By its name the scroll distance per mouse wheel step; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 197-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "smooth_scrolling",
+      "text": {
+        "de": "Das Wiki führt smooth_scrolling bei den Scroll-Schlüsseln, beschreibt es aber nicht. Laut Name weiches Scrollen; nicht dokumentiert.",
+        "en": "The wiki lists smooth_scrolling with the scroll keys but does not describe it. By its name smooth scrolling; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 191-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "drag_scroll",
+      "text": {
+        "de": "Scrollen durch Ziehen mit gedrückter Maustaste; die Liste nennt die Tasten: left, middle, right. Laut Wiki funktioniert nur left zuverlässig.",
+        "en": "Scrolling by dragging with a mouse button held; the list names the buttons: left, middle, right. According to the wiki only left reliably works."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (drag_scroll left/middle/right, nur left berichtet)" },
+        { "kind": "vanilla", "note": "HOI IV 25-mal, meist drag_scroll = { left middle }" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "vertical_scroll_step",
+      "text": {
+        "de": "Nur HOI IV, in Containern. Nicht im Wiki; laut Name die Schrittweite beim senkrechten Scrollen. Nicht dokumentiert.",
+        "en": "HOI IV only, in containers. Not on the wiki; by its name the step size for vertical scrolling. Not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 24-mal, nur containerWindowType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "scrollbarType",
+      "text": {
+        "de": "In Listen und Textfeldern der Name der Scrollleiste, z. B. standardlistbox_slider. Sie muss als oberstes scrollbarType oder extendedScrollbarType definiert sein.",
+        "en": "In lists and text boxes the name of the scrollbar, for example standardlistbox_slider. It must be defined as a top-level scrollbarType or extendedScrollbarType."
+      },
+      "pitfalls": {
+        "de": [ "Vanilla schreibt scrollbartype und scrollbarType; beides gilt." ],
+        "en": [ "Vanilla writes scrollbartype and scrollbarType; both work." ]
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (listboxType, instantTextBoxType)" },
+        { "kind": "vanilla", "note": "HOI IV 101-mal (scrollbartype 93, scrollbarType 8), EU IV 301-mal; alle Verweise lösen auf" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "spacing",
+      "text": {
+        "de": "Das Wiki führt spacing bei Listen, beschreibt es aber nicht. Laut Name der Abstand zwischen den Einträgen; nicht dokumentiert.",
+        "en": "The wiki lists spacing for lists but does not describe it. By its name the gap between entries; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 80-mal, EU IV 328-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "horizontal",
+      "text": {
+        "de": "Bei Scrollleisten macht horizontal = yes (oder 1) die Leiste waagerecht; eine Leiste für horizontalScrollbar braucht das. Bei Listen ist die Wirkung nicht dokumentiert, EU IV schreibt dort 0, 1 oder 2.",
+        "en": "On scrollbars horizontal = yes (or 1) makes the bar horizontal; a bar for horizontalScrollbar needs it. On lists the effect is not documented; EU IV writes 0, 1 or 2 there."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (Scrollleiste für horizontalScrollbar braucht horizontal = yes)" },
+        { "kind": "vanilla", "note": "HOI IV 62-mal, EU IV 248-mal (listboxType 196, Werte 0/1/2)" },
+        { "kind": "unsure", "note": "Wirkung bei Listen nicht dokumentiert" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "priority",
+      "text": {
+        "de": "Das Wiki führt priority bei Scrollleisten, beschreibt es aber nicht. Wirkung nicht dokumentiert.",
+        "en": "The wiki lists priority for scrollbars but does not describe it. Effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 39-mal, EU IV 36-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "startValue",
+      "text": {
+        "de": "Das Wiki führt startValue bei Scrollleisten, beschreibt es aber nicht. Laut Name der Anfangswert; nicht dokumentiert.",
+        "en": "The wiki lists startValue for scrollbars but does not describe it. By its name the initial value; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 65-mal, EU IV 29-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "maxValue",
+      "text": {
+        "de": "Das Wiki führt maxValue bei Scrollleisten, beschreibt es aber nicht. Laut Name der höchste Wert; nicht dokumentiert.",
+        "en": "The wiki lists maxValue for scrollbars but does not describe it. By its name the highest value; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 53-mal, EU IV 28-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "minValue",
+      "text": {
+        "de": "Das Wiki führt minValue bei Scrollleisten, beschreibt es aber nicht. Laut Name der niedrigste Wert; nicht dokumentiert.",
+        "en": "The wiki lists minValue for scrollbars but does not describe it. By its name the lowest value; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 53-mal, EU IV 28-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "stepSize",
+      "text": {
+        "de": "Das Wiki führt stepSize bei Scrollleisten, beschreibt es aber nicht. Laut Name die Schrittweite; nicht dokumentiert.",
+        "en": "The wiki lists stepSize for scrollbars but does not describe it. By its name the step size; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 53-mal, EU IV 28-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "slider",
+      "text": {
+        "de": "In scrollbarType der Name eines guiButtonType innerhalb derselben Scrollleiste; laut Name der Schieber.",
+        "en": "In scrollbarType the name of a guiButtonType inside the same scrollbar; by its name the slider."
+      },
+      "sources": [
+        { "kind": "vanilla", "note": "HOI IV 34-mal, EU IV 27-mal; der Name zeigt auf ein inneres guiButtonType der Scrollleiste" },
+        { "kind": "unsure", "note": "Rolle nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "track",
+      "text": {
+        "de": "In scrollbarType der Name eines guiButtonType innerhalb derselben Scrollleiste; laut Name die Laufbahn des Schiebers.",
+        "en": "In scrollbarType the name of a guiButtonType inside the same scrollbar; by its name the slider's track."
+      },
+      "sources": [
+        { "kind": "vanilla", "note": "HOI IV 34-mal, EU IV 27-mal; der Name zeigt auf ein inneres guiButtonType der Scrollleiste" },
+        { "kind": "unsure", "note": "Rolle nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "leftbutton",
+      "text": {
+        "de": "In scrollbarType der Name eines guiButtonType innerhalb derselben Scrollleiste; laut Name der Knopf am Anfang der Leiste.",
+        "en": "In scrollbarType the name of a guiButtonType inside the same scrollbar; by its name the button at the start of the bar."
+      },
+      "sources": [
+        { "kind": "vanilla", "note": "HOI IV 34-mal, EU IV 27-mal; der Name zeigt auf ein inneres guiButtonType der Scrollleiste" },
+        { "kind": "unsure", "note": "Rolle nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "rightbutton",
+      "text": {
+        "de": "In scrollbarType der Name eines guiButtonType innerhalb derselben Scrollleiste; laut Name der Knopf am Ende der Leiste.",
+        "en": "In scrollbarType the name of a guiButtonType inside the same scrollbar; by its name the button at the end of the bar."
+      },
+      "sources": [
+        { "kind": "vanilla", "note": "HOI IV 34-mal, EU IV 27-mal; der Name zeigt auf ein inneres guiButtonType der Scrollleiste" },
+        { "kind": "unsure", "note": "Rolle nur aus dem Namen geschlossen" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "parent",
+      "text": {
+        "de": "In Knöpfen von Scrollleisten ein Name wie listboxSliderButton. Nicht im Wiki; Wirkung nicht dokumentiert.",
+        "en": "In scrollbar buttons a name like listboxSliderButton. Not on the wiki; effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 34-mal, nur guiButtonType, Werte wie listboxSliderButton" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "slotsize",
+      "text": {
+        "de": "In gridBoxType ein Paar { width = … height = … }. Laut HOI4 Mod Utilities die Größe eines Platzes im Raster (ohne Angabe 50 × 50); im Spiel nicht gemessen.",
+        "en": "In gridBoxType a pair { width = … height = … }. According to HOI4 Mod Utilities the size of one slot in the grid (50 × 50 if missing); not measured in game."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "HOI4 Mod Utilities (gridboxcommon.ts); Vanilla HOI IV 656-mal, nur gridBoxType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "max_slots_horizontal",
+      "text": {
+        "de": "In gridBoxType eine Zahl. Nicht im Wiki; laut Name die Zahl der Plätze nebeneinander. Nicht dokumentiert.",
+        "en": "In gridBoxType a number. Not on the wiki; by its name the number of slots side by side. Not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 456-mal, nur gridBoxType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "max_slots_vertical",
+      "text": {
+        "de": "In gridBoxType eine Zahl. Nicht im Wiki; laut Name die Zahl der Plätze untereinander. Nicht dokumentiert.",
+        "en": "In gridBoxType a number. Not on the wiki; by its name the number of slots one below the other. Not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 123-mal, nur gridBoxType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "add_horizontal",
+      "text": {
+        "de": "In gridBoxType ein Schalter yes/no. Nicht im Wiki; laut Name werden Einträge waagerecht angefügt. Nicht dokumentiert.",
+        "en": "In gridBoxType a yes/no switch. Not on the wiki; by its name entries are added horizontally. Not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Nicht im Wiki; Vanilla HOI IV 40-mal, nur gridBoxType" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "animation_time",
+      "text": {
+        "de": "Dauer der Animation eines Fensters in Millisekunden. Die Vorschau zeigt keine Animation.",
+        "en": "Duration of a window's animation in milliseconds. The preview shows no animation."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (animation_time in ms)" },
+        { "kind": "vanilla", "note": "HOI IV 138-mal, EU IV 51-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "animation_type",
+      "text": {
+        "de": "Verlauf der Animation eines Fensters: accelerated, decelerated oder linear.",
+        "en": "Curve of a window's animation: accelerated, decelerated or linear."
+      },
+      "sources": [
+        { "kind": "wiki", "note": "hoi4.paradoxwikis.com/Interface_modding (animation_type accelerated/decelerated/linear)" },
+        { "kind": "vanilla", "note": "EU IV 49-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "show_animation_type",
+      "text": {
+        "de": "Das Wiki führt show_animation_type bei den Animationsschlüsseln, beschreibt es aber nicht. Laut Name der Verlauf beim Einblenden, mit Werten wie bei animation_type; nicht dokumentiert.",
+        "en": "The wiki lists show_animation_type with the animation keys but does not describe it. By its name the curve when showing, with values as for animation_type; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 117-mal, immer decelerated" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "hide_animation_type",
+      "text": {
+        "de": "Das Wiki führt hide_animation_type bei den Animationsschlüsseln, beschreibt es aber nicht. Laut Name der Verlauf beim Ausblenden, mit Werten wie bei animation_type; nicht dokumentiert.",
+        "en": "The wiki lists hide_animation_type with the animation keys but does not describe it. By its name the curve when hiding, with values as for animation_type; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 114-mal (accelerated 110)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "fade_time",
+      "text": {
+        "de": "Das Wiki führt fade_time bei den Animationsschlüsseln, beschreibt es aber nicht. Laut Name die Dauer des Ein- und Ausblendens; Einheit nicht dokumentiert.",
+        "en": "The wiki lists fade_time with the animation keys but does not describe it. By its name the duration of fading; the unit is not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 142-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "fade_type",
+      "text": {
+        "de": "Das Wiki führt fade_type bei den Animationsschlüsseln, beschreibt es aber nicht. Vanilla nutzt linear und accelerated; nicht dokumentiert.",
+        "en": "The wiki lists fade_type with the animation keys but does not describe it. Vanilla uses linear and accelerated; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 141-mal (linear 137, accelerated 4)" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "show_sound",
+      "text": {
+        "de": "Das Wiki führt show_sound bei den Animationsschlüsseln, beschreibt es aber nicht. Laut Name der Klang beim Einblenden, z. B. menu_open_window; nicht dokumentiert.",
+        "en": "The wiki lists show_sound with the animation keys but does not describe it. By its name the sound when showing, for example menu_open_window; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 89-mal" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "hide_sound",
+      "text": {
+        "de": "Das Wiki führt hide_sound bei den Animationsschlüsseln, beschreibt es aber nicht. Laut Name der Klang beim Ausblenden, z. B. menu_close_window; nicht dokumentiert.",
+        "en": "The wiki lists hide_sound with the animation keys but does not describe it. By its name the sound when hiding, for example menu_close_window; not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla HOI IV 36-mal, immer menu_close_window" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "horizontalBorder",
+      "text": {
+        "de": "In windowType und eu3dialogtype, fast immer leer (horizontalBorder = \"\"). Das Wiki nennt den Schlüssel nur als selten; Wirkung nicht dokumentiert.",
+        "en": "In windowType and eu3dialogtype, almost always empty (horizontalBorder = \"\"). The wiki only names the key as rare; effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 783-mal, HOI IV 56-mal, meist leere Zeichenkette" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "verticalBorder",
+      "text": {
+        "de": "In windowType und eu3dialogtype, fast immer leer (verticalBorder = \"\"). Das Wiki nennt den Schlüssel nur als selten; Wirkung nicht dokumentiert.",
+        "en": "In windowType and eu3dialogtype, almost always empty (verticalBorder = \"\"). The wiki only names the key as rare; effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 597-mal, HOI IV 56-mal, meist leere Zeichenkette" }
+      ]
+    },
+    {
+      "kind": "property",
+      "key": "dontRender",
+      "text": {
+        "de": "In windowType und eu3dialogtype, fast immer leer (dontRender = \"\"). Das Wiki nennt den Schlüssel nur als selten; Wirkung nicht dokumentiert.",
+        "en": "In windowType and eu3dialogtype, almost always empty (dontRender = \"\"). The wiki only names the key as rare; effect not documented."
+      },
+      "sources": [
+        { "kind": "unsure", "note": "Wiki nennt den Schlüssel ohne Beschreibung; Vanilla EU IV 755-mal, HOI IV 53-mal, meist leere Zeichenkette" }
+      ]
+    }
+  ]
+}

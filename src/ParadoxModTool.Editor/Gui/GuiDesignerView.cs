@@ -6,6 +6,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using ParadoxModTool.GuiDesign;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Layout;
@@ -65,6 +66,72 @@ public sealed class GuiDesignerView : UserControl
         Margin = new Thickness(0, 2, 8, 2),
         ToolTip = GuiTexts.DesignerListCountTip,
     };
+    /// <summary>Erlaubte UI-Skalierung im Eingabefeld (0 hieße: Teilen durch 0 in der Engine).</summary>
+    private const double MinUiScale = GuiPreviewScreen.MinUiScale;
+
+    private const double MaxUiScale = GuiPreviewScreen.MaxUiScale;
+
+    // Bildschirm-Werkzeuge der Vorschau (Auflösung, UI-Skalierung, Rahmen, Überstand) in beiden Formaten.
+    private readonly StackPanel _screenTools = new() { Orientation = Orientation.Horizontal };
+    private readonly ComboBox _resolution = new() { Margin = new Thickness(0, 2, 4, 2), MinWidth = 110, ToolTip = GuiTexts.DesignerResolutionTip };
+    private readonly TextBox _customResolution = new()
+    {
+        Width = 80,
+        Margin = new Thickness(0, 2, 8, 2),
+        VerticalContentAlignment = VerticalAlignment.Center,
+        Visibility = Visibility.Collapsed,
+        ToolTip = GuiTexts.DesignerResolutionCustomTip,
+    };
+    private readonly TextBox _uiScale = new()
+    {
+        Width = 44,
+        Margin = new Thickness(0, 2, 8, 2),
+        VerticalContentAlignment = VerticalAlignment.Center,
+        Text = "1",
+        ToolTip = GuiTexts.DesignerUiScaleTip,
+    };
+    // Sprache der Jomini-Vorschautexte: "Spiel (…)" und die Sprachen der Installation; nur im Jomini-Format sichtbar.
+    private readonly TextBlock _languageLabel = new() { Text = GuiTexts.DesignerLanguage, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) };
+    private readonly ComboBox _language = new() { Margin = new Thickness(0, 2, 8, 2), MinWidth = 100, ToolTip = GuiTexts.DesignerLanguageTip };
+    private readonly CheckBox _showBounds = new()
+    {
+        Content = GuiTexts.DesignerShowBounds,
+        Margin = new Thickness(0, 0, 8, 0),
+        VerticalAlignment = VerticalAlignment.Center,
+        ToolTip = GuiTexts.DesignerShowBoundsTip,
+    };
+    private readonly CheckBox _markOverflow = new()
+    {
+        Content = GuiTexts.DesignerMarkOverflow,
+        Margin = new Thickness(0, 0, 8, 0),
+        VerticalAlignment = VerticalAlignment.Center,
+        ToolTip = GuiTexts.DesignerMarkOverflowTip,
+    };
+    // Bedingte Elemente: Banner über der Vorschau ("n bedingte Elemente ausgeblendet", "Alle einblenden") und derselbe Knopf in der Leiste.
+    private readonly TextBlock _conditionalBannerText = new();
+    private readonly Button _conditionalBannerButton = new();
+    private readonly Border _conditionalBanner;
+    private readonly Button _showAllConditionals = new()
+    {
+        Content = GuiTexts.DesignerShowAllConditionals,
+        ToolTip = GuiTexts.DesignerShowAllConditionalsTip,
+        Padding = new Thickness(6, 1, 6, 1),
+        Margin = new Thickness(0, 2, 8, 2),
+        IsEnabled = false,
+    };
+
+    // Angesehene Datei der letzten Vorschau und die Schlüssel bedingter Elemente je Syntaxknoten (für Baummarken und Baummenü).
+    private string? _viewedFile;
+    private Dictionary<GuiNode, string> _conditionalKeys = new();
+
+    // Gezeigte Marke je Baumeintrag: false = bedingt, true = ausgeblendet; fehlt = nicht bedingt.
+    private readonly Dictionary<GuiNode, bool> _treeMarks = new();
+
+    // Stand der ausgeblendeten Schlüssel beim Entladen: weicht er beim nächsten Laden ab, rechnet die Vorschau neu.
+    private HashSet<string>? _hiddenAtUnload;
+
+    // Wirksame Vorschausprache beim Entladen: weicht sie beim nächsten Laden ab, rechnet die Vorschau neu.
+    private string? _languageAtUnload;
     private readonly ColumnDefinition _treeColumn = new() { Width = new GridLength(320) };
     private readonly RowDefinition _propertiesRow = new() { Height = new GridLength(320) };
     private readonly Dictionary<GuiNode, TreeViewItem> _treeItems = new();
@@ -79,8 +146,32 @@ public sealed class GuiDesignerView : UserControl
     private bool _stale;
     private string? _readOnlyReason;
     private GuiNode? _selectedNode;
+
+    // Klassisch: das Sprite im Kasten des gewählten Elements (Frame, Ränder, Textur) für die Skizzen im Erklärungsfeld.
+    private GuiSpriteVisual? _selectedSprite;
     private Point? _dragStart;
     private GuiTreeItem? _dragItem;
+
+    // Vorschau: gewählte Auflösung und Skalierung, die eigene Auflösung und der zuletzt gelesene Stand der Spieleinstellungen (klassisch settings.txt,
+    // Jomini pdx_settings im Benutzerordner) samt Format und Quelle, aus denen er stammt.
+    private (int Width, int Height) _customSize = (1920, 1080);
+    private double _uiScaleValue = 1;
+    private string? _settingsSource;
+    private bool _settingsClassic;
+    private bool _settingsRead;
+    private (int Width, int Height, double UiScale)? _gameScreen;
+    private bool _syncingScreenTools;
+    private bool _syncingLanguage;
+    private string? _languageItems;
+
+    /// <summary>Leiste mit Auflösung, UI-Skalierung, "Rahmen zeigen" und "Überstand markieren" (für Tests).</summary>
+    internal StackPanel ScreenTools => _screenTools;
+
+    /// <summary>Sprache der Vorschautexte: die gewählte, sonst die des Spiels.</summary>
+    private static string EffectiveLanguage => GuiSettings.PreviewLanguage ?? GuiPreviewScreen.GameLanguage();
+
+    /// <summary>Umschalter der Vorschausprache (für Tests).</summary>
+    internal ComboBox LanguageBox => _language;
 
     public GuiDesignerView()
     {
@@ -116,8 +207,14 @@ public sealed class GuiDesignerView : UserControl
         toolbar.Children.Add(redo);
         toolbar.Children.Add(_showConditional);
         toolbar.Children.Add(_showHidden);
+        _showAllConditionals.Click += (_, _) => ShowAllConditionals();
+        _conditionalBannerButton.Click += (_, _) => ShowAllConditionals();
+        _conditionalBanner = ConditionalBanner(_conditionalBannerText, _conditionalBannerButton);
+        toolbar.Children.Add(_showAllConditionals);
         toolbar.Children.Add(new TextBlock { Text = GuiTexts.DesignerListCount, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
         toolbar.Children.Add(_listCount);
+        BuildScreenTools();
+        toolbar.Children.Add(_screenTools);
         toolbar.Children.Add(fit);
         var viewInGame = new Button { Content = GuiTexts.ViewInGame, Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(0, 2, 4, 2), ToolTip = GuiTexts.ViewInGameTip };
         viewInGame.Click += (_, _) => ViewInGameRequested?.Invoke(this, EventArgs.Empty);
@@ -140,6 +237,10 @@ public sealed class GuiDesignerView : UserControl
         var previewArea = new Grid();
         previewArea.Children.Add(_canvas);
         previewArea.Children.Add(_message);
+        var previewPanel = new DockPanel();
+        DockPanel.SetDock(_conditionalBanner, Dock.Top);
+        previewPanel.Children.Add(_conditionalBanner);
+        previewPanel.Children.Add(previewArea);
 
         _properties.View = CreatePropertyColumns();
         _properties.ItemContainerStyle = PropertyRowStyle();
@@ -158,11 +259,19 @@ public sealed class GuiDesignerView : UserControl
             if (_properties.SelectedItem is GuiPropertyRow row)
             {
                 _selectedPropertyName = row.Name;
-                _propertyEditor.SetProperty(row.Source);
+                if (GuiSettings.Layout.IsClassic)
+                {
+                    _propertyEditor.SetRow(row);
+                }
+                else
+                {
+                    _propertyEditor.SetProperty(row.Source);
+                }
             }
         };
         _propertyEditor.ActionRequested += (_, action) => Request(action);
         _propertyEditor.ShowInCodeRequested += (_, node) => ShowInCodeRequested?.Invoke(this, node);
+        _propertyEditor.ExampleActivated += (_, origin) => OriginActivated?.Invoke(this, origin);
         _propertyEditor.StatusChanged += (_, text) => SetStatus(text);
         _propertyEditor.NewTypeRequested += (_, node) => RequestFor(NewTypeRequested, node);
         _propertyEditor.TypeEverywhereRequested += (_, node) => TypeEverywhereRequested?.Invoke(this, node);
@@ -207,8 +316,8 @@ public sealed class GuiDesignerView : UserControl
         Grid.SetColumn(_palette, 0);
         main.Children.Add(_palette);
         main.Children.Add(ColumnSplitter(1));
-        Grid.SetColumn(previewArea, 2);
-        main.Children.Add(previewArea);
+        Grid.SetColumn(previewPanel, 2);
+        main.Children.Add(previewPanel);
         main.Children.Add(ColumnSplitter(3));
         Grid.SetColumn(right, 4);
         main.Children.Add(right);
@@ -231,6 +340,41 @@ public sealed class GuiDesignerView : UserControl
         root.Children.Add(toolbar);
         root.Children.Add(main);
         Content = root;
+
+        // Ausgeblendete bedingte Elemente gelten für alle offenen Designer und Inspektoren: nur angemeldet, solange die Ansicht geladen ist.
+        Loaded += (_, _) =>
+        {
+            GuiSettings.HiddenConditionalsChanged -= OnHiddenConditionalsChanged;
+            GuiSettings.HiddenConditionalsChanged += OnHiddenConditionalsChanged;
+            GuiSettings.Changed -= OnSettingsChanged;
+            GuiSettings.Changed += OnSettingsChanged;
+            GuiSettings.PreviewLanguagesChanged -= OnSettingsChanged;
+            GuiSettings.PreviewLanguagesChanged += OnSettingsChanged;
+            GuiSettings.PreviewLanguageChanged -= OnPreviewLanguageChanged;
+            GuiSettings.PreviewLanguageChanged += OnPreviewLanguageChanged;
+            // Während der Ansicht entladen war, kann der Arbeitsbereich oder die Vorschausprache gewechselt haben.
+            SyncLanguageTools();
+            var changed = _hiddenAtUnload is { } before && !before.SetEquals(GuiSettings.HiddenConditionals);
+            _hiddenAtUnload = null;
+            // Die Vorschausprache kann sich geändert haben, solange die Ansicht entladen war (Abmeldung vom Ereignis).
+            changed |= _languageAtUnload is { } languageBefore && languageBefore != EffectiveLanguage;
+            _languageAtUnload = null;
+            UpdateConditionalState();
+            if (changed)
+            {
+                PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
+        Unloaded += (_, _) =>
+        {
+            GuiSettings.HiddenConditionalsChanged -= OnHiddenConditionalsChanged;
+            GuiSettings.Changed -= OnSettingsChanged;
+            GuiSettings.PreviewLanguagesChanged -= OnSettingsChanged;
+            GuiSettings.PreviewLanguageChanged -= OnPreviewLanguageChanged;
+            _languageAtUnload = EffectiveLanguage;
+            _hiddenAtUnload = new HashSet<string>(GuiSettings.HiddenConditionals, StringComparer.Ordinal);
+        };
+        UpdateConditionalState();
 
         _tree.SelectedItemChanged += (_, e) =>
         {
@@ -427,12 +571,293 @@ public sealed class GuiDesignerView : UserControl
     /// <summary>Gewähltes Element (Baum, Vorschau oder Cursor); null ohne Auswahl.</summary>
     public GuiNode? SelectedNode => _selectedNode;
 
-    public LayoutOptions PreviewOptions => new()
+    /// <summary>Vorschau-Einstellungen mit der gewählten Auflösung und UI-Skalierung (beide Formate).</summary>
+    public LayoutOptions PreviewOptions
     {
-        ShowConditional = _showConditional.IsChecked == true,
-        ShowHidden = _showHidden.IsChecked == true,
-        ListSampleCount = _listCount.SelectedItem is int count ? count : 3,
+        get
+        {
+            var (width, height) = SelectedResolution;
+            return new LayoutOptions
+            {
+                ShowConditional = _showConditional.IsChecked == true,
+                ShowHidden = _showHidden.IsChecked == true,
+                ListSampleCount = _listCount.SelectedItem is int count ? count : 3,
+                ScreenWidth = width,
+                ScreenHeight = height,
+                UiScale = _uiScaleValue,
+                // Kopie: das Layout läuft im Hintergrund, die Menge kann sich währenddessen ändern.
+                HiddenConditionals = new HashSet<string>(GuiSettings.HiddenConditionals, StringComparer.Ordinal),
+                Language = EffectiveLanguage,
+            };
+        }
+    }
+
+    /// <summary>Text des Banners für ausgeblendete bedingte Elemente; null, solange es nicht zu sehen ist (für Tests).</summary>
+    internal string? ConditionalBannerText => _conditionalBanner.Visibility == Visibility.Visible ? _conditionalBannerText.Text : null;
+
+    /// <summary>"Alle einblenden" im Banner (für Tests).</summary>
+    internal Button ConditionalBannerButton => _conditionalBannerButton;
+
+    /// <summary>"Alle einblenden" in der Leiste (für Tests).</summary>
+    internal Button ShowAllConditionalsButton => _showAllConditionals;
+
+    /// <summary>Der Baumeintrag dieses Knotens trägt die Marke "bedingt" (gezeigt oder ausgeblendet; für Tests).</summary>
+    internal bool TreeItemConditional(GuiNode node) => _treeMarks.ContainsKey(node);
+
+    /// <summary>Der Baumeintrag dieses Knotens ist als ausgeblendet markiert (für Tests).</summary>
+    internal bool TreeItemHidden(GuiNode node) => _treeMarks.TryGetValue(node, out var hidden) && hidden;
+
+    /// <summary>Namensfeld in der Überschrift des Baumeintrags dieses Knotens (für Tests).</summary>
+    internal TextBlock? TreeLabel(GuiNode node) =>
+        _treeItems.TryGetValue(node, out var item) && item.Header is Panel header ? header.Children.OfType<TextBlock>().FirstOrDefault() : null;
+
+    /// <summary>Baut das Kontextmenü des Baumeintrags dieses Knotens wie beim Rechtsklick (für Tests).</summary>
+    internal ContextMenu TreeMenuFor(GuiNode node)
+    {
+        _treeMenu.Items.Clear();
+        if (_treeItems.TryGetValue(node, out var item) && item.Tag is GuiTreeItem tag)
+        {
+            BuildTreeMenu(tag);
+        }
+
+        return _treeMenu;
+    }
+
+    /// <summary>
+    /// Spieleinstellungen neu lesen (<see cref="GuiPreviewScreen.FromGame"/>), wenn sich Format oder Quelle geändert haben: klassisch die settings.txt,
+    /// Jomini der Benutzerordner mit pdx_settings. Dann gelten wieder "Spiel" und dessen Skalierung; ohne lesbare Datei klassisch 1920×1080, Jomini "Spiel"
+    /// mit der Auflösung des Hauptbildschirms (<see cref="GuiPreviewScreen.Fallback"/>), jeweils mit Skalierung 1. Ruft der Controller
+    /// vor jeder Vorschau und beim Wechsel der Datei auf.
+    /// </summary>
+    public void SyncScreenTools()
+    {
+        var classic = GuiSettings.Layout.IsClassic;
+        _showAllConditionals.Visibility = classic ? Visibility.Collapsed : Visibility.Visible;
+        SyncLanguageTools();
+        var source = classic ? GuiSettings.GameSettingsPath : GuiSettings.GameUserFolder;
+        if (_settingsRead && classic == _settingsClassic && string.Equals(source, _settingsSource, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _settingsRead = true;
+        _settingsClassic = classic;
+        _settingsSource = source;
+        // Jomini ohne lesbare Einstellungen: "Spiel" ist der Hauptbildschirm mit Skalierung 1 (Spec "Fehlerbehandlung"); klassisch fehlt "Spiel" dann.
+        _gameScreen = GuiPreviewScreen.FromGame() ?? (classic ? null : GuiPreviewScreen.Fallback());
+        _syncingScreenTools = true;
+        try
+        {
+            FillResolutions();
+            _uiScaleValue = _gameScreen?.UiScale ?? 1;
+            _uiScale.Text = _uiScaleValue.ToString("0.###", CultureInfo.CurrentCulture);
+        }
+        finally
+        {
+            _syncingScreenTools = false;
+        }
+    }
+
+    /// <summary>
+    /// Umschalter der Vorschausprache zum aktuellen Stand: nur im Jomini-Format sichtbar; erster Eintrag "Spiel (Sprache)" (Tag null), dann eine Sprache je
+    /// Eintrag des Textdienstes (ohne "l_"). Aufgebaut wird nur bei geänderter Liste oder Spielsprache; gewählt ist die Vorschausprache der Sitzung.
+    /// </summary>
+    private void SyncLanguageTools()
+    {
+        var visibility = GuiSettings.Layout.IsClassic ? Visibility.Collapsed : Visibility.Visible;
+        _languageLabel.Visibility = visibility;
+        _language.Visibility = visibility;
+        if (visibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        var game = GuiPreviewScreen.GameLanguage();
+        // Nur die im Hintergrund gesuchte Liste: der UI-Thread löst die Ordnersuche des Textdienstes nie aus.
+        var languages = GuiSettings.PreviewLanguages;
+        var signature = game + "|" + string.Join(',', languages);
+        _syncingLanguage = true;
+        try
+        {
+            if (signature != _languageItems)
+            {
+                _languageItems = signature;
+                _language.Items.Clear();
+                _language.Items.Add(new ComboBoxItem { Content = GuiTexts.DesignerLanguageGame(GuiPreviewScreen.LanguageName(game)), Tag = null });
+                foreach (var language in languages)
+                {
+                    _language.Items.Add(new ComboBoxItem { Content = GuiPreviewScreen.LanguageName(language), Tag = language });
+                }
+            }
+
+            var chosen = GuiSettings.PreviewLanguage;
+            _language.SelectedItem = _language.Items.OfType<ComboBoxItem>().FirstOrDefault(item => Equals(item.Tag, chosen))
+                ?? _language.Items.OfType<ComboBoxItem>().First();
+        }
+        finally
+        {
+            _syncingLanguage = false;
+        }
+    }
+
+    /// <summary>Neuer Arbeitsbereich (Sprachen der Installation) oder anderes Spiel: Umschalter neu füllen.</summary>
+    private void OnSettingsChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(SyncLanguageTools);
+
+    /// <summary>Ein anderer Designer hat die Sprache gewählt: Umschalter angleichen und die Vorschau neu rechnen.</summary>
+    private void OnPreviewLanguageChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            var before = _language.SelectedItem;
+            SyncLanguageTools();
+            if (!ReferenceEquals(before, _language.SelectedItem))
+            {
+                PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        });
+
+    private (int Width, int Height) SelectedResolution => (_resolution.SelectedItem as ComboBoxItem)?.Tag switch
+    {
+        ValueTuple<int, int> size => size,
+        ResolutionChoice.Game when _gameScreen is { } game => (game.Width, game.Height),
+        ResolutionChoice.Custom => _customSize,
+        _ => FallbackSize(),
     };
+
+    private static (int Width, int Height) FallbackSize()
+    {
+        var (width, height, _) = GuiPreviewScreen.Fallback();
+        return (width, height);
+    }
+
+    private enum ResolutionChoice
+    {
+        Game,
+        Custom,
+    }
+
+    private void BuildScreenTools()
+    {
+        _screenTools.Children.Add(new TextBlock { Text = GuiTexts.DesignerResolution, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
+        _screenTools.Children.Add(_resolution);
+        _screenTools.Children.Add(_customResolution);
+        _screenTools.Children.Add(new TextBlock { Text = GuiTexts.DesignerUiScale, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
+        _screenTools.Children.Add(_uiScale);
+        _screenTools.Children.Add(_languageLabel);
+        _screenTools.Children.Add(_language);
+        _screenTools.Children.Add(_showBounds);
+        _screenTools.Children.Add(_markOverflow);
+        _markOverflow.IsChecked = GuiSettings.MarkAllOverflow;
+        _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow;
+        FillResolutions();
+
+        _resolution.SelectionChanged += (_, _) =>
+        {
+            var custom = (_resolution.SelectedItem as ComboBoxItem)?.Tag is ResolutionChoice.Custom;
+            _customResolution.Visibility = custom ? Visibility.Visible : Visibility.Collapsed;
+            if (_syncingScreenTools)
+            {
+                return;
+            }
+
+            if (custom)
+            {
+                _customResolution.Text = FormatSize(_customSize);
+                _customResolution.Focus();
+                _customResolution.SelectAll();
+            }
+
+            PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+        };
+
+        _customResolution.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                ApplyCustomResolution();
+                e.Handled = true;
+            }
+        };
+        _customResolution.LostKeyboardFocus += (_, _) => ApplyCustomResolution();
+        _uiScale.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                ApplyUiScale();
+                e.Handled = true;
+            }
+        };
+        _uiScale.LostKeyboardFocus += (_, _) => ApplyUiScale();
+        _language.SelectionChanged += (_, _) =>
+        {
+            if (_syncingLanguage || _language.SelectedItem is not ComboBoxItem { } item)
+            {
+                return;
+            }
+
+            var language = item.Tag as string;
+            GuiSettings.PreviewLanguage = language;
+            // Die gewählte Sprache vorladen, damit die neu gerechnete Vorschau nicht darauf wartet.
+            GuiSettings.WarmText(GuiSettings.Workspace, language ?? GuiPreviewScreen.GameLanguage());
+            PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+        };
+        _showBounds.Click += (_, _) => _canvas.ShowBounds = _showBounds.IsChecked == true;
+        _markOverflow.Click += (_, _) => _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow = _markOverflow.IsChecked == true;
+    }
+
+    /// <summary>Die festen Auflösungen, "Spiel" (klassisch nur mit lesbaren Spieleinstellungen, Jomini immer; dann vorgewählt) und "Eigene…".</summary>
+    private void FillResolutions()
+    {
+        _resolution.Items.Clear();
+        foreach (var size in new[] { (1920, 1080), (2560, 1440), (3840, 2160), (3440, 1440) })
+        {
+            _resolution.Items.Add(new ComboBoxItem { Content = FormatSize(size), Tag = size });
+        }
+
+        if (_gameScreen is { } game)
+        {
+            _resolution.Items.Add(new ComboBoxItem { Content = GuiTexts.DesignerResolutionGame(game.Width, game.Height), Tag = ResolutionChoice.Game });
+        }
+
+        _resolution.Items.Add(new ComboBoxItem { Content = GuiTexts.DesignerResolutionCustom, Tag = ResolutionChoice.Custom });
+        _resolution.SelectedIndex = _gameScreen is null ? 0 : 4;
+    }
+
+    private void ApplyCustomResolution()
+    {
+        if (ParseSize(_customResolution.Text) is { } size && size != _customSize)
+        {
+            _customSize = size;
+            PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        _customResolution.Text = FormatSize(_customSize);
+    }
+
+    private void ApplyUiScale()
+    {
+        var text = _uiScale.Text.Trim().Replace(',', '.');
+        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var scale) && double.IsFinite(scale) && scale is >= MinUiScale and <= MaxUiScale
+            && scale != _uiScaleValue)
+        {
+            _uiScaleValue = scale;
+            PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        _uiScale.Text = _uiScaleValue.ToString("0.###", CultureInfo.CurrentCulture);
+    }
+
+    /// <summary>"2048×1152", "2048x1152" oder "2048 1152"; Seiten zwischen 320 und 16384 Pixeln.</summary>
+    internal static (int Width, int Height)? ParseSize(string text)
+    {
+        var parts = text.Split(new[] { '×', 'x', 'X', '*', ' ', ';', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parts.Length == 2
+            && int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) && width is >= 320 and <= 16384
+            && int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var height) && height is >= 320 and <= 16384
+            ? (width, height)
+            : null;
+    }
+
+    private static string FormatSize((int Width, int Height) size) => string.Create(CultureInfo.InvariantCulture, $"{size.Width}×{size.Height}");
 
     /// <summary>"Baumbreite;Eigenschaftenhöhe;Palettenbreite" in Pixeln (invariante Zahlen); die ältere Form ohne Palettenbreite bleibt lesbar.</summary>
     public string LayoutState
@@ -509,10 +934,14 @@ public sealed class GuiDesignerView : UserControl
         {
             _treeItems.Clear();
             _tree.Items.Clear();
+            _treeMarks.Clear();
             foreach (var item in items)
             {
                 _tree.Items.Add(CreateItem(item, string.Empty, 0, expanded));
             }
+
+            // Der Baum kann nach der Vorschau neu entstehen: Marken aus der letzten Vorschau gleich wieder setzen.
+            ApplyTreeMarks();
         }
         finally
         {
@@ -520,18 +949,126 @@ public sealed class GuiDesignerView : UserControl
         }
     }
 
-    public void SetPreview(GuiPreview? preview, bool keepView)
+    /// <param name="fonts">Bitmap-Schriften des Arbeitsbereichs, der die Vorschau gelegt hat (klassisch).</param>
+    /// <param name="viewedFile">Angesehene Datei, mit der die Vorschau gelegt wurde (Schlüssel bedingter Elemente); null ohne Dateipfad.</param>
+    public void SetPreview(GuiPreview? preview, bool keepView, GuiDesign.Classic.ClassicFontLibrary? fonts = null, string? viewedFile = null)
     {
-        _canvas.SetScene(preview?.Scene, keepView);
+        _canvas.DarkBackground = !GuiSettings.Layout.IsClassic;
+        GuiSchematicCanvas.ApplyMessageForeground(_message, _canvas.DarkBackground);
+        _canvas.SetScene(preview?.Scene, keepView, fonts);
         _message.Text = preview?.Scene is null
             ? preview?.Message ?? GuiTexts.PreviewNone
             : string.Empty;
+        _viewedFile = viewedFile;
+        _conditionalKeys = ConditionalKeysByNode(preview);
+        UpdateConditionalState();
+    }
+
+    /// <summary>
+    /// Schlüssel bedingter Elemente je Syntaxknoten der Vorschau, wie <see cref="GuiPreview.ElementFor"/>: je Herkunftsknoten das erste Element in
+    /// Vorordnung, das Ziel steht für das Wurzelelement. Die Schlüssel berechnet die Engine (<see cref="LayoutBox.ConditionalKeys"/>), auch für
+    /// ausgeblendete Elemente ohne Kasten.
+    /// </summary>
+    private static Dictionary<GuiNode, string> ConditionalKeysByNode(GuiPreview? preview)
+    {
+        var result = new Dictionary<GuiNode, string>();
+        if (preview?.Element is not { } root || preview.Scene?.Root.ConditionalKeys is not { Count: > 0 } keys)
+        {
+            return result;
+        }
+
+        var seen = new HashSet<GuiNode> { preview.Target };
+        if (keys.TryGetValue(root, out var rootKey))
+        {
+            result[preview.Target] = rootKey;
+        }
+
+        var stack = new Stack<ResolvedElement>();
+        stack.Push(root);
+        while (stack.Count > 0)
+        {
+            var element = stack.Pop();
+            if (seen.Add(element.Origin.Node) && keys.TryGetValue(element, out var key))
+            {
+                result[element.Origin.Node] = key;
+            }
+
+            for (var i = element.Children.Count - 1; i >= 0; i--)
+            {
+                stack.Push(element.Children[i]);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>Ein Schlüssel kam hinzu oder fiel weg (auch aus einem anderen Designer oder dem Inspektor): Marken, Banner, Vorschau neu.</summary>
+    private void OnHiddenConditionalsChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            UpdateConditionalState();
+            PreviewOptionsChanged?.Invoke(this, EventArgs.Empty);
+        });
+
+    /// <summary>Blendet ein bedingtes Element aus oder wieder ein; Marken und Banner sofort, die Vorschau über <see cref="OnHiddenConditionalsChanged"/>.</summary>
+    private void SetConditionalHidden(string key, bool hidden)
+    {
+        GuiSettings.SetConditionalHidden(key, hidden);
+        UpdateConditionalState();
+    }
+
+    /// <summary>"Alle einblenden": nur die Schlüssel der angesehenen Datei.</summary>
+    private void ShowAllConditionals()
+    {
+        if (_viewedFile is { } file)
+        {
+            GuiSettings.ShowAllConditionals(file);
+            UpdateConditionalState();
+        }
+    }
+
+    /// <summary>Baummarken, Banner und Leistenknopf zum aktuellen Stand der ausgeblendeten Schlüssel.</summary>
+    private void UpdateConditionalState()
+    {
+        ApplyTreeMarks();
+        var count = _viewedFile is { } file ? GuiSettings.HiddenCount(file) : 0;
+        _conditionalBannerText.Text = count > 0 ? GuiTexts.DesignerHiddenConditionals(count) : string.Empty;
+        _conditionalBanner.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        _showAllConditionals.IsEnabled = count > 0;
+
+        // Klassische .gui-Dateien (HOI IV, EU IV) kennen kein visible = "[…]": der Knopf bliebe dort immer gesperrt.
+        _showAllConditionals.Visibility = GuiSettings.Layout.IsClassic ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    /// <summary>Setzt die Marke "bedingt" bzw. "ausgeblendet" an den Baumeinträgen; Überschriften entstehen nur bei geändertem Zustand neu.</summary>
+    private void ApplyTreeMarks()
+    {
+        foreach (var (node, treeItem) in _treeItems)
+        {
+            bool? mark = _conditionalKeys.TryGetValue(node, out var key) ? GuiSettings.HiddenConditionals.Contains(key) : null;
+            bool? shown = _treeMarks.TryGetValue(node, out var current) ? current : null;
+            if (mark == shown || treeItem.Tag is not GuiTreeItem item)
+            {
+                continue;
+            }
+
+            treeItem.Header = HeaderFor(item, mark);
+            if (mark is { } hidden)
+            {
+                _treeMarks[node] = hidden;
+            }
+            else
+            {
+                _treeMarks.Remove(node);
+            }
+        }
     }
 
     /// <summary>Markiert das Element in Baum und Vorschau und zeigt seine Eigenschaften (aus der Vorschau, sofern das Element darin vorkommt).</summary>
     public void Select(GuiNode? widget, GuiPreview? preview)
     {
         _selectedNode = widget;
+        _selectedSprite = widget is null ? null : preview?.Scene?.BoxesFor(widget).Select(box => box.Visual).OfType<GuiSpriteVisual>().FirstOrDefault();
         _canvas.SetSelection(widget);
         _suppressTreeEvents = true;
         try
@@ -609,37 +1146,74 @@ public sealed class GuiDesignerView : UserControl
     {
         _shownElement = element;
         var treeItem = _selectedNode is not null && _treeItems.TryGetValue(_selectedNode, out var shownItem) ? shownItem.Tag as GuiTreeItem : null;
-        _propertyEditor.SetElement(element is null ? null : _selectedNode, element, IsEditable, treeItem?.Kind == GuiTreeItemKind.Widget, treeItem?.IsTypeInstance == true);
+        _propertyEditor.SetElement(element is null ? null : _selectedNode, element, IsEditable, treeItem?.Kind == GuiTreeItemKind.Widget, treeItem?.IsTypeInstance == true, _selectedSprite);
         if (element is null)
         {
+            _chain.Visibility = Visibility.Visible;
             _chain.Text = GuiTexts.NoProperties;
             _properties.ItemsSource = null;
             return;
         }
 
-        _chain.Text = GuiTexts.TypeChain(string.Join(" → ", element.TypeChain));
-        var list = GuiPropertyRows.Build(element).ToList();
+        ShowChain(element);
+        var list = BuildRows(element);
         var rows = new ListCollectionView(list);
         rows.GroupDescriptions.Add(new PropertyGroupDescription(nameof(GuiPropertyRow.Group)));
         _properties.ItemsSource = rows;
 
-        // Nach einer Änderung dieselbe Eigenschaft wieder wählen, damit man an ihr weiterarbeiten kann.
-        if (_selectedPropertyName is { } name && list.FirstOrDefault(r => r.Name == name) is { } again)
+        // Nach einer Änderung dieselbe Eigenschaft wieder wählen, damit man an ihr weiterarbeiten kann. Klassisch ohne Rücksicht auf Groß-/Kleinschreibung
+        // (der Name kommt aus dem Code und kann sich beim Bearbeiten ändern), die genaue Schreibweise zuerst.
+        if (_selectedPropertyName is { } name && RowNamed(list, name) is { } again)
         {
             _properties.SelectedItem = again;
         }
+    }
+
+    /// <summary>Zeilen des Eigenschaftenfelds; klassisch mit den Werten aus dem <c>if_resolution</c>-Block, der zur gewählten Auflösung und UI-Skalierung passt.</summary>
+    private List<GuiPropertyRow> BuildRows(ResolvedElement element)
+    {
+        if (!GuiSettings.Layout.IsClassic)
+        {
+            return GuiPropertyRows.Build(element).ToList();
+        }
+
+        var options = PreviewOptions;
+        var scale = options.UiScale > 0 ? options.UiScale : 1;
+        return ClassicPropertyRows.Build(element, options.ScreenWidth / scale, options.ScreenHeight / scale).ToList();
+    }
+
+    internal static GuiPropertyRow? RowNamed(IReadOnlyList<GuiPropertyRow> rows, string name)
+    {
+        var exact = rows.FirstOrDefault(r => r.Name == name);
+        return exact ?? (GuiSettings.Layout.IsClassic ? rows.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)) : null);
     }
 
     /// <summary>Eigenschaften eines Elements aus dem Inneren eines Typs: nur lesen, Anpassen über blockoverride (Plan-Ruling 14).</summary>
     private void ShowInherited(GuiNode instance, ResolvedElement inner)
     {
         _shownElement = null;
-        _chain.Text = GuiTexts.TypeChain(string.Join(" → ", inner.TypeChain));
+        ShowChain(inner);
         var rows = new ListCollectionView(GuiPropertyRows.Build(inner).ToList());
         rows.GroupDescriptions.Add(new PropertyGroupDescription(nameof(GuiPropertyRow.Group)));
         _properties.ItemsSource = rows;
         _propertyEditor.SetInherited(instance, inner, IsEditable);
     }
+
+    /// <summary>Typkette über den Eigenschaften; klassische .gui-Dateien (HOI IV, EU IV) kennen keine Typen, dort bleibt die Zeile leer und ausgeblendet.</summary>
+    private void ShowChain(ResolvedElement element)
+    {
+        var classic = GuiSettings.Layout.IsClassic;
+        _chain.Visibility = classic ? Visibility.Collapsed : Visibility.Visible;
+        _chain.Text = classic ? string.Empty : GuiTexts.TypeChain(string.Join(" → ", element.TypeChain));
+    }
+
+    /// <summary>"In hbox/vbox einpacken" im Baummenü: nur Jomini, denn klassische .gui-Dateien (HOI IV, EU IV) kennen hbox und vbox nicht.</summary>
+    internal static bool OffersWrapIn(GuiTreeItemKind kind) =>
+        kind is GuiTreeItemKind.Widget or GuiTreeItemKind.Holder && !GuiSettings.Layout.IsClassic;
+
+    /// <summary>"Neuer Typ", "Als neuen Typ herausziehen", "Widget-Schlüssel umstellen": Typen gibt es nur im Jomini-Format, nicht klassisch (HOI IV, EU IV).</summary>
+    internal static bool OffersTypeEdits(GuiTreeItemKind kind) =>
+        kind == GuiTreeItemKind.Widget && !GuiSettings.Layout.IsClassic;
 
     /// <summary>Kontextmenü eines Baumeintrags: Anzeigen (immer) und Bearbeiten (nur, wenn der Designer ändern darf).</summary>
     private void BuildTreeMenu(GuiTreeItem item)
@@ -658,6 +1232,15 @@ public sealed class GuiDesignerView : UserControl
 
             // Auch schreibgeschützt (Vanilla): Speichern ändert die Datei nicht (Teil-2-Ruling 3).
             AddMenuItem(GuiTexts.ContextSaveBlock, () => SaveAsBlockRequested?.Invoke(this, node));
+
+            // Ausblenden ändert nur die Vorschau, nie die Datei: auch schreibgeschützt. Ohne Dateipfad gibt es keinen Schlüssel zum Merken.
+            if (_viewedFile is not null && _conditionalKeys.TryGetValue(node, out var conditionalKey))
+            {
+                var hidden = GuiSettings.HiddenConditionals.Contains(conditionalKey);
+                AddMenuItem(
+                    hidden ? GuiTexts.DesignerUnhideConditional : GuiTexts.DesignerHideConditional,
+                    () => SetConditionalHidden(conditionalKey, !hidden));
+            }
         }
 
         if (item.IsTypeInstance)
@@ -699,7 +1282,7 @@ public sealed class GuiDesignerView : UserControl
             AddMenuItem(GuiTexts.TreeMoveDown, () => Request(new GuiDesignerAction(GuiDesignerActionKind.MoveDown, node)), editable, GuiTexts.KeyMoveDown);
         }
 
-        if (item.Kind is GuiTreeItemKind.Widget or GuiTreeItemKind.Holder)
+        if (OffersWrapIn(item.Kind))
         {
             foreach (var box in new[] { "hbox", "vbox" })
             {
@@ -707,7 +1290,7 @@ public sealed class GuiDesignerView : UserControl
             }
         }
 
-        if (item.Kind == GuiTreeItemKind.Widget)
+        if (OffersTypeEdits(item.Kind))
         {
             AddMenuItem(GuiTexts.ScopeNewType, () => RequestFor(NewTypeRequested, node), editable);
             AddMenuItem(GuiTexts.TreeExtractType, () => RequestFor(ExtractTypeRequested, node), editable);
@@ -731,7 +1314,7 @@ public sealed class GuiDesignerView : UserControl
     private TreeViewItem CreateItem(GuiTreeItem item, string parentKey, int depth, HashSet<string> expanded)
     {
         var key = parentKey + "/" + item.Label;
-        var treeItem = new TreeViewItem { Header = HeaderFor(item), Tag = item, IsExpanded = depth == 0 || expanded.Contains(key) };
+        var treeItem = new TreeViewItem { Header = HeaderFor(item, null), Tag = item, IsExpanded = depth == 0 || expanded.Contains(key) };
         if (item.Kind != GuiTreeItemKind.OfferedBlock)
         {
             _treeItems.TryAdd(item.Node, treeItem);
@@ -764,7 +1347,7 @@ public sealed class GuiDesignerView : UserControl
         }
     }
 
-    private static TreeViewItem? FindTreeItem(DependencyObject? source)
+    internal static TreeViewItem? FindTreeItem(DependencyObject? source)
     {
         for (var current = source; current is not null; current = current is Visual ? VisualTreeHelper.GetParent(current) : LogicalTreeHelper.GetParent(current))
         {
@@ -777,7 +1360,8 @@ public sealed class GuiDesignerView : UserControl
         return null;
     }
 
-    private static FrameworkElement HeaderFor(GuiTreeItem item)
+    /// <param name="conditional">null: nicht bedingt; false: bedingt und gezeigt; true: ausgeblendet.</param>
+    private static FrameworkElement HeaderFor(GuiTreeItem item, bool? conditional)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
         panel.Children.Add(new Border
@@ -807,7 +1391,76 @@ public sealed class GuiDesignerView : UserControl
             panel.Children.Add(detailText);
         }
 
+        MarkConditional(panel, label, conditional);
         return panel;
+    }
+
+    /// <summary>
+    /// Marke eines bedingten Elements hinter dem Namen (Dreieck in der Warnfarbe wie in der Vorschau); ausgeblendet hohl, Name durchgestrichen und
+    /// gedämpft. Auch im Inspektor.
+    /// </summary>
+    internal static void MarkConditional(Panel header, TextBlock label, bool? hidden)
+    {
+        if (hidden is not { } isHidden)
+        {
+            return;
+        }
+
+        var triangle = new System.Windows.Shapes.Polygon
+        {
+            Points = new PointCollection { new Point(0, 0), new Point(7, 0), new Point(7, 7) },
+            StrokeThickness = 1,
+            Margin = new Thickness(5, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = GuiTexts.DesignerConditionalTip,
+        };
+        triangle.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "Theme.Warning");
+        if (isHidden)
+        {
+            label.TextDecorations = TextDecorations.Strikethrough;
+
+            // Eine schon gesetzte Farbe bleibt (z.B. Theme.Danger bei unbekanntem Typ): ausgeblendet zeigen Strich und hohle Marke.
+            if (label.ReadLocalValue(TextBlock.ForegroundProperty) == DependencyProperty.UnsetValue)
+            {
+                label.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
+            }
+        }
+        else
+        {
+            triangle.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, "Theme.Warning");
+        }
+
+        header.ToolTip = GuiTexts.DesignerConditionalTip;
+        header.Children.Add(triangle);
+    }
+
+    /// <summary>
+    /// Banner über der Vorschau, solange bedingte Elemente der angesehenen Datei ausgeblendet sind: fetter Text und "Alle einblenden" (auch im
+    /// Inspektor). Hinweisleisten-Farben des Themes mit einem Rand in der Warnfarbe, damit es nicht übersehen wird.
+    /// </summary>
+    internal static Border ConditionalBanner(TextBlock text, Button showAll)
+    {
+        text.FontWeight = FontWeights.Bold;
+        text.TextWrapping = TextWrapping.Wrap;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.SetResourceReference(TextBlock.ForegroundProperty, "Theme.NoticeText");
+        showAll.Content = GuiTexts.DesignerShowAllConditionals;
+        showAll.Padding = new Thickness(6, 1, 6, 1);
+        showAll.Margin = new Thickness(8, 0, 0, 0);
+        var row = new DockPanel();
+        DockPanel.SetDock(showAll, Dock.Right);
+        row.Children.Add(showAll);
+        row.Children.Add(text);
+        var banner = new Border
+        {
+            Child = row,
+            Padding = new Thickness(6, 3, 6, 3),
+            BorderThickness = new Thickness(4, 0, 0, 0),
+            Visibility = Visibility.Collapsed,
+        };
+        banner.SetResourceReference(Border.BackgroundProperty, "Theme.NoticeBackground");
+        banner.SetResourceReference(Border.BorderBrushProperty, "Theme.Warning");
+        return banner;
     }
 
     /// <summary>Spalten Eigenschaft, Wert, Herkunft (auch im GUI-Inspektor).</summary>

@@ -9,6 +9,9 @@ public enum ScriptDocKind
     EventTarget,
     OnAction,
     CustomLocalization,
+
+    /// <summary>Nur-lesbare Variablen, die das Spiel berechnet (Hearts of Iron IV, <c>dynamic_variables_documentation.md</c>).</summary>
+    DynamicVariable,
 }
 
 /// <summary>Zuordnung der Eintragsarten zu den Log-Dateien im <c>docs</c>-Ordner des Spiels.</summary>
@@ -22,8 +25,18 @@ public static class ScriptDocLogFiles
         ScriptDocKind.EventTarget => "event_targets.log",
         ScriptDocKind.OnAction => "on_actions.log",
         ScriptDocKind.CustomLocalization => "custom_localization.log",
+        ScriptDocKind.DynamicVariable => "dynamic_variables.log",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
+
+    /// <summary>
+    /// Wie <see cref="FileNameOf(ScriptDocKind)"/>, aber mit den Dateinamen des Spielprofils (Schlüssel = Name der Art, z. B. Stellaris
+    /// <c>EventTarget</c> → <c>scopes.log</c>); fehlt die Art in <paramref name="overrides"/>, gilt der übliche Name.
+    /// </summary>
+    public static string FileNameOf(ScriptDocKind kind, IReadOnlyDictionary<string, string>? overrides) =>
+        overrides is not null && overrides.TryGetValue(kind.ToString(), out var name) && !string.IsNullOrWhiteSpace(name)
+            ? name.Trim()
+            : FileNameOf(kind);
 
     public static string DisplayNameOf(ScriptDocKind kind) => kind switch
     {
@@ -33,6 +46,7 @@ public static class ScriptDocLogFiles
         ScriptDocKind.EventTarget => "Event-Target",
         ScriptDocKind.OnAction => "On-Action",
         ScriptDocKind.CustomLocalization => "Custom-Loc",
+        ScriptDocKind.DynamicVariable => "Dynamic Variable",
         _ => kind.ToString(),
     };
 }

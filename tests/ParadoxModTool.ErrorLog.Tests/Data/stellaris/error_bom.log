@@ -1,0 +1,280 @@
+[17:07:51][dlc.cpp:1847]: Could not find files for mod: D:\SteamLibrary\steamapps\workshop\content\281990\3253479588
+[17:07:52][dlc.cpp:346]: Invalid supported_version in  file: mod/Flogi Slavemarket.mod line: 6
+[17:07:52][dlc.cpp:346]: Invalid supported_version in  file: mod/Flogi's Galaxy Sizes.mod line: 6
+[17:07:52][dlc.cpp:346]: Invalid supported_version in  file: mod/ugc_1199002146.mod line: 9
+[17:07:52][persistent.cpp:41]: Error: "Unexpected token: dependencies, near line: 7
+" in file: "mod/ugc_2798297351.mod" near line: 8
+[17:07:52][persistent.cpp:41]: Error: "Unexpected token: dependancies, near line: 6
+" in file: "mod/ugc_2975286025.mod" near line: 9
+[17:07:53][localization_reader.cpp:147]: Expected colon(:) at line 5 and column 23 in localisation/english/pmt_probe_l_english.yml
+[17:07:53][localize.cpp:1975]: Localization file 'localisation/english/pmt_probe_no_bom_l_english.yml' should be in in utf-8-bom encoding
+[17:07:53][localization_reader.cpp:83]: Missing UTF8 BOM in localisation/english/pmt_probe_no_bom_l_english.yml
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: ﻿, near line: 2
+" in file: "interface/00_pmt_order_a.gfx" near line: 2
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "interface/00_pmt_order_a.gfx" near line: 11
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: ﻿, near line: 2
+" in file: "interface/pmt_probe.gfx" near line: 2
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "interface/pmt_probe.gfx" near line: 8
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: ﻿, near line: 2
+" in file: "interface/zz_pmt_order_a.gfx" near line: 2
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "interface/zz_pmt_order_a.gfx" near line: 7
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: ﻿, near line: 2
+" in file: "interface/zz_pmt_order_b.gfx" near line: 2
+[17:07:56][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "interface/zz_pmt_order_b.gfx" near line: 7
+[17:07:57][persistent.cpp:41]: Error: "Unexpected token: ﻿, near line: 2
+" in file: "interface/pmt_probe.gui" near line: 2
+[17:07:57][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "interface/pmt_probe.gui" near line: 12
+[17:08:07][modifier.cpp:3279]: Missing modifier localization: ﻿
+[17:08:07][scriptedeffect.cpp:33]: scripted effect if is overwriting an existing effect, rename it
+[17:08:09][persistent.cpp:41]: Error: "Expected format is "key={", check formatting and verify encoding is UTF8 (no BOM): building_pmt_probe, near line: 2
+Expected format is "key={", check formatting and verify encoding is UTF8 (no BOM): {, near line: 2
+Expected format is "key={", check formatting and verify encoding is UTF8 (no BOM): 100, near line: 3
+Unexpected token: always, near line: 5
+" in file: "common/buildings/pmt_probe_buildings.txt" near line: 5
+[17:08:09][persistent.cpp:41]: Error: "Unexpected token: pmt_probe_unknown_trigger_in_building, near line: 6
+" in file: "common/buildings/pmt_probe_buildings.txt" near line: 6
+[17:08:09][building_type.cpp:762]: Building 'potential' is lacking the building_sets definition.
+[17:08:09][persistent.cpp:41]: Error: "Unexpected token: cost, near line: 10
+" in file: "common/buildings/pmt_probe_buildings.txt" near line: 12
+[17:08:09][building_type.cpp:762]: Building 'resources' is lacking the building_sets definition.
+[17:08:09][building_type.cpp:762]: Building '}' is lacking the building_sets definition.
+[17:08:18][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/00_pmt_order_a.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:18][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/00_pmt_order_a.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:18][event.cpp:1270]: Event pmt_order.11 at  file: events/00_pmt_order_a.txt line: 5 has an invalid ID
+[17:08:18][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/00_pmt_order_b.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:18][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/00_pmt_order_b.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:18][event.cpp:1270]: Event pmt_order.12 at  file: events/00_pmt_order_b.txt line: 5 has an invalid ID
+[17:08:18][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/00_pmt_order_tutorial.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:18][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/00_pmt_order_tutorial.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:18][event.cpp:1270]: Event tutorial.503 at  file: events/00_pmt_order_tutorial.txt line: 5 has an invalid ID
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/pmt_order_ctrl_a.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/pmt_order_ctrl_a.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][event.cpp:1270]: Event pmt_order.1 at  file: events/pmt_order_ctrl_a.txt line: 5 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.2 at  file: events/pmt_order_ctrl_a.txt line: 18 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.101 at  file: events/pmt_order_ctrl_a.txt line: 107 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.102 at  file: events/pmt_order_ctrl_a.txt line: 117 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.103 at  file: events/pmt_order_ctrl_a.txt line: 127 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.104 at  file: events/pmt_order_ctrl_a.txt line: 137 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.105 at  file: events/pmt_order_ctrl_a.txt line: 147 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.106 at  file: events/pmt_order_ctrl_a.txt line: 157 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.107 at  file: events/pmt_order_ctrl_a.txt line: 167 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.108 at  file: events/pmt_order_ctrl_a.txt line: 177 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.109 at  file: events/pmt_order_ctrl_a.txt line: 187 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.110 at  file: events/pmt_order_ctrl_a.txt line: 197 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.111 at  file: events/pmt_order_ctrl_a.txt line: 207 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.112 at  file: events/pmt_order_ctrl_a.txt line: 217 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.113 at  file: events/pmt_order_ctrl_a.txt line: 227 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.114 at  file: events/pmt_order_ctrl_a.txt line: 237 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.115 at  file: events/pmt_order_ctrl_a.txt line: 247 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_order.116 at  file: events/pmt_order_ctrl_a.txt line: 257 has an invalid ID
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/pmt_order_ctrl_b.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/pmt_order_ctrl_b.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][event.cpp:1270]: Event pmt_order.20 at  file: events/pmt_order_ctrl_b.txt line: 5 has an invalid ID
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/pmt_probe_broken.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/pmt_probe_broken.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][event.cpp:1270]: Event pmt_probe_broken.1 at  file: events/pmt_probe_broken.txt line: 5 has an invalid ID
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/pmt_probe_events.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/pmt_probe_events.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][event.cpp:1270]: Event pmt_probe.1 at  file: events/pmt_probe_events.txt line: 6 has an invalid ID
+[17:08:19][effect.cpp:471]: Error: "Malformed token: @pmt_probe_missing_variable, near line: 19
+" in file: "events/pmt_probe_events.txt" near line: 19
+[17:08:19][effect.cpp:471]: Error: "Unexpected token: pmt_probe_missing_resource, near line: 20
+" in file: "events/pmt_probe_events.txt" near line: 20
+[17:08:19][event.cpp:1270]: Event pmt_probe.2 at  file: events/pmt_probe_events.txt line: 36 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_probe.3 at  file: events/pmt_probe_events.txt line: 48 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_probe.3 at  file: events/pmt_probe_events.txt line: 55 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_probe.4 at  file: events/pmt_probe_events.txt line: 63 has an invalid ID
+[17:08:19][event.cpp:1508]: Event pmt_probe.4 has neither MTTH nor is_triggered_only = yes, so it will try to fire every day (if you really want to do this, specify mean_time_to_happen = { days = 1 } )
+[17:08:19][event.cpp:1270]: Event pmt_probe_other.5 at  file: events/pmt_probe_events.txt line: 70 has an invalid ID
+[17:08:19][event.cpp:1270]: Event pmt_probe.6 at  file: events/pmt_probe_events.txt line: 78 has an invalid ID
+[17:08:19][effect.cpp:529]: Wrong scope for effect 'add_resource' at  file: events/pmt_probe_events.txt line: 86
+Current Scope: colony
+Supported Scopes: country
+[17:08:19][effect.cpp:471]: Error: "Malformed token: pmt_probe_bad_value, near line: 91
+" in file: "events/pmt_probe_events.txt" near line: 91
+[17:08:19][event.cpp:1270]: Event pmt_probe.7 at  file: events/pmt_probe_events.txt line: 97 has an invalid ID
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/pmt_probe_no_namespace.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/pmt_probe_no_namespace.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - id in events/pmt_probe_no_namespace.txtline: 3
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - hide_window in events/pmt_probe_no_namespace.txtline: 4
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - is_triggered_only in events/pmt_probe_no_namespace.txtline: 5
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - immediate in events/pmt_probe_no_namespace.txtline: 6
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - log in events/pmt_probe_no_namespace.txtline: 6
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - } in events/pmt_probe_no_namespace.txtline: 7
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/zz_pmt_order_a.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/zz_pmt_order_a.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][event.cpp:1270]: Event pmt_order.12 at  file: events/zz_pmt_order_a.txt line: 5 has an invalid ID
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/zz_pmt_order_ancrel.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/zz_pmt_order_ancrel.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:427]: an event with id [ancrel.150] already exists!  file: events/zz_pmt_order_ancrel.txt line: 4
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry -  in events/zz_pmt_order_b.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][eventmanager.cpp:489]: Corrupt Event Table Entry - = in events/zz_pmt_order_b.txtline: 2
+This usually means the syntax is wrong earlier in the file (e.g. wrong number of { or }, non-existent curly brackets effects)
+[17:08:19][event.cpp:1270]: Event pmt_order.11 at  file: events/zz_pmt_order_b.txt line: 5 has an invalid ID
+[17:08:19][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "common/on_actions/pmt_order_on_actions.txt" near line: 4
+[17:08:19][persistent.cpp:41]: Error: "Unexpected token: =, near line: 2
+" in file: "common/on_actions/pmt_probe_on_actions.txt" near line: 8
+[17:08:19][persistent.cpp:41]: Error: "Unexpected token: on_monthly_pulse_country, near line: 10
+" in file: "common/on_actions/pmt_probe_on_actions.txt" near line: 12
+[17:08:21][parser_deferred_database_objects.cpp:84]: Failed to deferred read key reference pmt_probe_missing_modifier from database  file: events/pmt_probe_events.txt line: 17
+[17:08:21][parser_deferred_database_objects.cpp:84]: Failed to deferred read key reference pmt_probe_static_modifier from database  file: events/pmt_probe_events.txt line: 18
+[17:08:21][building_type.cpp:747]: Missing building Localization Key: potential
+[17:08:21][building_type.cpp:747]: Missing building Localization Key: potential_desc
+[17:08:21][building_type.cpp:830]: No category assigned to building type potential
+[17:08:21][building_type.cpp:844]: Building potential is missing texture gfx/interface/icons/buildings/potential.dds
+[17:08:21][building_type.cpp:747]: Missing building Localization Key: resources
+[17:08:21][building_type.cpp:747]: Missing building Localization Key: resources_desc
+[17:08:21][building_type.cpp:844]: Building resources is missing texture gfx/interface/icons/buildings/resources.dds
+[17:08:21][building_type.cpp:747]: Missing building Localization Key: }
+[17:08:21][building_type.cpp:747]: Missing building Localization Key: }_desc
+[17:08:21][building_type.cpp:830]: No category assigned to building type }
+[17:08:21][building_type.cpp:844]: Building } is missing texture gfx/interface/icons/buildings/}.dds
+[17:08:25][modifier.cpp:2829]: Missing modifier scripted icon gfx/interface/icons/modifiers/pmt_probe_missing_icon.dds
+[17:08:25][modifier.cpp:4256]: Invalid modifier = at  file: common/static_modifiers/pmt_probe_modifiers.txt line: 2
+[17:08:25][modifier.cpp:4256]: Invalid modifier pmt_probe_unknown_modifier_add at  file: common/static_modifiers/pmt_probe_modifiers.txt line: 4
+[17:08:26][trigger_impl.cpp:1706]: Scripted Trigger pmt_probe_trigger is invalid at  file: events/pmt_probe_events.txt line: 25
+[17:08:26][trigger_impl.cpp:1706]: Scripted Trigger pmt_probe_unknown_trigger is invalid at  file: events/pmt_probe_events.txt line: 14
+[17:08:27][trigger_impl.cpp:1677]: [ file: events/pmt_probe_events.txt line: 25]: Error in scripted trigger, cannot find: pmt_probe_trigger
+[17:08:27][trigger_impl.cpp:1677]: [ file: events/pmt_probe_events.txt line: 14]: Error in scripted trigger, cannot find: pmt_probe_unknown_trigger
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 12, could not find event: pmt_order.2
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_m1 at  file: events/pmt_order_ctrl_a.txt line: 30
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_m2 at  file: events/pmt_order_ctrl_a.txt line: 32
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_m3 at  file: events/pmt_order_ctrl_a.txt line: 34
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_c1 at  file: events/pmt_order_ctrl_a.txt line: 36
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_c2 at  file: events/pmt_order_ctrl_a.txt line: 38
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_c3 at  file: events/pmt_order_ctrl_a.txt line: 40
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_s1 at  file: events/pmt_order_ctrl_a.txt line: 42
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_s2 at  file: events/pmt_order_ctrl_a.txt line: 44
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_ctrl_b at  file: events/pmt_order_ctrl_a.txt line: 46
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_000_pmt_order_a at  file: events/pmt_order_ctrl_a.txt line: 48
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_zz_pmt_order_a at  file: events/pmt_order_ctrl_a.txt line: 50
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_00_pmt_order_a at  file: events/pmt_order_ctrl_a.txt line: 52
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_zz_pmt_order_b at  file: events/pmt_order_ctrl_a.txt line: 54
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_00_pmt_order_b at  file: events/pmt_order_ctrl_a.txt line: 56
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_b_pmt_c1 at  file: events/pmt_order_ctrl_a.txt line: 58
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_a_pmt_c1 at  file: events/pmt_order_ctrl_a.txt line: 60
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a__pmt_c2 at  file: events/pmt_order_ctrl_a.txt line: 62
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_a_pmt_c2 at  file: events/pmt_order_ctrl_a.txt line: 64
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a__pmt_c3 at  file: events/pmt_order_ctrl_a.txt line: 66
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_z_pmt_c3 at  file: events/pmt_order_ctrl_a.txt line: 68
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_zz_pmt_s1 at  file: events/pmt_order_ctrl_a.txt line: 70
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_000_pmt_s2 at  file: events/pmt_order_ctrl_a.txt line: 72
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_pmt_order_ctrl_b at  file: events/pmt_order_ctrl_a.txt line: 74
+
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 76, could not find event: pmt_order.11
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 77, could not find event: pmt_order.12
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 83, could not find event: pmt_order.15
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 84, could not find event: pmt_order.20
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 85, could not find event: pmt_order.101
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 86, could not find event: pmt_order.102
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 87, could not find event: pmt_order.103
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 88, could not find event: pmt_order.104
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 89, could not find event: pmt_order.105
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 90, could not find event: pmt_order.106
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 91, could not find event: pmt_order.107
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 92, could not find event: pmt_order.108
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 93, could not find event: pmt_order.109
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 94, could not find event: pmt_order.110
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 95, could not find event: pmt_order.111
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 96, could not find event: pmt_order.112
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 97, could not find event: pmt_order.113
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 98, could not find event: pmt_order.114
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 99, could not find event: pmt_order.115
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 100, could not find event: pmt_order.116
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_same_a at  file: events/pmt_order_ctrl_a.txt line: 112
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_same_b at  file: events/pmt_order_ctrl_a.txt line: 122
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_s0 at  file: events/pmt_order_ctrl_a.txt line: 132
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_a1 at  file: events/pmt_order_ctrl_a.txt line: 142
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_a2 at  file: events/pmt_order_ctrl_a.txt line: 152
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_b1 at  file: events/pmt_order_ctrl_a.txt line: 162
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_b2 at  file: events/pmt_order_ctrl_a.txt line: 172
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_order_same at  file: events/pmt_order_ctrl_a.txt line: 182
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_pmt_order_same at  file: events/pmt_order_ctrl_a.txt line: 192
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_sub_pmt_s0 at  file: events/pmt_order_ctrl_a.txt line: 202
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_sub_pmt_s1 at  file: events/pmt_order_ctrl_a.txt line: 212
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_sub_pmt_s2 at  file: events/pmt_order_ctrl_a.txt line: 222
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_rp1_pmt_rp_a1 at  file: events/pmt_order_ctrl_a.txt line: 232
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_rp2_pmt_rp_a2 at  file: events/pmt_order_ctrl_a.txt line: 242
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_pmt_rp1_pmt_rp_b1 at  file: events/pmt_order_ctrl_a.txt line: 252
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_pmt_rp2_pmt_rp_b2 at  file: events/pmt_order_ctrl_a.txt line: 262
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_probe_unknown_effect at  file: events/pmt_probe_events.txt line: 12
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_probe_effect at  file: events/pmt_probe_events.txt line: 22
+
+[17:08:29][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_probe_dupe at  file: events/pmt_probe_events.txt line: 23
+
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_probe_events.txt line: 28, could not find event: pmt_probe.999
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_probe_events.txt line: 29, could not find event: pmt_probe.2
+[17:08:29][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_probe_events.txt line: 30, could not find event: pmt_probe.3
+[17:08:35][galaxy_configuration.cpp:654]: Invalid template name in settings.txt

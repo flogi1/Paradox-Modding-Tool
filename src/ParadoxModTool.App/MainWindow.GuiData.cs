@@ -38,7 +38,8 @@ public partial class MainWindow
     /// <summary>Menü, Symbolleiste, Strg+Umschalt+D: Start aus dem Datenkontext an der Cursorstelle einer .gui-Datei, Einfügen an der Cursorstelle.</summary>
     private async Task OpenGuiDataHelperAsync()
     {
-        if (!GuiSettings.ToolsEnabled)
+        // Auch über Leiste oder Kachel: klassische .gui-Dateien (HOI IV, EU IV) bekommen keine Jomini-Datenausdrücke.
+        if (!GuiSettings.DataHelperOffered)
         {
             return;
         }

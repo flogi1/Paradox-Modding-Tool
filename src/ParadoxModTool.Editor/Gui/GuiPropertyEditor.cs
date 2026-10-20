@@ -7,9 +7,11 @@ using System.Windows.Media;
 using Microsoft.Win32;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Catalog;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Conditions;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
+using ParadoxModTool.GuiDesign.Layout;
 using ParadoxModTool.GuiDesign.Resolve;
 using ParadoxModTool.GuiDesign.Syntax;
 
@@ -43,6 +45,14 @@ public sealed class GuiPropertyEditor : UserControl
     private string? _propertyName;
     private Func<string?>? _read;
     private bool _editable;
+
+    // Klassisch (HOI IV, EU IV): Eingabe als Code und die Bedingung des if_resolution-Blocks, aus dem die gewählte Zeile kommt.
+    private Func<ClassicValue?>? _classicRead;
+    private string? _condition;
+
+    // Klassisch: Erklärungsfeld unter der Eingabe und das Sprite des gewählten Elements aus der Vorschau (für die Frame- und Randskizze).
+    private readonly ClassicExplainBox _explain = new() { Visibility = Visibility.Collapsed };
+    private GuiSpriteVisual? _sprite;
 
     public GuiPropertyEditor()
     {
@@ -90,7 +100,7 @@ public sealed class GuiPropertyEditor : UserControl
             }
             else if (e.Key == Key.Escape)
             {
-                ShowFor(_propertyName, _property);
+                ShowFor(_propertyName, _property, _condition);
                 e.Handled = true;
             }
         };
@@ -108,6 +118,8 @@ public sealed class GuiPropertyEditor : UserControl
         editRow.Children.Add(_apply);
         editRow.Children.Add(_reset);
 
+        _explain.ExampleActivated += (_, origin) => ExampleActivated?.Invoke(this, origin);
+
         var addRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 2, 4, 4) };
         addRow.Children.Add(new TextBlock { Text = GuiTexts.PropertyAddLabel, VerticalAlignment = VerticalAlignment.Center });
         addRow.Children.Add(_addName);
@@ -121,6 +133,7 @@ public sealed class GuiPropertyEditor : UserControl
         panel.Children.Add(scopeRow);
         panel.Children.Add(_adapt);
         panel.Children.Add(editRow);
+        panel.Children.Add(_explain);
         panel.Children.Add(addRow);
         var border = new Border { Child = panel, BorderThickness = new Thickness(0, 1, 0, 0) };
         border.SetResourceReference(Border.BorderBrushProperty, "Theme.Separator");
@@ -140,6 +153,9 @@ public sealed class GuiPropertyEditor : UserControl
 
     /// <summary>"Typ überall": Definition des Typs der gewählten Instanz öffnen.</summary>
     public event EventHandler<GuiNode>? TypeEverywhereRequested;
+
+    /// <summary>Ein Vanilla-Beispiel im Erklärungsfeld wurde angeklickt (klassisch): Datei und Zeile zum Öffnen.</summary>
+    public event EventHandler<GuiOrigin>? ExampleActivated;
 
     private static GuiPropertyCatalog Catalog => GuiSettings.Workspace?.Catalog ?? EmptyCatalog;
 
@@ -165,10 +181,12 @@ public sealed class GuiPropertyEditor : UserControl
 
     /// <summary>
     /// Neues gewähltes Element: Geltungsbereich und "Eigenschaft hinzufügen" neu, Eingabe leer. <paramref name="canDerive"/>: ein Widget, von dem
-    /// "Neuer Typ" ableiten kann; <paramref name="isTypeInstance"/>: "Typ überall" ist möglich.
+    /// "Neuer Typ" ableiten kann; <paramref name="isTypeInstance"/>: "Typ überall" ist möglich. <paramref name="sprite"/>: das Sprite des Elements
+    /// in der Vorschau (klassisch), für die Skizzen im Erklärungsfeld.
     /// </summary>
-    public void SetElement(GuiNode? selected, ResolvedElement? element, bool editable, bool canDerive = false, bool isTypeInstance = false)
+    public void SetElement(GuiNode? selected, ResolvedElement? element, bool editable, bool canDerive = false, bool isTypeInstance = false, GuiSpriteVisual? sprite = null)
     {
+        _sprite = sprite;
         _selected = selected;
         _element = element;
         _editable = editable;
@@ -183,7 +201,9 @@ public sealed class GuiPropertyEditor : UserControl
         }
         else
         {
-            _addName.ItemsSource = GuiPropertyInput.AddableProperties(element, Catalog);
+            _addName.ItemsSource = GuiSettings.Layout.IsClassic
+                ? ClassicPropertyInput.AddableProperties(element, Catalog)
+                : GuiPropertyInput.AddableProperties(element, Catalog);
         }
 
         UpdateScope();
@@ -201,10 +221,15 @@ public sealed class GuiPropertyEditor : UserControl
         }
 
         var scope = GuiEditScope.Of(_selected!, GuiSettings.Workspace?.Index ?? GuiIndex.Empty, FilePath);
+        // Klassischer Entwurf: Die Einheit der Übernahme ist das oberste Fenster; außerhalb eines Fensters kopiert die Übernahme die ganze Datei.
         _scope.Text = scope.Label is { } label ? GuiTexts.ScopeHere(label, scope.Usages)
+            : _isDraft && GuiSettings.Layout.IsClassic && ClassicWindows.EnclosingOf(_selected!) is { } window ? GuiTexts.ScopeClassicWindow(ClassicWindows.NameOf(window))
             : _isDraft ? GuiTexts.ScopeCopiesFile
             : GuiTexts.ScopeHereOnly;
         _newType.IsEnabled = _editable && _canDerive;
+
+        // Klassische .gui-Dateien (HOI IV, EU IV) kennen keine Typen.
+        _newType.Visibility = GuiSettings.Layout.IsClassic ? Visibility.Collapsed : Visibility.Visible;
         _typeEverywhere.IsEnabled = _isTypeInstance;
     }
 
@@ -238,17 +263,39 @@ public sealed class GuiPropertyEditor : UserControl
     /// <summary>Zeile in der Liste gewählt: Eingabe für diese Eigenschaft mit ihrem Wert.</summary>
     public void SetProperty(ResolvedProperty? property) => ShowFor(property?.Name, property);
 
+    /// <summary>Klassisch: Zeile gewählt; kommt ihr Wert aus einem <c>if_resolution</c>-Block, gehört die Bedingung dazu (Hinweis und "Grundwert ändern").</summary>
+    public void SetRow(GuiPropertyRow? row) => ShowFor(row?.Name, row?.Source, row?.Condition);
+
     public void SetEditable(bool editable)
     {
         _editable = editable;
         UpdateScope();
-        ShowFor(_propertyName, _property);
+        ShowFor(_propertyName, _property, _condition);
     }
 
-    private void ShowFor(string? name, ResolvedProperty? property)
+    private void ShowFor(string? name, ResolvedProperty? property, string? condition = null)
+    {
+        ShowInput(name, property, condition);
+        UpdateExplain();
+    }
+
+    /// <summary>Klassisch: das Erklärungsfeld zeigt die gewählte Eigenschaft, ohne Eigenschaft die Elementart; ohne Element (oder in Jomini) bleibt es weg.</summary>
+    private void UpdateExplain()
+    {
+        var shown = GuiSettings.Layout.IsClassic && _element is not null;
+        _explain.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        if (shown)
+        {
+            _explain.Show(_propertyName, _property?.Value, _element, _sprite);
+        }
+    }
+
+    private void ShowInput(string? name, ResolvedProperty? property, string? condition)
     {
         _propertyName = name;
         _property = property;
+        _condition = condition;
+        _classicRead = null;
         _addName.IsEnabled = _add.IsEnabled = _editable && _element is not null;
         _adapt.IsEnabled = _editable && _adaptAction is not null;
         if (name is null || _element is null || _selected is null)
@@ -261,10 +308,115 @@ public sealed class GuiPropertyEditor : UserControl
         }
 
         _name.Text = name;
+        if (GuiSettings.Layout.IsClassic)
+        {
+            ShowClassic(name, property);
+            return;
+        }
+
         var editor = GuiPropertyInput.EditorFor(name, _element.BaseWidget, Catalog, property);
         _input.Content = CreateInput(editor, name, GuiPropertyInput.InputOf(property), property?.IsQuoted == true);
         _apply.IsEnabled = _editable && _read is not null;
         _reset.IsEnabled = _editable && property is not null && GuiPropertyInput.TargetFor(property, _selected).InPlace;
+    }
+
+    /// <summary>
+    /// Klassisch (HOI IV, EU IV): Eingabefeld nach <see cref="ClassicPropertyInput.InputFor"/>. Kommt der Wert aus einem <c>if_resolution</c>-Block, steht
+    /// darüber der Hinweis, dass die Änderung dorthin geht, und darunter "Grundwert ändern" mit derselben Eingabe.
+    /// </summary>
+    private void ShowClassic(string name, ResolvedProperty? property)
+    {
+        _read = null;
+        var context = new ClassicInputContext(name, property, _element!, _editable, Catalog, () =>
+        {
+            if (_property is { } shown && _selected is { } selected)
+            {
+                ShowInCodeRequested?.Invoke(this, GuiPropertyInput.TargetFor(shown, selected).Node);
+            }
+        });
+        var result = ClassicPropertyInputs.Create(context);
+        _classicRead = result.Read;
+
+        FrameworkElement content = result.Content;
+        if (_condition is { } condition)
+        {
+            var notice = new TextBlock { Text = GuiTexts.ClassicEditsIfResolution(condition), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 4) };
+            notice.SetResourceReference(TextBlock.ForegroundProperty, "Theme.Warning");
+            var panel = new StackPanel();
+            panel.Children.Add(notice);
+            panel.Children.Add(result.Content);
+            if (result.Read is not null)
+            {
+                var baseValue = new Button
+                {
+                    Content = GuiTexts.ClassicChangeBase,
+                    ToolTip = GuiTexts.ClassicChangeBaseTip,
+                    Padding = new Thickness(6, 1, 6, 1),
+                    Margin = new Thickness(0, 4, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    IsEnabled = _editable,
+                };
+                baseValue.Click += (_, _) => ApplyBase();
+                panel.Children.Add(baseValue);
+            }
+
+            content = panel;
+        }
+
+        _input.Content = content;
+        _apply.IsEnabled = _editable && result.Read is not null;
+        _reset.IsEnabled = _editable && property is not null && GuiPropertyInput.TargetFor(property, _selected!).InPlace;
+    }
+
+    /// <summary>Klassisch: Eingabe an die Stelle schreiben, aus der der Wert stammt (bei einem <c>if_resolution</c>-Wert in den Block); ein Paar als <c>SetPair</c>.</summary>
+    private void ApplyClassic()
+    {
+        if (!_editable || _classicRead is null || _propertyName is null || _selected is null)
+        {
+            return;
+        }
+
+        if (_classicRead() is not { } value)
+        {
+            StatusChanged?.Invoke(this, GuiTexts.PropertyInvalid);
+            return;
+        }
+
+        var target = _property is null ? new GuiPropertyTarget(_selected, false) : GuiPropertyInput.TargetFor(_property, _selected);
+        if (value.Second is { } second)
+        {
+            // Ein Paar schreibt immer in einen Block oder das Element, nie in eine Skalar-Zeile (SetPair würfe dort).
+            var block = target.InPlace && target.Node.Kind == GuiNodeKind.KeyedBlock ? target.Node : _selected;
+            ActionRequested?.Invoke(this, new GuiDesignerAction(GuiDesignerActionKind.SetPair, block) { Name = _propertyName, Value = value.First, Value2 = second, PairKeys = value.Keys });
+            return;
+        }
+
+        ActionRequested?.Invoke(this, target.InPlace
+            ? new GuiDesignerAction(GuiDesignerActionKind.SetValue, target.Node) { Value = value.First }
+            : new GuiDesignerAction(GuiDesignerActionKind.SetProperty, _selected) { Name = _propertyName, Value = value.First });
+    }
+
+    /// <summary>
+    /// "Grundwert ändern": dieselbe Eingabe in die Zeile direkt im Element. Ein Skalar geht als <c>SetBaseValue</c>. Ein Paar geht als <c>SetPair</c> auf
+    /// das Element: das ändert nur die zwei inneren Werte eines vorhandenen Blocks (Abstände und Schlüssel bleiben) und fasst nie einen
+    /// <c>if_resolution</c>-Block an; <c>SetBaseValue</c> würde den ganzen Block neu schreiben.
+    /// </summary>
+    private void ApplyBase()
+    {
+        if (!_editable || _classicRead is null || _propertyName is null || _selected is null)
+        {
+            return;
+        }
+
+        if (_classicRead() is not { } value)
+        {
+            StatusChanged?.Invoke(this, GuiTexts.PropertyInvalid);
+            return;
+        }
+
+        ActionRequested?.Invoke(this, value.Second is { } second
+            ? new GuiDesignerAction(GuiDesignerActionKind.SetPair, _selected) { Name = _propertyName, Value = value.First, Value2 = second, PairKeys = value.Keys }
+            : new GuiDesignerAction(GuiDesignerActionKind.SetBaseValue, _selected) { Name = _propertyName, Value = value.First });
     }
 
     /// <summary>Eingabefeld je Art; setzt <see cref="_read"/> (Eingabe als Code, null bei ungültiger Eingabe).</summary>
@@ -372,6 +524,12 @@ public sealed class GuiPropertyEditor : UserControl
     /// </summary>
     private FrameworkElement WithDataHelper(FrameworkElement input, Func<TextBox?> field, string name, string value, bool always)
     {
+        // Daten- und Bedingungs-Helfer bauen Jomini-Ausdrücke ([GetPlayer...]); klassische .gui-Dateien (HOI IV, EU IV) haben keine.
+        if (GuiSettings.Layout.IsClassic)
+        {
+            return input;
+        }
+
         if (ConditionTarget.IsConditionProperty(name) && GuiSettings.ConditionHelper is { } conditionHelper && _editable && _selected is not null)
         {
             return WithConditionHelper(input, field, value, conditionHelper);
@@ -480,6 +638,12 @@ public sealed class GuiPropertyEditor : UserControl
     /// <summary>Plan-Ruling 4: Wert aus einer Zeile dieser Datei wird dort geändert, ein geerbter bekommt eine neue Zeile am Element.</summary>
     private void Apply()
     {
+        if (GuiSettings.Layout.IsClassic)
+        {
+            ApplyClassic();
+            return;
+        }
+
         if (!_editable || _read is null || _propertyName is null || _selected is null)
         {
             return;
@@ -514,7 +678,17 @@ public sealed class GuiPropertyEditor : UserControl
             return;
         }
 
-        ShowFor(name, _element?.Properties.LastOrDefault(p => p.Name == name && p.Role != GuiRole.StructuredBlock));
+        if (GuiSettings.Layout.IsClassic)
+        {
+            // Ohne Rücksicht auf Groß-/Kleinschreibung: "orientation" findet die Zeile Orientation (wie das Spiel und die Engine). Gibt es sie nicht,
+            // kommt die Schreibweise, die Vanilla am häufigsten nimmt. Auch ein Paar-Block zählt: das Feld zeigt dann seine Werte.
+            var existing = _element?.Properties.LastOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+            ShowFor(existing?.Name ?? (_element is null ? name : ClassicPropertyInput.SpellingFor(name, Catalog, _element.BaseWidget)), existing);
+            (_input.Content as FrameworkElement)?.Focus();
+            return;
+        }
+
+        ShowFor(name, _element?.Properties.LastOrDefault(p => string.Equals(p.Name, name, StringComparison.Ordinal) && p.Role != GuiRole.StructuredBlock));
         (_input.Content as FrameworkElement)?.Focus();
     }
 

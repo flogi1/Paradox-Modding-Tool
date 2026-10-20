@@ -35,6 +35,7 @@ public partial class MainWindow
                 LocProfileStatus = () => LocProfileService.Status,
                 EnsureLocProfiles = async () => { await UpdateLocProfilesAsync(force: false); },
                 SourceRelativeFolder = LocSourceRelativeFolder,
+                NewFileEncoding = extension => ParadoxModTool.GameProfiles.ModFileEncoding.NewFile(WriteProfile, extension),
             };
 
             var store = new TemplateStore(Path.Combine(GameContext.Repository.GameDirectory(GameContext.GameId), "templates"));

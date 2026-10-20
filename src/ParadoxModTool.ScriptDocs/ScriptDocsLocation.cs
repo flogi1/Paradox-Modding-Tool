@@ -25,4 +25,25 @@ public static class ScriptDocsLocation
             return null;
         }
     }
+
+    /// <summary>
+    /// Der Ordner <paramref name="subfolder"/> im Installationsordner des Spiels (Hearts of Iron IV: <c>documentation</c>). <see langword="null"/> ohne
+    /// Installationsordner oder bei ungültigem Pfad.
+    /// </summary>
+    public static string? ForInstall(string? installRoot, string subfolder)
+    {
+        if (string.IsNullOrWhiteSpace(installRoot))
+        {
+            return null;
+        }
+
+        try
+        {
+            return Path.Combine(Path.TrimEndingDirectorySeparator(Path.GetFullPath(installRoot)), subfolder);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return null;
+        }
+    }
 }

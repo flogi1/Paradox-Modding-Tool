@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using ParadoxModTool.Mods;
 
@@ -18,7 +19,11 @@ public static class NewCompatch
         return new string(name.Trim().Select(c => invalid.Contains(c) ? '_' : c).ToArray()).TrimEnd('.', ' ');
     }
 
-    public static NewCompatchResult Create(string modRoot, string name, string metadataFile, IReadOnlyList<NewCompatchTarget> targets, string? supportedGameVersion)
+    /// <param name="supportedGameVersion">Spielversion aus den Metadaten der ersten Ziel-Mod; ohne Angabe <c>*</c> bzw. leer.</param>
+    /// <param name="installedGameVersion">Installierte Spielversion (launcher-settings.json), für <paramref name="majorMinorSupportedVersion"/>.</param>
+    /// <param name="majorMinorSupportedVersion">Das Spiel nimmt im Deskriptor nur <c>vX.Y.Z</c> oder <c>vX.Y.*</c> (Stellaris), siehe <see cref="SupportedVersion"/>.</param>
+    public static NewCompatchResult Create(string modRoot, string name, string metadataFile, IReadOnlyList<NewCompatchTarget> targets, string? supportedGameVersion,
+        string? installedGameVersion = null, bool majorMinorSupportedVersion = false)
     {
         var folderName = FolderName(name);
         if (folderName.Length == 0)
@@ -37,7 +42,8 @@ public static class NewCompatch
         var without = new List<string>();
         if (metadataFile == ModMetadata.ClassicSiblingMetadataFile)
         {
-            var descriptor = $"version=\"1.0.0\"\nname=\"{name.Trim()}\"\nsupported_version=\"{supportedGameVersion ?? "*"}\"\n";
+            var supported = SupportedVersion(supportedGameVersion, installedGameVersion, majorMinorSupportedVersion);
+            var descriptor = $"version=\"1.0.0\"\nname=\"{name.Trim()}\"\nsupported_version=\"{supported}\"\n";
             File.WriteAllText(Path.Combine(folder, "descriptor.mod"), descriptor, new UTF8Encoding(false));
             File.WriteAllText(Path.Combine(modRoot, folderName + ".mod"), descriptor + $"path=\"mod/{folderName}\"\n", new UTF8Encoding(false));
             return new NewCompatchResult(folder, without);
@@ -78,5 +84,40 @@ public static class NewCompatch
         var json = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         File.WriteAllText(path, json, new UTF8Encoding(false));
         return new NewCompatchResult(folder, without);
+    }
+
+    private static readonly Regex ValidMajorMinor = new(@"^v?(\d+)\.(\d+)\.(\d+|\*)$", RegexOptions.Compiled);
+
+    private static readonly Regex MajorMinor = new(@"v?(\d+)\.(\d+)", RegexOptions.Compiled);
+
+    /// <summary>
+    /// <c>supported_version</c> für den klassischen Deskriptor. Ohne <paramref name="majorMinor"/> wie bisher die Version der Ziel-Mod oder <c>*</c>.
+    /// Mit <paramref name="majorMinor"/> (Stellaris nimmt nur <c>v4.5.2</c> oder <c>v4.5.*</c>, gemessen 2026-10-16): eine gültige Version der Ziel-Mod
+    /// bleibt (fehlendes <c>v</c> wird ergänzt), sonst Haupt- und Nebenversion der installierten Version (<c>v4.5.2</c> oder
+    /// <c>Cygnus v4.5.2 (9776)</c> → <c>v4.5.*</c>), sonst die der Ziel-Mod. Ist gar nichts bekannt, bleibt <c>*</c>; das meldet Stellaris als
+    /// ungültig, die weitere Wirkung ist nicht gemessen.
+    /// </summary>
+    public static string SupportedVersion(string? fromMod, string? installed, bool majorMinor)
+    {
+        if (!majorMinor)
+        {
+            return fromMod ?? "*";
+        }
+
+        var mod = fromMod?.Trim() ?? string.Empty;
+        if (ValidMajorMinor.Match(mod) is { Success: true } valid)
+        {
+            return $"v{valid.Groups[1].Value}.{valid.Groups[2].Value}.{valid.Groups[3].Value}";
+        }
+
+        foreach (var source in new[] { installed, mod })
+        {
+            if (source is not null && MajorMinor.Match(source) is { Success: true } match)
+            {
+                return $"v{match.Groups[1].Value}.{match.Groups[2].Value}.*";
+            }
+        }
+
+        return "*";
     }
 }

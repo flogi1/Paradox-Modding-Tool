@@ -335,7 +335,7 @@ public sealed class AppSessionState
     /// <summary>Zuletzt gewählte Ansicht für .gui-Dateien: "Code", "Designer" oder "Split". Standard: Code.</summary>
     public string GuiDesignerMode { get; set; } = "Code";
 
-    /// <summary>Aufteilung der Designer-Bereiche (siehe GuiSettings.Layout); null = Standard.</summary>
+    /// <summary>Aufteilung der Designer-Bereiche (siehe GuiSettings.DesignerLayout); null = Standard.</summary>
     public string? GuiDesignerLayout { get; set; }
 
     /// <summary>Sprache der Oberflächentexte (Datei locales/&lt;sprache&gt;.json). Standard: en.</summary>
@@ -349,6 +349,12 @@ public sealed class AppSessionState
 
     /// <summary>GUI-Werkzeuge (Index, Designer, Brotkrumen, Inspektor, "Wird angezeigt in") eingeschaltet. Standard: an.</summary>
     public bool GuiToolsEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Ausgeblendete bedingte Elemente in Designer und Inspektor (Schlüssel aus <c>GuiConditionalKeys</c>: angesehene Datei, Vorschau-Wurzel, Weg im
+    /// aufgelösten Baum). Gehören zum Spiel, weil die Dateien spielbezogen sind.
+    /// </summary>
+    public List<string> GuiHiddenConditionals { get; set; } = new();
 
     /// <summary>Zuletzt gezeigte Kategorie des Einstellungsfensters (Name aus <c>SettingsCategory</c>); <see langword="null"/> vor dem ersten Öffnen. Gilt für alle Spiele.</summary>
     public string? SettingsWindowCategory { get; set; }

@@ -6,7 +6,8 @@ namespace ParadoxModTool.Modifiers;
 public sealed record ModifierDefinition(bool Percent, bool AlreadyPercent, int? Decimals, string? Format, bool NoDifferenceSign);
 
 /// <summary>
-/// Liest Modifier-Definitionsdateien (EU V <c>modifier_type_definitions</c>, CK3 <c>modifier_definition_formats</c>): Blöcke
+/// Liest Modifier-Definitionsdateien (EU V <c>modifier_type_definitions</c>, CK3 <c>modifier_definition_formats</c>, HOI IV <c>modifier_definitions</c>
+/// mit <c>value_type</c>/<c>precision</c>): Blöcke
 /// <c>name = { ... }</c> auf oberster Ebene mit <c>percent</c>, <c>already_percent</c>, <c>decimals</c>, <c>no_difference_sign</c>
 /// und <c>game_data = { format = ... }</c>. Boolean-Modifier haben keinen Zahlenwert und fehlen im Ergebnis; ein kaputter Eintrag
 /// wird übersprungen.
@@ -73,11 +74,17 @@ public static class ModifierDefinitionReader
                         case "boolean":
                             boolean = IsYes(field.Value);
                             break;
+                        case "value_type":
+                            // Hearts of Iron IV: value_type = yes_no ist ein Ja/Nein-Modifier.
+                            boolean = string.Equals(field.Value, "yes_no", StringComparison.OrdinalIgnoreCase);
+                            break;
                         case "color":
+                        case "color_type":
                             bad = string.Equals(field.Value, "bad", StringComparison.OrdinalIgnoreCase);
                             break;
                         case "category" when field.Value is not null:
-                            category = field.Value;
+                            // Hearts of Iron IV nennt mehrere Kategorien mit je einer Zeile category = x.
+                            category = category.Length == 0 ? field.Value : category + ", " + field.Value;
                             break;
                         case "game_data" when field.Block is not null && category.Length == 0:
                             // EU V: category steht im Block game_data.
@@ -117,7 +124,24 @@ public static class ModifierDefinitionReader
                 case "no_difference_sign":
                     noDifferenceSign = IsYes(field.Value);
                     break;
+                case "value_type":
+                    // Hearts of Iron IV (common/modifier_definitions): number, percentage, percentage_in_hundred, yes_no.
+                    switch (field.Value?.ToLowerInvariant())
+                    {
+                        case "yes_no":
+                            return null;
+                        case "percentage":
+                            percent = true;
+                            break;
+                        case "percentage_in_hundred":
+                            percent = true;
+                            alreadyPercent = true;
+                            break;
+                    }
+
+                    break;
                 case "decimals":
+                case "precision":
                     if (!int.TryParse(field.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
                     {
                         return null;

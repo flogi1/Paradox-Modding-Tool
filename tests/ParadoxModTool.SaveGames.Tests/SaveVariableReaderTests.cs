@@ -25,6 +25,31 @@ public class SaveVariableReaderTests
     }
 
     [Fact]
+    public void Hoi4_flat_variables_and_arrays_are_read()
+    {
+        // Hearts of Iron IV: Variablen stehen direkt als name=wert im Block, Listen als name^0, name^1 … und name^num (Länge).
+        var result = SaveVariableReader.ReadFile(
+            SaveText.Write(
+                "countries={\n\tGER={\n\t\tvariables={\n\t\t\trandom={ 1 2 }\n\t\t\tfoo=1.5\n\t\t\tlist^0=10\n\t\t\tlist^1=11\n\t\t\tlist^num=2\n\t\t}\n\t}\n}\n" +
+                "variables={\n\trandom={ 3 4 }\n\tglobal_x=3\n}\n",
+                "HOI4txt"),
+            SaveCaptureRequest.None,
+            null,
+            default);
+
+        Assert.Equal(SaveReadStatus.Complete, result.Status);
+        Assert.Equal(
+            new[]
+            {
+                new SaveVariableEntry("countries/GER", "foo", SaveEntryKind.Variable, string.Empty, "value", "1.5"),
+                new SaveVariableEntry("countries/GER", "list", SaveEntryKind.ListItem, string.Empty, "value", "10"),
+                new SaveVariableEntry("countries/GER", "list", SaveEntryKind.ListItem, string.Empty, "value", "11"),
+                new SaveVariableEntry(string.Empty, "global_x", SaveEntryKind.Variable, string.Empty, "value", "3"),
+            },
+            result.Entries);
+    }
+
+    [Fact]
     public void ListItemsFlagValuesAndLocationValuesKeepTheirValueField()
     {
         var result = Read(

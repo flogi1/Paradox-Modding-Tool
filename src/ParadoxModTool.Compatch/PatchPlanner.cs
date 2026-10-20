@@ -473,7 +473,9 @@ public static class PatchPlanner
                 return (at, at, eol + Eol(RenderAt(entries, style, DepthAt(text, at, style) + 1), eol) + eol);
             }
 
-            var wrapped = (isType ? "types " + OwnFileName : parent + " =") + " {" + eol + Eol(RenderAt(entries, style, 1), eol) + eol + "}";
+            var wrapped = isType
+                ? "types " + OwnFileName + " {" + eol + Eol(RenderAt(entries, style, 1), eol) + eol + "}"
+                : WrapIn(parent!, Eol(RenderAt(entries, style, 1), eol), eol);
             return (text.Length, text.Length, (text.EndsWith('\n') ? string.Empty : eol) + wrapped + eol);
         }
 
@@ -502,7 +504,7 @@ public static class PatchPlanner
                 {
                     children = new List<ScriptEntry>();
                     parents[parent] = children;
-                    entries.Add(new ScriptStatement { Key = parent, Value = new ScriptBlock { Entries = children } });
+                    entries.Add(NestedStatement(parent, children));
                 }
 
                 children.AddRange(chosen);
@@ -576,7 +578,7 @@ public static class PatchPlanner
 
         if (ParentOf(key, info.Behavior) is { } parent)
         {
-            return parent + " = {\n" + Render(entries) + "}\n";
+            return WrapIn(parent, Render(entries).TrimEnd('\n'), "\n") + "\n";
         }
 
         return Render(entries);
@@ -587,6 +589,31 @@ public static class PatchPlanner
         behavior == OverrideBehavior.PartialKeys
             ? key.Contains('.') ? key[..key.IndexOf('.')] : null
             : RuleKeys.WrapperOf(key);
+
+    /// <summary>Text in seinen Hüllen: <c>a &gt; b</c> ergibt <c>a = { b = { … } }</c> (HOI IV: <c>ideas &gt; country</c>), eine Hülle wie bisher.</summary>
+    private static string WrapIn(string parent, string inner, string eol)
+    {
+        var text = inner;
+        foreach (var wrapper in parent.Split(RuleKeys.WrapSeparator).Reverse())
+        {
+            text = wrapper + " = {" + eol + text + eol + "}";
+        }
+
+        return text;
+    }
+
+    /// <summary>Block für die Einträge <paramref name="children"/> in ihren Hüllen (siehe <see cref="WrapIn"/>).</summary>
+    private static ScriptStatement NestedStatement(string parent, List<ScriptEntry> children)
+    {
+        var wrappers = parent.Split(RuleKeys.WrapSeparator);
+        var statement = new ScriptStatement { Key = wrappers[^1], Value = new ScriptBlock { Entries = children } };
+        foreach (var wrapper in wrappers.Reverse().Skip(1))
+        {
+            statement = new ScriptStatement { Key = wrapper, Value = new ScriptBlock { Entries = new List<ScriptEntry> { statement } } };
+        }
+
+        return statement;
+    }
 
     private static string Render(IReadOnlyList<ScriptEntry> entries) =>
         ScriptWriter.Write(new ScriptBlock { Entries = entries.ToList() }, preferSourceVerbatim: true).Replace("\r\n", "\n").TrimEnd('\n') + "\n";

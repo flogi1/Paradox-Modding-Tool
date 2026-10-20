@@ -1,0 +1,77 @@
+# PMT Layout-Probe (generiert von make_jomini_layout_probe.py). Nicht von Hand aendern.
+window = {
+	name = "pmt_layout_probe_6"
+	position = { 40 40 }
+	size = { 1840 1000 }
+	layer = top
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.05 0.05 0.05 1 } size = { 100% 100% } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 0 0 1 } position = { 20 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0 1 0 1 } position = { 60 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0 0 1 1 } position = { 100 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 1 0 1 } position = { 140 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 0 1 1 } position = { 180 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0 1 1 1 } position = { 220 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 0.5 0 1 } position = { 260 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 1 1 1 } position = { 300 10 } size = { 30 30 } }
+	icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } position = { 340 10 } size = { 30 30 } }
+	textbox = { raw_text = "13a" position = { 20 60 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13a" position = { 20 78 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = corneredstretched spriteborder = { 8 8 } texture_density = 1 } }
+	textbox = { raw_text = "13b" position = { 20 190 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13b" position = { 20 208 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = corneredstretched spriteborder = { 8 8 } texture_density = 2 } }
+	textbox = { raw_text = "13c" position = { 20 320 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13c" position = { 20 338 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = corneredtiled spriteborder = { 8 8 } texture_density = 2 } }
+	textbox = { raw_text = "13d" position = { 20 450 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13d" position = { 20 468 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = corneredtiled texture_density = 2 } }
+	textbox = { raw_text = "13e" position = { 20 580 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13e" position = { 20 598 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteborder = { 8 8 } texture_density = 2 } }
+	textbox = { raw_text = "13f" position = { 20 710 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13f" position = { 20 728 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = stretched spriteborder = { 8 8 } texture_density = 2 } }
+	textbox = { raw_text = "13g" position = { 20 840 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13g" position = { 20 858 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = corneredstretched spriteborder = { 8 8 } texture_density = 1 spriteborder_left = 16 } }
+	textbox = { raw_text = "13h" position = { 240 60 } size = { 40 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13h" position = { 240 78 } size = { 12 12 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 12 12 } spriteType = corneredstretched spriteborder = { 8 8 } texture_density = 1 } }
+	textbox = { raw_text = "13i" position = { 240 102 } size = { 80 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13i" position = { 240 120 } size = { 80 80 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 80 80 } mirror = horizontal } }
+	textbox = { raw_text = "13j" position = { 240 212 } size = { 80 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13j" position = { 240 230 } size = { 80 80 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 80 80 } mirror = vertical } }
+	textbox = { raw_text = "13k" position = { 240 322 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13k" position = { 240 340 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/slice.dds" size = { 200 100 } spriteType = corneredstretched spriteborder = { 8 8 } texture_density = 1 spriteborder_left = 16 mirror = horizontal } }
+	textbox = { raw_text = "13l" position = { 240 452 } size = { 100 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13l" position = { 240 470 } size = { 100 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 100 100 } fittype = centercrop } }
+	textbox = { raw_text = "13m" position = { 240 582 } size = { 100 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13m" position = { 240 600 } size = { 100 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 100 100 } fittype = center } }
+	textbox = { raw_text = "13n" position = { 240 712 } size = { 100 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13n" position = { 240 730 } size = { 100 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 100 100 } fittype = start } }
+	textbox = { raw_text = "13o" position = { 240 842 } size = { 100 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13o" position = { 240 860 } size = { 100 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 100 100 } fittype = end } }
+	textbox = { raw_text = "13p" position = { 460 60 } size = { 100 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13p" position = { 460 78 } size = { 100 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 100 100 } fittype = fill } }
+	textbox = { raw_text = "13q" position = { 460 190 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13q" position = { 460 208 } size = { 200 50 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 200 50 } fittype = centercrop } }
+	textbox = { raw_text = "13r" position = { 460 270 } size = { 100 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13r" position = { 460 288 } size = { 100 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/wide.dds" size = { 100 100 }  } }
+	textbox = { raw_text = "13s" position = { 460 400 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13s" position = { 460 418 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/gray.dds" size = { 200 100 } color = { 2 2 2 1 } } }
+	textbox = { raw_text = "13t" position = { 460 530 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13t" position = { 460 548 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/white.dds" size = { 200 100 } color = { 200 20 0 1 } } }
+	textbox = { raw_text = "13u" position = { 460 660 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13u" position = { 460 678 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/white.dds" size = { 200 100 } color = { 1 0 0 0.5 } } }
+	textbox = { raw_text = "13v" position = { 460 790 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13v" position = { 460 808 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/white.dds" size = { 200 100 } tintcolor = { 1 0 0 1 } } }
+	textbox = { raw_text = "13w" position = { 680 60 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13w" position = { 680 78 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/white.dds" size = { 200 100 } alpha = 0.5 } }
+	textbox = { raw_text = "13x" position = { 680 190 } size = { 200 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13x" position = { 680 208 } size = { 200 100 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } widget = { size = { 200 100 } alpha = 0.5 icon = { texture = "gfx/interface/pmt_probe/white.dds" size = { 100% 100% }  } } }
+	textbox = { raw_text = "13y" position = { 680 320 } size = { 40 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13y" position = { 680 338 } size = { 40 40 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/frames.dds" size = { 40 40 } framesize = { 40 40 } frame = 3 } }
+	textbox = { raw_text = "13z" position = { 680 390 } size = { 40 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_13z" position = { 680 408 } size = { 40 40 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } button = { texture = "gfx/interface/pmt_probe/frames.dds" size = { 40 40 } framesize = { 40 40 } upframe = 2 } }
+	textbox = { raw_text = "14a" position = { 680 460 } size = { 40 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_14a" position = { 680 478 } size = { 40 40 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } button = { texture = "gfx/interface/pmt_probe/frames.dds" size = { 40 40 } framesize = { 40 40 } frame = 3 upframe = 2 } }
+	textbox = { raw_text = "14b" position = { 680 530 } size = { 40 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_14b" position = { 680 548 } size = { 40 40 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } icon = { texture = "gfx/interface/pmt_probe/frames.dds" size = { 40 40 } framesize = { 40 40 } frame = 9 } }
+	textbox = { raw_text = "14c" position = { 680 600 } size = { 400 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_14c" position = { 680 618 } size = { 400 40 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } hbox = { icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0 0 1 1 } size = { 4 30 } layoutpolicy_horizontal = fixed layoutpolicy_vertical = fixed } icon = { texture = "gfx/interface/pmt_probe/odd.dds"  texture_density = 3 color = { 1 1 0 1 } } icon = { texture = "gfx/interface/pmt_probe/odd.dds"  texture_density = 3 color = { 1 1 0 1 } } icon = { texture = "gfx/interface/pmt_probe/odd.dds"  texture_density = 3 color = { 1 1 0 1 } } icon = { texture = "gfx/interface/pmt_probe/odd.dds"  texture_density = 3 color = { 1 1 0 1 } } icon = { texture = "gfx/interface/pmt_probe/odd.dds"  texture_density = 3 color = { 1 1 0 1 } } icon = { texture = "gfx/interface/pmt_probe/odd.dds"  texture_density = 3 color = { 1 1 0 1 } } icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 0 1 1 } size = { 4 30 } layoutpolicy_horizontal = fixed layoutpolicy_vertical = fixed } expand = {} } }
+	textbox = { raw_text = "14d" position = { 680 670 } size = { 400 16 }  fontsize = 13 fontcolor = { 0.6 0.6 0.6 1 } }
+	widget = { name = "case_14d" position = { 680 688 } size = { 400 40 }  icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0.3 0.3 0.3 1 } size = { 100% 100% } } hbox = { icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 0 0 1 1 } size = { 4 30 } layoutpolicy_horizontal = fixed layoutpolicy_vertical = fixed } icon = { texture = "gfx/interface/pmt_probe/strip3.dds"  framesize = { 33.3333 20 } } icon = { texture = "gfx/interface/pmt_probe/strip3.dds"  framesize = { 33.3333 20 } } icon = { texture = "gfx/interface/pmt_probe/strip3.dds"  framesize = { 33.3333 20 } } icon = { texture = "gfx/interface/pmt_probe/strip3.dds"  framesize = { 33.3333 20 } } icon = { texture = "gfx/interface/pmt_probe/strip3.dds"  framesize = { 33.3333 20 } } icon = { texture = "gfx/interface/pmt_probe/strip3.dds"  framesize = { 33.3333 20 } } icon = { texture = "gfx/interface/pmt_probe/white.dds" color = { 1 0 1 1 } size = { 4 30 } layoutpolicy_horizontal = fixed layoutpolicy_vertical = fixed } expand = {} } }
+}

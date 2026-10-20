@@ -49,6 +49,69 @@ public sealed class NewCompatchTests : IDisposable
     }
 
     [Fact]
+    public void Eu4_keeps_star_or_the_version_of_mod_a()
+    {
+        var star = NewCompatch.Create(_root, "Ohne", ModMetadata.ClassicSiblingMetadataFile, new[] { new NewCompatchTarget("A", null) }, null, "1.37.2");
+        var fromMod = NewCompatch.Create(_root, "Mit", ModMetadata.ClassicSiblingMetadataFile, new[] { new NewCompatchTarget("A", null) }, "1.37.*.*", "1.37.2");
+
+        Assert.Contains("supported_version=\"*\"", File.ReadAllText(Path.Combine(star.Folder, "descriptor.mod")));
+        Assert.Contains("supported_version=\"1.37.*.*\"", File.ReadAllText(Path.Combine(fromMod.Folder, "descriptor.mod")));
+    }
+
+    [Theory]
+    [InlineData(null, "v4.5.2", "v4.5.*")]
+    [InlineData("*", "v4.5.2", "v4.5.*")]
+    [InlineData("v4.*.*", "v4.5.2", "v4.5.*")]
+    [InlineData("v4.*", "Cygnus v4.5.2 (9776)", "v4.5.*")]
+    [InlineData(null, "4.5.2", "v4.5.*")]
+    [InlineData("v4.4.*", "v4.5.2", "v4.4.*")]
+    [InlineData("v4.5.2", "v4.5.3", "v4.5.2")]
+    [InlineData("4.5.*", null, "v4.5.*")]
+    [InlineData("v4.5", null, "v4.5.*")]
+    [InlineData("v4.*.*", null, "*")]
+    [InlineData(null, null, "*")]
+    public void Stellaris_writes_only_exact_or_major_minor_star(string? fromMod, string? installed, string expected)
+    {
+        // Stellaris meldet "Invalid supported_version" für alles außer v4.5.2 und v4.5.* (gemessen 2026-10-16)
+        Assert.Equal(expected, NewCompatch.SupportedVersion(fromMod, installed, majorMinor: true));
+    }
+
+    [Fact]
+    public void Stellaris_descriptor_gets_the_installed_major_minor()
+    {
+        var result = NewCompatch.Create(_root, "Stellaris Patch", ModMetadata.ClassicSiblingMetadataFile, new[] { new NewCompatchTarget("A", null) }, "v4.*.*", "v4.5.2",
+            majorMinorSupportedVersion: true);
+
+        Assert.Contains("supported_version=\"v4.5.*\"", File.ReadAllText(Path.Combine(result.Folder, "descriptor.mod")));
+        Assert.Contains("supported_version=\"v4.5.*\"", File.ReadAllText(Path.Combine(_root, "Stellaris Patch.mod")));
+    }
+
+    [Fact]
+    public void Other_games_keep_their_supported_version_unchanged()
+    {
+        Assert.Equal("*", NewCompatch.SupportedVersion(null, "v4.5.2", majorMinor: false));
+        Assert.Equal("v4.*.*", NewCompatch.SupportedVersion("v4.*.*", "v4.5.2", majorMinor: false));
+    }
+
+    [Fact]
+    public void Shipped_stellaris_profile_asks_for_major_minor_versions()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ParadoxModTool.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        bool Flag(string file) => ParadoxModTool.GameProfiles.GameProfileLoader.LoadFromFile(Path.Combine(dir!.FullName, "profiles", file)).SupportedVersionMajorMinor;
+
+        Assert.True(Flag("stellaris.json"));
+        Assert.False(Flag("eu4.json"));
+        Assert.False(Flag("ck3.json"));
+        Assert.False(Flag("eu5.json"));
+        Assert.False(Flag("vic3.json"));
+    }
+
+    [Fact]
     public void Invalid_name_or_existing_folder_is_rejected()
     {
         Assert.Throws<CompatchInputException>(() => NewCompatch.Create(_root, "  ", ".metadata/metadata.json", Array.Empty<NewCompatchTarget>(), null));

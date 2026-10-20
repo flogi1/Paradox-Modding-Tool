@@ -59,7 +59,7 @@ public static class PatchRunner
         PatchContext context, PatchRecipe recipe, IReadOnlyDictionary<string, SkippedRow> forced, CancellationToken ct, IProgress<(int Done, int Total)>? progress)
     {
         ct.ThrowIfCancellationRequested();
-        var workspace = new PatchWorkspace(context.ModRoot, context.VanillaRoot);
+        var workspace = new PatchWorkspace(context.ModRoot, context.VanillaRoot, context.NewFileHasBom);
         var memory = PatchRecipeStore.LoadMemory(context.EffectiveRecipesFolder, recipe.Id);
         var table = ColumnResolver.Resolve(recipe, workspace);
         var ctx = new RuleRunContext(recipe, workspace, table, memory) { ForcedSkips = forced };

@@ -23,6 +23,9 @@
     <None Include="..\..\profiles\eu5.json" Link="profiles\eu5.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\profiles\hoi4.json" Link="profiles\hoi4.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\profiles\ck3.json" Link="profiles\ck3.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

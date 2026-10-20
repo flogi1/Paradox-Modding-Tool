@@ -1,0 +1,189 @@
+[17:14:03][dlc.cpp:1847]: Could not find files for mod: D:\SteamLibrary\steamapps\workshop\content\281990\3253479588
+[17:14:03][dlc.cpp:346]: Invalid supported_version in  file: mod/Flogi Slavemarket.mod line: 6
+[17:14:03][dlc.cpp:346]: Invalid supported_version in  file: mod/Flogi's Galaxy Sizes.mod line: 6
+[17:14:03][dlc.cpp:346]: Invalid supported_version in  file: mod/ugc_1199002146.mod line: 9
+[17:14:03][persistent.cpp:41]: Error: "Unexpected token: dependencies, near line: 7
+" in file: "mod/ugc_2798297351.mod" near line: 8
+[17:14:03][persistent.cpp:41]: Error: "Unexpected token: dependancies, near line: 6
+" in file: "mod/ugc_2975286025.mod" near line: 9
+[17:14:04][localization_reader.cpp:147]: Expected colon(:) at line 5 and column 23 in localisation/english/pmt_probe_l_english.yml
+[17:14:04][localize.cpp:1975]: Localization file 'localisation/english/pmt_probe_no_bom_l_english.yml' should be in in utf-8-bom encoding
+[17:14:04][localization_reader.cpp:83]: Missing UTF8 BOM in localisation/english/pmt_probe_no_bom_l_english.yml
+[17:14:07][persistent.cpp:41]: Error: "Unexpected token: pmt_probe_invalid_gfx_token, near line: 7
+" in file: "interface/pmt_probe.gfx" near line: 7
+[17:14:07][persistent.cpp:41]: Error: "Unexpected token: pmt_probe_invalid_property, near line: 6
+" in file: "interface/pmt_probe.gui" near line: 6
+[17:14:07][3dicontype.cpp:20]: Inexistent sprite type "GFX_pmt_probe_unknown_sprite" referenced at file: interface/pmt_probe.gui line: 9
+[17:14:09][texturehandler.cpp:66]: Texture Handler encountered missing texture file: gfx/interface/pmt_probe_missing.dds
+[17:14:09][texturehandler.cpp:350]: Couldn't find texture file: gfx/interface/pmt_probe_missing.dds.
+[17:14:09][spritetype.cpp:317]: Error initialising texture: gfx/interface/pmt_probe_missing.dds for spritetype GFX_pmt_probe_missing_texture
+[17:14:15][modifier.cpp:3279]: Missing modifier localization: pmt_probe_static_modifier
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: print_scope_effect already exists, using the one at  file: common/scripted_effects/00_scripted_effects.txt line: 16
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: pmt_order_c3 already exists, using the one at  file: common/scripted_effects/_pmt_c3.txt line: 2
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: pmt_order_c1 already exists, using the one at  file: common/scripted_effects/a_pmt_c1.txt line: 2
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: pmt_order_c2 already exists, using the one at  file: common/scripted_effects/a_pmt_c2.txt line: 2
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: pmt_probe_dupe already exists, using the one at  file: common/scripted_effects/pmt_probe_effects_dupe.txt line: 2
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: wilderness_get_natural_blocker_name already exists, using the one at  file: common/scripted_effects/zz_pmt_order_a.txt line: 2
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: pmt_order_m2 already exists, using the one at  file: common/scripted_effects/zz_pmt_order_a.txt line: 6
+[17:14:15][game_singleobjectdatabase.h:170]: Object with key: pmt_order_m1 already exists, using the one at  file: common/scripted_effects/zz_pmt_order_b.txt line: 2
+[17:14:16][persistent.cpp:41]: Error: "Unexpected token: pmt_probe_missing_resource, near line: 11
+" in file: "common/buildings/pmt_probe_buildings.txt" near line: 11
+[17:14:16][building_type.cpp:762]: Building 'building_pmt_probe' is lacking the building_sets definition.
+[17:14:26][effect.cpp:471]: Error: "Malformed token: @pmt_probe_missing_variable, near line: 19
+" in file: "events/pmt_probe_events.txt" near line: 19
+[17:14:26][effect.cpp:471]: Error: "Unexpected token: pmt_probe_missing_resource, near line: 20
+" in file: "events/pmt_probe_events.txt" near line: 20
+[17:14:26][eventpicture.cpp:43]: pmt_probe.2 is referencing non-existent event picture GFX_evt_pmt_probe_missing
+[17:14:26][eventmanager.cpp:427]: an event with id [pmt_probe.3] already exists!  file: events/pmt_probe_events.txt line: 54
+[17:14:26][event.cpp:1508]: Event pmt_probe.4 has neither MTTH nor is_triggered_only = yes, so it will try to fire every day (if you really want to do this, specify mean_time_to_happen = { days = 1 } )
+[17:14:26][event.cpp:1270]: Event pmt_probe_other.5 at  file: events/pmt_probe_events.txt line: 70 has an invalid ID
+[17:14:26][effect.cpp:529]: Wrong scope for effect 'add_resource' at  file: events/pmt_probe_events.txt line: 86
+Current Scope: colony
+Supported Scopes: country
+[17:14:26][effect.cpp:471]: Error: "Malformed token: pmt_probe_bad_value, near line: 91
+" in file: "events/pmt_probe_events.txt" near line: 91
+[17:14:26][event.cpp:1270]: Event pmt_probe_nons.1 at  file: events/pmt_probe_no_namespace.txt line: 3 has an invalid ID
+[17:14:26][eventmanager.cpp:427]: an event with id [tutorial.503] already exists!  file: events/tutorial_events.txt line: 333
+[17:14:26][eventmanager.cpp:427]: an event with id [pmt_order.12] already exists!  file: events/zz_pmt_order_a.txt line: 4
+[17:14:26][eventmanager.cpp:427]: an event with id [ancrel.150] already exists!  file: events/zz_pmt_order_ancrel.txt line: 4
+[17:14:26][eventmanager.cpp:427]: an event with id [pmt_order.11] already exists!  file: events/zz_pmt_order_b.txt line: 4
+[17:14:26][onaction.cpp:104]: OnAction "on_game_start_country" is referencing an invalid event: "pmt_probe.998"
+[17:14:28][parser_deferred_database_objects.cpp:84]: Failed to deferred read key reference pmt_probe_missing_modifier from database  file: events/pmt_probe_events.txt line: 17
+[17:14:28][building_type.cpp:747]: Missing building Localization Key: building_pmt_probe
+[17:14:28][building_type.cpp:747]: Missing building Localization Key: building_pmt_probe_desc
+[17:14:28][building_type.cpp:830]: No category assigned to building type building_pmt_probe
+[17:14:28][building_type.cpp:844]: Building building_pmt_probe is missing texture gfx/interface/icons/buildings/building_pmt_probe.dds
+[17:14:31][modifier.cpp:2829]: Missing modifier scripted icon gfx/interface/icons/modifiers/pmt_probe_missing_icon.dds
+[17:14:32][modifier.cpp:4256]: Invalid modifier pmt_probe_unknown_modifier_add at  file: common/static_modifiers/pmt_probe_modifiers.txt line: 4
+[17:14:32][trigger_impl.cpp:1706]: Scripted Trigger pmt_probe_unknown_trigger_in_building is invalid at  file: common/buildings/pmt_probe_buildings.txt line: 6
+[17:14:32][trigger_impl.cpp:1706]: Scripted Trigger pmt_probe_unknown_trigger is invalid at  file: events/pmt_probe_events.txt line: 14
+[17:14:33][trigger_impl.cpp:1706]: Scripted Trigger pmt_probe_unknown_trigger_in_scripted_trigger is invalid at  common/scripted_triggers/pmt_probe_triggers.txt:3 @ in scripted trigger pmt_probe_trigger at file: events/pmt_probe_events.txt line: 25
+[17:14:33][trigger_impl.cpp:1677]: [ file: common/buildings/pmt_probe_buildings.txt line: 6]: Error in scripted trigger, cannot find: pmt_probe_unknown_trigger_in_building
+[17:14:33][trigger_impl.cpp:1677]: [ file: events/pmt_probe_events.txt line: 14]: Error in scripted trigger, cannot find: pmt_probe_unknown_trigger
+[17:14:33][trigger_impl.cpp:1677]: [ common/scripted_triggers/pmt_probe_triggers.txt:3 @ in scripted trigger pmt_probe_trigger at file: events/pmt_probe_events.txt line: 25]: Error in scripted trigger, cannot find: pmt_probe_unknown_trigger_in_scripted_trigger
+[17:14:35][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_order_ctrl_a.txt line: 83, could not find event: pmt_order.15
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_same_a at  file: events/pmt_order_ctrl_a.txt line: 112
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_s0 at  file: events/pmt_order_ctrl_a.txt line: 132
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_a1 at  file: events/pmt_order_ctrl_a.txt line: 142
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_a2 at  file: events/pmt_order_ctrl_a.txt line: 152
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_b1 at  file: events/pmt_order_ctrl_a.txt line: 162
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_rp_b2 at  file: events/pmt_order_ctrl_a.txt line: 172
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_order_same at  file: events/pmt_order_ctrl_a.txt line: 182
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_sub_pmt_s0 at  file: events/pmt_order_ctrl_a.txt line: 202
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_sub_pmt_s1 at  file: events/pmt_order_ctrl_a.txt line: 212
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_sub_pmt_s2 at  file: events/pmt_order_ctrl_a.txt line: 222
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_rp1_pmt_rp_a1 at  file: events/pmt_order_ctrl_a.txt line: 232
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_a_pmt_rp2_pmt_rp_a2 at  file: events/pmt_order_ctrl_a.txt line: 242
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_pmt_rp1_pmt_rp_b1 at  file: events/pmt_order_ctrl_a.txt line: 252
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_order_file_b_pmt_rp2_pmt_rp_b2 at  file: events/pmt_order_ctrl_a.txt line: 262
+
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_probe_unknown_effect at  file: events/pmt_probe_events.txt line: 12
+
+[17:14:35][effect_impl.cpp:1839]: Error in fire event effect at  file: events/pmt_probe_events.txt line: 28, could not find event: pmt_probe.999
+[17:14:35][effect_impl.cpp:825]: Script Error: Invalid scripted effect: pmt_probe_unknown_effect_in_scripted at  common/scripted_effects/pmt_probe_effects.txt:3 @ scripted effect pmt_probe_effect at file: events/pmt_probe_events.txt line: 22
+
+[17:14:37][trigger_impl.cpp:1706]: Scripted Trigger pmt_probe_unknown_trigger_in_scripted is invalid at  common/scripted_effects/pmt_probe_effects.txt:5 @ scripted effect pmt_probe_effect at file: events/pmt_probe_events.txt line: 22
+[17:14:37][trigger_impl.cpp:1677]: [ common/scripted_effects/pmt_probe_effects.txt:5 @ scripted effect pmt_probe_effect at file: events/pmt_probe_events.txt line: 22]: Error in scripted trigger, cannot find: pmt_probe_unknown_trigger_in_scripted
+[17:15:19][game_text.cpp:1287]: Unknown property `GetName` in text: GetName]
+[17:15:19][game_text.cpp:1531]: Unknown promotion `FromFrom` in text: FromFrom.GetName]
+[17:15:19][game_text.cpp:1531]: Unknown promotion `FromFromFrom` in text: FromFromFrom.GetName]
+[17:15:19][game_text.cpp:1531]: Unknown promotion `FromFromFromFrom` in text: FromFromFromFrom.GetName]
+[17:15:19][game_text.cpp:1287]: Unknown property `GetStarName` in text: GetStarName]
+[17:15:19][game_text.cpp:1531]: Unknown promotion `Planet` in text: Planet.GetName]
+[17:15:19][game_text.cpp:1531]: Unknown promotion `Sector` in text: Sector.GetName]
+[17:15:19][eventtarget.cpp:3849]: Undefined event target: pmt_probe_missing_target, location:  file: events/pmt_probe_events.txt line: 84
+[17:15:19][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 84, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 3967304747 }
+random_allowed=yes
+saved_event_target=
+{
+	type=leader
+	id=88
+	opener_id=4294967295
+	name="governor_leader"
+}
+
+[17:15:19][effect_impl.cpp:242]: Script Error: Invalid context switch [from] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 85, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 3967304747 }
+random_allowed=yes
+saved_event_target=
+{
+	type=leader
+	id=88
+	opener_id=4294967295
+	name="governor_leader"
+}
+
+[17:15:19][effect.cpp:723]: Wrong scope for effect 'add_resource' at  file: events/pmt_probe_events.txt line: 86
+Current Scope: colony
+Supported Scopes: country
+[17:15:22][game_text.cpp:1287]: Unknown property `GetPmtUnknownFunction` in text: GetPmtUnknownFunction] and 
+[17:15:34][eventtarget.cpp:3849]: Undefined event target: pmt_probe_missing_target_monthly, location:  file: events/pmt_probe_events.txt line: 103
+[17:15:34][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 1205455410 }
+random_allowed=yes
+
+[17:15:34][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 1089222710 }
+random_allowed=yes
+
+[17:15:35][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 2329087904 }
+random_allowed=yes
+
+[17:15:35][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 1971276795 }
+random_allowed=yes
+
+[17:15:35][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 2484524963 }
+random_allowed=yes
+
+[17:15:36][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 3229935511 }
+random_allowed=yes
+
+[17:15:36][effect_impl.cpp:242]: Script Error: Invalid context switch [event_target:pmt_probe_missing_target_monthly] from United Nations of Earth [country], file: events/pmt_probe_events.txt line: 103, Scope: 
+type=country
+id=0
+opener_id=4294967295
+random={ 0 224948927 }
+random_allowed=yes
+

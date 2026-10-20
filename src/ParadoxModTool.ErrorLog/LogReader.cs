@@ -5,7 +5,9 @@ using System.Text.RegularExpressions;
 namespace ParadoxModTool.ErrorLog;
 
 /// <summary>
-/// Liest EU-V- und CK-III-Logs zeilenweise. Jede Zeile hat die Hülle <c>[HH:MM:SS][quelle.cpp:N]: Meldung</c> (CK III mit Level: <c>[HH:MM:SS][E][quelle.cpp:N]:</c>); Zeilen ohne Hülle (eingerückt oder nicht)
+/// Liest die Logs zeilenweise. Jede Zeile hat die Hülle <c>[HH:MM:SS][quelle.cpp:N]: Meldung</c> (CK III mit Level: <c>[HH:MM:SS][E][quelle.cpp:N]:</c>,
+/// Hearts of Iron IV mit Spieldatum: <c>[HH:MM:SS][1936.01.01.12][quelle.cpp:N]:</c> oder <c>[no_game_date]</c>, EU IV ohne Uhrzeit:
+/// <c>[quelle.cpp:N]:</c>, dann nur mit einer Quelle auf .cpp/.h/.hpp, damit Folgezeilen wie <c>[events/x.txt:12]: …</c> Folgezeilen bleiben); Zeilen ohne Hülle (eingerückt oder nicht)
 /// gehören zur vorigen Meldung. Die Datei wird geteilt geöffnet, weil das Spiel sie offen hält. Rotation (Spielstart benennt error.log in
 /// error.1.log um) erkennt <see cref="ReadFrom"/> an kleinerer Größe oder geändertem Dateianfang (Plan-Ruling 6).
 /// </summary>
@@ -14,7 +16,7 @@ public static class LogReader
     private const int HeadLength = 64;
 
     private static readonly Regex Envelope = new(
-        @"^\[(?<time>\d{2}:\d{2}:\d{2})\](?:\[[A-Z]\])?\[(?<source>[^\]:]+)(?::(?<sline>\d+))?\]:\s*(?<msg>.*)$",
+        @"^(?:\[(?<time>\d{2}:\d{2}:\d{2})\](?:\[[A-Z]\])?(?:\[(?<date>no_game_date|\d+(?:\.\d+){2,3})\])?\[(?<source>[^\]:]+)|\[(?<source>[^\]:]+\.(?:cpp|h|hpp)))(?::(?<sline>\d+))?\]:\s*(?<msg>.*)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static List<LogLine> Parse(IEnumerable<string> lines, int firstLineNumber = 1, int part = 0)
@@ -39,7 +41,8 @@ public static class LogReader
                     match.Groups["sline"].Success ? int.Parse(match.Groups["sline"].Value, CultureInfo.InvariantCulture) : null,
                     match.Groups["msg"].Value.Trim(),
                     number,
-                    Part: part));
+                    Part: part,
+                    GameDate: match.Groups["date"].Success ? match.Groups["date"].Value : null));
                 continue;
             }
 

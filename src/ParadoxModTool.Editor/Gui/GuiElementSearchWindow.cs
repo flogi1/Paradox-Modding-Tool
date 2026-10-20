@@ -10,9 +10,9 @@ using ParadoxModTool.GuiDesign.Resolve;
 namespace ParadoxModTool.Editor.Gui;
 
 /// <summary>
-/// Suchfenster "GUI-Element inspizieren": alle Typen, Templates und benannten Widgets aus Spiel und Mod, filterbar nach Name und Art
-/// (Plan-Rulings 6 und 7). Enter, Doppelklick oder "Inspizieren" öffnet den Eintrag im GUI-Inspektor. Die Liste entsteht im Hintergrund
-/// und neu, sobald ein neuer GUI-Index da ist.
+/// Suchfenster "GUI-Element inspizieren": alle Typen, Templates und benannten Widgets aus Spiel und Mod, dazu die unbenannten obersten
+/// Fenster jeder Datei unter ihrem Dateinamen; filterbar nach Name, Dateipfad und Art (Plan-Rulings 6 und 7). Enter, Doppelklick oder
+/// "Inspizieren" öffnet den Eintrag im GUI-Inspektor. Die Liste entsteht im Hintergrund und neu, sobald ein neuer GUI-Index da ist.
 /// </summary>
 public sealed class GuiElementSearchWindow : Window
 {
@@ -25,7 +25,7 @@ public sealed class GuiElementSearchWindow : Window
     {
         public string Name => Entry.Name;
 
-        public string KindText => GuiTexts.KindOf(Entry.Kind);
+        public string KindText => Entry.IsUnnamed ? GuiTexts.KindUnnamedRoot : GuiTexts.KindOf(Entry.Kind);
 
         public string BaseWidget => GuiWidgetKinds.Normalize(Entry.BaseWidget);
 
@@ -35,7 +35,8 @@ public sealed class GuiElementSearchWindow : Window
     }
 
     private readonly TextBox _search = new() { MinWidth = 240, Margin = new Thickness(0, 0, 12, 0) };
-    private readonly ComboBox _filter = new() { Width = 150 };
+    private readonly TextBox _fileSearch = new() { MinWidth = 180, Margin = new Thickness(0, 0, 12, 0) };
+    private readonly ComboBox _filter = new() { Width = 200 };
     private readonly ListView _list = new();
     private readonly TextBlock _count = new() { VerticalAlignment = VerticalAlignment.Center };
     private readonly Button _inspect = new() { Padding = new Thickness(10, 2, 10, 2), IsEnabled = false };
@@ -44,6 +45,7 @@ public sealed class GuiElementSearchWindow : Window
     private ListCollectionView? _view;
     private int _total;
     private string _text = string.Empty;
+    private string _fileText = string.Empty;
     private GuiElementFilter _filterValue = GuiElementFilter.All;
     private CancellationTokenSource? _run;
 
@@ -59,17 +61,18 @@ public sealed class GuiElementSearchWindow : Window
         _filter.ItemsSource = Enum.GetValues<GuiElementFilter>().Select(filter => new FilterChoice(filter)).ToList();
         _filter.SelectedIndex = 0;
         _filter.SelectionChanged += (_, _) => ApplyFilter();
-        _search.TextChanged += (_, _) =>
-        {
-            _filterTimer.Stop();
-            _filterTimer.Start();
-        };
+        _search.TextChanged += (_, _) => RestartFilterTimer();
+        _fileSearch.TextChanged += (_, _) => RestartFilterTimer();
+        _fileSearch.ToolTip = GuiTexts.SearchFileTip;
         _filterTimer.Tick += (_, _) =>
         {
             _filterTimer.Stop();
             ApplyFilter();
         };
-        _search.PreviewKeyDown += (_, e) =>
+        // Enter und Pfeil runter wirken in beiden Suchfeldern gleich (HotkeyCatalog gui.inspect, gui.toList).
+        _search.PreviewKeyDown += OnSearchKeyDown;
+        _fileSearch.PreviewKeyDown += OnSearchKeyDown;
+        void OnSearchKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -86,7 +89,8 @@ public sealed class GuiElementSearchWindow : Window
                 _list.Focus();
                 e.Handled = true;
             }
-        };
+        }
+
         _list.KeyDown += (_, e) =>
         {
             if (e.Key == Key.Enter)
@@ -112,6 +116,8 @@ public sealed class GuiElementSearchWindow : Window
         var top = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
         top.Children.Add(new TextBlock { Text = GuiTexts.SearchName, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) });
         top.Children.Add(_search);
+        top.Children.Add(new TextBlock { Text = GuiTexts.SearchFile, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) });
+        top.Children.Add(_fileSearch);
         top.Children.Add(new TextBlock { Text = GuiTexts.SearchKind, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) });
         top.Children.Add(_filter);
 
@@ -143,6 +149,12 @@ public sealed class GuiElementSearchWindow : Window
     }
 
     public event EventHandler<GuiInspectTarget>? InspectRequested;
+
+    private void RestartFilterTimer()
+    {
+        _filterTimer.Stop();
+        _filterTimer.Start();
+    }
 
     private static GridViewColumn Column(string header, string path, double width) =>
         new() { Header = header, DisplayMemberBinding = new Binding(path), Width = width };
@@ -200,6 +212,7 @@ public sealed class GuiElementSearchWindow : Window
     private void ApplyFilter()
     {
         _text = _search.Text.Trim();
+        _fileText = _fileSearch.Text.Trim();
         _filterValue = (_filter.SelectedItem as FilterChoice)?.Filter ?? GuiElementFilter.All;
         if (_view is null)
         {
@@ -210,7 +223,7 @@ public sealed class GuiElementSearchWindow : Window
         _count.Text = GuiTexts.SearchCount(_view.Count, _total);
     }
 
-    private bool Accept(object item) => item is Row row && GuiElementSearch.Matches(row.Entry, _text, _filterValue);
+    private bool Accept(object item) => item is Row row && GuiElementSearch.Matches(row.Entry, _text, _filterValue, _fileText);
 
     private void InspectSelected(bool firstIfNone)
     {

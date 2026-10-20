@@ -47,7 +47,17 @@ public static class SaveFiles
         if (readable && newline >= 0)
         {
             var metadata = head[(newline + 1)..];
-            if (metadata.StartsWith(metadataBlock + "={", StringComparison.Ordinal))
+            if (metadataBlock.Length == 0)
+            {
+                // Hearts of Iron IV: kein Metadaten-Block; die Angaben stehen als Werte auf oberster Ebene vor dem ersten Block.
+                var firstBlock = metadata.IndexOf("={", StringComparison.Ordinal);
+                metadata = firstBlock < 0 ? metadata : metadata[..firstBlock];
+                foreach (Match match in MetadataField(dateField).Matches(metadata))
+                {
+                    fields.TryAdd(match.Groups[1].Value, match.Groups[2].Success ? match.Groups[2].Value : match.Groups[3].Value);
+                }
+            }
+            else if (metadata.StartsWith(metadataBlock + "={", StringComparison.Ordinal))
             {
                 // Nur der Metadaten-Block: er endet mit der ersten schließenden Klammer in Spalte 0.
                 var end = metadata.IndexOf("\n}", StringComparison.Ordinal);

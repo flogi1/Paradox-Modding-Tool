@@ -230,7 +230,7 @@ public static class GeneratorCli
     {
         var found = Directory.Exists(modFolder)
             ? Directory.EnumerateDirectories(modFolder, "*", SearchOption.AllDirectories)
-                .Where(d => string.Equals(Path.GetFileName(Path.GetDirectoryName(d)), "localization", StringComparison.OrdinalIgnoreCase))
+                .Where(d => ParadoxModTool.GameProfiles.LocalizationFolders.IsName(Path.GetFileName(Path.GetDirectoryName(d))))
                 .Select(Path.GetFileName)
                 .OfType<string>()
                 .Distinct(StringComparer.OrdinalIgnoreCase)

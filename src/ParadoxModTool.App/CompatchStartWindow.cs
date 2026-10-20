@@ -429,7 +429,10 @@ public sealed class CompatchStartWindow : Window
 
                 var created = NewCompatch.Create(_host.ModRoot, _name.Text, _host.MetadataFile,
                     new[] { _a, _b }.Select(p => new NewCompatchTarget(p.Name, ModMetadata.Read(p.Folder, _host.MetadataFile)?.Id)).ToList(),
-                    ModMetadata.Read(_a.Folder, _host.MetadataFile)?.SupportedGameVersion);
+                    ModMetadata.Read(_a.Folder, _host.MetadataFile)?.SupportedGameVersion,
+                    // Stellaris nimmt im Deskriptor nur vX.Y.Z oder vX.Y.*; fehlt das bei Mod A, gilt die installierte Version
+                    _host.Profile?.SupportedVersionMajorMinor == true ? InstalledVersion() : null,
+                    _host.Profile?.SupportedVersionMajorMinor == true);
                 target = _host.Registry.Add(_name.Text.Trim(), created.Folder);
                 _host.Registry.SetCompatch(target.Id, targets);
                 if (created.WithoutDependency.Count > 0)

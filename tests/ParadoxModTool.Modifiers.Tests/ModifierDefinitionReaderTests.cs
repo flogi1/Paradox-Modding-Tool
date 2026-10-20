@@ -16,6 +16,39 @@ public class ModifierDefinitionReaderTests
     }
 
     [Fact]
+    public void Reader_reads_hoi4_value_type_and_precision()
+    {
+        var result = ModifierDefinitionReader.Read(
+            "a = { value_type = percentage precision = 2 }\n" +
+            "b = { value_type = percentage_in_hundred }\n" +
+            "c = { value_type = number precision = 1 }\n" +
+            "d = { value_type = yes_no }\n");
+
+        Assert.True(result["a"].Percent);
+        Assert.False(result["a"].AlreadyPercent);
+        Assert.Equal(2, result["a"].Decimals);
+        Assert.True(result["b"].Percent);
+        Assert.True(result["b"].AlreadyPercent);
+        Assert.False(result["c"].Percent);
+        Assert.Equal(1, result["c"].Decimals);
+        Assert.False(result.ContainsKey("d"));
+    }
+
+    [Fact]
+    public void Traits_read_hoi4_color_type_yes_no_and_several_categories()
+    {
+        var traits = ModifierDefinitionReader.ReadTraits(
+            "a = { color_type = bad value_type = yes_no category = army category = air }\n" +
+            "b = { color_type = good category = country }\n");
+
+        Assert.True(traits["a"].Bad);
+        Assert.True(traits["a"].Boolean);
+        Assert.Equal("army, air", traits["a"].Category);
+        Assert.False(traits["b"].Bad);
+        Assert.Equal("country", traits["b"].Category);
+    }
+
+    [Fact]
     public void SpacesAroundEqualsDoNotMatter() => Assert.True(ModifierDefinitionReader.Read("b = {\n\tpercent = yes\n}\n")["b"].Percent);
 
     [Fact]

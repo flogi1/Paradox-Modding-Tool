@@ -107,25 +107,27 @@ public sealed class GuiIndex
     /// Wirksame Definition: höchste Ebene (Mod vor Abhängigkeit vor Vanilla), innerhalb einer Ebene die zuletzt geladene, bei
     /// <see cref="GuiLayout.FirstWins"/> (Crusader Kings III) die zuerst geladene. Bei FirstWins bilden eigene Mod und Abhängigkeits-Mods eine
     /// gemeinsame Ebene, sortiert nach relativem Pfad (gemessen 2026-09-30: die Playset-Reihenfolge zählt nicht); gleicher Pfad in zwei Mods = die
-    /// eigene Mod, deren Datei die andere ersetzt.
+    /// eigene Mod, deren Datei die andere ersetzt. Ohne <see cref="GuiLayout.ModsBeforeVanilla"/> (klassisches Format, HOI IV) gilt die Ladereihenfolge über
+    /// alle Ebenen: <see cref="LastLoaded"/>.
     /// </summary>
     public GuiDefinition? Find(string name, GuiDefinitionKind kind) =>
         !_definitions.TryGetValue((kind, name), out var list) ? null
-        : Layout.FirstWins ? FirstLoaded(list, Layout.ModsBeforeVanilla)
+        : Layout.FirstWins ? FirstLoaded(list, Layout.ModsBeforeVanilla, Layout.CaseSensitive)
+        : !Layout.ModsBeforeVanilla ? LastLoaded(list, Layout.CaseSensitive)
         : list.OrderBy(d => d.File.Layer).Last();
 
     /// <summary>
     /// Wirksame Definition bei FirstWins: zuerst die Mods (eigene und Abhängigkeiten zusammen, nach Pfad), sonst Vanilla in Ladereihenfolge. Ohne
     /// <paramref name="modsBeforeVanilla"/> (Victoria 3) zählen alle Dateien gemeinsam in Ladereihenfolge (<see cref="ParadoxModTool.GameProfiles.GameLoadOrder"/>); bei gleichem Pfad
-    /// geht die höhere Ebene vor, weil ihre Datei die andere ersetzt.
+    /// geht die höhere Ebene vor, weil ihre Datei die andere ersetzt. <paramref name="caseSensitive"/>: Dateinamen mit Groß-/Kleinschreibung vergleichen.
     /// </summary>
-    public static GuiDefinition? FirstLoaded(IEnumerable<GuiDefinition> definitions, bool modsBeforeVanilla = true)
+    public static GuiDefinition? FirstLoaded(IEnumerable<GuiDefinition> definitions, bool modsBeforeVanilla = true, bool caseSensitive = false)
     {
         var all = definitions.ToList();
         if (!modsBeforeVanilla)
         {
             return all
-                .OrderBy(d => d.File.RelativePath, ParadoxModTool.GameProfiles.GameLoadOrder.Instance)
+                .OrderBy(d => d.File.RelativePath, ParadoxModTool.GameProfiles.GameLoadOrder.For(caseSensitive))
                 .ThenByDescending(d => d.File.Layer)
                 .FirstOrDefault();
         }
@@ -137,6 +139,16 @@ public sealed class GuiIndex
             .FirstOrDefault()
             ?? all.FirstOrDefault(d => d.File.Layer == GuiLayer.Vanilla);
     }
+
+    /// <summary>
+    /// Wirksame Definition, wenn Vanilla und Mods gemeinsam in Ladereihenfolge zählen und die zuletzt geladene gewinnt (HOI IV, gemessen 2026-10-17: die
+    /// Dateien eines Ordners laden vor seinen Unterordnern). Bei gleichem Pfad geht die höhere Ebene vor, weil ihre Datei die andere ersetzt.
+    /// </summary>
+    public static GuiDefinition? LastLoaded(IEnumerable<GuiDefinition> definitions, bool caseSensitive) =>
+        definitions
+            .OrderBy(d => d.File.RelativePath, ParadoxModTool.GameProfiles.GameLoadOrder.For(caseSensitive))
+            .ThenBy(d => d.File.Layer)
+            .LastOrDefault();
 
     public IReadOnlyList<GuiDefinition> FindAll(string name, GuiDefinitionKind kind) =>
         _definitions.TryGetValue((kind, name), out var list) ? list : Array.Empty<GuiDefinition>();
@@ -203,12 +215,15 @@ public sealed class GuiIndex
 
                 case GuiNodeKind.KeyedBlock when node.Name.Length > 0:
                     AddUsage(new GuiUsage(node.Name, GuiUsageKind.Widget, file, node));
-                    var name = node.Children.FirstOrDefault(c => c.Kind == GuiNodeKind.Property && c.Name == "name");
+                    // Klassisch: die Schlüssel schreiben die Spiele in jeder Schreibweise ("Name", "name"); Fenster stehen in guiTypes = { … }.
+                    var classic = Layout.IsClassic;
+                    var name = node.Children.FirstOrDefault(c =>
+                        c.Kind == GuiNodeKind.Property && string.Equals(c.Name, "name", classic ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
                     if (name is { Value.Length: > 0 })
                     {
                         Add(new GuiDefinition(
                             name.Value, GuiDefinitionKind.NamedWidget, file, node, null, node.Name,
-                            node.Parent?.Kind == GuiNodeKind.Document, null, Array.Empty<string>()));
+                            node.Parent?.Kind == GuiNodeKind.Document || (classic && IsClassicWindow(node)), null, Array.Empty<string>()));
                     }
 
                     break;
@@ -219,6 +234,11 @@ public sealed class GuiIndex
             }
         }
     }
+
+    /// <summary>Klassisches Fenster: der Block steht direkt in <c>guiTypes = { … }</c> (beliebige Schreibweise) auf oberster Dateiebene.</summary>
+    internal static bool IsClassicWindow(GuiNode node) =>
+        node.Parent is { Kind: GuiNodeKind.KeyedBlock, Parent.Kind: GuiNodeKind.Document } container
+        && string.Equals(container.Name, "guiTypes", StringComparison.OrdinalIgnoreCase);
 
     private void Add(GuiDefinition definition)
     {

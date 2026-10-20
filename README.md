@@ -1,6 +1,6 @@
 # Paradox Modding Tool (PMT)
 
-A Windows tool for modders of **Europa Universalis V**, **Crusader Kings III**, **Victoria 3** and **Europa Universalis IV**. It combines a script editor with game knowledge, search and replace across whole mods, compatibility patches between mods, an error log analyzer, and tools for publishing.
+A Windows tool for modders of **Europa Universalis V**, **Crusader Kings III**, **Victoria 3**, **Europa Universalis IV**, **Stellaris** and **Hearts of Iron IV**. It combines a script editor with game knowledge, search and replace across whole mods, compatibility patches between mods, an error log analyzer, and tools for publishing.
 
 PMT is not affiliated with Paradox Interactive. It reads the game files and your mods; it only writes into a mod folder when you save a file or run an action, and most actions can be undone.
 
@@ -34,7 +34,7 @@ PMT is not affiliated with Paradox Interactive. It reads the game files and your
 - Playsets can be imported from the Paradox Launcher database into the compatibility set.
 
 ### Playsets
-- Create, copy, rename and delete the playsets of a game, edit their mods (keyword search, reorder, switch on and off) and DLCs, and start the game with one, for Crusader Kings III, Victoria 3, Europa Universalis IV and Europa Universalis V. Existing launcher playsets can be edited too.
+- Create, copy, rename and delete the playsets of a game, edit their mods (keyword search, reorder, switch on and off) and DLCs, and start the game with one, for Crusader Kings III, Victoria 3, Europa Universalis IV, Europa Universalis V and Stellaris. Existing launcher playsets can be edited too.
 - Right-click a test mod in the mod list to start the game with the current playset plus that mod, or to create a new playset from it.
 - Before every change PMT backs up the playset files (the last 10 backups stay, one click restores) and refuses to write while the game, or the Paradox Launcher for launcher games, is running.
 
@@ -47,6 +47,11 @@ PMT is not affiliated with Paradox Interactive. It reads the game files and your
 ### GUI editor
 - Code, designer and split view for `.gui` files, with the game's override order for types and templates, a data helper for GUI data types and expressions such as `[Country.GetCapital.GetName]`, and a condition editor that shows `visible`, `enabled` and `checked` expressions in plain language.
 - Building blocks: ready-made GUI parts (windows with tabs, lists, buttons, checkboxes, dropdowns, portraits, flags, progress bars and more) with parameters and repeated parts. You can save your own blocks and share them as packages.
+- Jomini preview (Crusader Kings III, Victoria 3, Europa Universalis V): the designer and the inspector lay out `hbox`, `vbox`, `flowcontainer`, grids and lists by rules measured in game (layout policies, spacing, margins, minimum and maximum sizes, invisible children, backgrounds, scroll areas). The toolbar picks the resolution and the UI scale (preset from your game settings), "Show bounds" outlines every element and "Mark overflow" outlines in red what sticks out of its parent or the screen. Elements shown only under a condition (`visible = "[…]"`) are marked and can be hidden one by one from the context menu of the element tree, remembered per file, until "Show all" brings them back. Places where the game reports an error or that were not measured carry a note.
+- GUI inspector: "Choose element…" opens the search for types, templates and widgets, which also filters by file path and lists the top-level windows of each file, unnamed ones under their file name, so a whole window such as the one in `gui/window_county_view.gui` opens in the inspector with its preview.
+- Jomini texts in game look: the preview draws texts with the game's fonts, localisation, text formats and text icons, measured against the game in all three titles (widths, line heights, word wrap, `fontsize_min` with elide, alignment). "Language" in the toolbar picks the language of the preview texts, preset from your game settings; missing texts come in English. Data bindings such as `[GetPlayer.GetName]` show as marked placeholders.
+- Jomini preview with game textures: the designer and the inspector draw the game's images, with 9-slice frames, tiling, mirror, `fittype`, colour and alpha, loaded in the background (DDS including BC7, PNG, JPG). Boxes whose texture is chosen by a data binding, is missing or cannot be decoded show a labelled placeholder; borders, tiling, `fittype`, colour, alpha and frames follow rules measured in all three games; tiling with a border (`corneredtiled` with `spriteborder`), `fittype` on a background, `upframe` on framed buttons, fractional frame sizes from half a pixel and colour or alpha values above 1 (Crusader Kings III shows colours above 1 differently) carry a note. The preview applies the `_show` state (followed through `next`) and `scale` of elements and sits on a dark background in light and dark theme.
+- Classic interface files of Hearts of Iron IV and Europa Universalis IV (`interface/*.gui` with sprites from `.gfx`): the designer shows a window in game look, with textures, the game's bitmap fonts and English texts, at your game's resolution and UI scale, following the window and sprite override order measured in each game. Approximations are marked. For editing, a property panel explains each property with a sketch and vanilla examples and edits only the changed value in the text, "Edit for mod" and "Take over into mod" bring a vanilla window into the mod (only changed windows, in an override file that wins by the measured load order) and "Create sprite…" adds sprites to a `.gfx` file of the mod. Checks, scripted GUIs, building blocks, new GUI files and mod compatibility for this format follow later.
 
 ### Saves and multiplayer
 - Save explorer for debug saves (Europa Universalis V and the text saves of Crusader Kings III, also compressed ones): variables, flags, characters, titles, houses, dynasties, faiths, cultures and more with their names, search, filters, and a comparison of two saves.
@@ -58,15 +63,14 @@ PMT is not affiliated with Paradox Interactive. It reads the game files and your
 - Bug tracker for your mods with GitHub issues as a source.
 
 ### Games and languages
-- Europa Universalis V, Crusader Kings III, Victoria 3 and Europa Universalis IV. Each game is described by a profile file, so further games can be added without changing the program. Victoria 3 does not have the save explorer yet.
-- Planned: compatibility for more Paradox games, namely Stellaris and Hearts of Iron IV.
+- Europa Universalis V, Crusader Kings III, Victoria 3, Europa Universalis IV, Stellaris and Hearts of Iron IV. Each game is described by a profile file, so further games can be added without changing the program. Victoria 3 and Stellaris do not have the save explorer yet; Stellaris has no GUI editor yet. Hearts of Iron IV and Europa Universalis IV have the GUI preview and editing for their classic interface format (see GUI editor); the building blocks and the data and condition helpers are made for the Jomini format of the newer games.
 - The interface is English by default and available in German, French, Spanish, Russian, Polish, Brazilian Portuguese and Simplified Chinese. See `TRANSLATING.md` if you want to help translate.
 
 ## Installation
 
 ### Requirements
 - Windows 10 or 11, 64-bit.
-- At least one supported game installed: Europa Universalis V, Crusader Kings III, Victoria 3 or Europa Universalis IV.
+- At least one supported game installed: Europa Universalis V, Crusader Kings III, Victoria 3, Europa Universalis IV, Stellaris or Hearts of Iron IV.
 - Nothing else. The download includes everything PMT needs, so you do not have to install .NET.
 
 ### Install

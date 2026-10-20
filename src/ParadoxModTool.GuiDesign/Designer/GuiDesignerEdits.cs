@@ -180,9 +180,10 @@ public static class GuiDesignerEdits
     }
 
     /// <summary>Eigenschaft am Element setzen ("Diese Stelle"): vorhandene Zeile ändern, sonst nach den Eigenschaften einfügen.</summary>
-    public static GuiDesignEdit SetProperty(GuiDocument document, GuiNode element, string name, string valueText)
+    /// <param name="ignoreNameCase">Klassisch (HOI IV, EU IV): <c>orientation</c> trifft auch <c>Orientation</c>; die Schreibweise der Zeile bleibt.</param>
+    public static GuiDesignEdit SetProperty(GuiDocument document, GuiNode element, string name, string valueText, bool ignoreNameCase = false)
     {
-        var edits = new GuiTextEdits(document).SetProperty(element, name, valueText);
+        var edits = new GuiTextEdits(document).SetProperty(element, name, valueText, ignoreNameCase);
         return new GuiDesignEdit(edits, TextEdit.MapOffset(element.Span.Start, edits));
     }
 

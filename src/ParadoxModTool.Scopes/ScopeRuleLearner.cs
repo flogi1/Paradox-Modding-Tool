@@ -100,7 +100,9 @@ public static class ScopeRuleLearner
         DateTime nowUtc,
         CancellationToken cancellation = default,
         IProgress<(int Done, int Total)>? progress = null,
-        string? defaultEventType = null)
+        string? defaultEventType = null,
+        IReadOnlyDictionary<string, string>? eventBlockScopes = null,
+        bool numericKeysChangeScope = false)
     {
         var started = DateTime.UtcNow;
         var files = EnumerateFiles(roots);
@@ -140,13 +142,15 @@ public static class ScopeRuleLearner
                     .GroupBy(c => c.Key!)
                     .ToDictionary(g => g.Key, g => g.First().Scalar!);
 
-                // Ereignisse heißen nach ihrer Kennung; ihre Art steht im Feld type (country_event …, ohne type der Standard des Spiels) und bildet
-                // den Pfad. Ein Event mit eigenem Root-Scope (scope = artifact) stimmt nicht mit ab.
+                // Ereignisse heißen nach ihrer Kennung; ihre Art steht im Feld type (country_event …), im Blocknamen (Stellaris) oder ist der Standard
+                // des Spiels und bildet den Pfad. Ein Event mit eigenem Root-Scope (scope = artifact) stimmt nicht mit ab, ein Event-Block ohne
+                // Root-Scope (Stellaris: event) auch nicht.
                 string path;
                 if (file.Folder == "events")
                 {
-                    var eventType = siblings.GetValueOrDefault("type") ?? ScopeEngine.DefaultTypeFor(obj.Key, defaultEventType);
-                    if (eventType is null || siblings.ContainsKey("scope"))
+                    var blockType = ScopeEngine.BlockEventType(obj.Key, eventBlockScopes);
+                    var eventType = siblings.GetValueOrDefault("type") ?? blockType ?? ScopeEngine.DefaultTypeFor(obj.Key, defaultEventType);
+                    if (eventType is null || siblings.ContainsKey("scope") || (blockType is not null && eventBlockScopes![blockType] != ScopeRules.LearnedRootScope && !db.IsScopeType(eventBlockScopes[blockType])))
                     {
                         continue;
                     }
@@ -158,11 +162,11 @@ public static class ScopeRuleLearner
                     path = $"{file.Folder}/*";
                 }
 
-                WalkField(db, obj.Children!, path, 1, siblings, tallies);
+                WalkField(db, obj.Children!, path, 1, siblings, tallies, numericKeysChangeScope);
 
                 foreach (var field in obj.Children!.Where(c => c.Key is not null && c.IsBlock))
                 {
-                    VisitSavedScopes(db, field.Children!, $"{path}/{field.Key}", savedTallies, savedByName);
+                    VisitSavedScopes(db, field.Children!, $"{path}/{field.Key}", savedTallies, savedByName, numericKeysChangeScope);
                 }
             }
         }
@@ -174,6 +178,10 @@ public static class ScopeRuleLearner
             DocsImportId = docsImportId,
             FilesScanned = files.Count,
             DefaultEventType = defaultEventType,
+            EventBlockScopes = eventBlockScopes is null
+                ? new Dictionary<string, string>(StringComparer.Ordinal)
+                : new Dictionary<string, string>(eventBlockScopes, StringComparer.Ordinal),
+            NumericKeysChangeScope = numericKeysChangeScope,
             ScriptValues = ScriptValueNames.FromFiles(files.Where(f => f.Folder == ScriptValueNames.Folder).Select(f => f.Path)).ToList(),
         };
 
@@ -248,7 +256,8 @@ public static class ScopeRuleLearner
         List<ScriptNode> nodes,
         string field,
         Dictionary<(string Field, string Name), Tally> byField,
-        Dictionary<string, Tally> byName)
+        Dictionary<string, Tally> byName,
+        bool numeric)
     {
         foreach (var node in nodes)
         {
@@ -269,7 +278,7 @@ public static class ScopeRuleLearner
                     byName[name] = nameTally = new Tally();
                 }
 
-                foreach (var direct in DirectKeys(node.Children!, db))
+                foreach (var direct in DirectKeys(node.Children!, db, numeric, node.Key))
                 {
                     if (db.VoteScopes(direct) is { } scopes)
                     {
@@ -279,7 +288,7 @@ public static class ScopeRuleLearner
                 }
             }
 
-            VisitSavedScopes(db, node.Children!, field, byField, byName);
+            VisitSavedScopes(db, node.Children!, field, byField, byName, numeric);
         }
     }
 
@@ -324,7 +333,7 @@ public static class ScopeRuleLearner
     }
 
     /// <summary>Direkt im Block stehende Schlüssel; transparente Blöcke (limit, OR, if …) werden aufgelöst, Scope-Wechsler zählen nicht.</summary>
-    private static IEnumerable<string> DirectKeys(IEnumerable<ScriptNode> nodes, ScopeDb db)
+    private static IEnumerable<string> DirectKeys(IEnumerable<ScriptNode> nodes, ScopeDb db, bool numeric, string? parentKey)
     {
         foreach (var node in nodes)
         {
@@ -333,10 +342,10 @@ public static class ScopeRuleLearner
                 continue;
             }
 
-            var kind = KeyClassifier.Classify(node.Key, db);
+            var kind = KeyClassifier.Classify(node.Key, db, KeyClassifier.NumericChangesScope(numeric, parentKey));
             if (kind == KeyKind.Transparent && node.IsBlock)
             {
-                foreach (var key in DirectKeys(node.Children!, db))
+                foreach (var key in DirectKeys(node.Children!, db, numeric, node.Key))
                 {
                     yield return key;
                 }
@@ -354,9 +363,10 @@ public static class ScopeRuleLearner
         string path,
         int depth,
         IReadOnlyDictionary<string, string> siblings,
-        Dictionary<string, PathTally> tallies)
+        Dictionary<string, PathTally> tallies,
+        bool numeric)
     {
-        foreach (var key in DirectKeys(nodes, db))
+        foreach (var key in DirectKeys(nodes, db, numeric, null))
         {
             var scopes = db.VoteScopes(key);
             if (scopes is null)
@@ -407,7 +417,7 @@ public static class ScopeRuleLearner
                 continue;
             }
 
-            WalkField(db, node.Children!, path + "/" + node.Key, depth + 1, siblings, tallies);
+            WalkField(db, node.Children!, path + "/" + node.Key, depth + 1, siblings, tallies, numeric);
         }
     }
 

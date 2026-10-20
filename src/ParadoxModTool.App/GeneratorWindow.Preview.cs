@@ -196,7 +196,7 @@ public partial class GeneratorWindow
         string? renumbered;
         try
         {
-            if (await PlanWithHashCheckAsync(new GeneratorTarget(modRoot, output, _host.ProfileLanguages(), ExternalPathStore.Load(_package.DataFolder))) is not { } planned)
+            if (await PlanWithHashCheckAsync(new GeneratorTarget(modRoot, output, _host.ProfileLanguages(), ExternalPathStore.Load(_package.DataFolder)) { NewFileHasBom = _host.NewFileHasBom }) is not { } planned)
             {
                 // Veraltet (Formular oder Stand geändert, Fenster geschlossen): still verwerfen
                 return false;

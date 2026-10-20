@@ -21,6 +21,7 @@
     <Project Path="src/ParadoxModTool.Notes/ParadoxModTool.Notes.csproj" />
     <Project Path="src/ParadoxModTool.BugTracking/ParadoxModTool.BugTracking.csproj" />
     <Project Path="src/ParadoxModTool.SaveGames/ParadoxModTool.SaveGames.csproj" />
+    <Project Path="src/ParadoxModTool.Performance/ParadoxModTool.Performance.csproj" />
     <Project Path="src/ParadoxModTool.SearchReplace/ParadoxModTool.SearchReplace.csproj" />
     <Project Path="src/ParadoxModTool.ScriptDocs/ParadoxModTool.ScriptDocs.csproj" />
     <Project Path="src/ParadoxModTool.Scopes/ParadoxModTool.Scopes.csproj" />
@@ -60,6 +61,7 @@
     <Project Path="tests/ParadoxModTool.GuiDesign.Tests/ParadoxModTool.GuiDesign.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Release.Tests/ParadoxModTool.Release.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.SaveGames.Tests/ParadoxModTool.SaveGames.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.Performance.Tests/ParadoxModTool.Performance.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.SearchReplace.Tests/ParadoxModTool.SearchReplace.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.ScriptDocs.Tests/ParadoxModTool.ScriptDocs.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Scopes.Tests/ParadoxModTool.Scopes.Tests.csproj" />

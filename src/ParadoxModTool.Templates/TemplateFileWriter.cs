@@ -7,7 +7,8 @@ public sealed record AppendResult(int Added, int Skipped, string? ExistingLangua
 
 /// <summary>
 /// Hängt erzeugten Code oder erzeugte Lokalisierung an eine Datei an. Die Textfunktionen arbeiten auf Zeichenketten, damit dieselbe Logik auch für ein offenes Dokument im Editor gilt;
-/// die Dateifunktionen erhalten Kodierung (UTF-8 mit oder ohne BOM) und Zeilenenden einer vorhandenen Datei und legen fehlende Dateien mit UTF-8-BOM an.
+/// die Dateifunktionen erhalten Kodierung (UTF-8 mit oder ohne BOM) und Zeilenenden einer vorhandenen Datei und legen fehlende Dateien mit UTF-8-BOM an
+/// (Code-Dateien in der übergebenen Kodierung aus dem Spielprofil).
 /// </summary>
 public static class TemplateFileWriter
 {
@@ -105,9 +106,10 @@ public static class TemplateFileWriter
         return (sb.ToString(), new AppendResult(toAdd.Count, skipped, existingLanguage));
     }
 
-    public static void AppendCodeToFile(string path, string code)
+    /// <param name="newFileEncoding">Kodierung, falls die Datei neu angelegt wird (aus dem Spielprofil, Stellaris: ohne BOM); ohne Angabe UTF-8 mit BOM.</param>
+    public static void AppendCodeToFile(string path, string code, Encoding? newFileEncoding = null)
     {
-        var (existing, encoding) = ReadFile(path);
+        var (existing, encoding) = ReadFile(path, newFileEncoding);
         Write(path, AppendCodeText(existing, code), encoding);
     }
 
@@ -119,12 +121,12 @@ public static class TemplateFileWriter
         return result;
     }
 
-    /// <summary>Liest eine Datei, falls vorhanden; sonst leerer Text mit UTF-8-BOM als Kodierung.</summary>
-    public static (string Text, Encoding Encoding) ReadFile(string path)
+    /// <summary>Liest eine Datei, falls vorhanden; sonst leerer Text mit <paramref name="newFileEncoding"/> (ohne Angabe UTF-8-BOM) als Kodierung.</summary>
+    public static (string Text, Encoding Encoding) ReadFile(string path, Encoding? newFileEncoding = null)
     {
         if (!File.Exists(path))
         {
-            return (string.Empty, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            return (string.Empty, newFileEncoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         }
 
         var bytes = File.ReadAllBytes(path);

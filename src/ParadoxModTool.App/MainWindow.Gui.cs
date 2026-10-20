@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using ParadoxModTool.Editor.Gui;
 using ParadoxModTool.Editor;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.UndoRedo;
@@ -53,9 +54,13 @@ public partial class MainWindow
     /// <summary>Gleicht den GUI-Index mit Spielpfad und aktiver Mod ab (baut nur neu, wenn sich etwas geändert hat oder <paramref name="force"/>). Bei ausgeschalteten GUI-Werkzeugen passiert nichts.</summary>
     private async Task UpdateGuiWorkspaceAsync(bool force, CancellationToken cancellation = default, IProgress<(int Done, int Total)>? progress = null)
     {
+        // Installationsordner: Jomini mit game, jomini, clausewitz darin; klassisch (HOI IV, EU IV) der Exe-Ordner selbst, in dem interface/ liegt
+        // (GameContentRoot.InstallRoot erkennt ihn an common/ ohne game/).
         var installDirectory = ComputeGameFilesGuess(_gameExecutablePath);
 
-        // Schreibschutz für Vanilla-.gui (auch jomini, clausewitz) schon vor dem Index (Plan-Ruling 3), auch bei ausgeschalteten GUI-Werkzeugen.
+        // Schreibschutz für Vanilla-.gui (auch jomini, clausewitz; klassisch alles unter der Installation) schon vor dem Index (Plan-Ruling 3), auch bei
+        // ausgeschalteten GUI-Werkzeugen.
+        ApplyGuiProfile();
         GuiSettings.InstallDirectory = installDirectory;
         if (!GuiSettings.ToolsEnabled)
         {
@@ -65,6 +70,45 @@ public partial class MainWindow
 
         var (modRoot, dependencies) = CurrentGuiModRoots();
         await GuiService.UpdateAsync(installDirectory, modRoot, dependencies, force, cancellation, progress);
+    }
+
+    /// <summary>
+    /// Format der .gui-Dateien und "Designer anbieten" aus dem Spielprofil. Ohne gui-Abschnitt (Stellaris) kein Designer; ohne Profil bleibt es beim
+    /// bisherigen Verhalten (Jomini, Designer an).
+    /// </summary>
+    private void ApplyGuiProfile()
+    {
+        GuiSettings.Layout = CurrentGuiLayout;
+        GuiSettings.ProfileHasGui = GameContext.Profile is not { } profile || profile.Gui is not null;
+        GuiSettings.GameSettingsPath = ClassicScreenSettings.PathFor(GameContext.Profile?.DefaultModRootTemplate);
+        // Benutzerordner (Elternordner des Mod-Ordners): dort liegen bei Jomini pdx_settings.txt bzw. pdx_settings.json.
+        GuiSettings.GameUserFolder = GuiSettings.GameSettingsPath is { } settingsPath ? Path.GetDirectoryName(settingsPath) : null;
+        GuiSettings.GameId = GameContext.Profile?.Id;
+        GuiSettings.Explanations = ClassicExplanationsFor(GuiSettings.GameId, GuiSettings.Layout.IsClassic);
+        WireClassicSpriteTools(GuiSettings.Layout.IsClassic);
+    }
+
+    private string? _explanationsGameId;
+    private ClassicExplanations _explanations = ClassicExplanations.Empty;
+
+    /// <summary>
+    /// Erklärtexte des klassischen Designers (<c>profiles/guiexplain/classic.json</c> neben dem Programm) für das Spiel; Jomini-Spiele und Spiele ohne
+    /// Profil bekommen die leere Menge. Je Spiel einmal gelesen: der Index baut oft neu, die Datei ändert sich nicht.
+    /// </summary>
+    private ClassicExplanations ClassicExplanationsFor(string? gameId, bool classic)
+    {
+        if (!classic || gameId is null)
+        {
+            return ClassicExplanations.Empty;
+        }
+
+        if (_explanationsGameId != gameId)
+        {
+            _explanations = ClassicExplanations.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "profiles", "guiexplain", "classic.json"), gameId);
+            _explanationsGameId = gameId;
+        }
+
+        return _explanations;
     }
 
     private string? _guiModRoot;
@@ -101,6 +145,8 @@ public partial class MainWindow
     /// <summary>Die Arbeitsbereiche existieren schon (XAML); <see cref="GuiSettings.Load"/> meldet die Werte, damit offene .gui-Tabs Ansicht und Aufteilung übernehmen.</summary>
     private void LoadGuiSettings(AppSessionState state)
     {
+        // Vor GuiSettings.Load: dessen Meldung lässt wiederhergestellte .gui-Tabs Designer und Schreibschutz schon nach dem Spielprofil wählen.
+        ApplyGuiProfile();
         GuiSettings.Load(
             state.GuiToolsEnabled,
             state.GuiDesignerEnabled,
@@ -108,6 +154,8 @@ public partial class MainWindow
             state.GuiDesignerLayout,
             state.GuiBreadcrumbEnabled,
             state.GuiShownInEnabled);
+        // Ein Prozess je Spiel (GameContext.LaunchWindow): die Schlüssel dieses Spiels werden nur hier, beim Start, geladen.
+        GuiSettings.LoadHiddenConditionals(state.GuiHiddenConditionals);
         SyncGuiInspectMenu();
     }
 
@@ -116,9 +164,10 @@ public partial class MainWindow
         state.GuiToolsEnabled = GuiSettings.ToolsEnabled;
         state.GuiDesignerEnabled = GuiSettings.DesignerEnabled;
         state.GuiDesignerMode = GuiSettings.DefaultMode.ToString();
-        state.GuiDesignerLayout = GuiSettings.Layout;
+        state.GuiDesignerLayout = GuiSettings.DesignerLayout;
         state.GuiBreadcrumbEnabled = GuiSettings.BreadcrumbEnabled;
         state.GuiShownInEnabled = GuiSettings.ShownInEnabled;
+        state.GuiHiddenConditionals = GuiSettings.HiddenConditionals.Order(StringComparer.Ordinal).ToList();
     }
 
     /// <summary>Baut den GUI-Index mit Fortschrittsfenster neu auf; nach einem Abbruch bleibt der bisherige Index, ohne Meldung.</summary>
@@ -130,7 +179,7 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>Nach dem Speichern: geänderte .gui-Dateien der Mod in den Index übernehmen (nur bei eingeschalteten GUI-Werkzeugen).</summary>
+    /// <summary>Nach dem Speichern: geänderte .gui-Dateien der Mod in den Index übernehmen, nach .yml die Vorschautexte neu lesen (nur bei eingeschalteten GUI-Werkzeugen).</summary>
     private void NotifyGuiFileSaved(string path, string text)
     {
         if (GuiSettings.ToolsEnabled)
@@ -169,12 +218,16 @@ public partial class MainWindow
         SyncGuiInspectMenu();
     }
 
-    /// <summary>Menüpunkt "GUI-Element inspizieren" nur bei eingeschalteten GUI-Werkzeugen.</summary>
+    /// <summary>
+    /// Menüpunkt "GUI-Element inspizieren" nur bei eingeschalteten GUI-Werkzeugen; Daten-Helfer, Bausteine und "Neue GUI-Datei" außerdem nur im
+    /// Jomini-Format (das Spiel wechselt nur mit einem Neustart, das Profil steht also schon fest).
+    /// </summary>
     private void SyncGuiInspectMenu()
     {
         GuiInspectMenuItem.Visibility = GuiSettings.ToolsEnabled ? Visibility.Visible : Visibility.Collapsed;
-        GuiDataHelperMenuItem.Visibility = GuiInspectMenuItem.Visibility;
-        GuiBlocksMenuItem.Visibility = GuiInspectMenuItem.Visibility;
+        GuiDataHelperMenuItem.Visibility = GuiSettings.DataHelperOffered ? Visibility.Visible : Visibility.Collapsed;
+        GuiBlocksMenuItem.Visibility = GuiSettings.BlocksOffered ? Visibility.Visible : Visibility.Collapsed;
+        GuiNewFileMenuItem.Visibility = GuiSettings.NewFileOffered ? Visibility.Visible : Visibility.Collapsed;
         RebuildToolbar();
         TileBarControl.Rebuild();
     }
@@ -204,6 +257,7 @@ public partial class MainWindow
         {
             _guiInspector = new GuiInspectorWindow { Owner = this };
             _guiInspector.OpenLocationRequested += (_, e) => JumpToBookmarkInFile(e.Path, e.Line);
+            _guiInspector.PickElementRequested += (_, _) => OpenGuiElementSearch();
             _guiInspector.OpenInDesignerRequested += (_, e) => OpenGuiInDesigner(e.Path, e.Line, startDraft: true);
             _guiInspector.TakeOverAsTypeRequested += (_, target) => TakeOverAsNewType(target);
             _guiInspector.Closed += (_, _) => _guiInspector = null;
@@ -251,6 +305,13 @@ public partial class MainWindow
     /// </summary>
     private void NewGuiFile_Click(object sender, RoutedEventArgs e)
     {
+        // Klassisch (HOI IV, EU IV) läge die Datei in <mod>/gui, das weder Spiel noch Index lesen; kommt mit Plan 3.
+        if (!GuiSettings.NewFileOffered)
+        {
+            MessageBox.Show(this, GuiTexts.ClassicBlocksLater, GuiTexts.NewFileTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
         if (CurrentGuiModRoots().ModRoot is not { } modRoot)
         {
             MessageBox.Show(this, GuiTexts.NewFileNoMod, GuiTexts.NewFileTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -269,7 +330,7 @@ public partial class MainWindow
         try
         {
             Directory.CreateDirectory(folder);
-            _history.Execute(new FileWriteUndoableAction(GuiTexts.NewFileAction(dialog.FileName), path, text));
+            _history.Execute(new FileWriteUndoableAction(GuiTexts.NewFileAction(dialog.FileName), path, text, ModFileEncodingFor(path)));
             _newModFiles.Created(path, DateTime.UtcNow);
         }
         catch (Exception ex)

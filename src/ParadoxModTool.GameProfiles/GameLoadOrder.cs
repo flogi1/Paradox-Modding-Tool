@@ -1,12 +1,22 @@
 namespace ParadoxModTool.GameProfiles;
 
 /// <summary>
-/// Ladereihenfolge relativer Pfade: alphabetisch nach ASCII in Kleinschreibung ("_" vor Buchstaben), die Dateien eines Ordners vor seinen Unterordnern
-/// (Victoria-3-Wiki "Mod compatibility"; beides für GUI gemessen 2026-10-11 mit PMT Order Probe C, siehe GameLoadOrderTests).
+/// Ladereihenfolge relativer Pfade: alphabetisch nach ASCII, die Dateien eines Ordners vor seinen Unterordnern. <see cref="Instance"/> vergleicht in
+/// Kleinschreibung ("_" vor Buchstaben; Victoria-3-Wiki "Mod compatibility", für GUI gemessen 2026-10-11 mit PMT Order Probe C, siehe GameLoadOrderTests),
+/// <see cref="CaseSensitive"/> mit Groß-/Kleinschreibung (Großbuchstaben vor "_" vor Kleinbuchstaben; Stellaris, gemessen 2026-10-16 mit PMT Order Probe A/B).
 /// </summary>
 public sealed class GameLoadOrder : IComparer<string>
 {
-    public static GameLoadOrder Instance { get; } = new();
+    private readonly bool _caseSensitive;
+
+    private GameLoadOrder(bool caseSensitive) => _caseSensitive = caseSensitive;
+
+    public static GameLoadOrder Instance { get; } = new(caseSensitive: false);
+
+    public static GameLoadOrder CaseSensitive { get; } = new(caseSensitive: true);
+
+    /// <summary>Die Reihenfolge des Spiels (<see cref="GameProfile.LoadOrderCaseSensitive"/>).</summary>
+    public static GameLoadOrder For(bool caseSensitive) => caseSensitive ? CaseSensitive : Instance;
 
     public int Compare(string? x, string? y)
     {
@@ -22,7 +32,9 @@ public sealed class GameLoadOrder : IComparer<string>
             }
 
             // ASCII in Kleinschreibung: "_" (95) vor Buchstaben (gemessen 2026-10-11); OrdinalIgnoreCase faltet nach Großbuchstaben und sortiert "_" danach.
-            var result = string.CompareOrdinal(a[i].ToLowerInvariant(), b[i].ToLowerInvariant());
+            var result = _caseSensitive
+                ? string.CompareOrdinal(a[i], b[i])
+                : string.CompareOrdinal(a[i].ToLowerInvariant(), b[i].ToLowerInvariant());
             if (result != 0)
             {
                 return result;

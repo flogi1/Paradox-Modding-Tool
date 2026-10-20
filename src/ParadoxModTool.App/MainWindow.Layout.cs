@@ -150,7 +150,7 @@ public partial class MainWindow
             return true;
         }
 
-        if (id == ToolbarItemIds.GuiDataHelper && !GuiSettings.ToolsEnabled)
+        if (id == ToolbarItemIds.GuiDataHelper && !GuiSettings.DataHelperOffered)
         {
             return false;
         }

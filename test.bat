@@ -31,6 +31,7 @@ call :run_test tests\ParadoxModTool.Desync.Tests
 call :run_test tests\ParadoxModTool.GuiDesign.Tests
 call :run_test tests\ParadoxModTool.Updates.Tests
 call :run_test tests\ParadoxModTool.Generators.Tests
+call :run_test tests\ParadoxModTool.Performance.Tests
 
 echo.
 if "%FAILED%"=="1" (

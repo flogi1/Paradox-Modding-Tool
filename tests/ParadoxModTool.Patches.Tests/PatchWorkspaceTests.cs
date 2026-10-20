@@ -106,6 +106,24 @@ public sealed class PatchWorkspaceTests
     }
 
     [Fact]
+    public void New_files_ask_the_profile_for_their_bom_but_localisation_always_gets_one()
+    {
+        using var mod = new TempMod();
+        mod.WriteMod("common/a.txt", "a = 1\n", bom: true);
+        var workspace = new PatchWorkspace(mod.ModRoot, mod.VanillaRoot, extension => extension != ".txt");
+
+        workspace.Set("common/a.txt", "a = 2\n");
+        workspace.Set("common/new.txt", "b = 1");
+        workspace.Set("common/new.gui", "c = 1");
+        workspace.Set("localization/english/x_l_english.yml", "l_english:\n");
+
+        Assert.True(workspace.HasBomOf("common/a.txt"));
+        Assert.False(workspace.HasBomOf("common/new.txt"));
+        Assert.True(workspace.HasBomOf("common/new.gui"));
+        Assert.True(new PatchWorkspace(mod.ModRoot, mod.VanillaRoot, _ => false).HasBomOf("localization/english/x_l_english.yml"));
+    }
+
+    [Fact]
     public void Workspace_collects_notes_and_conflicts_per_file()
     {
         using var mod = new TempMod();

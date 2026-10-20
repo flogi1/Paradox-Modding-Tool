@@ -1,0 +1,286 @@
+File Location;Bottleneck Time;Call Count;Max Time;Min Time;Self Time;Total Time;Average Time (Inclusive);Average Time (Exclusive)
+script_value @ common/generic_actions/iv2_ga_dynamic_national_ideas_adm.txt:22188;0;66;0;0;0;0;0;0
+trigger @ common/generic_actions/general_religion.txt:497;0;142;0;0;0;0;0;0
+script_value @ common/generic_actions/iv2_ga_dynamic_national_ideas_dip.txt:6765;0;5;0;0;0;0;0;0
+trigger @ common/generic_actions/iv2_ga_idea_groups_adm.txt:10392;0;25;0;0;0;0;0;0
+event (weight) @ events/character/personality_events.txt:1871;0;2;0;0;0;0;0;0
+script_value @ common/generic_actions/iv2_ga_idea_groups_adm.txt:2590;0;1;0;0;0;0;0;0
+on_actions (on_actions) @ common/on_action/_hardcoded.txt:3962;0;79;0;0;0;0;0;0
+trigger @ common/generic_actions/iv2_ga_dynamic_national_ideas_navy.txt:18832;0;147;0;0;0;0;0;0
+script_value @ common/generic_actions/iv2_ga_dynamic_national_ideas_dip.txt:8516;0;75;0;0;0;0;0;0
+trigger @ common/estate_privileges/nobles_estate.txt:533;0;652;0;0;0;0;0;0
+script_value @ common/generic_actions/iv2_GA_ideas_FLO.txt:1175;0;10;0;0;0;0;0;0
+trigger @ common/generic_actions/iv2_ga_dynamic_national_ideas_adm.txt:58734;0;60;0;0;0;0;0;0
+trigger @ common/generic_actions/iv2_ga_idea_groups_adm.txt:24015;0;6;0;0;0;0;0;0
+on_actions (effect) @ common/on_action/_hardcoded.txt:1284;0;204;0;0;0;0;0;0
+trigger @ common/generic_actions/iv2_ga_dynamic_national_ideas_adm.txt:32078;0;73;0;0;0;0;0;0
+trigger @ common/parliament_issues/07_expansion_parliament_issues.txt:690;0;101;0;0;0;0;0;0
+effect @ common/generic_actions/iv2_ga_idea_groups_navy.txt:2382;0;2;0;0;0;0;0;0
+event (trigger) @ events/random_event.txt:4561;0;6;0;0;0;0;0;0
+script_value @ common/generic_actions/iv2_GA_ideas_BRA.txt:1299;0;10;0;0;0;0;0;0
+trigger @ common/generic_actions/hindu_branches.txt:17;0;240;0;0;0;0;0;0
+effect @ common/resolutions/hre_election.txt:101;0.06;168;0.003;0.002;0;0.407;0.002;0
+trigger @ common/levies/06_tribal_levies.txt:47;0.011;163304;0.001;0;0.027;0.219;0;0
+trigger @ common/generic_actions/government_conversions.txt:107;0.004;11428;0.001;0;0.005;0.074;0;0
+trigger @ common/missions/generic_humiliate_rival_mission_pack.txt:6;0.008;27164;0.004;0;0.022;0.081;0;0
+script_value @ common/building_types/rural_buildings.txt:117;0.006;25443;0;0;0.004;0.068;0;0
+trigger @ common/levies/05_traditions_levies.txt:226;0.007;76801;0;0;0.014;0.15;0;0
+trigger @ common/generic_action_ai_lists/coup_attempt_list.txt:2;0.012;656635;0.001;0;0.126;0.226;0;0
+trigger @ common/auto_modifiers/wrong_religion_ruler.txt:30;0.015;243288;0.001;0;0.094;0.25;0;0
+trigger @ common/pop_types/00_default.txt:130;0.007;25290;0;0;0.005;0.061;0;0
+on_actions (effect) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_army_ideas.txt:6;0.027;656635;0.002;0;0.126;0.51;0;0
+trigger @ common/generic_action_ai_lists/union_list.txt:2;0.008;678519;0;0;0.121;0.155;0;0
+trigger @ common/scripted_relations/alliance.txt:46;0.012;15663;0.003;0;0.004;0.174;0;0
+trigger @ common/generic_action_ai_lists/advisor_management_list.txt:2;0.036;656635;0.003;0;0.141;0.711;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:260;0.005;50784;0;0;0.032;0.094;0;0
+trigger @ common/unit_types/3_elephant_units.txt:39;0.009;248563;0;0;0.044;0.14;0;0
+trigger @ common/laws/01_common.txt:1725;0.053;10072;0;0;0.002;0.061;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_religion.txt:167;0.004;21884;0.001;0;0.009;0.067;0;0
+trigger @ common/generic_actions/invite_foreign_cleric.txt:49;0.01;45476;0.001;0;0.022;0.095;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:326;0.005;52104;0;0;0.032;0.092;0;0
+trigger @ common/missions/generic_estate_cooperation_mission_pack.txt:33;0.01;50043;0.007;0;0.024;0.09;0;0
+effect @ common/generic_actions/iv2_ga_idea_groups_army.txt:1445;0.075;1;0.075;0.075;0;0.075;0.075;0
+trigger @ common/country_interactions/cas_demand_war_entry.txt:5;0.003;8317;0;0;0.005;0.065;0;0
+trigger @ common/generic_action_ai_lists/hre_emperor_circle_actions_list.txt:2;0.006;21884;0.003;0;0.009;0.068;0;0
+trigger @ common/societal_values/00_default.txt:423;0.004;21293;0;0;0.006;0.08;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:111;0.005;52080;0;0;0.03;0.094;0;0
+script_value @ common/building_types/rural_buildings.txt:183;0.005;23791;0;0;0.003;0.064;0;0
+script_value @ common/heir_selections/tribal.txt:197;0.014;6616;0.001;0;0.003;0.078;0;0
+trigger @ common/unit_types/d009_uniques_for_age_1_traditions.txt:275;0.004;27343;0.001;0;0.017;0.067;0;0
+trigger @ common/auto_modifiers/d009_court_favorite.txt:2;0.004;20240;0.001;0;0.015;0.064;0;0
+trigger @ common/international_organizations/hre.txt:84;0.006;41042;0.003;0;0.009;0.115;0;0
+trigger @ common/levies/05_traditions_levies.txt:50;0.01;112317;0.003;0;0.021;0.15;0;0
+trigger @ common/heir_selections/monarchy.txt:1361;0.016;44371;0.003;0;0.005;0.119;0;0
+on_actions (random_events) @ common/on_action/country_biyearly.txt:4;0.034;899;0.02;0;0.146;0.226;0;0
+effect @ common/generic_actions/iv2_ga_ai_chooser.txt:13935;0.142;28;0.031;0.003;0;0.142;0.005;0
+trigger @ common/generic_action_ai_lists/naval_list.txt:2;0.019;678519;0.002;0;0.137;0.351;0;0
+trigger @ common/customizable_localization/country_ranks.txt:389;0.007;26901;0;0;0.01;0.094;0;0
+trigger @ common/scripted_relations/alliance.txt:62;0.152;226357;0.001;0;0.042;3.036;0;0
+script_value @ common/building_types/common_buildings.txt:126;0.013;20274;0.004;0;0.004;0.144;0;0
+trigger @ common/levies/05_traditions_levies.txt:124;0.014;246018;0.002;0;0.041;0.247;0;0
+on_actions (random_events) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+trigger @ common/unit_types/02_iv_unit_types.txt:32;0.006;230108;0;0;0.044;0.105;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_SCO.txt:76;0.005;21884;0.001;0;0.018;0.082;0;0
+trigger @ common/unit_types/d009_uniques_for_age_4_reformation.txt:18;0.004;27374;0;0;0.019;0.074;0;0
+script_value @ common/international_organization_special_statuses/hre.txt:536;0.385;2031327;0.003;0;0.712;5.621;0;0
+effect @ common/international_organization_payments/tithe.txt:2;0.061;25;0.003;0.002;0;0.061;0.002;0
+trigger @ common/generic_actions/government_conversions.txt:499;0.006;7615;0.002;0;0.004;0.069;0;0
+script_value @ common/international_organizations/sect.txt:233;0.093;276;0.001;0;0;0.093;0;0
+trigger @ common/generic_actions/guelphs_and_ghibellines.txt:405;0.029;14447;0;0;0.006;0.081;0;0
+trigger @ common/building_types/rural_buildings.txt:128;0.013;57050;0;0;0.011;0.159;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_pick_ig.txt:102;0.054;656635;0.002;0;0.223;1.063;0;0
+script_value @ common/bureaucracies/iv2_research_system_bureaucracies.txt:101;0.086;89619;0.001;0;0.083;1.67;0;0
+trigger @ common/missions/generic_progress_and_literacy_mission_pack.txt:12;0.004;27164;0;0;0.019;0.061;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:283;0.005;52104;0.001;0;0.032;0.093;0;0
+effect @ common/generic_actions/parliament.txt:115;0.148;90;0.004;0.001;0;0.148;0.002;0
+trigger @ common/international_organizations/jurchen_federation.txt:74;0.003;17760;0;0;0.006;0.066;0;0
+trigger @ common/international_organizations/guelphs_and_ghibellines.txt:102;0.004;17243;0;0;0.012;0.073;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_POR.txt:82;0.004;21884;0;0;0.018;0.081;0;0
+mtth @ <unknown>:0;0.063;683643;0;0;0.023;0.079;0;0
+script_value @ common/international_organization_special_statuses/hre.txt:272;0.032;278840;0.002;0;0.082;0.464;0;0
+script_value @ common/heir_selections/tribal.txt:27;0.048;36529;0.001;0;0.018;0.278;0;0
+trigger @ common/international_organizations/coalition.txt:79;0.013;107166;0;0;0.022;0.242;0;0
+trigger @ common/country_interactions/appanage_seize_court_resources.txt:8;0.003;8317;0;0;0.005;0.06;0;0
+trigger @ common/unit_types/3_camel_units.txt:602;0.013;227928;0;0;0.039;0.219;0;0
+trigger @ common/generic_action_ai_lists/crisis_of_faith_list.txt:2;0.007;656635;0.001;0;0.117;0.14;0;0
+trigger @ common/generic_actions/black_death.txt:22;0.015;18866;0.011;0;0.019;0.086;0;0
+on_actions (trigger) @ common/on_action/d009_country_monthly.txt:1;0;21333;0;0;0.001;0.001;0;0
+script_value @ common/building_types/common_buildings.txt:457;0.016;60634;0.01;0;0.008;0.168;0;0
+trigger @ common/generic_actions/government_conversions.txt:83;0.005;11489;0;0;0.008;0.09;0;0
+trigger @ common/international_organizations/hre.txt:401;0.009;123830;0;0;0.023;0.133;0;0
+on_actions (random_on_action) @ common/on_action/d009_country_monthly.txt:1;0.001;21333;0.001;0;0.003;0.003;0;0
+trigger @ common/unit_types/d009_uniques_for_age_3_discovery.txt:23;0.004;27498;0.001;0;0.017;0.063;0;0
+script_value @ common/generic_actions/general_religion.txt:446;0.01;1334;0.001;0;0.001;0.072;0;0
+trigger @ common/generic_actions/black_death.txt:740;0.004;18851;0.001;0;0.018;0.072;0;0
+trigger @ common/auto_modifiers/country.txt:767;0.009;518882;0.001;0;0.09;0.164;0;0
+trigger @ common/parliament_types/00_default.txt:26;0.007;158452;0;0;0.031;0.124;0;0
+trigger @ common/levies/05_traditions_levies.txt:110;0.013;244754;0.002;0;0.043;0.23;0;0
+trigger @ common/international_organizations/coalition.txt:99;0.004;7490;0;0;0.004;0.077;0;0
+trigger @ common/generic_actions/black_death.txt:982;0.004;18919;0.001;0;0.019;0.074;0;0
+script_value @ common/building_types/common_buildings.txt:413;0.007;37381;0.001;0;0.005;0.096;0;0
+trigger @ common/auto_modifiers/wrong_religion_ruler.txt:2;0.011;234048;0.001;0;0.092;0.196;0;0
+trigger @ common/expedition_types/pilgrimage_expedition.txt:77;0.012;5775;0.009;0;0.022;0.079;0;0
+trigger @ common/generic_action_ai_lists/unlockable_io_actions_list.txt:2;0.021;21884;0.02;0;0.043;0.066;0;0
+trigger @ common/generic_action_ai_lists/military_list.txt:2;0.015;656635;0.001;0;0.129;0.283;0;0
+trigger @ common/expedition_types/pacific_crossing.txt:67;0.013;22346;0.003;0;0.018;0.211;0;0
+on_actions (events) @ common/on_action/d009_country_monthly.txt:1;0.014;21333;0.001;0;0.045;0.263;0;0
+trigger @ common/unit_types/3_elephant_units.txt:5;0.008;248837;0;0;0.046;0.133;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_adm_ideas.txt:6;0.042;656635;0.003;0;0.129;0.808;0;0
+trigger @ common/international_organizations/independence_movement.txt:128;0.045;18654;0.002;0;0.006;0.899;0;0
+trigger @ common/parliament_agendas/00_common.txt:65;0.15;720;0.001;0;0;0.152;0;0
+trigger @ common/building_types/01_IV2_idea_buildings.txt:209;0.006;43821;0;0;0.008;0.079;0;0
+trigger @ common/levies/04_renaissance_levies.txt:59;0.009;112621;0.001;0;0.022;0.185;0;0
+trigger @ common/resolutions/policy_vote.txt:279;0.064;146847;0.001;0;0.058;1.216;0;0
+script_value @ common/international_organizations/independence_movement.txt:196;0.012;2572;0.001;0;0.009;0.136;0;0
+trigger @ common/generic_actions/black_death.txt:854;0.004;18892;0;0;0.018;0.073;0;0
+trigger @ common/missions/generic_conquer_province_mission_pack.txt:11;0.024;27164;0.003;0;0.01;0.409;0;0
+trigger @ common/customizable_localization/country_ranks.txt:553;0.006;26832;0;0;0.01;0.091;0;0
+trigger @ common/generic_action_ai_lists/revolution_list.txt:2;0.012;678519;0.001;0;0.129;0.231;0;0
+script_value @ common/building_types/common_buildings.txt:632;0.009;44469;0.001;0;0.006;0.112;0;0
+on_actions (on_actions) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+script_value @ common/diseases/measles.txt:61;0.013;82201;0;0;0.027;0.255;0;0
+named_script_value @ common/script_values/02_iv2_script_values_progress.txt:18;0.02;20240;0.008;0;0.02;0.229;0;0
+trigger @ common/resolutions/policy_vote.txt:110;0.023;140250;0.002;0;0.059;0.367;0;0
+trigger @ common/generic_actions/black_death.txt:354;0.007;6321;0;0;0.003;0.123;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_FRA.txt:90;0.005;21884;0.001;0;0.018;0.082;0;0
+trigger @ common/generic_action_ai_lists/nahuatl_list.txt:2;0.012;678519;0.001;0;0.124;0.236;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_CAS.txt:82;0.006;21884;0.001;0;0.022;0.086;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_FLO.txt:78;0.004;21884;0;0;0.018;0.082;0;0
+trigger @ common/pop_types/00_default.txt:51;0.012;29497;0.002;0;0.005;0.069;0;0
+script_value @ common/resolutions/policy_vote.txt:671;1.485;2939106;0.004;0;0.835;21.684;0;0
+trigger @ common/expedition_types/hajj_caravan.txt:37;0.004;2563;0.001;0;0.007;0.061;0;0
+trigger @ common/generic_action_ai_lists/war_of_religions_list.txt:2;0.015;678519;0.004;0;0.13;0.224;0;0
+effect @ common/situations/black_death.txt:77;0.104;12;0.009;0.008;0;0.104;0.009;0
+trigger @ common/generic_action_ai_lists/siege_list.txt:2;0.018;656635;0.002;0;0.125;0.329;0;0
+on_actions (random_on_action) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+trigger @ common/unit_types/1_uniques_for_age_1_traditions.txt:56;0.022;259220;0.001;0;0.044;0.336;0;0
+script_value @ common/heir_selections/monarchy.txt:18;0.118;146380;0.003;0;0.023;0.84;0;0
+trigger @ common/customizable_localization/country_ranks.txt:119;0.005;26901;0;0;0.016;0.069;0;0
+script_value @ common/heir_selections/monarchy.txt:289;0.012;25065;0.001;0;0.006;0.155;0;0
+on_actions (trigger) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+trigger @ common/resolutions/policy_vote.txt:274;0.007;147269;0.001;0;0.031;0.132;0;0
+trigger @ common/building_types/unique_buildings.txt:2619;0.012;21889;0;0;0.006;0.144;0;0
+trigger @ common/generic_action_ai_lists/liturgical_language_change_list.txt:2;0.006;21884;0.001;0;0.009;0.091;0;0
+named_script_value @ common/script_values/02_iv2_script_values.txt:353;0.02;20240;0.009;0;0.012;0.231;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_dip_ideas.txt:6;0.027;656635;0.002;0;0.124;0.504;0;0
+trigger @ common/international_organizations/union.txt:112;0.011;10494;0.005;0;0.007;0.099;0;0
+on_actions (first_valid) @ common/on_action/d009_country_monthly.txt:1;0.001;21333;0.001;0;0.001;0.001;0;0
+trigger @ common/unit_types/02_iv_unit_types.txt:20;0.003;19279;0.001;0;0.02;0.061;0;0
+trigger @ common/disasters/sinicization_disaster.txt:7;0.004;21302;0;0;0.017;0.07;0;0
+on_actions (events) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+effect @ common/resolutions/policy_vote.txt:548;1.084;362;0.006;0;0;1.084;0.003;0
+trigger @ common/generic_action_ai_lists/02_iv2_generic_action_list_dynamic_nat_ideas_army.txt:74;0.009;21884;0.003;0;0.02;0.136;0;0
+trigger @ common/generic_actions/parliament.txt:10;0.006;37425;0;0;0.015;0.115;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:240;0.005;52104;0;0;0.033;0.096;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_BYZ.txt:82;0.004;21884;0.001;0;0.019;0.083;0;0
+trigger @ common/generic_actions/black_death.txt:270;0.004;18874;0;0;0.02;0.076;0;0
+trigger @ common/generic_action_ai_lists/hundred_years_war_list.txt:2;0.013;678519;0.001;0;0.136;0.239;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:88;0.005;50760;0;0;0.03;0.089;0;0
+script_value @ common/estates/00_default.txt:83;0.031;25676;0.002;0;0.004;0.491;0;0
+trigger @ common/generic_action_ai_lists/02_iv2_generic_action_list_dynamic_nat_ideas_adm.txt:219;0.013;21884;0.001;0;0.023;0.253;0;0
+trigger @ common/peace_treaties/steal_maps_treaty.txt:18;0.018;155586;0.001;0;0.027;0.1;0;0
+trigger @ common/country_interactions/hre.txt:2354;0.005;8317;0.001;0;0.005;0.082;0;0
+trigger @ common/generic_action_ai_lists/tatar_yoke_list.txt:2;0.01;678519;0.001;0;0.133;0.193;0;0
+trigger @ common/auto_modifiers/country.txt:994;0.005;98394;0;0;0.038;0.075;0;0
+trigger @ common/levies/05_traditions_levies.txt:33;0.007;112929;0.001;0;0.021;0.149;0;0
+on_actions (random_events) @ common/on_action/d009_country_monthly.txt:1;0.003;21333;0.001;0;0.012;0.038;0;0
+trigger @ common/building_types/common_buildings.txt:644;0.007;68942;0.004;0;0.013;0.064;0;0
+trigger @ common/unit_types/d009_uniques_for_age_1_traditions.txt:300;0.003;27343;0;0;0.017;0.063;0;0
+trigger @ common/generic_action_ai_lists/oligarchic_capture_list.txt:2;0.008;656635;0.001;0;0.13;0.158;0;0
+trigger @ common/auto_modifiers/byzantium.txt:585;0.05;20240;0.002;0;0.007;0.915;0;0
+trigger @ common/unit_types/d009_uniques_for_age_3_discovery.txt:92;0.022;27498;0.02;0;0.017;0.072;0;0
+trigger @ common/generic_action_ai_lists/great_pestilence_list.txt:2;0.012;656635;0.002;0;0.126;0.211;0;0
+script_value @ common/building_types/common_buildings.txt:213;0.01;21938;0;0;0.004;0.07;0;0
+trigger @ common/generic_actions/government_conversions.txt:162;0.004;11489;0.001;0;0.006;0.074;0;0
+trigger @ common/auto_modifiers/country.txt:781;0.008;516964;0.001;0;0.086;0.144;0;0
+trigger @ common/movements/roman_culture_movement.txt:8;0.148;12;0.017;0.011;0;0.148;0.012;0
+trigger @ common/parliament_types/00_default.txt:13;0.011;278562;0;0;0.044;0.212;0;0
+trigger @ common/generic_action_ai_lists/colonial_revolution_list.txt:2;0.013;678519;0.002;0;0.138;0.233;0;0
+on_actions (events) @ common/on_action/d009_country_yearly.txt:1;0.015;1799;0.003;0;0.024;0.16;0;0
+trigger @ common/missions/generic_capable_cabinet_mission_pack.txt:6;0.007;25560;0.003;0;0.027;0.081;0;0
+trigger @ common/generic_action_ai_lists/iv2_gal_ai_chooser.txt:49;0.01;21884;0.001;0;0.038;0.198;0;0
+trigger @ common/generic_action_ai_lists/fall_of_delhi_list.txt:2;0.012;656635;0.001;0;0.124;0.223;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_ARA.txt:92;0.007;21884;0.002;0;0.019;0.103;0;0
+effect @ common/generic_actions/io_parliament.txt:346;0.824;253;0.006;0.001;0;0.824;0.003;0
+trigger @ common/generic_action_ai_lists/black_death_list.txt:2;0.019;656635;0.003;0;0.132;0.327;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:2;0.007;50784;0.001;0;0.033;0.124;0;0
+trigger @ common/international_organizations/catholic_church.txt:193;0.006;177293;0;0;0.03;0.108;0;0
+on_actions (first_valid) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+effect @ common/international_organizations/sect.txt:301;0.078;276;0.001;0;0;0.078;0;0
+trigger @ common/generic_action_ai_lists/02_iv2_generic_action_list_dynamic_nat_ideas_navy.txt:75;0.008;21884;0.002;0;0.019;0.126;0;0
+script_value @ common/building_types/rural_buildings.txt:232;0.012;53052;0.001;0;0.007;0.135;0;0
+trigger @ common/customizable_localization/country_ranks.txt:89;0.006;26901;0;0;0.009;0.066;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:197;0.005;52096;0.001;0;0.033;0.096;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_NAP.txt:82;0.004;21884;0;0;0.021;0.085;0;0
+on_actions (effect) @ common/on_action/Idea_Variation2_on_action.txt:56;0.404;21333;0;0;0.01;0.404;0;0
+trigger @ common/scripted_diplomatic_objectives/hre_emperorship.txt:43;0.014;16492;0.002;0;0.016;0.238;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_BRA.txt:82;0.007;21884;0.003;0;0.019;0.087;0;0
+on_actions (effect) @ common/on_action/diplomatic_reactions.txt:72;0.071;209;0.002;0;0;0.071;0;0
+trigger @ common/building_types/unique_buildings.txt:2760;0.014;22202;0.001;0;0.006;0.174;0;0
+trigger @ common/unit_types/d009_uniques_for_age_1_traditions.txt:223;0.006;27457;0.002;0;0.017;0.099;0;0
+trigger @ common/customizable_localization/country_name_construction.txt:129;0.011;12956;0.001;0;0.007;0.121;0;0
+on_actions (on_actions) @ common/on_action/d009_country_yearly.txt:1;0.008;1799;0;0;0.016;0.08;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:154;0.005;52104;0;0;0.029;0.091;0;0
+trigger @ common/expedition_types/mining_survey.txt:8;0.015;24133;0.003;0;0.012;0.247;0;0
+on_actions (on_actions) @ common/on_action/d009_country_monthly.txt:1;0.022;21333;0.001;0;0.076;0.447;0;0
+trigger @ common/parliament_types/00_default.txt:42;0.007;187874;0;0;0.032;0.136;0;0
+trigger @ common/generic_action_ai_lists/estate_emergency_list.txt:2;0.082;656635;0.003;0;0.137;1.656;0;0
+effect @ common/country_interactions/propose_ruler.txt:26;0.111;2441;0.002;0;0.001;1.499;0.001;0
+trigger @ common/customizable_localization/country_ranks.txt:1748;0.01;19226;0.001;0;0.009;0.12;0;0
+trigger @ common/customizable_localization/country_name_construction.txt:58;0.006;13183;0;0;0.006;0.061;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_navy_ideas.txt:6;0.027;656635;0.003;0;0.122;0.503;0;0
+named_script_value @ common/script_values/02_iv2_script_values.txt:324;0.016;20240;0.005;0;0.013;0.266;0;0
+trigger @ common/generic_action_ai_lists/parliament_list.txt:2;0.018;656635;0.003;0;0.131;0.33;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:174;0.005;50776;0;0;0.03;0.088;0;0
+trigger @ common/generic_action_ai_lists/ilkhanate_list.txt:2;0.026;656635;0.002;0;0.231;0.511;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:217;0.005;50784;0;0;0.033;0.095;0;0
+trigger @ common/resolutions/policy_vote.txt:61;0.05;77744;0.001;0;0.048;0.804;0;0
+trigger @ common/subject_types/vassal.txt:88;0.011;26312;0.001;0;0.008;0.202;0;0
+trigger @ <unknown>:0;0.06;11286733;0.006;0;0.353;0.353;0;0
+trigger @ common/auto_modifiers/byzantium.txt:555;0.069;20240;0.002;0;0.007;1.239;0;0
+script_value @ common/building_types/rural_buildings.txt:324;0.014;37896;0;0;0.005;0.181;0;0
+script_value @ common/international_organization_special_statuses/hre.txt:334;0.012;74388;0;0;0.031;0.156;0;0
+on_actions (first_valid_on_action) @ common/on_action/d009_country_monthly.txt:1;0;21333;0;0;0.001;0.001;0;0
+trigger @ common/auto_modifiers/country.txt:398;0.018;935060;0.003;0;0.161;0.323;0;0
+trigger @ common/generic_action_ai_lists/02_iv2_generic_action_list_dynamic_nat_ideas_dip.txt:205;0.021;21884;0.016;0;0.019;0.14;0;0
+trigger @ common/expedition_types/grand_tour.txt:38;0.008;25986;0.002;0;0.026;0.136;0;0
+trigger @ common/generic_action_ai_lists/expedition_list.txt:2;0.112;21884;0.011;0;0.01;1.952;0;0
+script_value @ common/scripted_relations/alliance.txt:29;0.032;88967;0.001;0;0.015;0.599;0;0
+named_script_value @ common/script_values/02_iv2_script_values_ideas.txt:358;0.004;3346;0;0;0.007;0.072;0;0
+trigger @ common/building_types/01_IV2_idea_buildings.txt:271;0.005;46052;0;0;0.009;0.067;0;0
+trigger @ common/generic_action_ai_lists/hindu_list.txt:2;0.013;678519;0.001;0;0.121;0.257;0;0
+trigger @ common/unit_types/02_iv_unit_types.txt:621;0.005;19654;0.002;0;0.015;0.066;0;0
+effect @ <unknown>:0;0.09;5759636;0.004;0;0.168;0.25;0;0
+trigger @ common/parliament_types/00_default.txt:45;0.013;187874;0;0;0.06;0.249;0;0
+script_value @ common/diseases/malaria.txt:17;0.018;75392;0.001;0;0.038;0.327;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_researcher.txt:6;0.022;656635;0.003;0;0.125;0.372;0;0
+trigger @ common/situations/rise_of_the_ottomans.txt:159;0.007;21748;0;0;0.004;0.08;0;0
+script_value @ common/scripted_relations/alliance.txt:354;0.017;8857;0.004;0;0.025;0.318;0;0
+named_script_value @ common/script_values/02_iv2_script_values.txt:295;0.022;20240;0.01;0;0.015;0.301;0;0
+script_value @ common/building_types/rural_buildings.txt:397;0.008;38271;0.001;0;0.005;0.102;0;0
+trigger @ common/missions/generic_traditional_economy_mission_pack.txt:6;0.007;25324;0.001;0;0.023;0.122;0;0
+on_actions (fallback_event) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+trigger @ common/expedition_types/holy_site_pilgrimage.txt:11;0.014;23933;0.011;0;0.028;0.087;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:45;0.005;50780;0;0;0.032;0.093;0;0
+trigger @ common/subject_types/vassal.txt:41;0.007;36754;0;0;0.008;0.063;0;0
+trigger @ common/unit_types/a_north_american.txt:15;0.006;27374;0.001;0;0.015;0.089;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_researcher.txt:15;0.017;656635;0.001;0;0.115;0.325;0;0
+trigger @ common/missions/generic_estate_cooperation_mission_pack.txt:7;0.007;25559;0.002;0;0.031;0.13;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:25;0.006;52104;0;0;0.032;0.104;0;0
+trigger @ common/country_interactions/catholic_interactions.txt:181;0.005;8317;0.001;0;0.006;0.076;0;0
+trigger @ common/expedition_types/circumnavigation_expedition.txt:82;0.006;25784;0.003;0;0.015;0.069;0;0
+trigger @ common/scripted_diplomatic_objectives/japanese_clan_spying.txt:8;0.006;44874;0;0;0.014;0.071;0;0
+trigger @ common/pop_types/00_default.txt:15;0.014;29723;0.001;0;0.005;0.07;0;0
+trigger @ common/resolutions/policy_vote.txt:116;0.053;77778;0.001;0;0.055;0.947;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_researcher.txt:33;0.019;656635;0.002;0;0.118;0.337;0;0
+trigger @ common/generic_action_ai_lists/government_list.txt:2;0.005;21884;0.001;0;0.009;0.083;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:303;0.005;50784;0;0;0.029;0.091;0;0
+on_actions (first_valid_on_action) @ common/on_action/location_pulses.txt:38;0;12;0;0;0;0;0;0
+named_script_value @ common/script_values/02_iv2_script_values_progress.txt:44;0.011;20240;0.002;0;0.02;0.166;0;0
+trigger @ common/generic_action_ai_lists/mayan_list.txt:2;0.015;678519;0.002;0;0.133;0.268;0;0
+trigger @ common/situations/red_turban_rebellions.txt:202;0.007;21748;0.001;0;0.004;0.084;0;0
+on_actions (effect) @ common/on_action/d009_country_monthly.txt:1;0;21333;0;0;0.001;0.001;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_religion.txt:6;0.022;21884;0.004;0;0.011;0.386;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_religion.txt:339;0.004;21884;0.001;0;0.01;0.07;0;0
+trigger @ common/parliament_types/00_default.txt:29;0.007;158452;0;0;0.027;0.135;0;0
+trigger @ common/generic_action_ai_lists/iv2_generic_action_list_researcher.txt:24;0.016;656635;0.001;0;0.111;0.317;0;0
+trigger @ common/generic_action_ai_lists/church_aspects_list.txt:2;0.023;656635;0.001;0;0.139;0.45;0;0
+script_value @ common/scripted_relations/alliance.txt:200;0.059;31014;0.005;0;0.012;1.065;0;0
+trigger @ common/subject_types/vassal.txt:53;0.029;122845;0.002;0;0.065;0.386;0;0
+trigger @ common/expedition_types/d009_cibola_expedition.txt:13;0.004;25986;0.001;0;0.027;0.068;0;0
+named_script_value @ common/script_values/02_iv2_script_values_progress.txt:31;0.015;20240;0.005;0;0.02;0.196;0;0
+trigger @ common/scripted_relations/deny_market_access.txt:48;0.004;13862;0.001;0;0.006;0.066;0;0
+named_script_value @ common/script_values/02_iv2_script_values.txt:265;0.02;20240;0.005;0;0.016;0.326;0;0
+script_value @ common/international_organization_special_statuses/hre.txt:458;0.062;562634;0.002;0;0.15;0.884;0;0
+script_value @ common/international_organization_special_statuses/hre.txt:90;0.008;40829;0;0;0.022;0.098;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:131;0.005;50784;0.001;0;0.032;0.094;0;0
+trigger @ common/generic_action_ai_lists/italian_wars_list.txt:2;0.012;678519;0.001;0;0.131;0.221;0;0
+trigger @ common/generic_action_ai_lists/crisis_of_the_chinese_dynasty_list.txt:2;0.01;656635;0.003;0;0.138;0.16;0;0
+trigger @ common/generic_actions/iv2_ga_ai_chooser.txt:4848;0.054;56;0.009;0;0;0.141;0.003;0
+trigger @ common/pop_types/00_default.txt:198;0.024;55210;0.001;0;0.01;0.136;0;0
+script_value @ common/building_types/rural_buildings.txt:280;0.022;52764;0.005;0;0.008;0.259;0;0
+named_script_value @ common/script_values/02_iv2_script_values_progress.txt:5;0.039;20240;0.01;0;0.021;0.369;0;0
+trigger @ common/auto_modifiers/country.txt:415;0.012;706286;0;0;0.117;0.236;0;0
+trigger @ common/auto_modifiers/estate_religion_discontent.txt:68;0.014;52100;0.01;0;0.04;0.1;0;0
+trigger @ common/generic_action_ai_lists/03_iv2_gal_nat_idea_HAB.txt:91;0.005;21884;0.001;0;0.018;0.082;0;0

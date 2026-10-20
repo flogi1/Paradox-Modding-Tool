@@ -141,6 +141,7 @@ public static class SessionPartition
         nameof(AppSessionState.CompatchHiddenKinds),
         nameof(AppSessionState.CompatchLastStart),
         nameof(AppSessionState.FolderFilters),
+        nameof(AppSessionState.GuiHiddenConditionals),
     };
 
     /// <summary>Kopiert die genannten Eigenschaften (tiefe Kopie); fehlende bleiben weg.</summary>

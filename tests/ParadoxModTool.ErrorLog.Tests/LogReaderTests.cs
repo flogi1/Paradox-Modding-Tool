@@ -284,6 +284,77 @@ public class LogReaderTests
         Assert.Equal("Script system error!\nScript location: common/a.txt:3\ncommon/b.txt:9", existing[0].Message);
     }
 
+    [Fact]
+    public void Parse_reads_hoi4_lines_with_game_date()
+    {
+        var line = Assert.Single(LogReader.Parse(new[]
+        {
+            "[15:29:30][1936.01.01.12][effect.cpp:445]: Invalid effect 'IRQ_kamil_shabib' in history/countries/IRQ - Iraq.txt line : 116",
+        }));
+
+        Assert.Equal("15:29:30", line.Time);
+        Assert.Equal("1936.01.01.12", line.GameDate);
+        Assert.Equal("effect.cpp", line.Source);
+        Assert.Equal(445, line.SourceLine);
+        Assert.StartsWith("Invalid effect", line.Message);
+        Assert.False(line.IsContinuation);
+    }
+
+    [Fact]
+    public void Parse_reads_hoi4_lines_without_game_date()
+    {
+        var line = Assert.Single(LogReader.Parse(new[]
+        {
+            "[15:29:27][no_game_date][triggerimplementation.cpp:9803]: common/scripted_effects/BLT_scripted_effects.txt:77: has_game_rule: game rule LIT_ai_behavior does not exist",
+        }));
+
+        Assert.Equal("no_game_date", line.GameDate);
+        Assert.Equal("triggerimplementation.cpp", line.Source);
+        Assert.Equal(9803, line.SourceLine);
+        Assert.StartsWith("common/scripted_effects/BLT_scripted_effects.txt:77:", line.Message);
+    }
+
+    [Fact]
+    public void Parse_reads_eu4_lines_without_time()
+    {
+        var line = Assert.Single(LogReader.Parse(new[] { "[dlc.cpp:254]: Invalid supported_version in file: mod/x.mod line: 4" }));
+
+        Assert.Equal(string.Empty, line.Time);
+        Assert.Null(line.GameDate);
+        Assert.Equal("dlc.cpp", line.Source);
+        Assert.Equal(254, line.SourceLine);
+        Assert.Equal("Invalid supported_version in file: mod/x.mod line: 4", line.Message);
+        Assert.False(line.IsContinuation);
+    }
+
+    [Fact]
+    public void Parse_keeps_bracketed_non_source_lines_as_continuation()
+    {
+        var lines = LogReader.Parse(new[]
+        {
+            "[12:00:01][E][jomini_effect.cpp:556]: Script system error!",
+            "[events/x.txt:12]: in effect foo",
+        });
+
+        var line = Assert.Single(lines);
+        Assert.Equal("Script system error!\n[events/x.txt:12]: in effect foo", line.Message);
+        Assert.Null(line.GameDate);
+    }
+
+    [Fact]
+    public void Two_hoi4_lines_are_two_messages()
+    {
+        var lines = LogReader.Parse(new[]
+        {
+            "[15:29:27][no_game_date][triggerimplementation.cpp:9803]: first",
+            "[15:29:30][1936.01.01.12][effect.cpp:358]: Error: \"Unknown effect-type: IRQ_kamil_shabib, near line: 116\" in file: \"history/countries/IRQ - Iraq.txt\" near line: 117",
+        });
+
+        Assert.Equal(2, lines.Count);
+        Assert.Equal("first", lines[0].Message);
+        Assert.Equal("effect.cpp", lines[1].Source);
+    }
+
     private static string TempLog(string content)
     {
         var path = Path.Combine(Path.GetTempPath(), "pmt-log-" + Guid.NewGuid().ToString("N") + ".log");

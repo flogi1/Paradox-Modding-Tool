@@ -113,7 +113,9 @@ public static class KeyPartReader
         var rule = result.Rule;
         foreach (var statement in root.Entries.OfType<ScriptStatement>())
         {
-            if (statement.Key.StartsWith('@') || (rule.Behavior == OverrideBehavior.FirstWins && statement.Key == "namespace"))
+            // inline_script auf oberster Ebene bindet ein Skript ein (Stellaris-Mods in districts, pop_jobs); was es definiert, steht erst in der
+            // eingebundenen Datei. Als Schlüssel "inline_script" gäbe es nur Scheinkonflikte; die Definitionen darin vergleicht PMT nicht.
+            if (statement.Key.StartsWith('@') || statement.Key == "inline_script" || (rule.Behavior == OverrideBehavior.FirstWins && statement.Key == "namespace"))
             {
                 continue;
             }
@@ -146,9 +148,16 @@ public static class KeyPartReader
     /// <summary>Schlüssel nach <see cref="RuleKeys"/>; Einträge einer Hülle merken sich deren schließende Klammer für neue Geschwister.</summary>
     private static void ReadKeyed(FileParts result, ScriptBlock root, HashSet<ScriptEntry> used, IReadOnlyDictionary<string, ScriptScalar> constants)
     {
-        foreach (var keyed in RuleKeys.Read(root, result.Rule))
+        var keyedStatements = RuleKeys.Read(root, result.Rule).ToList();
+
+        // Eine Hülle mit Werten, die keine Schlüssel sind (HOI IV: economy = { law = yes … }, technologies = { @1936 = 2 … }), bleibt ganz im
+        // Dateirest: beim Neuschreiben einzelner Einträge in ihrer Hülle gingen die Werte sonst verloren (Review 2026-10-16).
+        var keepWhole = keyedStatements.Where(k => k.WrapperHasValues && k.Wrappers.Count > 0).Select(k => k.Wrappers[0])
+            .ToHashSet(ReferenceEqualityComparer.Instance);
+        foreach (var keyed in keyedStatements.Where(k => k.Wrappers.Count == 0 || !keepWhole.Contains(k.Wrappers[0])))
         {
-            used.Add(keyed.Wrapper ?? keyed.Statement);
+            // Verbraucht ist der Eintrag der obersten Ebene (die äußere Hülle); neue Geschwister kommen in die innerste.
+            used.Add(keyed.Wrappers.Count > 0 ? keyed.Wrappers[0] : keyed.Statement);
             var containerEnd = keyed.Wrapper?.SourceEnd is { } end ? end - 1 : (int?)null;
             result.Keys.Add(Make(result, OverrideOperator.None, keyed.Key, new ScriptEntry[] { keyed.Statement }, constants, containerEnd));
         }

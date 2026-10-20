@@ -22,10 +22,15 @@ public sealed class GuiTextEdits
 
     public string IndentUnit { get; }
 
-    public IReadOnlyList<TextEdit> SetProperty(GuiNode element, string name, string valueText)
+    /// <param name="ignoreNameCase">
+    /// Klassisch (HOI IV, EU IV) liest das Spiel Schlüssel ohne Rücksicht auf Groß-/Kleinschreibung: <c>orientation</c> ersetzt dann den Wert von
+    /// <c>Orientation</c> (die Schreibweise der Zeile bleibt), statt eine zweite Zeile anzulegen. Wie die Engine gilt die letzte passende Zeile.
+    /// </param>
+    public IReadOnlyList<TextEdit> SetProperty(GuiNode element, string name, string valueText, bool ignoreNameCase = false)
     {
         RequireBody(element);
-        var existing = element.Children.LastOrDefault(c => c.Name == name && c.Kind is GuiNodeKind.Property or GuiNodeKind.KeyedBlock);
+        var comparison = ignoreNameCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        var existing = element.Children.LastOrDefault(c => string.Equals(c.Name, name, comparison) && c.Kind is GuiNodeKind.Property or GuiNodeKind.KeyedBlock);
         if (existing is null)
         {
             var anchor = element.Children.LastOrDefault(IsPropertyLike);

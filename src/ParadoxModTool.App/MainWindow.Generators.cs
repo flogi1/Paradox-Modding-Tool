@@ -101,7 +101,8 @@ public partial class MainWindow
                 OpenPackageEditor,
                 OpenPackageEditorAi,
                 GeneratorCandidateSources,
-                GeneratorModifierNames)) { Owner = this };
+                GeneratorModifierNames,
+                extension => ParadoxModTool.GameProfiles.ModFileEncoding.NewFileHasBom(WriteProfile, extension))) { Owner = this };
             _generatorWindow.Closed += (_, _) => _generatorWindow = null;
         }
 

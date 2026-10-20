@@ -50,6 +50,18 @@ public class ScopeDbTests
     }
 
     [Fact]
+    public void Dynamic_variables_do_not_widen_trigger_scopes()
+    {
+        // HOI IV: viele Dynamic Variables heißen wie ein Trigger ("Auto generated using the trigger with same name").
+        var trigger = new ScriptDocEntry { Kind = ScriptDocKind.Trigger, Name = "has_war", Scopes = new() { "country" } };
+        var variable = new ScriptDocEntry { Kind = ScriptDocKind.DynamicVariable, Name = "has_war", Scopes = new() { "state" } };
+        var db = Db(trigger, variable);
+
+        Assert.Equal(new[] { "country" }, db.GetCommand("has_war")!.Scopes);
+        Assert.False(db.IsScopeType("state") && db.GetCommand("has_war")!.Scopes.Contains("state"));
+    }
+
+    [Fact]
     public void NoneAnyScope_OfNewerGameBuilds_MeansAnyScopeLikeNone()
     {
         // Neuere Spiel-Builds schreiben "**Supported Scopes**: none/any", ältere "none". Beides heißt: in jedem Scope erlaubt.
@@ -74,5 +86,29 @@ public class ScopeDbTests
         Assert.False(db.GetCommand("country_tax_base")!.TakesArgument);
         Assert.True(db.GetCommand("opinion")!.TakesArgument);
         Assert.False(db.GetCommand("has_flag")!.IsComparison);
+    }
+
+    [Fact]
+    public void VariousOutput_IsNoScope_ButAMarkOnTheTarget()
+    {
+        // Stellaris: "target" (spy_network, espionage_operation ...) schreibt "Output Scope: various" – das ist kein Scope-Typ.
+        var db = Db(Target("target", new[] { "spy_network", "situation" }, "various"), Target("owner", new[] { "planet" }, "country"));
+
+        Assert.Empty(db.GetTarget("target")!.Outputs);
+        Assert.True(db.GetTarget("target")!.VariousOutputs);
+        Assert.False(db.GetTarget("owner")!.VariousOutputs);
+        Assert.False(db.IsScopeType("various"));
+        Assert.True(db.IsScopeType("spy_network"));
+    }
+
+    [Fact]
+    public void VariousOutput_IsNoStepOfThePathFinder()
+    {
+        var finder = new ScopePathFinder(Db(Target("target", Array.Empty<string>(), "various"), Target("owner", Array.Empty<string>(), "country")));
+
+        var steps = finder.NextSteps("situation", first: true, includeGlobalLinks: false).Select(s => s.Name).ToList();
+
+        Assert.Contains("owner", steps);
+        Assert.DoesNotContain("target", steps);
     }
 }

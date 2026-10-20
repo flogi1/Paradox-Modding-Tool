@@ -38,7 +38,7 @@ public static class GuiPropertyInput
             return GuiValueEditor.Block;
         }
 
-        if (catalog.Property(baseWidget, name) is { } stats)
+        if (catalog.Lookup(baseWidget, name) is { } stats)
         {
             if (stats.IsEnum)
             {
@@ -66,11 +66,11 @@ public static class GuiPropertyInput
     /// benutzt, auch wenn sonst meist <c>yes</c>/<c>no</c> dasteht (<c>visible</c>, <c>enabled</c>). Dann bietet der Designer den GUI-Daten-Helfer an.
     /// </summary>
     public static bool AcceptsDataExpression(string name, string baseWidget, GuiPropertyCatalog catalog, string input) =>
-        input.Contains('[') || catalog.Property(baseWidget, name)?.Forms.ContainsKey(GuiValueForm.Binding) == true;
+        input.Contains('[') || catalog.Lookup(baseWidget, name)?.Forms.ContainsKey(GuiValueForm.Binding) == true;
 
     /// <summary>In Vanilla gesehene Werte, die häufigsten zuerst.</summary>
     public static IReadOnlyList<string> EnumOptions(string name, string baseWidget, GuiPropertyCatalog catalog) =>
-        catalog.Property(baseWidget, name) is { } stats
+        catalog.Lookup(baseWidget, name) is { } stats
             ? stats.Words.OrderByDescending(p => p.Value).ThenBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key).ToList()
             : Array.Empty<string>();
 
@@ -210,8 +210,8 @@ public static class GuiPropertyInput
     /// <summary>"Eigenschaft hinzufügen": Eigenschaften des Basis-Widgets nach Häufigkeit, ohne die hier schon gesetzten.</summary>
     public static IReadOnlyList<string> AddableProperties(ResolvedElement element, GuiPropertyCatalog catalog)
     {
-        var here = element.Properties.Where(p => p.Origin.Kind == GuiOriginKind.Here).Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
-        return catalog.PropertiesFor(element.BaseWidget).Where(s => !here.Contains(s.Name)).Select(s => s.Name).ToList();
+        var here = element.Properties.Where(p => p.Origin.Kind == GuiOriginKind.Here).Select(p => p.Name).ToHashSet(catalog.Classic ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        return catalog.PropertiesOf(element.BaseWidget).Where(s => !here.Contains(s.Name)).Select(s => catalog.Classic ? s.PreferredSpelling : s.Name).ToList();
     }
 
     /// <summary>

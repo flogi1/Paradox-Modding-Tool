@@ -65,6 +65,7 @@ public static class HotkeyCatalog
         new("designer.paletteInsert", HotkeyGroup.GuiDesigner, None, "Enter", "GuiPaletteView.cs"),
         new("designer.propertyApply", HotkeyGroup.GuiDesigner, None, "Enter", "GuiPropertyEditor.cs"),
         new("designer.propertyReset", HotkeyGroup.GuiDesigner, None, "Escape", "GuiPropertyEditor.cs"),
+        new("designer.previewSizeApply", HotkeyGroup.GuiDesigner, None, "Enter", "GuiDesignerView.cs"),
         new("explorer.pin", HotkeyGroup.Explorer, HotkeyModifiers.Alt, "F", "ExplorerPanel.xaml.cs"),
         new("explorer.clearSearch", HotkeyGroup.Explorer, None, "Escape", "ExplorerPanel.Search.cs"),
         new("explorer.searchNow", HotkeyGroup.Explorer, None, "Enter", "ExplorerPanel.Search.cs"),

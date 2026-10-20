@@ -146,7 +146,11 @@ public partial class PatchRecipesWindow : Window
         // replace_path der Mod: diese Vanilla-Ordner lädt das Spiel nicht, der Wächter durchsucht sie deshalb nicht.
         var profile = _host.Profile();
         var hidden = profile is null ? null : ParadoxModTool.Mods.ReplacePaths.Of(new[] { _modRoot }, profile.MetadataFile, profile.ReplacePathRoots);
-        return new PatchContext(_modRoot, vanilla, GameVersionReader.TryReadVersion(vanilla), history, RecipesFolder(_modRoot), hidden, profile?.ReplacePathRoots);
+        // Neue Dateien nach dem Spielprofil kodieren (Stellaris: Skriptdateien ohne BOM)
+        return new PatchContext(_modRoot, vanilla, GameVersionReader.TryReadVersion(vanilla), history, RecipesFolder(_modRoot), hidden, profile?.ReplacePathRoots)
+        {
+            NewFileHasBom = extension => ParadoxModTool.GameProfiles.ModFileEncoding.NewFileHasBom(profile, extension),
+        };
     }
 
     internal void SetStatus(string text) => StatusText.Text = text;

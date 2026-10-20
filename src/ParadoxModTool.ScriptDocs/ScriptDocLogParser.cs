@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace ParadoxModTool.ScriptDocs;
 
 /// <summary>
@@ -11,6 +13,11 @@ public static class ScriptDocLogParser
 
     public static IReadOnlyList<ScriptDocEntry> Parse(ScriptDocKind kind, string text) => kind switch
     {
+        ScriptDocKind.Trigger or ScriptDocKind.Effect when IsHoi4Documentation(text) => ParseHoi4Commands(text, kind),
+        ScriptDocKind.Modifier when IsHoi4Documentation(text) => ParseHoi4Modifiers(text),
+        ScriptDocKind.DynamicVariable => IsHoi4Documentation(text) ? ParseHoi4DynamicVariables(text) : Array.Empty<ScriptDocEntry>(),
+        ScriptDocKind.Modifier when IsStellaris(text) => ParseStellarisModifiers(text),
+        ScriptDocKind.Trigger or ScriptDocKind.Effect or ScriptDocKind.EventTarget when IsStellaris(text) => ParseStellaris(text, kind),
         ScriptDocKind.Modifier => ParseModifiers(text),
         ScriptDocKind.Trigger => IsClassic(text) ? ParseClassic(text, ScriptDocKind.Trigger) : ParseMarkdown(text, ScriptDocKind.Trigger, "## "),
         ScriptDocKind.Effect => IsClassic(text) ? ParseClassic(text, ScriptDocKind.Effect) : ParseMarkdown(text, ScriptDocKind.Effect, "## "),
@@ -28,6 +35,345 @@ public static class ScriptDocLogParser
     {
         var first = Lines(text).Select(l => l.Trim().TrimStart('﻿')).FirstOrDefault(l => l.Length > 0);
         return first is not null && !first.StartsWith('#') && first.EndsWith("Documentation:", StringComparison.Ordinal);
+    }
+
+    private static readonly string[] Hoi4Titles = { "# Effects", "# Triggers", "# Modifiers", "# Dynamic Variables" };
+
+    private static readonly Regex Hoi4Span = new(@"<span[^>]*>\s*</span>", RegexOptions.CultureInvariant);
+
+    private static readonly Regex Hoi4Placeholder = new(@"<[A-Za-z]+>", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Doku von Hearts of Iron IV (<c>documentation/*.md</c> im Installationsordner): erste Zeile <c># Effects</c>, <c># Triggers</c>,
+    /// <c># Modifiers</c> oder <c># Dynamic Variables</c>, dazu ein Inhaltsverzeichnis <c>## Table of Content</c>.
+    /// </summary>
+    public static bool IsHoi4Documentation(string text)
+    {
+        var first = Lines(text).Select(l => l.Trim().TrimStart('﻿')).FirstOrDefault(l => l.Length > 0);
+        return first is not null
+            && Hoi4Titles.Contains(first, StringComparer.Ordinal)
+            && Lines(text).Any(l => l.Trim() == "## Table of Content");
+    }
+
+    /// <summary>
+    /// Teilt HOI-IV-Doku in Einträge: eine Überschrift mit <paramref name="entryPrefix"/> beginnt einen Eintrag; <c>## Table of Content</c> und
+    /// <c>## … for scope X</c> sind Abschnitte (X kommt als Abschnitt mit). Überschriften in einem ```-Zaun (<c>### Example</c>) gehören zum Text.
+    /// Jede Zeile kommt mit der Angabe, ob sie im Zaun steht; die Zaunzeilen selbst fallen weg.
+    /// </summary>
+    private static IEnumerable<(string Name, List<(string Line, bool Fenced)> Body, string? Section)> Hoi4Sections(string text, string entryPrefix)
+    {
+        const string scopeMarker = " for scope ";
+        string? section = null;
+        string? name = null;
+        var body = new List<(string, bool)>();
+        var fenced = false;
+        foreach (var raw in Lines(text))
+        {
+            var line = raw.TrimEnd();
+            if (line.TrimStart().StartsWith("```", StringComparison.Ordinal))
+            {
+                fenced = !fenced;
+                continue;
+            }
+
+            if (!fenced && line.StartsWith("## ", StringComparison.Ordinal))
+            {
+                if (name is not null)
+                {
+                    yield return (name, body, section);
+                }
+
+                name = null;
+                body = new List<(string, bool)>();
+                var heading = line[3..].Trim();
+                var scopeAt = heading.IndexOf(scopeMarker, StringComparison.Ordinal);
+                if (heading == "Table of Content")
+                {
+                    section = null;
+                }
+                else if (scopeAt > 0)
+                {
+                    section = heading[(scopeAt + scopeMarker.Length)..].Trim();
+                }
+                else if (entryPrefix == "## ")
+                {
+                    name = Hoi4Span.Replace(heading, string.Empty).Trim();
+                }
+
+                continue;
+            }
+
+            if (!fenced && entryPrefix != "## " && line.StartsWith(entryPrefix, StringComparison.Ordinal))
+            {
+                if (name is not null)
+                {
+                    yield return (name, body, section);
+                }
+
+                name = line[entryPrefix.Length..].Trim();
+                body = new List<(string, bool)>();
+                continue;
+            }
+
+            if (name is not null)
+            {
+                body.Add((line, fenced));
+            }
+        }
+
+        if (name is not null)
+        {
+            yield return (name, body, section);
+        }
+    }
+
+    /// <summary>
+    /// Effects und Trigger von HOI IV: <c>* Supported Scopes: COUNTRY, CHARACTER</c>, <c>* Supported Targets: …</c>, dann die Beschreibung in einem
+    /// ```-Zaun. <c>any</c> und <c>none</c> heißen: kein bestimmter Scope.
+    /// </summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseHoi4Commands(string text, ScriptDocKind kind)
+    {
+        var result = new List<ScriptDocEntry>();
+        foreach (var (name, body, _) in Hoi4Sections(text, "## "))
+        {
+            var entry = new ScriptDocEntry { Kind = kind, Name = name };
+            var description = new List<string>();
+            foreach (var (line, fenced) in body)
+            {
+                if (!fenced && TryLabel(line.Trim(), "* Supported Scopes:", out var scopes))
+                {
+                    entry.Scopes.AddRange(SplitList(scopes).Where(s => !IsHoi4NoScope(s)));
+                }
+                else if (!fenced && TryLabel(line.Trim(), "* Supported Targets:", out var targets))
+                {
+                    entry.Targets.AddRange(SplitList(targets).Where(s => !IsHoi4NoScope(s)));
+                }
+                else if (fenced || line.Trim().Length > 0)
+                {
+                    description.Add(fenced ? line : line.Trim());
+                }
+            }
+
+            entry.Description = JoinBody(description);
+            result.Add(entry);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Modifier von HOI IV: <c>* Number with N decimal places</c> (Anzeigegenauigkeit, nach "Decimals"), <c>* **Categories**: a, b</c> (keine Scopes,
+    /// nach "Category"), <c>* **Description**: …</c>. Vorlagen wie <c>&lt;Building&gt;_max_level_terrain_limit</c> werden mit
+    /// <c>* **Modified types**: a, b</c> zu echten Namen; ohne diese Liste fallen sie weg.
+    /// </summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseHoi4Modifiers(string text)
+    {
+        const string decimalsPrefix = "* Number with ";
+        const string decimalsSuffix = " decimal places";
+        var result = new List<ScriptDocEntry>();
+        foreach (var (name, body, _) in Hoi4Sections(text, "## "))
+        {
+            var extra = new Dictionary<string, string>();
+            var description = new List<string>();
+            var types = new List<string>();
+            foreach (var (raw, _) in body)
+            {
+                var line = raw.Trim();
+                if (line.StartsWith(decimalsPrefix, StringComparison.Ordinal) && line.EndsWith(decimalsSuffix, StringComparison.Ordinal))
+                {
+                    extra["Decimals"] = line[decimalsPrefix.Length..^decimalsSuffix.Length].Trim();
+                }
+                else if (TryLabel(line, "* **Categories**:", out var categories))
+                {
+                    extra["Category"] = string.Join(", ", SplitList(categories));
+                }
+                else if (TryLabel(line, "* **Description**:", out var said))
+                {
+                    description.Add(said.Trim());
+                }
+                else if (TryLabel(line, "* **Modified types**:", out var modified))
+                {
+                    types.AddRange(SplitList(modified));
+                }
+                else if (line.Length > 0)
+                {
+                    description.Add(line);
+                }
+            }
+
+            var names = name.Contains('<') ? types.Select(t => Hoi4Placeholder.Replace(name, t)) : new[] { name };
+            foreach (var expanded in names.Where(n => n.Length > 0 && !n.Contains('<')))
+            {
+                result.Add(new ScriptDocEntry
+                {
+                    Kind = ScriptDocKind.Modifier,
+                    Name = expanded,
+                    Description = JoinBody(description),
+                    Extra = new Dictionary<string, string>(extra),
+                });
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>Dynamic Variables von HOI IV: <c>## Dynamic variables for scope country</c>, darunter <c>### name</c> und <c>* description: …</c>.</summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseHoi4DynamicVariables(string text)
+    {
+        var result = new List<ScriptDocEntry>();
+        foreach (var (name, body, section) in Hoi4Sections(text, "### "))
+        {
+            if (section is null)
+            {
+                continue;
+            }
+
+            var description = new List<string>();
+            foreach (var (raw, _) in body)
+            {
+                var line = raw.Trim();
+                if (TryLabel(line, "* description:", out var value))
+                {
+                    description.Add(value.Trim());
+                }
+                else if (line.Length > 0)
+                {
+                    description.Add(line);
+                }
+            }
+
+            var entry = new ScriptDocEntry { Kind = ScriptDocKind.DynamicVariable, Name = name, Description = JoinBody(description) };
+            if (!IsHoi4NoScope(section))
+            {
+                entry.Scopes.Add(section);
+            }
+
+            result.Add(entry);
+        }
+
+        return result;
+    }
+
+    private static bool IsHoi4NoScope(string scope) => IsNoScope(scope) || scope.Equals("any", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Format von Stellaris (<c>logs/script_documentation</c>): eine Zeitstempel-Zeile wie <c>[14:52:31][game_application.cpp:1422]:</c>, dann
+    /// <c>== EFFECT DOCUMENTATION ==</c> (auch TRIGGER, SCOPE, MODIFIER).
+    /// </summary>
+    public static bool IsStellaris(string text)
+    {
+        foreach (var raw in Lines(text).Take(5))
+        {
+            var line = raw.Trim().TrimStart('﻿');
+            if (line.Length == 0 || (line.StartsWith('[') && line.EndsWith("]:", StringComparison.Ordinal)))
+            {
+                continue;
+            }
+
+            return line.StartsWith("== ", StringComparison.Ordinal) && line.EndsWith(" DOCUMENTATION ==", StringComparison.Ordinal);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Trigger, Effects und Scope-Wechsel (als Event-Targets) von Stellaris. Es gibt keine Trennlinien, und Leerzeilen trennen nicht sicher, weil
+    /// Anwendungsbeispiele über mehrere Zeilen gehen. Ein Eintrag beginnt mit <c>name - Beschreibung</c> (oder nur dem Namen) und endet mit der Zeile
+    /// <c>Supported Scopes: a b c</c> (durch Leerzeichen getrennt, <c>all</c> = kein bestimmter Scope); bei Scope-Wechseln folgt <c>Output Scope: x</c>.
+    /// Freitext vor dem ersten Eintrag (Einleitung von scopes.log) fällt weg.
+    /// </summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseStellaris(string text, ScriptDocKind kind)
+    {
+        var result = new List<ScriptDocEntry>();
+        var pending = new List<string>();
+        ScriptDocEntry? last = null;
+        foreach (var raw in Lines(text).SkipWhile(l => !l.Contains(" DOCUMENTATION ==", StringComparison.Ordinal)).Skip(1))
+        {
+            var line = raw.TrimEnd();
+            if (TryLabel(line, "Supported Scopes:", out var scopes))
+            {
+                last = StellarisEntry(pending, kind);
+                pending.Clear();
+                if (last is not null)
+                {
+                    last.Scopes = scopes.Split(' ', '\t').Select(s => s.Trim()).Where(s => s.Length > 0 && s != "all").ToList();
+                    result.Add(last);
+                }
+
+                continue;
+            }
+
+            if (last is not null && pending.Count == 0 && (TryLabel(line, "Output Scope:", out var output) || TryLabel(line, "Output Scopes:", out output)))
+            {
+                last.Targets = output.Split(' ', '\t').Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
+                continue;
+            }
+
+            if (pending.Count > 0 || line.Length > 0)
+            {
+                pending.Add(line);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>Kopf (erste Zeile, deren Name kein Leerzeichen hat) und Rumpf eines Stellaris-Eintrags; Zeilen davor sind Einleitungstext.</summary>
+    private static ScriptDocEntry? StellarisEntry(List<string> lines, ScriptDocKind kind)
+    {
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var header = lines[i].Trim();
+            var dash = header.IndexOf(" - ", StringComparison.Ordinal);
+            var name = (dash < 0 ? header : header[..dash]).Trim();
+            if (name.Length == 0 || name.Any(char.IsWhiteSpace) || name.EndsWith(':'))
+            {
+                continue;
+            }
+
+            var body = new List<string>();
+            if (dash >= 0 && header[(dash + 3)..].Trim() is { Length: > 0 } first)
+            {
+                body.Add(first);
+            }
+
+            body.AddRange(lines.Skip(i + 1));
+            return new ScriptDocEntry { Kind = kind, Name = name, Description = JoinBody(body) };
+        }
+
+        return null;
+    }
+
+    /// <summary>Modifier von Stellaris: Zeilen <c>- name, Category: A, B</c>. Die Kategorien sind keine Scope-Namen ("Ship Design Stats") und stehen unter "Category".</summary>
+    private static IReadOnlyList<ScriptDocEntry> ParseStellarisModifiers(string text)
+    {
+        const string marker = ", Category: ";
+        var result = new List<ScriptDocEntry>();
+        foreach (var raw in Lines(text))
+        {
+            var line = raw.Trim();
+            if (!line.StartsWith("- ", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var at = line.IndexOf(marker, StringComparison.Ordinal);
+            var name = (at < 0 ? line[2..] : line[2..at]).Trim();
+            if (name.Length == 0 || name.Any(char.IsWhiteSpace))
+            {
+                continue;
+            }
+
+            var entry = new ScriptDocEntry { Kind = ScriptDocKind.Modifier, Name = name };
+            if (at >= 0 && line[(at + marker.Length)..].Trim() is { Length: > 0 } category)
+            {
+                entry.Extra["Category"] = category;
+            }
+
+            result.Add(entry);
+        }
+
+        return result;
     }
 
     /// <summary>

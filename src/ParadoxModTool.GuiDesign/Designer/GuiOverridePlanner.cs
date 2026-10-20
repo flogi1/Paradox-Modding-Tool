@@ -31,16 +31,54 @@ public enum GuiPlanEntryKind
     RenameConstant,
 }
 
-/// <summary>Eintrag der Übersicht. <c>Line</c>: Zeile der Definition in der Zieldatei nach dem Schreiben (0 = ohne).</summary>
+/// <summary>
+/// Warum eine klassische Überschreibung (HOI IV, EU IV) in ihrer Datei gewinnt; gezeigt in der Übersicht. Gemessen 2026-10-17: in <c>interface/</c> laden
+/// die Dateien eines Ordners nach Namen (Vanilla und Mods gemischt), danach seine Unterordner.
+/// </summary>
+public enum ClassicTargetRule
+{
+    /// <summary>HOI IV: lädt als letzte Datei direkt in <c>interface/</c>; die zuletzt geladene Fassung gewinnt.</summary>
+    RootLastWins,
+
+    /// <summary>HOI IV: lädt als letzte Datei im Unterordner des Vanilla-Fensters; die zuletzt geladene Fassung gewinnt.</summary>
+    SubfolderLastWins,
+
+    /// <summary>EU IV: lädt vor allen Vanilla-Dateien direkt in <c>interface/</c> (und damit vor allen Unterordnern); die zuerst geladene Fassung gewinnt.</summary>
+    RootFirstWins,
+
+    /// <summary>Der Dateiname ist in den Mod-Einstellungen gesetzt und wird so verwendet; ob er gewinnt, prüft der Planer.</summary>
+    Configured,
+
+    /// <summary>Die Mod-Datei hat das Fenster schon und gewinnt nach der Ladereihenfolge (vom Planer geprüft); es wird dort ersetzt.</summary>
+    ExistingWinner,
+}
+
+/// <summary>
+/// Eintrag der Übersicht. <c>Line</c>: Zeile der Definition in der Zieldatei nach dem Schreiben (0 = ohne). <c>Rule</c>: klassisch, warum diese Datei
+/// (bei <c>Override</c>, <c>Replace</c> und <c>NewDefinition</c>).
+/// </summary>
 public sealed record GuiPlanEntry(GuiPlanEntryKind Kind, string Name, GuiDefinitionKind? DefinitionKind, string TargetPath, int Usages, string? Detail = null)
 {
     public int Line { get; init; }
+
+    public ClassicTargetRule? Rule { get; init; }
+
+    /// <summary>
+    /// Klassischer Umzug (<see cref="GuiPlanEntryKind.RemoveFromMod"/> neben einem Override): Etikett der Abhängigkeits-Mod, gegen die das Fenster in seiner
+    /// Mod-Datei verliert; null, wenn Vanilla gewinnt.
+    /// </summary>
+    public string? LosesToDependency { get; init; }
 }
 
-/// <summary>Zu schreibende Datei; <c>OldText</c> null = neue Datei.</summary>
+/// <summary>
+/// Zu schreibende Datei; <c>OldText</c> null = neue Datei. <c>EncodingName</c>: <c>windows-1252</c> erzwingt diese Kodierung für eine neue Datei
+/// (sie übernimmt Nicht-ASCII-Text aus einer Windows-1252-Quelle); null = die App entscheidet.
+/// </summary>
 public sealed record GuiPlanFile(string FullPath, string? OldText, string NewText)
 {
     public bool IsNew => OldText is null;
+
+    public string? EncodingName { get; init; }
 }
 
 public enum GuiPlanBlockerKind
@@ -65,9 +103,52 @@ public enum GuiPlanBlockerKind
 
     /// <summary>Die Mod hat die Definition geändert, seit der Entwurf begonnen hat; der Entwurf würde das überschreiben.</summary>
     ModChangedSince,
+
+    /// <summary>
+    /// Klassisch: Ein geschriebenes Fenster wirkte nach dem Schreiben nicht wie geplant; was genau, sagt <see cref="GuiPlanBlocker.TargetProblem"/>
+    /// (gewinnt nicht, ersetzte eine ganze Datei, fehlt in der Zieldatei, unzulässiger Dateiname).
+    /// </summary>
+    TargetLoses,
 }
 
-public sealed record GuiPlanBlocker(GuiPlanBlockerKind Kind, string Name, IReadOnlyList<string> Places);
+/// <summary>
+/// Ein Hindernis. Nur bei <see cref="GuiPlanBlockerKind.TargetLoses"/>: <c>TargetProblem</c> sagt, was mit der Zieldatei nicht stimmt, <c>ConfiguredTarget</c>,
+/// ob ihr Name aus den Mod-Einstellungen stammt (sonst hat PMT ihn gewählt).
+/// </summary>
+public sealed record GuiPlanBlocker(GuiPlanBlockerKind Kind, string Name, IReadOnlyList<string> Places)
+{
+    public GuiTargetProblem? TargetProblem { get; init; }
+
+    public bool ConfiguredTarget { get; init; }
+}
+
+/// <summary>Was mit der Zieldatei einer klassischen Übernahme nicht stimmt (<see cref="GuiPlanBlockerKind.TargetLoses"/>).</summary>
+public enum GuiTargetProblem
+{
+    /// <summary>Ein anderes Fenster gewönne weiter; <c>Places</c> = geplante Fundstelle und Gewinner.</summary>
+    Loses,
+
+    /// <summary>Die Zieldatei hätte den Pfad einer Vanilla- oder Abhängigkeits-Datei und ersetzte sie ganz; <c>Places</c> = zweimal dieser Pfad.</summary>
+    ReplacesFile,
+
+    /// <summary>Das Fenster fehlte nach dem Schreiben in der Zieldatei; <c>Places</c> = die Zieldatei.</summary>
+    NotFound,
+
+    /// <summary>Der gesetzte Dateiname enthält einen Ordner oder unzulässige Zeichen; <c>Places</c> = der Name, wie gesetzt.</summary>
+    InvalidName,
+}
+
+public enum GuiPlanWarningKind
+{
+    /// <summary>Eine Abhängigkeits-Mod lädt danach und gewinnt im Spiel; <c>Places</c> nennt ihre Fundstelle.</summary>
+    DependencyWins,
+
+    /// <summary>Die Ladereihenfolge hängt an einer DLC-Datei und ist nicht gemessen (unsicher); <c>Places</c> nennt die Zieldatei.</summary>
+    UncertainOrder,
+}
+
+/// <summary>Hinweis der Übersicht, der das Übernehmen nicht verhindert.</summary>
+public sealed record GuiPlanWarning(GuiPlanWarningKind Kind, string Name, IReadOnlyList<string> Places);
 
 /// <summary>Warum die ganze Datei kopiert wird.</summary>
 public enum GuiCopyReason
@@ -77,6 +158,9 @@ public enum GuiCopyReason
 
     /// <summary>Eine Definition wurde gelöscht; das geht nur mit einer Kopie ohne sie.</summary>
     DefinitionDeleted,
+
+    /// <summary>In der Übersicht wurde "Ganze Datei kopieren" gewählt.</summary>
+    Requested,
 }
 
 public sealed record GuiOverridePlan(
@@ -86,6 +170,8 @@ public sealed record GuiOverridePlan(
     GuiCopyReason? CopyReason)
 {
     public bool CanApply => Blockers.Count == 0 && Files.Count > 0;
+
+    public IReadOnlyList<GuiPlanWarning> Warnings { get; init; } = Array.Empty<GuiPlanWarning>();
 }
 
 /// <param name="Source">Die Vanilla-Datei des Entwurfs (aus dem Index).</param>
@@ -98,7 +184,14 @@ public sealed record GuiOverrideRequest(
     GuiIndex Index,
     GuiModTargets Targets,
     Func<string, string?> ReadFile,
-    string? BaselineText = null);
+    string? BaselineText = null)
+{
+    /// <summary>Klassisch: In der Übersicht wurde "Ganze Datei kopieren" gewählt.</summary>
+    public bool ForceCopyFile { get; init; }
+
+    /// <summary>Kodierung der Vanilla-Datei, wie <see cref="GuiTextReader"/> sie erkannt hat (<c>utf-8</c>, <c>utf-8-bom</c>, <c>windows-1252</c>); null = unbekannt.</summary>
+    public string? SourceEncoding { get; init; }
+}
 
 /// <summary>Inspektor "Als neuen Typ in Mod übernehmen": Quelle, neuer Name und das Übliche des Planers.</summary>
 public sealed record GuiNewTypeCopyRequest(GuiCopySource Source, string Name, GuiIndex Index, GuiModTargets Targets, Func<string, string?> ReadFile);
@@ -115,6 +208,11 @@ public static class GuiOverridePlanner
 
     public static GuiOverridePlan Plan(GuiOverrideRequest request)
     {
+        if (request.Index.Layout.IsClassic)
+        {
+            return ClassicOverridePlanner.Plan(request);
+        }
+
         // Ersetzt eine Abhängigkeits-Mod die ganze Datei, ist ihre Fassung der Grundtext (Plan 3c Ruling 8).
         var baseText = GuiDraft.BaseText(request.Source, request.VanillaText, request.Index);
         if (!new GuiLiveDocument(baseText).Update(request.DraftText))
@@ -183,6 +281,11 @@ public static class GuiOverridePlanner
     /// </summary>
     public static GuiOverridePlan PlanNewTypeCopy(GuiNewTypeCopyRequest request)
     {
+        if (request.Index.Layout.IsClassic)
+        {
+            throw new InvalidOperationException("Das klassische Format (HOI IV, EU IV) hat keine Typen.");
+        }
+
         var source = request.Source;
         if (GuiTypeEdits.CopySnippet(source.Document, source.Node, request.Name) is not { } copy)
         {
@@ -490,64 +593,13 @@ public static class GuiOverridePlanner
         private string Snippet(GuiNode node, IReadOnlyDictionary<string, string> renames) =>
             GuiConstants.Rename(_draftEdits.Dedent(node), renames);
 
-        /// <summary>
-        /// Kopiert die Konstanten, die die Definition braucht, auf die oberste Ebene der Zieldatei. Gibt es dort denselben Namen mit anderem Wert,
-        /// bekommt die Kopie den Namen <c>name_&lt;quelldatei&gt;</c>; das Ergebnis sind diese Umbenennungen.
-        /// </summary>
+        /// <summary>Kopiert die Konstanten der Definition auf die oberste Ebene der Zieldatei (siehe <see cref="GuiConstantCopy"/>).</summary>
         private Dictionary<string, string> CopyConstants(GuiNode node, TargetFile file)
         {
-            var renames = new Dictionary<string, string>(StringComparer.Ordinal);
-            var existing = GuiParser.Parse(file.Text).Root.Children
-                .Where(c => c.Kind == GuiNodeKind.ConstantDefinition)
-                .GroupBy(c => c.Name)
-                .ToDictionary(g => g.Key, g => g.First().Value ?? string.Empty, StringComparer.Ordinal);
-            foreach (var constant in GuiConstants.RequiredBy(node, Home(node)))
-            {
-                var value = GuiConstants.Rename(constant.Value ?? string.Empty, renames);
-                if (existing.TryGetValue(constant.Name, out var present))
-                {
-                    if (present == value)
-                    {
-                        continue;
-                    }
-
-                    var name = constant.Name + "_" + _stem;
-                    for (var n = 2; existing.TryGetValue(name, out var taken) && taken != value; n++)
-                    {
-                        name = $"{constant.Name}_{_stem}_{n}";
-                    }
-
-                    renames[constant.Name] = name;
-                    if (!existing.ContainsKey(name))
-                    {
-                        InsertConstant(file, name, value);
-                        existing[name] = value;
-                    }
-
-                    _entries.Add(new GuiPlanEntry(GuiPlanEntryKind.RenameConstant, constant.Name, null, file.Path, 0, name));
-                    continue;
-                }
-
-                InsertConstant(file, constant.Name, value);
-                existing[constant.Name] = value;
-                _entries.Add(new GuiPlanEntry(GuiPlanEntryKind.CopyConstant, constant.Name, null, file.Path, 0));
-            }
-
+            var text = file.Text;
+            var renames = GuiConstantCopy.Copy(node, Home(node), ref text, _stem, _entries, file.Path);
+            file.Text = text;
             return renames;
-        }
-
-        private static void InsertConstant(TargetFile file, string name, string value)
-        {
-            var document = GuiParser.Parse(file.Text);
-            var edits = new GuiTextEdits(document);
-            var root = document.Root;
-            var line = $"@{name} = {value}";
-            var lastConstant = root.Children.LastOrDefault(c => c.Kind == GuiNodeKind.ConstantDefinition);
-            var first = root.Children.FirstOrDefault(c => c.Kind != GuiNodeKind.Comment);
-            var change = lastConstant is not null ? edits.InsertChild(root, line, InsertPosition.After, lastConstant)
-                : first is not null ? edits.InsertChild(root, line, InsertPosition.Before, first)
-                : edits.InsertChild(root, line, InsertPosition.LastChild);
-            file.Text = TextEdit.Apply(file.Text, change);
         }
 
         /// <summary>Fügt die Definition am Ende ein: Typen in den types-Container (bei Bedarf neu angelegt), Templates auf oberster Ebene.</summary>

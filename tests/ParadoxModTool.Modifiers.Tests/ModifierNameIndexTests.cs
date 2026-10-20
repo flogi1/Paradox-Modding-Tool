@@ -206,4 +206,34 @@ public sealed class ModifierNameIndexTests : IDisposable
     [InlineData("xx")]
     [InlineData(null)]
     public void EnglishAndUnknownLanguagesOnlyGetEnglish(string? ui) => Assert.Equal(new[] { "english" }, ModifierNameIndex.GameLanguages(ui));
+
+    [Fact]
+    public void Stellaris_keys_with_mod_prefix_references_and_colour_codes()
+    {
+        var settings = new ModifierFormatSettings { NameLocFolders = { "localisation" }, NameKeys = { "mod_{name}", "MOD_{name}", "{name}" } };
+        Write(Game, "localisation/english/modifiers_l_english.yml",
+            "l_english:\n mod_shipsize_battleship_hull_mult:0 \"Battleship Hull Points\"\n mod_shipsize_battleship_hull_add:0 \"$mod_shipsize_battleship_hull_mult$\"\n" +
+            " MOD_SHIP_ARCHAEOLOGICAL_SITE_CLUES_ADD:0 \"§GArchaeology§! Skill\"\n");
+
+        var index = Build(settings, new[] { "shipsize_battleship_hull_mult", "shipsize_battleship_hull_add", "ship_archaeological_site_clues_add" }, "english");
+
+        Assert.Equal("Battleship Hull Points", index.Find("shipsize_battleship_hull_mult"));
+        Assert.Equal("Battleship Hull Points", index.Find("shipsize_battleship_hull_add"));
+        Assert.Equal("Archaeology Skill", index.Find("ship_archaeological_site_clues_add"));
+    }
+
+    [Fact]
+    public void Stellaris_profile_reads_suffix_formats_and_names()
+    {
+        var settings = GameProfileLoader.LoadFromFile(Path.Combine(AppContext.BaseDirectory, "profiles", "stellaris.json")).ModifierFormats!;
+        Write(Game, "localisation/english/modifiers_l_english.yml", "l_english:\n mod_ship_hull_mult:0 \"Hull\"\n");
+
+        var formats = ModifierFormatIndex.Build(settings, Array.Empty<string>(), Array.Empty<string>(), new[] { ("ship_hull_mult", "Military Ships"), ("ship_hull_add", "Military Ships") });
+        var index = Build(settings, formats.AllNames.ToArray(), "english");
+
+        Assert.Equal("suffix", settings.Source);
+        Assert.True(formats.Find("ship_hull_mult")!.Percent);
+        Assert.False(formats.Find("ship_hull_add")!.Percent);
+        Assert.Equal("Hull", index.Find("ship_hull_mult"));
+    }
 }

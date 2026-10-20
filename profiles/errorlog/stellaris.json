@@ -1,0 +1,754 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "code": "MOD-001",
+      "name": {
+        "de": "Mod-Dateien fehlen",
+        "en": "Mod files missing"
+      },
+      "severity": "warning",
+      "pattern": "^Could not find files for mod: (?<file>.+)$",
+      "explain": {
+        "de": "Eine Mod steht in der Mod-Liste des Launchers, ihr Ordner fehlt aber (Workshop-Abo beendet, Download nicht fertig oder Ordner gelöscht). Das Spiel lädt sie nicht.",
+        "en": "A mod is in the launcher's mod list, but its folder is missing (Workshop subscription ended, download not finished or folder deleted). The game does not load it."
+      },
+      "tips": {
+        "de": [
+          "Im Launcher die Mod erneut abonnieren oder aus dem Playset entfernen."
+        ],
+        "en": [
+          "Resubscribe to the mod in the launcher or remove it from the playset."
+        ]
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "MOD-002",
+      "name": {
+        "de": "Ungültige supported_version",
+        "en": "Invalid supported_version"
+      },
+      "severity": "info",
+      "pattern": "^Invalid supported_version in\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Die Zeile supported_version der .mod-Datei hat eine Form, die das Spiel nicht liest. Gültig sind eine genaue Version (v4.5.2) oder ein Platzhalter für die letzte Stelle (v4.5.*); v4.* und v4.*.* meldet das Spiel als ungültig (gemessen mit 4.5.2). Die Mod wird trotzdem geladen, der Launcher kann sie aber als veraltet anzeigen.",
+        "en": "The supported_version line of the .mod file has a form the game does not read. Valid are an exact version (v4.5.2) or a wildcard for the last part (v4.5.*); the game reports v4.* and v4.*.* as invalid (measured with 4.5.2). The mod still loads, but the launcher may show it as outdated."
+      },
+      "tips": {
+        "de": [
+          "In descriptor.mod und der .mod-Datei daneben supported_version=\"v4.5.*\" schreiben (Hauptversion.Nebenversion.*)."
+        ],
+        "en": [
+          "Write supported_version=\"v4.5.*\" (major.minor.*) in descriptor.mod and the .mod file next to it."
+        ]
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "MOD-003",
+      "name": {
+        "de": "Unbekannter Eintrag in .mod-Datei",
+        "en": "Unknown entry in .mod file"
+      },
+      "severity": "warning",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]*?)\\\" in file: \\\"(?<file>mod/[^\\\"]+\\.mod)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Die .mod-Datei einer Mod enthält einen Eintrag, den das Spiel nicht kennt (z. B. dependencies in einer Form, die Stellaris nicht liest). Das Spiel überspringt den Eintrag; die Mod lädt trotzdem.",
+        "en": "A mod's .mod file contains an entry the game does not know (e.g. dependencies in a form Stellaris does not read). The game skips the entry; the mod still loads."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "ENC-001",
+      "name": {
+        "de": "Skriptdatei mit BOM",
+        "en": "Script file with BOM"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unexpected token: \\uFEFF, near line: \\d+[\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Die Datei ist als UTF-8 mit BOM gespeichert. Stellaris erwartet Skript-, .gui- und .gfx-Dateien ohne BOM (nur Lokalisierungsdateien brauchen eine BOM) und liest die Datei falsch: Events darin bekommen eine ungültige ID, Einträge fehlen. Gemessen 2026-10-16.",
+        "en": "The file is saved as UTF-8 with BOM. Stellaris expects script, .gui and .gfx files without BOM (only localisation files need one) and misreads the file: events in it get an invalid ID, entries go missing. Measured 2026-10-16."
+      },
+      "tips": {
+        "de": [
+          "Die Datei in PMT öffnen und mit der Kodierung UTF-8 (ohne BOM) speichern."
+        ],
+        "en": [
+          "Open the file in PMT and save it with the encoding UTF-8 (without BOM)."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "PAR-003",
+      "name": {
+        "de": "Erwartet schlüssel = {",
+        "en": "Expected key = {"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Expected format is \\\"key=\\{\\\"[\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "An dieser Stelle erwartet das Spiel einen Eintrag der Form schlüssel = { … }. Häufige Ursachen: eine BOM am Dateianfang (die Datei dann ohne BOM speichern), eine fehlende oder überzählige Klammer davor oder ein Wert ohne Schlüssel.",
+        "en": "The game expects an entry of the form key = { … } here. Common causes: a BOM at the start of the file (save it without BOM), a missing or extra brace before it, or a value without key."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-010",
+      "name": {
+        "de": "Kaputter Event-Eintrag",
+        "en": "Corrupt event table entry"
+      },
+      "severity": "error",
+      "pattern": "^Corrupt Event Table Entry - (?<name>.*?) in (?<file>\\S.*?\\.txt) ?line: (?<line>\\d+)",
+      "explain": {
+        "de": "Das Spiel konnte die Event-Datei an dieser Stelle nicht lesen. Meist ist die Syntax davor falsch (fehlende oder überzählige Klammer, Effekt mit Klammern, den es nicht gibt) oder die Datei hat eine BOM; ist der genannte Eintrag leer, steht die BOM am Dateianfang.",
+        "en": "The game could not read the event file at this point. Usually the syntax before it is wrong (missing or extra brace, an effect with braces that does not exist), or the file has a BOM; if the named entry is empty, the BOM is at the start of the file."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TOK-001",
+      "name": {
+        "de": "Ungültiger Wert",
+        "en": "Malformed token"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Malformed token: (?<name>[^,\\n]+), near line: \\d+[\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Der Wert ist weder eine Zahl noch etwas, das das Spiel hier kennt: meist eine @-Variable, die nirgends definiert ist, oder ein Name ohne passende Definition. Der Effekt wird ohne diesen Wert gelesen.",
+        "en": "The value is neither a number nor anything the game knows here: usually an @ variable that is not defined anywhere, or a name without a matching definition. The effect is read without this value."
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TOK-002",
+      "name": {
+        "de": "Unbekannter Eintrag",
+        "en": "Unexpected token"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"Unexpected token: (?<name>[^,\\n]+), near line: \\d+[\\s\\S]*?\\\" in file: \\\"(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Das Spiel kennt diesen Eintrag an dieser Stelle nicht (Tippfehler, falsche Ebene, eine Ressource oder Eigenschaft, die es nicht gibt) und überspringt ihn.",
+        "en": "The game does not know this entry at this point (typo, wrong level, a resource or property that does not exist) and skips it."
+      },
+      "fixes": [
+        "jump",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-009",
+      "name": {
+        "de": "Doppelpunkt fehlt in Lokalisierung",
+        "en": "Missing colon in localisation"
+      },
+      "severity": "error",
+      "pattern": "^Expected colon\\(:\\) at line (?<line>\\d+) and column \\d+ in (?<file>\\S.*?\\.yml)",
+      "explain": {
+        "de": "In dieser Zeile der Lokalisierungsdatei fehlt der Doppelpunkt zwischen Schlüssel und Text (richtig: schlüssel: \"Text\"). Das Spiel überspringt die Zeile.",
+        "en": "This line of the localisation file lacks the colon between key and text (correct: key: \"Text\"). The game skips the line."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-010",
+      "name": {
+        "de": "Lokalisierungsdatei ohne BOM",
+        "en": "Localisation file without BOM"
+      },
+      "severity": "error",
+      "pattern": "^(?:Localization file '(?<file>[^']+)' should be in in utf-8-bom encoding|Missing UTF8 BOM in (?<file>\\S.*?\\.yml))",
+      "explain": {
+        "de": "Lokalisierungsdateien müssen als UTF-8 mit BOM gespeichert sein (anders als Skriptdateien, die keine BOM haben dürfen). Ohne BOM meldet Stellaris die Datei zweimal.",
+        "en": "Localisation files must be saved as UTF-8 with BOM (unlike script files, which must not have one). Without BOM Stellaris reports the file twice."
+      },
+      "tips": {
+        "de": [
+          "Die Datei in PMT öffnen und mit der Kodierung UTF-8 mit BOM speichern."
+        ],
+        "en": [
+          "Open the file in PMT and save it with the encoding UTF-8 with BOM."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-003",
+      "name": {
+        "de": "Unbekannte Eigenschaft in Text",
+        "en": "Unknown property in text"
+      },
+      "severity": "warning",
+      "pattern": "^Unknown property `(?<name>[^`]+)` in text: (?<detail>.*)",
+      "explain": {
+        "de": "Ein Text ruft in eckigen Klammern eine Funktion auf, die es für diesen Scope nicht gibt (z. B. [Root.GetName] auf einem Scope ohne Namen). An der Stelle bleibt der Text leer.",
+        "en": "A text calls a function in square brackets that does not exist for this scope (e.g. [Root.GetName] on a scope without name). The text stays empty at that point."
+      },
+      "fixes": [
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "LOC-004",
+      "name": {
+        "de": "Unbekannter Scope-Wechsel in Text",
+        "en": "Unknown promotion in text"
+      },
+      "severity": "warning",
+      "pattern": "^Unknown promotion `(?<name>[^`]+)` in text: (?<detail>.*)",
+      "explain": {
+        "de": "Ein Text wechselt in eckigen Klammern zu einem Scope, den es hier nicht gibt (z. B. FromFrom, wenn kein From gesetzt ist). An der Stelle bleibt der Text leer.",
+        "en": "A text switches to a scope in square brackets that does not exist here (e.g. FromFrom when no From is set). The text stays empty at that point."
+      },
+      "fixes": [
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GUI-004",
+      "name": {
+        "de": "Unbekannter Sprite",
+        "en": "Unknown sprite"
+      },
+      "severity": "error",
+      "pattern": "^Inexistent sprite type \\\"(?<name>[^\\\"]+)\\\" referenced at file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Ein .gui-Element nutzt einen spriteType-Namen, der in keiner geladenen .gfx-Datei unter interface/ definiert ist. Das Element bleibt ohne Bild.",
+        "en": "A .gui element uses a spriteType name that no loaded .gfx file under interface/ defines. The element stays without image."
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TEX-001",
+      "name": {
+        "de": "Textur fehlt",
+        "en": "Missing texture"
+      },
+      "severity": "error",
+      "pattern": "^(?:Texture Handler encountered missing texture file: (?<name>\\S+?)\\.?$|Couldn't find texture file: (?<name>\\S+?)\\.?$|Error initialising texture: (?<name>\\S+) for spritetype (?<detail>\\S+))",
+      "explain": {
+        "de": "Ein spriteType in einer .gfx-Datei verweist mit texturefile auf eine Bilddatei, die es weder in Vanilla noch in einer Mod gibt. Stellaris meldet das dreimal (Textur, Datei, Sprite).",
+        "en": "A spriteType in a .gfx file points with texturefile to an image file that exists neither in vanilla nor in any mod. Stellaris reports this three times (texture, file, sprite)."
+      },
+      "fixes": [
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GFX-001",
+      "name": {
+        "de": "Event-Bild fehlt",
+        "en": "Missing event picture"
+      },
+      "severity": "error",
+      "pattern": "^(?<name>\\S+) is referencing non-existent event picture (?<detail>\\S+)",
+      "explain": {
+        "de": "Das Event setzt picture auf einen Sprite-Namen, den keine .gfx-Datei definiert. Das Event zeigt kein Bild.",
+        "en": "The event sets picture to a sprite name that no .gfx file defines. The event shows no picture."
+      },
+      "fixes": [
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "DUP-001",
+      "name": {
+        "de": "Doppelter Schlüssel",
+        "en": "Duplicate key"
+      },
+      "severity": "warning",
+      "pattern": "^Object with key: (?<name>\\S+) already exists, using the one at\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Mehrere Dateien definieren denselben Eintrag. Die Meldung nennt die Definition, die gilt; die anderen werden verworfen. Stellaris ordnet Dateien über Vanilla und alle Mods nach dem Dateinamen (ASCII, Groß- vor Kleinbuchstaben); in Ordnern, in denen das Letzte gewinnt (z. B. scripted_effects), gilt die Datei mit dem späteren Namen, bei gleichem Namen die spätere Mod im Playset (gemessen 2026-10-16).",
+        "en": "Several files define the same entry. The message names the definition that applies; the others are dropped. Stellaris orders files across vanilla and all mods by file name (ASCII, upper case before lower case); in folders where the last one wins (e.g. scripted_effects), the file with the later name applies, with the same name the later mod in the playset (measured 2026-10-16)."
+      },
+      "tips": {
+        "de": [
+          "Soll die eigene Definition gelten, die Datei so benennen, dass sie nach der anderen lädt (z. B. zz_…), oder die Vanilla-Datei mit gleichem Namen ganz ersetzen."
+        ],
+        "en": [
+          "To make your definition apply, name the file so it loads after the other one (e.g. zz_…), or replace the vanilla file entirely with one of the same name."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SEF-001",
+      "name": {
+        "de": "Scripted Effect mit eingebautem Namen",
+        "en": "Scripted effect with built-in name"
+      },
+      "severity": "error",
+      "pattern": "^scripted effect (?<name>\\S+) is overwriting an existing effect, rename it",
+      "explain": {
+        "de": "Ein Eintrag in common/scripted_effects heißt wie ein eingebauter Effekt (z. B. if) und überdeckt ihn. Steht hier ein Name, den niemand so vergeben hat, ist die Datei verrutscht gelesen worden (BOM am Dateianfang oder fehlende Klammer).",
+        "en": "An entry in common/scripted_effects has the name of a built-in effect (e.g. if) and hides it. If the name is one nobody chose, the file was misread (BOM at the start of the file or a missing brace)."
+      },
+      "fixes": [
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "MDF-001",
+      "name": {
+        "de": "Unbekannter Modifier",
+        "en": "Invalid modifier"
+      },
+      "severity": "error",
+      "pattern": "^Invalid modifier (?<name>\\S+) at\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Diesen Modifier gibt es nicht. Das Spiel überspringt die Zeile. Die Namen aller Modifier stehen in logs/script_documentation/modifiers.log (Konsolenbefehl script_docs).",
+        "en": "This modifier does not exist. The game skips the line. The names of all modifiers are in logs/script_documentation/modifiers.log (console command script_docs)."
+      },
+      "fixes": [
+        "jump",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "MDF-002",
+      "name": {
+        "de": "Modifier-Icon fehlt",
+        "en": "Missing modifier icon"
+      },
+      "severity": "warning",
+      "pattern": "^Missing modifier scripted icon (?<name>\\S+)",
+      "explain": {
+        "de": "Ein statischer Modifier verweist mit icon auf eine Bilddatei, die es nicht gibt.",
+        "en": "A static modifier points with icon to an image file that does not exist."
+      },
+      "fixes": [
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "MDF-003",
+      "name": {
+        "de": "Modifier ohne Lokalisierung",
+        "en": "Missing modifier localisation"
+      },
+      "severity": "warning",
+      "pattern": "^Missing modifier localization: (?<name>.+)$",
+      "explain": {
+        "de": "Für diesen statischen Modifier gibt es keinen Lokalisierungsschlüssel mit seinem Namen; im Spiel erscheint der Schlüssel statt eines Textes.",
+        "en": "There is no localisation key with the name of this static modifier; the game shows the key instead of a text."
+      },
+      "fixes": [
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "REF-001",
+      "name": {
+        "de": "Verweis auf fehlenden Eintrag",
+        "en": "Reference to missing entry"
+      },
+      "severity": "error",
+      "pattern": "^Failed to deferred read key reference (?<name>\\S+) from database\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Die Zeile verweist auf einen Eintrag (z. B. einen statischen Modifier in add_modifier), den keine Datei definiert. Der Verweis bleibt leer.",
+        "en": "The line refers to an entry (e.g. a static modifier in add_modifier) that no file defines. The reference stays empty."
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "BLD-001",
+      "name": {
+        "de": "Gebäude ohne building_sets",
+        "en": "Building without building_sets"
+      },
+      "severity": "error",
+      "pattern": "^Building '(?<name>[^']+)' is lacking the building_sets definition",
+      "explain": {
+        "de": "Dem Gebäude fehlt der Eintrag building_sets, den Stellaris für jedes Gebäude verlangt. Steht hier ein Name wie potential oder }, ist die Gebäudedatei verrutscht gelesen worden (BOM oder Klammerfehler).",
+        "en": "The building lacks the building_sets entry Stellaris requires for every building. If the name is something like potential or }, the building file was misread (BOM or brace error)."
+      },
+      "fixes": [
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "BLD-002",
+      "name": {
+        "de": "Gebäude ohne Lokalisierung",
+        "en": "Missing building localisation"
+      },
+      "severity": "warning",
+      "pattern": "^Missing building Localization Key: (?<name>\\S+)",
+      "explain": {
+        "de": "Für das Gebäude fehlt der Name oder die Beschreibung (_desc) in der Lokalisierung.",
+        "en": "The building's name or description (_desc) is missing from the localisation."
+      },
+      "fixes": [
+        "locCheck",
+        "suppress"
+      ]
+    },
+    {
+      "code": "BLD-003",
+      "name": {
+        "de": "Gebäude ohne Kategorie",
+        "en": "Building without category"
+      },
+      "severity": "warning",
+      "pattern": "^No category assigned to building type (?<name>\\S+)",
+      "explain": {
+        "de": "Dem Gebäude fehlt category (im Block resources), deshalb ordnet das Spiel es keiner Kategorie zu.",
+        "en": "The building lacks category (in its resources block), so the game assigns it to no category."
+      },
+      "fixes": [
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "BLD-004",
+      "name": {
+        "de": "Gebäude-Icon fehlt",
+        "en": "Missing building icon"
+      },
+      "severity": "warning",
+      "pattern": "^Building (?<name>\\S+) is missing texture (?<detail>\\S+)",
+      "explain": {
+        "de": "Für das Gebäude gibt es kein Icon unter gfx/interface/icons/buildings/<Gebäudename>.dds und keinen icon-Eintrag.",
+        "en": "There is no icon for the building at gfx/interface/icons/buildings/<building name>.dds and no icon entry."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "EFF-001",
+      "name": {
+        "de": "Unbekannter Effekt",
+        "en": "Unknown effect"
+      },
+      "severity": "error",
+      "pattern": "^Script Error: Invalid scripted effect: (?<name>\\S+) at\\s+(?:file: (?<file>.+?) line: (?<line>\\d+)|(?<file>[^\\n@]+?):(?<line>\\d+) @[^\\n\\]]*)",
+      "explain": {
+        "de": "Diesen Effekt gibt es weder als eingebauten Effekt noch als Scripted Effect in common/scripted_effects (Tippfehler, fehlende Mod oder eine Datei in einem Unterordner: Stellaris lädt keine Unterordner von common/scripted_effects, gemessen 2026-10-16). Bei einem Aufruf aus einem Scripted Effect nennt die Meldung dessen Datei und Zeile.",
+        "en": "This effect exists neither as a built-in effect nor as a scripted effect in common/scripted_effects (typo, missing mod, or a file in a subfolder: Stellaris does not load subfolders of common/scripted_effects, measured 2026-10-16). For a call from a scripted effect the message names its file and line."
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "addModToPlayset",
+        "suppress"
+      ]
+    },
+    {
+      "code": "TRG-001",
+      "name": {
+        "de": "Unbekannter Trigger",
+        "en": "Unknown trigger"
+      },
+      "severity": "error",
+      "pattern": "^(?:Scripted Trigger (?<name>\\S+) is invalid at\\s+(?:file: (?<file>.+?) line: (?<line>\\d+)|(?<file>[^\\n@]+?):(?<line>\\d+) @[^\\n\\]]*)|\\[\\s*(?:file: (?<file>.+?) line: (?<line>\\d+)|(?<file>[^\\n@]+?):(?<line>\\d+) @[^\\n\\]]*)\\]: Error in scripted trigger, cannot find: (?<name>\\S+))",
+      "explain": {
+        "de": "Diesen Trigger gibt es weder als eingebauten Trigger noch als Scripted Trigger in common/scripted_triggers. Stellaris meldet ihn zweimal; die Bedingung gilt als nicht erfüllt.",
+        "en": "This trigger exists neither as a built-in trigger nor as a scripted trigger in common/scripted_triggers. Stellaris reports it twice; the condition counts as not met."
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "addModToPlayset",
+        "suppress"
+      ]
+    },
+    {
+      "code": "SCP-001",
+      "name": {
+        "de": "Effekt im falschen Scope",
+        "en": "Effect in wrong scope"
+      },
+      "severity": "error",
+      "pattern": "^Wrong scope for (?<detail>effect|trigger) '(?<name>[^']+)' at\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Der Effekt oder Trigger gilt im aktuellen Scope nicht (die Meldung nennt darunter den aktuellen und die erlaubten Scopes, z. B. add_resource nur für country). Stellaris meldet das beim Laden und noch einmal, wenn die Zeile läuft.",
+        "en": "The effect or trigger does not work in the current scope (the message lists the current and the supported scopes below, e.g. add_resource only for country). Stellaris reports it at load time and again when the line runs."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-002",
+      "name": {
+        "de": "Event-Target nicht gesetzt",
+        "en": "Undefined event target"
+      },
+      "severity": "error",
+      "pattern": "^Undefined event target: (?<name>\\S+), location:\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Die Zeile nutzt event_target:<name>, aber zu diesem Zeitpunkt hat nichts das Ziel mit save_event_target_as oder save_global_event_target_as gespeichert. Der Block läuft nicht.",
+        "en": "The line uses event_target:<name>, but at this point nothing has saved the target with save_event_target_as or save_global_event_target_as. The block does not run."
+      },
+      "fixes": [
+        "jump",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "RUN-001",
+      "name": {
+        "de": "Ungültiger Scope-Wechsel",
+        "en": "Invalid context switch"
+      },
+      "severity": "error",
+      "pattern": "^Script Error: Invalid context switch \\[(?<name>[^\\]]+)\\] from\\s+(?<detail>[^\\n]*?), file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Beim Ausführen konnte das Spiel nicht in den genannten Scope wechseln (z. B. from oder ein Event-Target, das nicht gesetzt ist). Darunter druckt Stellaris den aktuellen Scope mit allen gespeicherten Zielen.",
+        "en": "While running, the game could not switch to the named scope (e.g. from, or an event target that is not set). Below, Stellaris prints the current scope with all saved targets."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-005",
+      "name": {
+        "de": "Doppelte Event-ID",
+        "en": "Duplicate event ID"
+      },
+      "severity": "warning",
+      "pattern": "^an event with id \\[(?<name>[^\\]]+)\\] already exists!\\s+file: (?<file>.+?) line: (?<line>\\d+)",
+      "explain": {
+        "de": "Zwei Events haben dieselbe ID. Bei Events gewinnt das zuerst geladene; Stellaris ordnet die Dateien über Vanilla und alle Mods nach dem Dateinamen. Die Meldung nennt die Kopie, die verworfen wird (gemessen 2026-10-16: eine Mod-Datei 00_… ersetzt ein Vanilla-Event, eine Mod-Datei zz_… nicht).",
+        "en": "Two events have the same ID. For events the first loaded one wins; Stellaris orders the files across vanilla and all mods by file name. The message names the copy that is dropped (measured 2026-10-16: a mod file 00_… replaces a vanilla event, a mod file zz_… does not)."
+      },
+      "tips": {
+        "de": [
+          "Soll das eigene Event ein Vanilla-Event ersetzen, die Datei so benennen, dass sie vor der Vanilla-Datei lädt (z. B. 00_…)."
+        ],
+        "en": [
+          "To replace a vanilla event with your own, name the file so it loads before the vanilla file (e.g. 00_…)."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-006",
+      "name": {
+        "de": "Ungültige Event-ID",
+        "en": "Invalid event ID"
+      },
+      "severity": "error",
+      "pattern": "^Event (?<name>\\S+) at\\s+file: (?<file>.+?) line: (?<line>\\d+) has an invalid ID",
+      "explain": {
+        "de": "Die ID des Events gehört zu keinem Namespace, den diese Datei mit namespace = … deklariert, oder die Datei ist kaputt gelesen worden (BOM am Dateianfang). Das Event wird nicht geladen.",
+        "en": "The event's ID belongs to no namespace this file declares with namespace = …, or the file was misread (BOM at the start of the file). The event is not loaded."
+      },
+      "tips": {
+        "de": [
+          "Am Dateianfang namespace = <Teil vor dem Punkt> eintragen."
+        ],
+        "en": [
+          "Add namespace = <part before the dot> at the start of the file."
+        ]
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-007",
+      "name": {
+        "de": "Event ohne Auslöser",
+        "en": "Event without trigger mode"
+      },
+      "severity": "warning",
+      "pattern": "^Event (?<name>\\S+) has neither MTTH nor is_triggered_only = yes",
+      "explain": {
+        "de": "Das Event hat weder is_triggered_only = yes noch mean_time_to_happen. Stellaris prüft es deshalb jeden Tag für jeden passenden Scope, das kostet Leistung und feuert es oft.",
+        "en": "The event has neither is_triggered_only = yes nor mean_time_to_happen. Stellaris therefore checks it every day for every matching scope, which costs performance and fires it often."
+      },
+      "fixes": [
+        "findDefinition",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-008",
+      "name": {
+        "de": "Event nicht gefunden",
+        "en": "Event not found"
+      },
+      "severity": "error",
+      "pattern": "^Error in fire event effect at\\s+file: (?<file>.+?) line: (?<line>\\d+), could not find event: (?<name>\\S+)",
+      "explain": {
+        "de": "Die Zeile löst ein Event aus, das es nicht gibt (Tippfehler, Event in einer Datei mit ungültiger ID oder in einem Unterordner von events/, den Stellaris nicht lädt).",
+        "en": "The line fires an event that does not exist (typo, event in a file with an invalid ID, or in a subfolder of events/, which Stellaris does not load)."
+      },
+      "fixes": [
+        "jump",
+        "findDefinition",
+        "replaceWithCandidate",
+        "suppress"
+      ]
+    },
+    {
+      "code": "EVT-009",
+      "name": {
+        "de": "On-Action mit fehlendem Event",
+        "en": "On action with missing event"
+      },
+      "severity": "error",
+      "pattern": "^OnAction \\\"(?<detail>[^\\\"]+)\\\" is referencing an invalid event: \\\"(?<name>[^\\\"]+)\\\"",
+      "explain": {
+        "de": "Eine Datei in common/on_actions trägt für diese On-Action ein Event ein, das es nicht gibt.",
+        "en": "A file in common/on_actions lists an event for this on action that does not exist."
+      },
+      "fixes": [
+        "findDefinition",
+        "showUsages",
+        "suppress"
+      ]
+    },
+    {
+      "code": "GAL-001",
+      "name": {
+        "de": "Zu wenige fortgeschrittene Reiche",
+        "en": "Too few advanced empires"
+      },
+      "severity": "info",
+      "pattern": "^Can only spawn \\d+ Advanced Empires out of \\d+ desired",
+      "explain": {
+        "de": "Die Galaxie bietet nicht genug Platz für alle eingestellten fortgeschrittenen Reiche. Eine Einstellung der Spielstarts, kein Mod-Fehler.",
+        "en": "The galaxy has not enough room for all advanced empires set up. A game setup setting, not a mod error."
+      },
+      "fixes": [
+        "suppress"
+      ],
+      "defaultSuppressed": true
+    },
+    {
+      "code": "SET-001",
+      "name": {
+        "de": "Ungültige Vorlage in settings.txt",
+        "en": "Invalid template in settings.txt"
+      },
+      "severity": "info",
+      "pattern": "^Invalid template name in settings\\.txt",
+      "explain": {
+        "de": "settings.txt nennt eine Galaxie-Vorlage, die es nicht mehr gibt (z. B. nach einem Update oder ohne die Mod, die sie lieferte). Das Spiel nimmt die Standardvorlage.",
+        "en": "settings.txt names a galaxy template that no longer exists (e.g. after an update or without the mod that provided it). The game uses the default template."
+      },
+      "fixes": [
+        "suppress"
+      ],
+      "defaultSuppressed": true
+    },
+    {
+      "code": "SAV-002",
+      "name": {
+        "de": "Lesefehler im Spielstand",
+        "en": "Read error in save game"
+      },
+      "severity": "info",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]*)\\\" in file: \\\"(?<name>save games/[^\\\"]+)\\\"",
+      "explain": {
+        "de": "Ein Lesefehler beim Laden eines Spielstands. Er stammt aus den gespeicherten Daten, nicht aus einer Mod-Datei.",
+        "en": "A read error while loading a save game. It comes from the saved data, not from a mod file."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    },
+    {
+      "code": "PAR-001",
+      "name": {
+        "de": "Lesefehler",
+        "en": "Parsing error"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]*)\\\" in file: \\\"(?:(?<file>[^\\\"]+)\\\" near line: (?<line>\\d+)|\\\")",
+      "explain": {
+        "de": "Das Spiel konnte diese Stelle der Datei nicht lesen und überspringt sie.",
+        "en": "The game could not read this part of the file and skips it."
+      },
+      "fixes": [
+        "jump",
+        "suppress"
+      ]
+    },
+    {
+      "code": "PAR-002",
+      "name": {
+        "de": "Lesefehler ohne Datei",
+        "en": "Parsing error without file"
+      },
+      "severity": "error",
+      "pattern": "^Error: \\\"(?<detail>[\\s\\S]+)",
+      "explain": {
+        "de": "Das Spiel konnte etwas nicht lesen und nennt keine Datei.",
+        "en": "The game could not read something and names no file."
+      },
+      "fixes": [
+        "suppress"
+      ]
+    }
+  ]
+}

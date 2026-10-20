@@ -46,8 +46,9 @@ public partial class MainWindow
         _ => null,
     };
 
-    /// <summary>GUI-Kacheln nur mit eingeschalteten GUI-Werkzeugen.</summary>
-    private static bool TileOffered(string id) => TileCatalog.Find(id)?.RequiresGuiTools != true || GuiSettings.ToolsEnabled;
+    /// <summary>GUI-Kacheln nur mit eingeschalteten GUI-Werkzeugen; der Daten-Helfer außerdem nur im Jomini-Format.</summary>
+    private static bool TileOffered(string id) =>
+        (TileCatalog.Find(id)?.RequiresGuiTools != true || GuiSettings.ToolsEnabled) && (id != TileIds.GuiDataHelper || GuiSettings.DataHelperOffered);
 
     /// <summary>Der Save Explorer braucht Profil-Unterstützung (wie der Menüpunkt).</summary>
     private bool TileEnabled(string id) => id != TileIds.SaveExplorer || SaveExplorerSettings is not null;
@@ -100,9 +101,22 @@ public partial class MainWindow
             {
                 var menu = new ContextMenu();
                 menu.Items.Add(GuiTileItem(GuiTexts.MenuInspect, GuiTexts.MenuInspectTip, GuiTexts.KeyInspect, GuiInspectMenuItem_Click));
-                menu.Items.Add(GuiTileItem(GuiDataTexts.Title, GuiDataTexts.MenuTip, GuiDataTexts.Key, GuiDataHelper_Click));
-                menu.Items.Add(GuiTileItem(GuiTexts.MenuBlocks, GuiTexts.MenuBlocksTip, GuiTexts.KeyBlocks, GuiBlocks_Click));
-                menu.Items.Add(GuiTileItem(GuiTexts.MenuNewFile, GuiTexts.MenuNewFileTip, null, NewGuiFile_Click));
+                if (GuiSettings.DataHelperOffered)
+                {
+                    menu.Items.Add(GuiTileItem(GuiDataTexts.Title, GuiDataTexts.MenuTip, GuiDataTexts.Key, GuiDataHelper_Click));
+                }
+
+                // Klassisch (HOI IV, EU IV) keine Bausteine und keine neue GUI-Datei (Jomini-Code bzw. Ordner gui, Plan 3).
+                if (GuiSettings.BlocksOffered)
+                {
+                    menu.Items.Add(GuiTileItem(GuiTexts.MenuBlocks, GuiTexts.MenuBlocksTip, GuiTexts.KeyBlocks, GuiBlocks_Click));
+                }
+
+                if (GuiSettings.NewFileOffered)
+                {
+                    menu.Items.Add(GuiTileItem(GuiTexts.MenuNewFile, GuiTexts.MenuNewFileTip, null, NewGuiFile_Click));
+                }
+
                 menu.Items.Add(GuiTileItem(GuiTexts.MenuModSettings, GuiTexts.MenuModSettingsTip, null, GuiModSettings_Click));
                 return menu;
             }

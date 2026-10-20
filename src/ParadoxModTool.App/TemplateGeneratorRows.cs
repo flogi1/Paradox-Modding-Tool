@@ -420,6 +420,9 @@ public sealed class TemplateGeneratorHost
 
     /// <summary>Der Ordner der zuletzt aktiven Datei relativ zum Spielordner (z. B. <c>common/building_types</c>); <see langword="null"/>, wenn unbekannt.</summary>
     public required Func<string?> SourceRelativeFolder { get; init; }
+
+    /// <summary>Kodierung neuer Code-Dateien je Endung aus dem Spielprofil (Stellaris: ohne BOM); ohne Angabe UTF-8 mit BOM.</summary>
+    public Func<string, System.Text.Encoding>? NewFileEncoding { get; init; }
 }
 
 /// <summary>Eintrag der Mod-Auswahl im Template-Fenster; <see cref="Mod"/> ist <see langword="null"/> für "keine Mod".</summary>

@@ -96,6 +96,15 @@ public sealed class OverrideRules
     /// <summary>Zuerst geladen gewinnt nach Ladereihenfolge über Vanilla und Mods (siehe <see cref="GameProfile.FirstWinsInLoadOrder"/>).</summary>
     public bool FirstWinsInLoadOrder { get; init; }
 
+    /// <summary>Zuletzt geladen gewinnt nach Ladereihenfolge der Dateien über Vanilla und Mods (siehe <see cref="GameProfile.LastWinsInLoadOrder"/>).</summary>
+    public bool LastWinsInLoadOrder { get; init; }
+
+    /// <summary>Dateinamen mit Groß-/Kleinschreibung vergleichen (siehe <see cref="GameProfile.LoadOrderCaseSensitive"/>).</summary>
+    public bool LoadOrderCaseSensitive { get; init; }
+
+    /// <summary>Ladereihenfolge der Pfade über Vanilla und Mods für <see cref="FirstWinsInLoadOrder"/> und <see cref="LastWinsInLoadOrder"/>.</summary>
+    public GameLoadOrder LoadOrder => GameLoadOrder.For(LoadOrderCaseSensitive);
+
     public static OverrideRules FromProfile(GameProfile profile, IEnumerable<OverrideRule>? game = null)
     {
         var shipped = new List<OverrideRule>();
@@ -108,7 +117,7 @@ public sealed class OverrideRules
             }
         }
 
-        return new OverrideRules(shipped, game) { InjectAppends = profile.InjectAppends, FirstWinsInLoadOrder = profile.FirstWinsInLoadOrder };
+        return new OverrideRules(shipped, game) { InjectAppends = profile.InjectAppends, FirstWinsInLoadOrder = profile.FirstWinsInLoadOrder, LastWinsInLoadOrder = profile.LastWinsInLoadOrder, LoadOrderCaseSensitive = profile.LoadOrderCaseSensitive };
     }
 
     public RuleMatch Match(string relativePath)

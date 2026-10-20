@@ -38,6 +38,12 @@ public partial class MainWindow
             return _scriptDocsFolderOverride;
         }
 
+        // Hearts of Iron IV: Doku im Installationsordner; bei flacher Installation ist der erste Vanilla-Ordner die Installation.
+        if (_activeProfile is { ScriptDocsBase: "install" } installProfile)
+        {
+            return ScriptDocsLocation.ForInstall(CollectOriginRoots().Vanilla.FirstOrDefault(), installProfile.ScriptDocsFolder);
+        }
+
         return _activeProfile is { DefaultModRootTemplate: { Length: > 0 } template } profile
             ? ScriptDocsLocation.Default(template, profile.ScriptDocsFolder)
             : null;
@@ -81,7 +87,9 @@ public partial class MainWindow
     private ScopeService ScopeRuleService => _scopeService ??= new ScopeService(
         Path.Combine(GameContext.Repository.GameDirectory(GameContext.GameId), "scopes", "rules.json"),
         () => CollectOriginRoots().Vanilla,
-        () => _activeProfile?.DefaultEventType);
+        () => _activeProfile?.DefaultEventType,
+        () => _activeProfile?.EventBlockScopes,
+        () => _activeProfile?.NumericKeysChangeScope == true);
 
     /// <summary>Gleicht die Scope-Regeln mit Script-Datenbank und Vanilla-Dateien ab und lernt im Hintergrund neu, falls nötig.</summary>
     private async Task<ScopeUpdateResult?> UpdateScopeRulesAsync(bool force, CancellationToken cancellation = default, IProgress<(int Done, int Total)>? progress = null)

@@ -45,6 +45,22 @@ public class VanillaMergeWorkflowTests : IDisposable
         return path;
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void MergeFileIntoMod_BehaeltBomZustandDerModDatei(bool bom)
+    {
+        // Stellaris liest Skriptdateien mit BOM falsch; eine Mod-Datei ohne BOM darf durch den Merge keins bekommen
+        var oldVanillaPath = WriteGameFile("old.txt", "cost = 100\n");
+        var newVanillaPath = WriteGameFile("new.txt", "cost = 100\nbrand_new = 5\n");
+        File.WriteAllText(_modFilePath, "cost = 150\n", new System.Text.UTF8Encoding(bom));
+
+        VanillaMergeWorkflow.MergeFileIntoMod(oldVanillaPath, newVanillaPath, _modFilePath, _versionManager);
+
+        var bytes = File.ReadAllBytes(_modFilePath);
+        Assert.Equal(bom, bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF);
+    }
+
     [Fact]
     public void MergeFileIntoMod_OhneKonflikt_SchreibtDateiUndErstelltSnapshot()
     {

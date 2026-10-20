@@ -16,7 +16,8 @@ public static class GuiCatalogLearner
     public static GuiPropertyCatalog Learn(GuiIndex index, GuiRules rules, string fingerprint)
     {
         var resolver = new GuiResolver(index, rules);
-        var catalog = new GuiPropertyCatalog { Fingerprint = fingerprint };
+        var classic = rules.Layout.IsClassic;
+        var catalog = new GuiPropertyCatalog { Fingerprint = fingerprint, Classic = classic };
         var baseCache = new Dictionary<string, string>(StringComparer.Ordinal);
 
         string BaseOf(string key)
@@ -38,11 +39,15 @@ public static class GuiCatalogLearner
             {
                 if (node.Kind == GuiNodeKind.TypeDefinition)
                 {
-                    Record(catalog, BaseOf(node.Name), node, resolver);
+                    Record(catalog, BaseOf(node.Name), node, resolver, classic);
                 }
                 else if (node.Kind == GuiNodeKind.KeyedBlock && resolver.Classify(node) is GuiRole.TypeInstance or GuiRole.EngineWidget)
                 {
-                    Record(catalog, BaseOf(node.Name), node, resolver);
+                    // Klassisch sind guiTypes und spriteTypes nur Behälter; als Element gilt ein bekannter Schlüssel oder ein Block mit name.
+                    if (!classic || IsClassicElement(node))
+                    {
+                        Record(catalog, BaseOf(node.Name), node, resolver, classic);
+                    }
                 }
                 else if (node is { Kind: GuiNodeKind.Property, IsQuoted: true } && node.Value?.Contains('[') == true)
                 {
@@ -96,23 +101,33 @@ public static class GuiCatalogLearner
         return catalog;
     }
 
-    private static void Record(GuiPropertyCatalog catalog, string widget, GuiNode container, GuiResolver resolver)
+    private static bool IsClassicElement(GuiNode node) =>
+        Classic.ClassicLayoutEngine.IsKnownElement(node.Name)
+        || node.Children.Any(c => c.Kind == GuiNodeKind.Property && string.Equals(c.Name, "name", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Klassisch liegen Widgets und Eigenschaften unter dem kleingeschriebenen Schlüssel; die Schreibweisen zählt <c>Spellings</c> mit.</summary>
+    private static void Record(GuiPropertyCatalog catalog, string widget, GuiNode container, GuiResolver resolver, bool classic)
     {
-        if (!catalog.Widgets.TryGetValue(widget, out var stats))
+        var widgetKey = classic ? GuiPropertyCatalog.ClassicKey(widget) : widget;
+        if (!catalog.Widgets.TryGetValue(widgetKey, out var stats))
         {
-            stats = new GuiWidgetStats { Name = widget };
-            catalog.Widgets[widget] = stats;
+            stats = new GuiWidgetStats { Name = widgetKey };
+            catalog.Widgets[widgetKey] = stats;
         }
 
         stats.Count++;
+        stats.Spellings[widget] = stats.Spellings.GetValueOrDefault(widget) + 1;
         foreach (var child in container.Children)
         {
             GuiValueForm form;
             string? word = null;
+            string? pairKey = null;
+            var quoted = false;
             switch (child.Kind)
             {
                 case GuiNodeKind.Property:
                     form = GuiValueClassifier.ClassifyScalar(child.Value ?? string.Empty, child.IsQuoted);
+                    quoted = child.IsQuoted;
                     if (form == GuiValueForm.Word)
                     {
                         word = child.Value;
@@ -129,6 +144,7 @@ public static class GuiCatalogLearner
                     else if (role == GuiRole.StructuredBlock)
                     {
                         form = GuiValueForm.Block;
+                        pairKey = PairKeyOf(child);
                     }
                     else
                     {
@@ -141,19 +157,40 @@ public static class GuiCatalogLearner
                     continue;
             }
 
-            if (!stats.Properties.TryGetValue(child.Name, out var property))
+            var propertyKey = classic ? GuiPropertyCatalog.ClassicKey(child.Name) : child.Name;
+            if (!stats.Properties.TryGetValue(propertyKey, out var property))
             {
-                property = new GuiPropertyStats { Name = child.Name };
-                stats.Properties[child.Name] = property;
+                property = new GuiPropertyStats { Name = propertyKey };
+                stats.Properties[propertyKey] = property;
             }
 
             property.Count++;
+            property.Spellings[child.Name] = property.Spellings.GetValueOrDefault(child.Name) + 1;
+            if (quoted)
+            {
+                property.Quoted++;
+            }
+
+            if (pairKey is not null)
+            {
+                property.PairKeys[pairKey] = property.PairKeys.GetValueOrDefault(pairKey) + 1;
+            }
+
             property.Forms[form] = property.Forms.GetValueOrDefault(form) + 1;
             if (word is not null && (property.Words.ContainsKey(word) || property.Words.Count < MaxWordsPerProperty))
             {
                 property.Words[word] = property.Words.GetValueOrDefault(word) + 1;
             }
         }
+    }
+
+    /// <summary>Schlüssel eines Blocks mit genau zwei Skalaren, klein und mit Komma verbunden (<c>width,height</c>); sonst null. Kommentare zählen nicht.</summary>
+    private static string? PairKeyOf(GuiNode block)
+    {
+        var children = block.Children.Where(c => c.Kind != GuiNodeKind.Comment).ToList();
+        return children.Count == 2 && children.All(c => c.Kind == GuiNodeKind.Property)
+            ? string.Join(',', children.Select(c => c.Name.ToLowerInvariant()))
+            : null;
     }
 
     private static void RecordBindings(GuiPropertyCatalog catalog, GuiNode property)

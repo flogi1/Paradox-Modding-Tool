@@ -204,9 +204,9 @@ public sealed class GuiPaletteView : UserControl
             TaskScheduler.FromCurrentSynchronizationContext());
     }
 
-    /// <summary>Bausteine des aktiven Spiels (auf dem UI-Thread, Teil-2-Ruling 1).</summary>
+    /// <summary>Bausteine des aktiven Spiels (auf dem UI-Thread, Teil-2-Ruling 1); klassisch keine (<see cref="GuiSettings.BlocksOffered"/>).</summary>
     private void LoadBlocks() =>
-        _blockEntries = GuiSettings.BlockSource is { } source ? GuiPalette.BlockEntries(source()) : Array.Empty<GuiPaletteEntry>();
+        _blockEntries = GuiSettings.BlocksOffered && GuiSettings.BlockSource is { } source ? GuiPalette.BlockEntries(source()) : Array.Empty<GuiPaletteEntry>();
 
     /// <summary>Bausteingruppe oben, darunter die Einträge des Index; ListCollectionView gruppiert in Reihenfolge des ersten Auftretens.</summary>
     private void ShowEntries()

@@ -343,6 +343,22 @@ public static class SaveVariableReader
         private void OnScalar(string key, string value)
         {
             var n = _stack.Count;
+            if (n >= 1 && _itemDepth < 0 && _stack[n - 1] == "variables")
+            {
+                // Hearts of Iron IV: Variablen stehen flach als name=wert im Block, Listen als name^0, name^1 … mit name^num als Länge.
+                // Jomini-Spiele haben hier nur die Blöcke data und list, nie einen Wert.
+                var owner = Intern(string.Join('/', _stack.Take(n - 1)));
+                var caret = key.IndexOf('^');
+                if (caret < 0)
+                {
+                    Entries.Add(new SaveVariableEntry(owner, Intern(key), SaveEntryKind.Variable, string.Empty, "value", value));
+                }
+                else if (key[(caret + 1)..] != "num")
+                {
+                    Entries.Add(new SaveVariableEntry(owner, Intern(key[..caret]), SaveEntryKind.ListItem, string.Empty, "value", value));
+                }
+            }
+
             if (n == _itemDepth)
             {
                 if (key == (_itemKind == SaveEntryKind.Variable ? "flag" : "name"))

@@ -77,6 +77,15 @@ public sealed class ResolvedElement
 
     public string? Name => Property("name")?.Value;
 
+    /// <summary>Vorlagensuche des Resolvers, mit der die Vorschau <c>using</c> in Zuständen auflöst (<see cref="Layout.JominiShowState"/>).</summary>
+    internal Func<string, GuiNode?>? TemplateLookup { get; set; }
+
+    /// <summary>Dateipfad eines Syntaxknotens (Resolver), für die Herkunft von Vorlagenwerten im Zustand <c>_show</c>.</summary>
+    internal Func<GuiNode, string?>? FilePathLookup { get; set; }
+
+    /// <summary>Zwischengespeicherte Endwerte des Zustands <c>_show</c>; die Vorschau berechnet sie einmal je Element.</summary>
+    internal Layout.ShowOverlay? ShowOverlayCache { get; set; }
+
     /// <summary>Skalare Eigenschaft oder Wertblock mit diesem Namen (der letzte gewinnt).</summary>
     public ResolvedProperty? Property(string name) =>
         Properties.FirstOrDefault(p => p.Name == name && p.Role != GuiRole.StructuredBlock);

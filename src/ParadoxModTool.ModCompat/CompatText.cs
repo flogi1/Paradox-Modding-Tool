@@ -29,6 +29,7 @@ public static class CompatText
         CompatKind.ReplacePathGuiCrash => ModCompatTexts.KindReplacePathGuiCrash,
         CompatKind.PrefixNoEffect => ModCompatTexts.KindPrefixNoEffect,
         CompatKind.PrefixActsAsReplace => ModCompatTexts.KindPrefixActsAsReplace,
+        CompatKind.LosesToVanilla => ModCompatTexts.KindLosesToVanilla,
         _ => kind.ToString(),
     };
 

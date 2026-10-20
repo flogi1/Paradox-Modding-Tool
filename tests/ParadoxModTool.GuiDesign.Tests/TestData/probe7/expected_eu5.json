@@ -1,0 +1,697 @@
+{
+ "file": "eu5-probe-window7-scale100.jpg",
+ "scale": 1.0,
+ "origin": [
+  41.0,
+  41.0
+ ],
+ "colors": {
+  "R": [
+   254,
+   0,
+   0
+  ],
+  "G": [
+   0,
+   255,
+   1
+  ],
+  "B": [
+   0,
+   0,
+   254
+  ],
+  "Y": [
+   255,
+   255,
+   0
+  ],
+  "M": [
+   255,
+   0,
+   254
+  ],
+  "C": [
+   0,
+   255,
+   255
+  ],
+  "O": [
+   255,
+   127,
+   0
+  ],
+  "W": [
+   255,
+   255,
+   255
+  ],
+  "BACK": [
+   76,
+   76,
+   76
+  ],
+  "WIN": [
+   9,
+   10,
+   14
+  ]
+ },
+ "cases": [
+  {
+   "id": "15a",
+   "question": "icon R 100x50 bei {20 20}, scale = 0.5, Kind G 20x20 bei {10 10}: Drehpunkt (oben links / Mitte), Kind skaliert?",
+   "w": 200,
+   "h": 100,
+   "runs_h": [
+    {
+     "c": "BACK",
+     "start": 0.0,
+     "len": 199.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "BACK",
+     "start": 0.0,
+     "len": 99.0
+    }
+   ],
+   "edges_h": [],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 20.0,
+     "y": 20.0,
+     "w": 48.0,
+     "h": 23.0
+    },
+    "G": {
+     "x": 25.0,
+     "y": 25.0,
+     "w": 8.0,
+     "h": 8.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 20.0,
+      "y": 20.0,
+      "w": 48.0,
+      "h": 23.0,
+      "px": 953
+     }
+    ],
+    "G": [
+     {
+      "x": 25.0,
+      "y": 25.0,
+      "w": 8.0,
+      "h": 8.0,
+      "px": 58
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    88.8,
+    70.6,
+    70.5
+   ]
+  },
+  {
+   "id": "15b",
+   "question": "hbox ohne size: G mit scale = 0.5 zwischen R und B (50x40): aendert scale den Platz in der hbox?",
+   "w": 300,
+   "h": 60,
+   "runs_h": [
+    {
+     "c": "BACK",
+     "start": 0.0,
+     "len": 23.0
+    },
+    {
+     "c": "R",
+     "start": 25.0,
+     "len": 48.0
+    },
+    {
+     "c": "BACK",
+     "start": 75.0,
+     "len": 148.0
+    },
+    {
+     "c": "B",
+     "start": 225.0,
+     "len": 48.0
+    },
+    {
+     "c": "BACK",
+     "start": 275.0,
+     "len": 24.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "BACK",
+     "start": 0.0,
+     "len": 59.0
+    }
+   ],
+   "edges_h": [
+    {
+     "between": "BACK|R",
+     "at": 24.0
+    },
+    {
+     "between": "R|BACK",
+     "at": 74.0
+    },
+    {
+     "between": "BACK|B",
+     "at": 224.0
+    },
+    {
+     "between": "B|BACK",
+     "at": 274.0
+    }
+   ],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 25.0,
+     "y": 10.0,
+     "w": 48.0,
+     "h": 38.0
+    },
+    "G": {
+     "x": 125.0,
+     "y": 10.0,
+     "w": 23.0,
+     "h": 18.0
+    },
+    "B": {
+     "x": 225.0,
+     "y": 10.0,
+     "w": 48.0,
+     "h": 38.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 25.0,
+      "y": 10.0,
+      "w": 48.0,
+      "h": 38.0,
+      "px": 1824
+     }
+    ],
+    "G": [
+     {
+      "x": 125.0,
+      "y": 10.0,
+      "w": 23.0,
+      "h": 18.0,
+      "px": 414
+     }
+    ],
+    "B": [
+     {
+      "x": 225.0,
+      "y": 9.0,
+      "w": 48.0,
+      "h": 40.0,
+      "px": 1826
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    69.6,
+    89.4,
+    71.4
+   ]
+  },
+  {
+   "id": "15c",
+   "question": "textbox 'Probe text 123' fontsize 15, scale = 0.5, B/R-Marken wie 7a: Breite und Hoehe der G-Tinte, skaliert der Text?",
+   "w": 600,
+   "h": 40,
+   "runs_h": [
+    {
+     "c": "B",
+     "start": 0.0,
+     "len": 2.0
+    },
+    {
+     "c": "BACK",
+     "start": 4.0,
+     "len": 88.0
+    },
+    {
+     "c": "R",
+     "start": 94.0,
+     "len": 2.0
+    },
+    {
+     "c": "BACK",
+     "start": 98.0,
+     "len": 501.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "BACK",
+     "start": 0.0,
+     "len": 39.0
+    }
+   ],
+   "edges_h": [
+    {
+     "between": "B|BACK",
+     "at": 3.0
+    },
+    {
+     "between": "BACK|R",
+     "at": 93.0
+    },
+    {
+     "between": "R|BACK",
+     "at": 97.0
+    }
+   ],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 94.0,
+     "y": 5.0,
+     "w": 2.0,
+     "h": 28.0
+    },
+    "B": {
+     "x": 0.0,
+     "y": 5.0,
+     "w": 3.0,
+     "h": 28.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 94.0,
+      "y": 5.0,
+      "w": 2.0,
+      "h": 28.0,
+      "px": 56
+     }
+    ],
+    "B": [
+     {
+      "x": 0.0,
+      "y": 5.0,
+      "w": 3.0,
+      "h": 28.0,
+      "px": 58
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    76.0,
+    76.0,
+    76.0
+   ],
+   "ink": {
+    "x": 4.0,
+    "y": 10.0,
+    "w": 44.0,
+    "h": 7.0,
+    "px": 218
+   },
+   "ink_light": null
+  },
+  {
+   "id": "15d",
+   "question": "widget alpha = 0 mit Kind R und state _show alpha = 1: fuehrt GUI.CreateWidget _show aus (R sichtbar)?",
+   "w": 100,
+   "h": 50,
+   "runs_h": [
+    {
+     "c": "R",
+     "start": 0.0,
+     "len": 98.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "R",
+     "start": 0.0,
+     "len": 48.0
+    }
+   ],
+   "edges_h": [],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 0.0,
+     "y": 0.0,
+     "w": 98.0,
+     "h": 48.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 0.0,
+      "y": 0.0,
+      "w": 98.0,
+      "h": 48.0,
+      "px": 4704
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    254.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "id": "15e",
+   "question": "icon R size {100 40} mit state _show size {200 40}: Breite 100 oder 200?",
+   "w": 250,
+   "h": 40,
+   "runs_h": [
+    {
+     "c": "R",
+     "start": 0.0,
+     "len": 198.0
+    },
+    {
+     "c": "BACK",
+     "start": 200.0,
+     "len": 49.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "R",
+     "start": 0.0,
+     "len": 38.0
+    }
+   ],
+   "edges_h": [
+    {
+     "between": "R|BACK",
+     "at": 199.0
+    }
+   ],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 0.0,
+     "y": 0.0,
+     "w": 198.0,
+     "h": 38.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 0.0,
+      "y": 0.0,
+      "w": 198.0,
+      "h": 38.0,
+      "px": 7524
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    254.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "id": "15f",
+   "question": "icon R alpha = 0, state _show using = Vorlage mit alpha = 1: R sichtbar (using im state wirkt)?",
+   "w": 100,
+   "h": 50,
+   "runs_h": [
+    {
+     "c": "R",
+     "start": 0.0,
+     "len": 98.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "R",
+     "start": 0.0,
+     "len": 48.0
+    }
+   ],
+   "edges_h": [],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 0.0,
+     "y": 0.0,
+     "w": 98.0,
+     "h": 48.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 0.0,
+      "y": 0.0,
+      "w": 98.0,
+      "h": 48.0,
+      "px": 4704
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    254.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "id": "15g",
+   "question": "Gegenprobe zu 15c ohne scale: Breite und Hoehe der G-Tinte",
+   "w": 600,
+   "h": 40,
+   "runs_h": [
+    {
+     "c": "B",
+     "start": 0.0,
+     "len": 2.0
+    },
+    {
+     "c": "?",
+     "start": 4.0,
+     "len": 5.0
+    },
+    {
+     "c": "BACK",
+     "start": 9.0,
+     "len": 2.0
+    },
+    {
+     "c": "?",
+     "start": 11.0,
+     "len": 4.0
+    },
+    {
+     "c": "BACK",
+     "start": 15.0,
+     "len": 3.0
+    },
+    {
+     "c": "?",
+     "start": 18.0,
+     "len": 3.0
+    },
+    {
+     "c": "BACK",
+     "start": 21.0,
+     "len": 2.0
+    },
+    {
+     "c": "?",
+     "start": 23.0,
+     "len": 7.0
+    },
+    {
+     "c": "?",
+     "start": 31.0,
+     "len": 11.0
+    },
+    {
+     "c": "BACK",
+     "start": 42.0,
+     "len": 4.0
+    },
+    {
+     "c": "?",
+     "start": 46.0,
+     "len": 4.0
+    },
+    {
+     "c": "?",
+     "start": 51.0,
+     "len": 8.0
+    },
+    {
+     "c": "?",
+     "start": 60.0,
+     "len": 4.0
+    },
+    {
+     "c": "BACK",
+     "start": 64.0,
+     "len": 3.0
+    },
+    {
+     "c": "?",
+     "start": 67.0,
+     "len": 3.0
+    },
+    {
+     "c": "BACK",
+     "start": 70.0,
+     "len": 7.0
+    },
+    {
+     "c": "?",
+     "start": 77.0,
+     "len": 4.0
+    },
+    {
+     "c": "BACK",
+     "start": 81.0,
+     "len": 4.0
+    },
+    {
+     "c": "BACK",
+     "start": 88.0,
+     "len": 7.0
+    },
+    {
+     "c": "?",
+     "start": 95.0,
+     "len": 4.0
+    },
+    {
+     "c": "R",
+     "start": 99.0,
+     "len": 2.0
+    },
+    {
+     "c": "BACK",
+     "start": 103.0,
+     "len": 496.0
+    }
+   ],
+   "runs_v": [
+    {
+     "c": "BACK",
+     "start": 0.0,
+     "len": 39.0
+    }
+   ],
+   "edges_h": [
+    {
+     "between": "BACK|BACK",
+     "at": 13.0
+    },
+    {
+     "between": "BACK|BACK",
+     "at": 19.5
+    },
+    {
+     "between": "BACK|BACK",
+     "at": 68.5
+    },
+    {
+     "between": "BACK|BACK",
+     "at": 79.0
+    },
+    {
+     "between": "BACK|BACK",
+     "at": 86.5
+    },
+    {
+     "between": "BACK|R",
+     "at": 97.0
+    },
+    {
+     "between": "R|BACK",
+     "at": 102.0
+    }
+   ],
+   "edges_v": [],
+   "boxes": {
+    "R": {
+     "x": 99.0,
+     "y": 6.0,
+     "w": 2.0,
+     "h": 27.0
+    },
+    "B": {
+     "x": 0.0,
+     "y": 5.0,
+     "w": 2.0,
+     "h": 28.0
+    }
+   },
+   "components": {
+    "R": [
+     {
+      "x": 99.0,
+      "y": 5.0,
+      "w": 2.0,
+      "h": 28.0,
+      "px": 55
+     }
+    ],
+    "B": [
+     {
+      "x": -1.0,
+      "y": 5.0,
+      "w": 4.0,
+      "h": 28.0,
+      "px": 59
+     }
+    ]
+   },
+   "w_periods": {},
+   "mean_rgb": [
+    76.0,
+    76.0,
+    76.0
+   ],
+   "ink": {
+    "x": 4.0,
+    "y": 12.0,
+    "w": 93.0,
+    "h": 13.0,
+    "px": 729
+   },
+   "ink_light": {
+    "x": 65.0,
+    "y": 15.0,
+    "w": 28.0,
+    "h": 9.0,
+    "px": 3
+   }
+  }
+ ]
+}

@@ -127,13 +127,7 @@ public static class LocalizationProfileLearner
         {
             foreach (var baseDirectory in Bases(root))
             {
-                var localization = Path.Combine(baseDirectory, "localization");
-                if (!Directory.Exists(localization))
-                {
-                    continue;
-                }
-
-                foreach (var path in Directory.EnumerateFiles(localization, pattern, options))
+                foreach (var path in ParadoxModTool.GameProfiles.LocalizationFolders.Existing(baseDirectory).SelectMany(localization => Directory.EnumerateFiles(localization, pattern, options)))
                 {
                     var full = Path.GetFullPath(path);
                     if (seen.Add(full))

@@ -435,6 +435,12 @@ public static class GeneratorPlanner
             work.OriginalText = source == atTarget ? content.Text : null;
             work.ModBaseText = source == atTarget ? null : content.Text;
         }
+        else
+        {
+            // Neue Datei: BOM nach dem Spielprofil (Stellaris liest Skriptdateien mit BOM falsch); Lokalisierung braucht immer eins
+            var extension = Path.GetExtension(relativePath).ToLowerInvariant();
+            work.HasBom = output.Kind == OutputKind.Localization || extension == ".yml" || (target.NewFileHasBom?.Invoke(extension) ?? true);
+        }
 
         return work;
     }

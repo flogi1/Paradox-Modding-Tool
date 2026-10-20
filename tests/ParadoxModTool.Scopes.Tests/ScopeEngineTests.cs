@@ -10,7 +10,8 @@ internal static class TestData
     private static ScriptDocEntry E(ScriptDocKind kind, string name, string[]? scopes = null, string[]? targets = null) =>
         new() { Kind = kind, Name = name, Scopes = (scopes ?? Array.Empty<string>()).ToList(), Targets = (targets ?? Array.Empty<string>()).ToList() };
 
-    public static ScopeDb Db()
+    /// <summary>Die Test-Datenbank, auf Wunsch mit weiteren Einträgen.</summary>
+    public static ScopeDb Db(params ScriptDocEntry[] extra)
     {
         var database = new ScriptDocDatabase();
         database.ApplyImport(
@@ -29,7 +30,7 @@ internal static class TestData
                 E(ScriptDocKind.EventTarget, "capital", new[] { "country" }, new[] { "location" }),
                 E(ScriptDocKind.EventTarget, "multi", new[] { "country" }, new[] { "location", "character" }),
                 E(ScriptDocKind.Modifier, "country_income", new[] { "Country" }),
-            },
+            }.Concat(extra).ToList(),
             Enum.GetValues<ScriptDocKind>().ToList(),
             T0,
             new Dictionary<string, long>());
@@ -193,6 +194,56 @@ public class ScopeEngineTests
         Assert.Contains("Parameterblock", context.UnknownReason);
     }
 
+    /// <summary>Wie Stellaris' <c>target</c>: die Doku-Logs nennen als Ergebnis nur "various".</summary>
+    private static readonly ScopeEngine VariousEngine = new(
+        TestData.Db(
+            new ScriptDocEntry { Kind = ScriptDocKind.EventTarget, Name = "target", Scopes = new() { "country" }, Targets = new() { "various" } },
+            new ScriptDocEntry { Kind = ScriptDocKind.EventTarget, Name = "from", Targets = new() { "various" } },
+            new ScriptDocEntry { Kind = ScriptDocKind.EventTarget, Name = "root", Targets = new() { "various" } }),
+        TestData.Rules());
+
+    [Fact]
+    public void EventTarget_WithVariousOutput_IsUnknown()
+    {
+        var context = At("b = { potential = { target = { | } } }", engine: VariousEngine);
+
+        Assert.Null(context.CurrentScope);
+        Assert.False(context.Confident);
+        Assert.Contains("verschiedenen Scopes", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Scope_saved_inside_a_various_target_stays_unknown()
+    {
+        var context = At("b = { potential = { target = { save_scope_as = t } scope:t = { | } } }", engine: VariousEngine);
+
+        Assert.Null(context.CurrentScope);
+    }
+
+    [Fact]
+    public void Various_target_inside_a_chain_passes_to_the_next_link()
+    {
+        // target.owner: "owner" führt aus jedem Scope zum Land, auch wenn das Ziel davor wechselt.
+        Assert.Equal("country", At("b = { potential = { target.owner = { | } } }", engine: VariousEngine).CurrentScope);
+    }
+
+    [Fact]
+    public void From_and_unknown_root_still_end_the_chain_although_the_logs_list_them_as_various()
+    {
+        // Stellaris nennt auch from, root, prev und this mit Ergebnis "various"; sie behalten ihre eigene Behandlung.
+        Assert.Null(At("b = { potential = { from.owner = { | } } }", engine: VariousEngine).CurrentScope);
+        Assert.Null(At("b = { tied = { root.owner = { | } } }", engine: VariousEngine).CurrentScope);
+    }
+
+    [Fact]
+    public void Chain_ending_at_a_various_target_is_unknown()
+    {
+        var context = At("b = { potential = { capital.target = { | } } }", engine: VariousEngine);
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("verschiedenen Scopes", context.UnknownReason);
+    }
+
     [Fact]
     public void FieldWithoutRule_IsUnknown_AndWeakOrTiedRulesAreNotUsed()
     {
@@ -251,12 +302,170 @@ public class ScopeEngineTests
     }
 
     [Fact]
+    public void Engine_resolves_classic_event_without_type()
+    {
+        var rules = TestData.Rules();
+        rules.EventBlockScopes = new() { ["country_event"] = "country" };
+        var context = At("country_event = { id = a.1 immediate = { | } }", @"C:\mods\m\events\x.txt", new ScopeEngine(TestData.Db(), rules));
+
+        Assert.Equal("country", context.CurrentScope);
+        Assert.Equal("events/country_event/immediate", context.FieldPath);
+        Assert.Null(context.UnknownReason);
+    }
+
+    [Fact]
+    public void Learned_block_scope_uses_the_learned_rules_and_no_fixed_scope_below_unknown_keys()
+    {
+        // HOI IV / EU IV: Blockname = Event-Art, der Root-Scope kommt aus den gelernten Regeln (eventBlockScopes-Wert "learned").
+        var rules = TestData.Rules();
+        rules.EventBlockScopes = new() { ["country_event"] = ScopeRules.LearnedRootScope };
+        var engine = new ScopeEngine(TestData.Db(), rules);
+
+        var field = At("country_event = { id = a.1 immediate = { | } }", @"C:\mods\m\events\x.txt", engine);
+        var nested = At("country_event = { id = a.1 option = { GER_char = { | } } }", @"C:\mods\m\events\x.txt", engine);
+
+        Assert.Equal("country", field.CurrentScope);
+        Assert.Equal("events/country_event/immediate", field.FieldPath);
+        Assert.Null(nested.CurrentScope);
+        Assert.Empty(engine.FindIssues("country_event = { id = a.1 option = { GER_char = { is_female = yes } } }", @"C:\mods\m\events\x.txt"));
+    }
+
+    private static ScopeEngine EngineWithNumericScopes()
+    {
+        var rules = TestData.Rules();
+        rules.NumericKeysChangeScope = true;
+        return new ScopeEngine(TestData.Db(), rules);
+    }
+
+    [Fact]
+    public void Numeric_block_is_an_unknown_scope_when_numeric_keys_change_scope()
+    {
+        var context = At("b = { potential = { 763 = { | } } }", engine: EngineWithNumericScopes());
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("763", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Numeric_block_in_random_list_stays_transparent()
+    {
+        var context = At("b = { potential = { random_list = { 10 = { | } } } }", engine: EngineWithNumericScopes());
+
+        Assert.Equal("country", context.CurrentScope);
+    }
+
+    [Fact]
+    public void Numeric_block_without_the_setting_stays_transparent()
+    {
+        Assert.Equal("country", At("b = { potential = { 763 = { | } } }").CurrentScope);
+    }
+
+    [Fact]
+    public void Numeric_scope_gives_no_issue()
+    {
+        Assert.Empty(EngineWithNumericScopes().FindIssues("b = { potential = { 763 = { is_capital = yes } } }", BuildingFile));
+        Assert.Single(EngineWithNumericScopes().FindIssues("b = { potential = { random_list = { 10 = { is_capital = yes } } } }", BuildingFile));
+    }
+
+    [Fact]
+    public void Without_event_block_types_classic_event_has_no_type()
+    {
+        var context = At("country_event = { id = a.1 immediate = { | } }", @"C:\mods\m\events\x.txt");
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("ohne type", context.UnknownReason);
+    }
+
+    [Fact]
     public void Scripted_definition_in_an_event_file_gets_no_default_type()
     {
         var context = At("scripted_trigger my_check = { immediate = { | } }", @"C:\mods\m\events\x.txt", EngineWithDefaultEventType());
 
         Assert.Null(context.CurrentScope);
         Assert.Contains("ohne type", context.UnknownReason);
+    }
+
+    private static ScopeEngine EngineWithEventBlocks()
+    {
+        var rules = TestData.Rules();
+        rules.EventBlockScopes = new Dictionary<string, string> { ["country_event"] = "country", ["location_event"] = "location", ["event"] = "none" };
+        rules.Fields["events/location_event/pre_triggers"] = new FieldRule { Scope = null, Support = 0.85, Total = 40 };
+        rules.Fields["events/location_event/elsewhere"] = new FieldRule { Scope = "country", Support = 1.0, Total = 40 };
+        return new ScopeEngine(TestData.Db(), rules);
+    }
+
+    [Fact]
+    public void Event_block_root_scope_reaches_nested_fields()
+    {
+        var context = At("location_event = { id = a.1 option = { trigger = { | } } }", @"C:\mods\m\events\x.txt", EngineWithEventBlocks());
+
+        Assert.Equal("location", context.CurrentScope);
+        Assert.True(context.Confident);
+    }
+
+    [Fact]
+    public void Event_block_root_scope_yields_to_mixed_vanilla_votes()
+    {
+        var context = At("location_event = { id = a.1 pre_triggers = { | } }", @"C:\mods\m\events\x.txt", EngineWithEventBlocks());
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("nicht eindeutig", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Event_block_root_scope_yields_to_another_learned_scope()
+    {
+        var context = At("location_event = { id = a.1 elsewhere = { | } }", @"C:\mods\m\events\x.txt", EngineWithEventBlocks());
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("nicht eindeutig", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Event_block_name_gives_the_root_scope_from_the_profile_map()
+    {
+        var context = At("location_event = { id = a.1 option = { name = OK | } }", @"C:\mods\m\events\x.txt", EngineWithEventBlocks());
+
+        Assert.Equal("location", context.CurrentScope);
+        Assert.True(context.Confident);
+        Assert.Equal("events/location_event/option", context.FieldPath);
+    }
+
+    [Fact]
+    public void Event_block_without_root_scope_stays_unknown_with_its_own_reason()
+    {
+        var context = At("event = { id = a.2 immediate = { | } }", @"C:\mods\m\events\x.txt", EngineWithEventBlocks());
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("ohne Root-Scope", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Unmapped_blocks_in_event_files_stay_without_type()
+    {
+        var context = At("inline_script = { script = x immediate = { | } }", @"C:\mods\m\events\x.txt", EngineWithEventBlocks());
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("ohne type", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Event_block_names_mean_nothing_without_the_profile_map()
+    {
+        var context = At("location_event = { id = a.1 option = { | } }", @"C:\mods\m\events\x.txt");
+
+        Assert.Null(context.CurrentScope);
+        Assert.Contains("ohne type", context.UnknownReason);
+    }
+
+    [Fact]
+    public void Event_block_root_scope_is_checked_in_the_whole_file()
+    {
+        var issues = EngineWithEventBlocks().FindIssues(
+            "country_event = { id = a.1 immediate = { add_gold = 1 is_capital = yes } }\nevent = { id = a.2 immediate = { is_capital = yes } }",
+            @"C:\mods\m\events\x.txt");
+
+        Assert.Equal("is_capital", Assert.Single(issues).Command);
     }
 
     [Fact]

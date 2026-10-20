@@ -56,10 +56,11 @@ public partial class MainWindow
             return;
         }
 
+        // Klassisch per GuiTextReader: EU IV hat Vanilla-Dateien in Windows-1252 (end_of_combat.gui); als UTF-8 gelesen würde "é" zu Ersatzzeichen.
         string vanillaText;
         try
         {
-            vanillaText = File.ReadAllText(path);
+            vanillaText = ReadGuiSource(path).Text;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -74,7 +75,7 @@ public partial class MainWindow
 
             // Dasselbe Element in der Mod-Kopie statt derselben Zeilennummer (3b-Nacharbeit 8).
             var caretOffset = ReferenceEquals(pane.ActiveDocument, document) ? pane.CurrentCaretOffset : 0;
-            OpenGuiInDesigner(copy.FullPath, GuiDraft.LineInCopy(GuiParser.Parse(vanillaText), caretOffset, workspace.Index.DocumentOf(copy)), startDraft: false);
+            OpenGuiInDesigner(copy.FullPath, GuiDraft.LineInCopy(GuiParser.Parse(vanillaText), caretOffset, workspace.Index.DocumentOf(copy), workspace.Index.Layout), startDraft: false);
             return;
         }
 
@@ -89,7 +90,7 @@ public partial class MainWindow
         {
             // Der Entwurf geht womöglich von der Abhängigkeits-Kopie aus und enthält eingesetzte Mod-Fassungen: dieselbe Stelle über ihr Element
             // suchen statt den Vanilla-Offset in den neuen Text zu übertragen (3c-Review).
-            line = GuiDraft.LineInCopy(GuiParser.Parse(document.Document.Text), caret, GuiParser.Parse(start.Text));
+            line = GuiDraft.LineInCopy(GuiParser.Parse(document.Document.Text), caret, GuiParser.Parse(start.Text), workspace.Index.Layout);
             document.Document.Text = start.Text;
         }
 
@@ -177,30 +178,61 @@ public partial class MainWindow
             return;
         }
 
-        GuiOverridePlan plan;
-        try
+        // Klassisch (HOI IV, EU IV): der klassische Planer mit dem Standardnamen aus ClassicOverrideTargets; ein gesetzter Name gilt wie angegeben.
+        var layout = CurrentGuiLayout;
+        var classic = layout.IsClassic;
+        var forceCopy = false;
+        while (true)
         {
-            var mod = RegisteredGuiMod(modRoot);
-            var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile, CurrentGuiLayout.FirstWins);
-            plan = GuiOverridePlanner.Plan(new GuiOverrideRequest(
-                source,
-                File.ReadAllText(path),
-                document.Document.Text,
-                workspace.Index,
-                targets,
-                file => File.Exists(file) ? File.ReadAllText(file) : null,
-                document.GuiDraftBase));
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            MessageBox.Show(this, GuiTexts.TakeOverFailed(ex.Message), GuiTexts.TakeOverTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            GuiOverridePlan plan;
+            try
+            {
+                var mod = RegisteredGuiMod(modRoot);
+                var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile, layout.FirstWins, classic: classic);
+                var (vanillaText, encodingName) = ReadGuiSource(path);
+                plan = GuiOverridePlanner.Plan(new GuiOverrideRequest(
+                    source,
+                    vanillaText,
+                    document.Document.Text,
+                    workspace.Index,
+                    targets,
+                    ReadGuiTarget,
+                    document.GuiDraftBase)
+                {
+                    ForceCopyFile = forceCopy,
+                    SourceEncoding = encodingName,
+                });
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                MessageBox.Show(this, GuiTexts.TakeOverFailed(ex.Message), GuiTexts.TakeOverTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        var window = new GuiTakeOverWindow(plan, modRoot, OpenModifiedTargets(plan)) { Owner = this };
-        if (window.ShowDialog() == true)
-        {
-            ApplyGuiPlan(plan, modRoot, GuiTexts.TakeOverAction(Path.GetFileName(path)), document);
+            // Ziehen Fenster aus einer verlierenden Mod-Datei um, fragt "Übernehmen" erst nach (Florian 2026-10-17); "Nein" bleibt in der Übersicht.
+            var window = new GuiTakeOverWindow(plan, modRoot, OpenModifiedTargets(plan), classic, layout.FirstWins)
+            {
+                Owner = this,
+                ConfirmMoves = (overview, moves) => MessageBox.Show(
+                    overview,
+                    GuiTexts.ClassicMoveConfirm(moves, layout.FirstWins),
+                    GuiTexts.TakeOverTitle,
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) == MessageBoxResult.Yes,
+            };
+            if (window.ShowDialog() == true)
+            {
+                ApplyGuiPlan(plan, modRoot, GuiTexts.TakeOverAction(Path.GetFileName(path)), document);
+                return;
+            }
+
+            // "Ganze Datei kopieren…": neu planen und die Übersicht noch einmal zeigen (dort gibt es den Knopf dann nicht mehr).
+            if (!window.CopyFileRequested || forceCopy)
+            {
+                return;
+            }
+
+            forceCopy = true;
         }
     }
 
@@ -217,6 +249,13 @@ public partial class MainWindow
     /// </summary>
     private void TakeOverAsNewType(GuiInspectTarget target)
     {
+        // HOI IV und EU IV kennen keine Typen.
+        if (!GuiSettings.TypeCopyOffered)
+        {
+            MessageBox.Show(this, GuiTexts.ClassicNoTypes, GuiTexts.NewTypeCopyTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
         if (GuiSettings.Workspace is not { } workspace)
         {
             MessageBox.Show(this, GuiTexts.DraftNoIndex, GuiTexts.NewTypeCopyTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -243,7 +282,7 @@ public partial class MainWindow
         }
 
         var mod = RegisteredGuiMod(modRoot);
-        var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile, CurrentGuiLayout.FirstWins);
+        var targets = GuiModTargets.For(modRoot, mod?.GuiOverrideFile, mod?.GuiTypesFile, CurrentGuiLayout.FirstWins, classic: CurrentGuiLayout.IsClassic);
         bool Taken(string name) => GuiTypeEdits.IsTaken(name, probe.Kind, workspace.Index, null, workspace.Catalog.IsKnownEngineWidget);
         var ask = new GuiNewTypeWindow(
             GuiNewTypeMode.Copy,
@@ -269,7 +308,7 @@ public partial class MainWindow
                 ask.TypeName,
                 workspace.Index,
                 targets,
-                file => File.Exists(file) ? File.ReadAllText(file) : null));
+                ReadGuiTarget));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -305,6 +344,9 @@ public partial class MainWindow
 
         // Neue Dateien in der Kodierung aus dem Spielprofil, bestehende behalten ihr BOM (Spec "GuiOverridePlanner", 3b-Nacharbeit 6). Die
         // Ordner-Aktion steht vorn: Rückgängig entfernt die Dateien zuerst und danach die selbst angelegten, leeren Ordner (3b-Nacharbeit 3).
+        // Klassisch (HOI IV, EU IV): bestehende Dateien behalten ihre Kodierung (auch Windows-1252), neue nach Profil oder Windows-1252-Quelle
+        // (ClassicOverridePlanner.WriteEncoding). Die Kodierungen stehen hier fest, bevor die erste Datei geschrieben wird (ForWrite liest die Datei).
+        var classic = CurrentGuiLayout.IsClassic;
         var encodingName = GuiFileEncodingName();
         var writes = new List<IUndoableAction>
         {
@@ -314,7 +356,9 @@ public partial class MainWindow
             GuiTexts.TakeOverFileAction(Path.GetFileName(file.FullPath)),
             file.FullPath,
             file.NewText,
-            GuiFileEncoding.For(encodingName, file.IsNew, !file.IsNew && HasUtf8Bom(file.FullPath)))));
+            classic
+                ? ClassicOverridePlanner.WriteEncoding(file, _activeProfile)
+                : GuiFileEncoding.For(encodingName, file.IsNew, !file.IsNew && HasUtf8Bom(file.FullPath)))).ToList());
 
         // Alle Dateien oder keine: Scheitert eine, gleich aus welchem Grund, werden die schon geschriebenen zurückgenommen (3b-Nacharbeit 4).
         var done = new List<IUndoableAction>();
@@ -380,7 +424,7 @@ public partial class MainWindow
             }
 
             pane.ShowGuiMode(document, GuiViewMode.Split);
-            if (startDraft && GuiSettings.IsVanillaGui(document))
+            if (startDraft && GuiSettings.DraftsOffered && GuiSettings.IsVanillaGui(document))
             {
                 StartGuiDraft(pane, document);
             }
@@ -398,7 +442,8 @@ public partial class MainWindow
             return;
         }
 
-        var defaults = GuiModTargets.For(modRoot, firstWins: CurrentGuiLayout.FirstWins);
+        // Klassisch ist der Standardname der aus ClassicOverrideTargets (zz_ bzw. 00_); eine Typdatei gibt es dort nicht.
+        var defaults = GuiModTargets.For(modRoot, firstWins: CurrentGuiLayout.FirstWins, classic: CurrentGuiLayout.IsClassic);
         var defaultDependencies = ModGuiDependencies.Defaults(_mods.Registry, mod);
         var window = new GuiModSettingsWindow(mod.Name, defaults, mod.GuiOverrideFile, mod.GuiTypesFile, ModGuiDependencies.For(_mods.Registry, mod), defaultDependencies, CurrentGuiLayout)
         {
@@ -424,7 +469,7 @@ public partial class MainWindow
 
     /// <summary>Kodierung für neue .gui-Dateien aus dem Spielprofil (wie beim Kompatch), Standard "utf-8-bom".</summary>
     private string GuiFileEncodingName() =>
-        _activeProfile?.FileTypes.FirstOrDefault(f => string.Equals(f.Extension, ".gui", StringComparison.OrdinalIgnoreCase))?.DefaultEncoding ?? "utf-8-bom";
+        ParadoxModTool.GameProfiles.ModFileEncoding.NewFileEncodingName(_activeProfile, ".gui");
 
     /// <summary>
     /// Gehört der Index zur aktiven Mod? Nach einem Mod-Wechsel baut er noch (oder der Neuaufbau ist gescheitert); dann stammten Mod-Fassungen und
@@ -440,6 +485,16 @@ public partial class MainWindow
 
         return fits;
     }
+
+    /// <summary>
+    /// Quelltext für Entwurf und Übernahme. Klassisch (HOI IV, EU IV) per <see cref="GuiTextReader"/> mit erkannter Kodierung; Jomini wie der Jomini-Index
+    /// mit <see cref="File.ReadAllText(string)"/> und ohne Kodierungsnamen (keine Verhaltensänderung für ck3, eu5, vic3).
+    /// </summary>
+    private (string Text, string? EncodingName) ReadGuiSource(string path) =>
+        CurrentGuiLayout.IsClassic ? GuiTextReader.Read(path) : (File.ReadAllText(path), null);
+
+    /// <summary>Text einer Zieldatei des Planers (null, wenn es sie nicht gibt), nach derselben Regel wie <see cref="ReadGuiSource"/>.</summary>
+    private string? ReadGuiTarget(string path) => File.Exists(path) ? ReadGuiSource(path).Text : null;
 
     private static GuiSourceFile? VanillaSourceOf(GuiWorkspace workspace, string path) =>
         workspace.Index.Files.FirstOrDefault(f => f.Layer == GuiLayer.Vanilla && EditorPane.PathsEqual(f.FullPath, path));

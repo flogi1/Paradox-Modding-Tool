@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using ParadoxModTool.GuiDesign;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
 
@@ -36,7 +37,7 @@ public sealed class GuiModSettingsWindow : Window
         ResizeMode = ResizeMode.NoResize;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         ShowInTaskbar = false;
-        _overrideFile.Text = overrideFile ?? defaults.OverrideFileName;
+        _overrideFile.Text = overrideFile ?? (_layout.IsClassic ? ClassicOverrideTargets.DefaultFileName(defaults.ModRoot, _layout) : defaults.OverrideFileName);
         _typesFile.Text = typesFile ?? defaults.TypesFileName;
         foreach (var folder in dependencies)
         {
@@ -94,15 +95,23 @@ public sealed class GuiModSettingsWindow : Window
         buttons.Children.Add(cancel);
 
         var panel = new StackPanel { Margin = new Thickness(14), MaxWidth = 560 };
-        panel.Children.Add(new TextBlock { Text = _layout.IsFlat ? GuiTexts.ModSettingsOverrideFileFlat : GuiTexts.ModSettingsOverrideFile, TextWrapping = TextWrapping.Wrap });
-        panel.Children.Add(_overrideFile);
-        panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsTypesFile, TextWrapping = TextWrapping.Wrap });
-        panel.Children.Add(_typesFile);
-        if (_layout.FirstWins)
+        if (_layout.IsClassic)
         {
-            var firstWins = new TextBlock { Text = GuiTexts.ModSettingsFirstWinsHintFor(_layout), TextWrapping = TextWrapping.Wrap, MaxWidth = 460, Margin = new Thickness(0, 2, 0, 6) };
-            firstWins.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
-            panel.Children.Add(firstWins);
+            // Klassisch (HOI IV, EU IV): keine Typen, also kein Feld für die Typdatei; der Standardname kommt aus ClassicOverrideTargets (über defaults).
+            panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsOverrideFileClassic, TextWrapping = TextWrapping.Wrap });
+            panel.Children.Add(_overrideFile);
+            panel.Children.Add(Hint(GuiTexts.ModSettingsClassicHint(_layout.FirstWins)));
+        }
+        else
+        {
+            panel.Children.Add(new TextBlock { Text = _layout.IsFlat ? GuiTexts.ModSettingsOverrideFileFlat : GuiTexts.ModSettingsOverrideFile, TextWrapping = TextWrapping.Wrap });
+            panel.Children.Add(_overrideFile);
+            panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsTypesFile, TextWrapping = TextWrapping.Wrap });
+            panel.Children.Add(_typesFile);
+            if (_layout.FirstWins)
+            {
+                panel.Children.Add(Hint(GuiTexts.ModSettingsFirstWinsHintFor(_layout)));
+            }
         }
 
         panel.Children.Add(new TextBlock { Text = GuiTexts.ModSettingsDependencies, TextWrapping = TextWrapping.Wrap });
@@ -111,6 +120,13 @@ public sealed class GuiModSettingsWindow : Window
         panel.Children.Add(_error);
         panel.Children.Add(buttons);
         Content = panel;
+    }
+
+    private static TextBlock Hint(string text)
+    {
+        var hint = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, MaxWidth = 460, Margin = new Thickness(0, 2, 0, 6) };
+        hint.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
+        return hint;
     }
 
     public string OverrideFile => _overrideFile.Text.Trim();

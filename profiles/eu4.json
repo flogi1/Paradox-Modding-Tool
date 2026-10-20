@@ -11,6 +11,8 @@
   "replacePathHidesEarlierMods": false,
   "replacePathGuiCrashRoots": [ "interface" ],
   "loadOrderRule": "alphabetical-filename-wins",
+  "eventBlockScopes": { "country_event": "learned", "province_event": "learned" },
+  "numericKeysChangeScope": true,
   "scriptDocsSourceKind": "wiki",
   "scriptDocsWikiFile": "scriptdocs/eu4.json",
   "modifierFormats": { "source": "wiki", "defaultDecimals": 2, "trimTrailingZeros": true, "nameLocFolders": ["localisation"], "nameKeys": ["{name}", "MODIFIER_{name}"] },
@@ -30,8 +32,8 @@
   ],
   "fileTypes": [
     { "extension": ".txt", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" },
-    { "extension": ".gui", "parser": "jomini-gui", "defaultEncoding": "utf-8-bom" },
-    { "extension": ".gfx", "parser": "jomini-gfx", "defaultEncoding": "utf-8-bom" },
+    { "extension": ".gui", "parser": "jomini-gui", "defaultEncoding": "utf-8" },
+    { "extension": ".gfx", "parser": "jomini-gfx", "defaultEncoding": "utf-8" },
     { "extension": ".yml", "parser": "yaml-localization", "defaultEncoding": "utf-8-bom" },
     { "extension": ".lua", "parser": "jomini-script", "defaultEncoding": "utf-8-bom" }
   ],
@@ -60,5 +62,16 @@
     { "folder": "history", "behavior": "WholeFile", "certain": false },
     { "folder": "map", "behavior": "WholeFile", "certain": false }
   ],
-  "notes": "Startprofil, gegen die echte Installation (D:\\SteamLibrary, AppID 236850) und eu4.paradoxwikis.com geprüft, 2026-09-22. Bekannte Lücken: Mod-Anzeigename kommt aus dem Ordnernamen statt der externen .mod-Datei (Metadaten liegen dort außerhalb des Mod-Ordners, PMTs MetadataFile-Mechanismus erwartet sie innerhalb — siehe Backlog). Playsets werden aus launcher-v2.sqlite nur gelesen (Import ins Kompatibilitätsset, Fehlerprotokoll); umschalten und Mods eintragen geht nur im Paradox-Launcher. Override-Regeln bis auf common/defines nicht Wiki-bestätigt (EU IV hat kein INJECT/REPLACE, die Wiki dokumentiert kein Override-Verhalten) — als unsicher markiert, common/defines dagegen wiki-bestätigt (siehe eu4.paradoxwikis.com/Defines: eigene .lua-Datei unter common/defines/, kopiert von 00_dummy.lua, setzt nur einzelne NDefines.*-Schlüssel). Script-Datenbank (Modifier/Trigger/Effect/On-Action) und Scope-Viewer/Scope-Finder jetzt aus der offiziellen Wiki vorab erzeugt (siehe tools/wiki-scraper, scriptDocsWikiFile), da EU IV keine docs/*.log-Dateien wie EU V exportiert. Weiterhin unverfügbar: Event-Target (Wiki-Abdeckung nicht geprüft) und Custom-Localization (Wiki dokumentiert nur den defined_text-Mechanismus, keine feste Namensliste — Custom-Loc-Kommandos sind pro Mod definiert, nicht wiki-referenzierbar). replace_path blendet nur Vanilla aus, keine anderen Mods, in keiner Reihenfolge (gemessen 2026-09-30 mit zwei Test-Mods, Anführereigenschaften in common/leader_personalities). Eine .gui-Datei in einem interface/-Unterordner, auf den ein replace_path zeigt, ließ das Spiel beim Start abstürzen, auch die eigene Datei der Mod (Pfad ohne Unterordner, not found)."
+  "gui": {
+    "dialect": "classic",
+    "contexts": [],
+    "typeOverride": "firstWins",
+    "spriteOverride": "lastWins",
+    "modsBeforeVanilla": false,
+    "vanillaRoots": [ "", "builtin_dlc/*", "dlc/*" ],
+    "structuredBlocks": [ "position", "show_position", "hide_position", "size", "borderSize", "margin", "slotsize", "if_resolution", "spacing" ],
+    "widgetHolders": [],
+    "layoutHolders": []
+  },
+  "notes": "Startprofil, gegen die echte Installation (D:\\SteamLibrary, AppID 236850) und eu4.paradoxwikis.com geprüft, 2026-09-22. Bekannte Lücken: Mod-Anzeigename kommt aus dem Ordnernamen statt der externen .mod-Datei (Metadaten liegen dort außerhalb des Mod-Ordners, PMTs MetadataFile-Mechanismus erwartet sie innerhalb — siehe Backlog). Playsets werden aus launcher-v2.sqlite nur gelesen (Import ins Kompatibilitätsset, Fehlerprotokoll); umschalten und Mods eintragen geht nur im Paradox-Launcher. Override-Regeln bis auf common/defines nicht Wiki-bestätigt (EU IV hat kein INJECT/REPLACE, die Wiki dokumentiert kein Override-Verhalten) — als unsicher markiert, common/defines dagegen wiki-bestätigt (siehe eu4.paradoxwikis.com/Defines: eigene .lua-Datei unter common/defines/, kopiert von 00_dummy.lua, setzt nur einzelne NDefines.*-Schlüssel). Script-Datenbank (Modifier/Trigger/Effect/On-Action) und Scope-Viewer/Scope-Finder jetzt aus der offiziellen Wiki vorab erzeugt (siehe tools/wiki-scraper, scriptDocsWikiFile), da EU IV keine docs/*.log-Dateien wie EU V exportiert. Weiterhin unverfügbar: Event-Target (Wiki-Abdeckung nicht geprüft) und Custom-Localization (Wiki dokumentiert nur den defined_text-Mechanismus, keine feste Namensliste — Custom-Loc-Kommandos sind pro Mod definiert, nicht wiki-referenzierbar). replace_path blendet nur Vanilla aus, keine anderen Mods, in keiner Reihenfolge (gemessen 2026-09-30 mit zwei Test-Mods, Anführereigenschaften in common/leader_personalities). Eine .gui-Datei in einem interface/-Unterordner, auf den ein replace_path zeigt, ließ das Spiel beim Start abstürzen, auch die eigene Datei der Mod (Pfad ohne Unterordner, not found). Interface-Ladereihenfolge (gemessen 2026-10-17): zuerst die Dateien direkt in interface/ nach Dateinamen, Vanilla und Mods gemischt, danach die Unterordner; Sprites: die zuletzt geladene Definition gewinnt, Fenster: die zuerst geladene (jede spätere Kopie meldet EU IV als Already Defined im error.log); Groß-/Kleinschreibung der Dateinamen nicht gemessen, PMT vergleicht ohne Unterschied. Neue .gui- und .gfx-Dateien schreibt PMT als UTF-8 ohne BOM: Vanilla hat dort kein BOM, und die Probe-Mods ohne BOM (make_eu4_gui_probes.py) luden (2026-10-17); eine neue Datei mit Nicht-ASCII-Text aus einer Windows-1252-Datei bleibt Windows-1252."
 }

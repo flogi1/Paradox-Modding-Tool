@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ParadoxModTool.GameProfiles;
 
 namespace ParadoxModTool.Generators.Lookups;
 
@@ -10,7 +11,8 @@ namespace ParadoxModTool.Generators.Lookups;
 public sealed class GameLocalization
 {
     private const int MaxRounds = 4;
-    private static readonly string[] Parts = { "main_menu", "in_game" };
+    // Leerer Teil: flache Spiele (Hearts of Iron IV, EU IV) mit localisation/ direkt im Spielordner.
+    private static readonly string[] Parts = { "main_menu", "in_game", "" };
     private static readonly Regex Reference = new(@"\$(?<key>[A-Za-z0-9_.\-]+)\$", RegexOptions.CultureInvariant);
 
     private readonly Dictionary<string, string> _texts;
@@ -25,9 +27,8 @@ public sealed class GameLocalization
         var texts = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var root in gameRoots)
         {
-            foreach (var part in Parts)
+            foreach (var folder in Parts.SelectMany(part => LocalizationFolders.Existing(Path.Combine(root, part))).Select(f => Path.Combine(f, language)))
             {
-                var folder = Path.Combine(root, part, "localization", language);
                 if (!Directory.Exists(folder))
                 {
                     continue;

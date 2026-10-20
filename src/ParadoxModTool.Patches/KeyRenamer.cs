@@ -59,7 +59,7 @@ public static class KeyRenamer
     /// </summary>
     public static PatchPlan Plan(PatchContext context, PatchRecipe recipe, IReadOnlyList<KeyRename> renames, string folder, bool wasComments, CancellationToken ct = default)
     {
-        var workspace = new PatchWorkspace(context.ModRoot, context.VanillaRoot);
+        var workspace = new PatchWorkspace(context.ModRoot, context.VanillaRoot, context.NewFileHasBom);
         var memory = PatchRecipeStore.LoadMemory(context.EffectiveRecipesFolder, recipe.Id);
         var proposals = KeyRenameProposals.Build(workspace, folder);
         var defined = proposals.DefinedKeys;

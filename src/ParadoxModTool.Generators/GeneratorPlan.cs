@@ -6,7 +6,14 @@ namespace ParadoxModTool.Generators;
 /// Wohin ein Lauf schreibt: <see cref="OutputFolder"/> <see langword="null"/> = in die Mod; <see cref="AllLanguages"/> = Sprachen des Spielprofils.
 /// <see cref="ExternalPaths"/>: gewählte Pfade der externen Dateien des Pakets (Kennung → absoluter Pfad), siehe <see cref="ExternalPathStore"/>.
 /// </summary>
-public sealed record GeneratorTarget(string ModRoot, string? OutputFolder, IReadOnlyList<string>? AllLanguages = null, IReadOnlyDictionary<string, string>? ExternalPaths = null);
+public sealed record GeneratorTarget(string ModRoot, string? OutputFolder, IReadOnlyList<string>? AllLanguages = null, IReadOnlyDictionary<string, string>? ExternalPaths = null)
+{
+    /// <summary>
+    /// Ob neue Textdateien mit dieser Endung (mit Punkt) ein BOM bekommen, aus dem Spielprofil (Stellaris: Skript, .gui und .gfx ohne).
+    /// Ohne Angabe bekommen sie eins; Lokalisierung bekommt immer eins, bestehende Dateien behalten ihres.
+    /// </summary>
+    public Func<string, bool>? NewFileHasBom { get; init; }
+}
 
 /// <summary>
 /// Eine Datei im Plan. Textausgaben haben <see cref="NewText"/>, Binärdateien <see cref="Bytes"/>. <see cref="OriginalText"/>/<see cref="OriginalBytes"/>

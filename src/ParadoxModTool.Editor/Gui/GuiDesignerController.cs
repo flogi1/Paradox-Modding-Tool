@@ -5,6 +5,8 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
 using ParadoxModTool.Categories;
 using ParadoxModTool.GuiDesign;
+using ParadoxModTool.GuiDesign.Catalog;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Edit;
 using ParadoxModTool.GuiDesign.Index;
@@ -142,6 +144,7 @@ public sealed class GuiDesignerController
         }
 
         document.Document.TextChanged += Document_TextChanged;
+        _view.SyncScreenTools();
         var version = document.Document.Version;
         _parsedVersion = LiveOf(document).Update(document.Document.Text) ? version : null;
         Refresh();
@@ -183,6 +186,13 @@ public sealed class GuiDesignerController
         // Einfügestelle führt der Ablauf unten zu den üblichen Meldungen.
         if (action is { Kind: GuiDesignerActionKind.Insert, Code: null, Entry: { Kind: GuiPaletteKind.Block } blockEntry })
         {
+            // Klassisch gibt es keine Bausteine (die Palette zeigt sie nicht; hier nur zur Sicherheit, z.B. ein gezogener Eintrag von vorher).
+            if (!GuiSettings.BlocksOffered)
+            {
+                _view.SetStatus(GuiTexts.ClassicBlocksLater);
+                return;
+            }
+
             GuiDesignEdit? probe;
             try
             {
@@ -226,6 +236,21 @@ public sealed class GuiDesignerController
             _view.SetStatus(GuiTexts.EditNothing);
 
             // Der Neuparse-Timer ist gestoppt: Hat sich der Text seit dem angezeigten Stand geändert, den Baum jetzt neu aufbauen.
+            if (!ReferenceEquals(shown.Root, document.Root))
+            {
+                Refresh();
+            }
+
+            return;
+        }
+
+        // Klassisch: Der Spielcode nutzt den Namen eines Vanilla-Elements vielleicht; vor dem Löschen oder Umbenennen nachfragen.
+        if (GuiSettings.Layout.IsClassic
+            && GuiSettings.Workspace is { } classicWorkspace
+            && VanillaNameAffected(action, shown, document, _resolver, _editor.CaretOffset, classicWorkspace.Index) is { } affected
+            && MessageBox.Show(Window.GetWindow(_view), GuiTexts.ClassicVanillaNameConfirm(affected), GuiTexts.ClassicVanillaNameTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        {
+            // Wie bei einer leeren Aktion: Hat sich der Text seit dem angezeigten Stand geändert, den Baum jetzt neu aufbauen.
             if (!ReferenceEquals(shown.Root, document.Root))
             {
                 Refresh();
@@ -482,7 +507,8 @@ public sealed class GuiDesignerController
                 GuiSettings.IsVanillaGui(_document) && !draft,
                 _document.LockTooltip is not null,
                 GuiSettings.Workspace?.Options.DependencyRoots ?? Array.Empty<string>());
-        _view.SetReadOnly(_readOnly is { } reason ? GuiTexts.ReadOnly(reason) : null, _readOnly == GuiReadOnlyReason.Vanilla);
+        // "Für Mod bearbeiten" in beiden Formaten (klassisch seit Plan 2).
+        _view.SetReadOnly(_readOnly is { } reason ? GuiTexts.ReadOnly(reason) : null, _readOnly == GuiReadOnlyReason.Vanilla && GuiSettings.DraftsOffered);
         _view.SetDraft(draft, _document?.FilePath);
     }
 
@@ -492,16 +518,7 @@ public sealed class GuiDesignerController
     /// </summary>
     internal static GuiDesignEdit? Compute(GuiDesignerAction action, GuiDocument shown, GuiDocument document, GuiResolver resolver, int caret)
     {
-        GuiNode? Fresh(GuiNode stale)
-        {
-            if (ReferenceEquals(stale.Root, shown.Root))
-            {
-                return GuiDesignerEdits.Rebind(stale, shown, document);
-            }
-
-            // Der Baum zeigt noch den Stand vor der letzten Aktion; der Cursor steht auf deren Ergebnis (Plan-Ruling 11).
-            return action.FromSelection && document.Text.Length > 0 ? GuiElementPath.ElementAt(document, caret, resolver) : null;
-        }
+        GuiNode? Fresh(GuiNode stale) => Rebind(action, stale, shown, document, resolver, caret);
 
         var node = action.Node is null ? null : Fresh(action.Node);
         var target = action.Target is null ? null : Fresh(action.Target);
@@ -556,7 +573,13 @@ public sealed class GuiDesignerController
                 return GuiDesignerEdits.OverrideBlock(document, node, block, content, action.FocusKey);
 
             case GuiDesignerActionKind.SetProperty when node is not null && action.Name is { } name && action.Value is { } value:
-                return GuiDesignerEdits.SetProperty(document, node, name, value);
+                return GuiDesignerEdits.SetProperty(document, node, name, value, ignoreNameCase: GuiSettings.Layout.IsClassic);
+
+            case GuiDesignerActionKind.SetPair when node is not null && action.Name is { } pairName && action.Value is { } first && action.Value2 is { } second:
+                return PairEdit(document, resolver, node, pairName, first, second, action.PairKeys);
+
+            case GuiDesignerActionKind.SetBaseValue when node is not null && action.Name is { } baseName && action.Value is { } baseText:
+                return ClassicEdits.SetBaseValue(document, node, baseName, baseText);
 
             case GuiDesignerActionKind.SetValue when node is not null && action.Value is { } newValue:
                 return GuiDesignerEdits.SetValue(document, node, newValue);
@@ -587,6 +610,75 @@ public sealed class GuiDesignerController
             default:
                 return GuiDesignEdit.None;
         }
+    }
+
+    /// <summary>
+    /// SetPair: <paramref name="target"/> ist der Block selbst (auch in einem <c>if_resolution</c>-Block) oder das Element. Die inneren Schlüssel kommen
+    /// aus dem Block, den <see cref="ClassicEdits.SetPair"/> ändert (ein vorhandener behält <c>width</c>/<c>height</c>), sonst aus dem Katalog des Elements.
+    /// Auf einem Skalar (<c>size = 5</c>) schreibt nichts. <paramref name="shown"/>: die Schlüssel, die das Eigenschaftenfeld zeigt. Hat der Block beide, gelten
+    /// die Werte nach Namen (der Grundwert <c>{ y = 1 x = 2 }</c> neben einem angezeigten <c>if_resolution</c>-Block <c>{ x = .. y = .. }</c> tauscht sonst
+    /// die Werte); fehlt der Block, wird er mit ihnen angelegt; sonst gilt die Position im Block.
+    /// </summary>
+    private static GuiDesignEdit PairEdit(GuiDocument document, GuiResolver resolver, GuiNode target, string blockName, string first, string second, ClassicPairKeys? shown = null)
+    {
+        if (target.Kind != GuiNodeKind.KeyedBlock)
+        {
+            return GuiDesignEdit.None;
+        }
+
+        static bool IsNamed(GuiNode n, string name) => n.Kind == GuiNodeKind.KeyedBlock && n.HasBody && string.Equals(n.Name, name, StringComparison.OrdinalIgnoreCase);
+
+        var existing = IsNamed(target, blockName) ? target : target.Children.LastOrDefault(c => IsNamed(c, blockName));
+        var element = existing is not null && ReferenceEquals(existing, target)
+            ? (target.Parent is { } holder && string.Equals(holder.Name, "if_resolution", StringComparison.OrdinalIgnoreCase) ? holder.Parent : target.Parent)
+            : target;
+        var widgetKey = element is null ? string.Empty : resolver.BaseWidgetOf(element.Name);
+        var catalog = GuiSettings.Workspace?.Catalog ?? new GuiPropertyCatalog { Classic = true };
+        var keys = shown is { } byName && !string.Equals(byName.First, byName.Second, StringComparison.OrdinalIgnoreCase)
+            && (existing is null || (HasInner(existing, byName.First) && HasInner(existing, byName.Second)))
+                ? byName
+                : ClassicPropertyInput.PairKeysFor(blockName, existing, catalog, widgetKey);
+        return ClassicEdits.SetPair(document, target, blockName, keys, first, second);
+
+        static bool HasInner(GuiNode block, string key) =>
+            block.Children.Any(c => c.Kind == GuiNodeKind.Property && string.Equals(c.Name, key, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Knoten der Aktion im frisch geparsten Dokument (Pfad-Suche); null, wenn er dort nicht sicher wiederzufinden ist.</summary>
+    private static GuiNode? Rebind(GuiDesignerAction action, GuiNode stale, GuiDocument shown, GuiDocument document, GuiResolver resolver, int caret)
+    {
+        if (ReferenceEquals(stale.Root, shown.Root))
+        {
+            return GuiDesignerEdits.Rebind(stale, shown, document);
+        }
+
+        // Der Baum zeigt noch den Stand vor der letzten Aktion; der Cursor steht auf deren Ergebnis (Plan-Ruling 11).
+        return action.FromSelection && document.Text.Length > 0 ? GuiElementPath.ElementAt(document, caret, resolver) : null;
+    }
+
+    /// <summary>
+    /// Klassisch: der Vanilla-Name, den die Aktion löschen (<c>Delete</c>) oder umbenennen würde (<c>SetValue</c> auf <c>name</c>); sonst null.
+    /// Der Knoten wird wie in <see cref="Compute"/> im frischen Dokument gesucht.
+    /// </summary>
+    internal static string? VanillaNameAffected(GuiDesignerAction action, GuiDocument shown, GuiDocument document, GuiResolver resolver, int caret, GuiIndex index)
+    {
+        // "Grundwert ändern" auf name: die name-Zeile im Element zählt wie ein SetValue darauf.
+        if (action.Kind == GuiDesignerActionKind.SetBaseValue && action.Node is { } holder && string.Equals(action.Name, "name", StringComparison.OrdinalIgnoreCase))
+        {
+            return Rebind(action, holder, shown, document, resolver, caret) is { } element
+                && element.Children.LastOrDefault(c => c.Kind == GuiNodeKind.Property && string.Equals(c.Name, "name", StringComparison.OrdinalIgnoreCase)) is { } nameLine
+                    ? ClassicNameGuard.VanillaNameAffected(nameLine, false, index)
+                    : null;
+        }
+
+        if (action.Kind is not (GuiDesignerActionKind.Delete or GuiDesignerActionKind.SetValue) || action.Node is null)
+        {
+            return null;
+        }
+
+        return Rebind(action, action.Node, shown, document, resolver, caret) is { } node
+            ? ClassicNameGuard.VanillaNameAffected(node, action.Kind == GuiDesignerActionKind.Delete, index)
+            : null;
     }
 
     private void Document_TextChanged(object? sender, EventArgs e)
@@ -678,12 +770,12 @@ public sealed class GuiDesignerController
     private void SyncToNode(GuiNode? node, bool forcePreview)
     {
         var widget = NearestWidget(node);
-        var target = node is null ? null : GuiPreviewBuilder.PreviewTarget(node);
+        var target = node is null ? null : GuiPreviewBuilder.PreviewTarget(node, GuiSettings.Layout);
         if (target is null)
         {
             _preview = null;
             _previewTargetPath = null;
-            _view.SetPreview(null, keepView: false);
+            _view.SetPreview(null, keepView: false, viewedFile: _document?.FilePath);
             _view.Select(widget, null);
             return;
         }
@@ -707,11 +799,17 @@ public sealed class GuiDesignerController
         _previewRun = run;
         var resolver = _resolver!;
         var document = LiveOf(_document!).Current;
+        var viewedFile = _document!.FilePath;
+
+        // Auflösung und UI-Skalierung aus der Leiste (Voreinstellung aus den Spieleinstellungen) gehen in die Layout-Optionen.
+        _view.SyncScreenTools();
         var options = _view.PreviewOptions;
+        // Engine und Schriften aus demselben Arbeitsbereich (er kann sich während des Laufs ändern).
         var workspace = GuiSettings.Workspace;
-        Func<GuiLayoutEngine> createEngine = workspace is not null ? workspace.CreateLayoutEngine : () => new GuiLayoutEngine(GuiRules.Empty, _ => null);
+        var createEngine = GuiSettings.LayoutEngineFactory(workspace);
+        var fonts = workspace?.Classic?.Fonts;
         _view.SetStatus(GuiTexts.PreviewRunning);
-        Task.Run(() => GuiPreviewBuilder.Build(resolver, createEngine, document, target, options, run.Token), run.Token).ContinueWith(
+        Task.Run(() => GuiPreviewBuilder.Build(resolver, createEngine, document, target, options, run.Token, viewedFile), run.Token).ContinueWith(
             task =>
             {
                 if (run.IsCancellationRequested)
@@ -726,8 +824,8 @@ public sealed class GuiDesignerController
                 }
 
                 _preview = task.Result;
-                _view.SetStatus(GuiSettings.Workspace is null ? GuiSettings.Status : string.Empty);
-                _view.SetPreview(_preview, keepView);
+                _view.SetStatus(GuiSettings.PreviewStatus);
+                _view.SetPreview(_preview, keepView, fonts, viewedFile);
                 _view.Select(widget, _preview);
             },
             CancellationToken.None,
@@ -783,7 +881,7 @@ public sealed class GuiDesignerController
     }
 
     private static GuiNode? FirstTarget(GuiDocument document) =>
-        document.Root.Descendants().Select(GuiPreviewBuilder.PreviewTarget).FirstOrDefault(t => t is not null);
+        document.Root.Descendants().Select(n => GuiPreviewBuilder.PreviewTarget(n, GuiSettings.Layout)).FirstOrDefault(t => t is not null);
 
     /// <summary>Der Text wurde seit dem Parsen des angezeigten Stands nicht geändert (Vergleich der AvalonEdit-Version, ohne den Text zu kopieren).</summary>
     private bool TextMatchesParse() =>

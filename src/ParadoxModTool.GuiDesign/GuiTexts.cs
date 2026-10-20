@@ -19,6 +19,20 @@ public static class GuiTexts
 
     public static string LayoutTextEstimated => T("gui.layout.textEstimated", "Textgröße geschätzt");
 
+    public static string LayoutTextFontMissing(string font) => F("gui.layout.textFontMissing", "Schrift {0} fehlt: Ersatzschrift Segoe UI, Breite geschätzt", font);
+
+    public static string LayoutTextApproximated(string what) => F("gui.layout.textApproximated", "Text angenähert ({0})", what);
+
+    public static string LayoutTextLineBreakAsSpace => T("gui.layout.textLineBreakAsSpace", "Text angenähert (Zeilenumbruch ohne multiline als Leerzeichen)");
+
+    public static string LayoutTextIconMissing(string icon) => F("gui.layout.textIconMissing", "Text-Icon {0} fehlt", icon);
+
+    public static string LayoutTextPlaceholder => T("gui.layout.textPlaceholder", "Text enthält Platzhalter (Datenbindung)");
+
+    public static string LayoutTextKeyMissing(string key) => F("gui.layout.textKeyMissing", "Text {0} fehlt in der Lokalisierung", key);
+
+    public static string LayoutTextFontUnknown(string font) => F("gui.layout.textFontUnknown", "Schrift {0} unbekannt: das Spiel zeigt diesen Text nicht", font);
+
     public static string LayoutSizeUnknown => T("gui.layout.sizeUnknown", "Größe unbekannt");
 
     public static string LayoutPositionUnresolved(string value) => F("gui.layout.positionUnresolved", "Position nicht auswertbar: {0}", value);
@@ -26,6 +40,259 @@ public static class GuiTexts
     public static string LayoutGridApproximated => T("gui.layout.gridApproximated", "Rasteranordnung angenähert");
 
     public static string LayoutHidden => T("gui.layout.hidden", "Element ist ausgeblendet");
+
+    public static string LayoutBoxInZeroParent => T("gui.layout.boxInZeroParent", "Box in einem widget ohne size: Größe angenähert (Inhalt)");
+
+    public static string LayoutFreeSpaceUnmeasured => T("gui.layout.freeSpaceUnmeasured", "Freier Platz nach maximumsize/Stretch-Faktor nicht gemessen; Kinder ab Anfang gepackt");
+
+    public static string LayoutGameError(string detail) => F("gui.layout.gameError", "Das Spiel meldet hier einen Fehler ({0}); die Lage kann abweichen", detail);
+
+    public static string LayoutBoxInContainer(string container) => F("gui.layout.boxInContainer", "hbox/vbox direkt in {0}: das Spiel stürzt ab", container);
+
+    public static string LayoutFlowChildUnmeasured(string detail) => F("gui.layout.flowChildUnmeasured", "In flowcontainer nicht gemessen ({0}); ignoriert", detail);
+
+    public static string LayoutIgnoreLayoutApproximated => T("gui.layout.ignoreLayoutApproximated", "ignore_layout: Lage angenähert (nicht gemessen)");
+
+    public static string LayoutFillIgnoresAnchor => T("gui.layout.fillIgnoresAnchor", "Box füllt ihr Elternelement; position/Anker nicht gemessen und ignoriert");
+
+    public static string LayoutMinusOneUnmeasured(string kind) => F("gui.layout.minusOneUnmeasured", "size -1 bei {0} nicht gemessen; als 0 angenommen", kind);
+
+    public static string LayoutMinSizeBoxAnchorUnmeasured => T("gui.layout.minSizeBoxAnchorUnmeasured", "Box mit set_parent_size_to_minimum: position/Anker nicht gemessen; wie in einem widget angewendet");
+
+    public static string LayoutPercentInSizelessBox => T("gui.layout.percentInSizelessBox", "Prozentgröße in Box ohne size: Bezug angenähert");
+
+    public static string LayoutTextureDynamic(string path) => F("gui.layout.textureDynamic", "Textur aus Datenbindung: {0}", path);
+
+    public static string LayoutTextureFormat(string path, string format) => F("gui.layout.textureFormat", "Bildformat nicht unterstützt ({1}): {0}", path, format);
+
+    public static string LayoutTextureApproximated(string what) => F("gui.layout.textureApproximated", "Textur angenähert ({0})", what);
+
+    /// <summary><c>scale</c> in einem nicht gemessenen Fall (Text, verschachtelt, Ränder, Kacheln); Kasten und Drehpunkt sind gemessen (Lauf 6).</summary>
+    public static string LayoutScaleApproximated(string what) => F("gui.layout.scaleApproximated", "scale angenähert ({0} nicht gemessen)", what);
+
+    /// <summary><c>scale</c> ist keine positive Zahl (0, negativ, Prozent, Text); gezeigt wie 1.</summary>
+    public static string LayoutScaleInvalid(string value) => F("gui.layout.scaleInvalid", "scale ungültig ({0}): als 1 angenommen", value);
+
+    /// <summary><c>scale</c> aus einer Datenbindung oder einer unbekannten Konstante; nicht angewandt.</summary>
+    public static string LayoutScaleUnresolved(string value) => F("gui.layout.scaleUnresolved", "scale nicht auswertbar: {0}", value);
+
+    /// <summary>Die Kette aus <c>_show</c> und <c>next</c> wiederholt sich; gezeigt werden die Werte bis vor die erste Wiederholung (ein fehlendes Ziel beendet die Kette ohne Hinweis).</summary>
+    public static string LayoutShowNextApproximated => T("gui.layout.showNextApproximated", "Zustand _show mit next: Animation angenähert (Endwert der Kette gezeigt)");
+
+    public static string LayoutWidgetNotDrawn(string kind) => F("gui.layout.widgetNotDrawn", "{0} wird nicht dargestellt (Platzhalter)", kind);
+
+    public static string LayoutFrameOutOfRange(int frame, int count) => F("gui.layout.frameOutOfRange", "frame {0} gibt es nicht (nur {1}); letztes Bild gezeigt", frame, count);
+
+    public static string LayoutAlphaInvisible => T("gui.layout.alphaInvisible", "alpha 0: unsichtbar (andere Zustände und Animationen nicht dargestellt)");
+
+    public static string LayoutAlphaTextUnmeasured => T("gui.layout.alphaTextUnmeasured", "alpha für Text nicht gemessen; Text voll deckend gezeigt");
+
+    // Bezeichnungen nicht lesbarer Texturen (Platzhalter und Hinweis "Bildformat nicht unterstützt"); technische wie "DDS DXGI 83 (BC5)" bleiben fest.
+    public static string TextureFormatNone => T("gui.texture.formatNone", "kein Bildformat");
+
+    public static string TextureFormatEmptyFile => T("gui.texture.formatEmptyFile", "leere Datei");
+
+    public static string TextureFormatDdsTruncated => T("gui.texture.formatDdsTruncated", "DDS unvollständig");
+
+    public static string TextureFormatDdsBadSize => T("gui.texture.formatDdsBadSize", "DDS Größe ungültig");
+
+    // Hinweise der klassischen Layout-Engine (HOI IV, EU IV).
+    public static string ClassicSpriteMissing(string name) => F("gui.classic.spriteMissing", "Sprite fehlt: {0}", name);
+
+    public static string ClassicTextureMissing(string path) => F("gui.classic.textureMissing", "Textur fehlt: {0}", path);
+
+    public static string ClassicTextureUnreadable(string path) => F("gui.classic.textureUnreadable", "Textur unlesbar (Größe nicht lesbar): {0}", path);
+
+    public static string ClassicBlockIgnored(string key) => F("gui.classic.blockIgnored", "Block {0} nicht ausgewertet", key);
+
+    public static string ClassicSpriteCaseMismatch(string name) => F("gui.classic.spriteCaseMismatch", "Sprite {0} nur in anderer Groß-/Kleinschreibung gefunden; ob das Spiel es so findet, ist nicht gemessen", name);
+
+    public static string ClassicSpriteKindApproximated(string kind) => F("gui.classic.spriteKindApproximated", "Sprite-Art {0} angenähert", kind);
+
+    public static string ClassicFrameClamped(int frame, int frames) => F("gui.classic.frameClamped", "Frame {0} gibt es nicht ({1} Frames), der letzte wird gezeigt", frame, frames);
+
+    public static string ClassicCorneredMinimum(int borderX, int borderY) => F("gui.classic.corneredMinimum", "9-Slice kleiner als 2 × borderSize ({0}×{1}): das Spiel zeichnet größer, angenähert", borderX, borderY);
+
+    public static string ClassicFontMissing(string font) => F("gui.classic.fontMissing", "Schrift fehlt: {0}, Textgröße geschätzt", font);
+
+    public static string ClassicGlyphsMissing => T("gui.classic.glyphsMissing", "Zeichen fehlen in der Schrift");
+
+    public static string ClassicTextTooWide(double maxWidth) =>
+        F("gui.classic.textTooWide", "Text breiter als {0} Pixel (maxWidth bzw. Knopfbreite; Wort ohne Umbruchstelle), ragt hinaus", maxWidth.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture));
+
+    public static string ClassicTextCut(int shown, int total) => F("gui.classic.textCut", "Text höher als maxHeight: {0} von {1} Zeilen gezeigt", shown, total);
+
+    public static string ClassicSizeFromChildren => T("gui.classic.sizeFromChildren", "Ohne Größe: aus den Kindern geschätzt");
+
+    public static string ClassicGridContent => T("gui.classic.gridContent", "Inhalt kommt aus dem Spiel; leere Beispielplätze gezeigt");
+
+    public static string ClassicApproximated(string key) => F("gui.classic.approximated", "{0} angenähert", key);
+
+    public static string ClassicUnknownElement(string key) => F("gui.classic.unknownElement", "Unbekannter Elementtyp {0}, als Container gezeigt", key);
+
+    public static string ClassicAnchorUnknown(string value) => F("gui.classic.anchorUnknown", "Unbekannter Ankerwert {0}, UPPER_LEFT angenommen", value);
+
+    public static string ClassicAnchorAlias(string value) => F("gui.classic.anchorAlias", "Alias `{0}`, Bedeutung nicht belegt", value);
+
+    public static string ClassicFromIfResolution(string key, string condition) => F("gui.classic.fromIfResolution", "{0} aus if_resolution ({1})", key, condition);
+
+    public static string ClassicOriginIfResolution(string condition) => F("gui.classic.originIfResolution", "aus if_resolution ({0})", condition);
+
+    public static string ClassicNoInterface(string install) => F("gui.classic.noInterface", "Kein Ordner interface in {0}: Vorschau nur schematisch, ohne Sprites und Schriften des Spiels.", install);
+
+    public static string ClassicFormatUnknown(string format) => F("gui.classic.formatUnknown", "Ausrichtung format = {0} nicht ausgewertet, linksbündig gezeigt", format);
+
+    public static string ClassicFormatVertical(string format) => F("gui.classic.formatVertical", "Senkrechter Teil von format = {0} nicht ausgewertet, Text von oben gezeichnet", format);
+
+    public static string ClassicNoTypes => T("gui.classic.noTypes", "HOI IV und EU IV kennen keine Typen.");
+
+    public static string ClassicBlocksLater => T("gui.classic.blocksLater", "Bausteine und neue GUI-Dateien kommen für HOI IV und EU IV mit dem nächsten Ausbau des GUI-Editors; die vorhandenen Bausteine sind im Jomini-Format der neueren Spiele.");
+    public static string ClassicVanillaNameTitle => T("gui.classic.vanillaNameTitle", "Name aus dem Spiel");
+    public static string ClassicVanillaNameConfirm(string name) => F("gui.classic.vanillaNameConfirm", "„{0}“ ist ein Name aus den Vanilla-Dateien. Der Spielcode nutzt diesen Namen vielleicht. Trotzdem ändern?", name);
+
+    // Eigenschaftenfeld für klassische Elemente (HOI IV, EU IV).
+    public static string ClassicValueInvalid(string value) => F("gui.classic.valueInvalid", "„{0}“ ist kein bekannter Wert; die Vorschau nimmt den Standard.", value);
+
+    public static string ClassicValueAlias(string value) => F("gui.classic.valueAlias", "„{0}“ ist ein Alias, dessen Bedeutung nicht belegt ist.", value);
+
+    public static string ClassicEditsIfResolution(string condition) => F("gui.classic.editsIfResolution", "Änderung geht in den if_resolution-Block ({0})", condition);
+
+    public static string ClassicChangeBase => T("gui.classic.changeBase", "Grundwert ändern");
+
+    public static string ClassicChangeBaseTip => T("gui.classic.changeBaseTip", "Schreibt den Wert in die Zeile direkt im Element statt in den if_resolution-Block.");
+
+    public static string ClassicSpritePick => T("gui.classic.spritePick", "Auswählen…");
+
+    public static string ClassicSpriteCreate => T("gui.classic.spriteCreate", "Sprite anlegen…");
+
+    public static string ClassicSpriteUnknown => T("gui.classic.spriteUnknown", "Sprite unbekannt – anlegen?");
+
+    public static string ClassicSpriteNameInvalid => T("gui.classic.spriteNameInvalid", "Der Name ist leer oder enthält andere Zeichen als Buchstaben, Ziffern und _.");
+
+    public static string ClassicSpriteNameTaken(string name, string where) => F("gui.classic.spriteNameTaken", "Das Sprite {0} gibt es schon ({1}). Vorhandene Sprites ersetzt PMT hier nicht.", name, where);
+
+    public static string ClassicSpriteNameCaseOnly(string name, string existing, string where) => F("gui.classic.spriteNameCaseOnly", "Es gibt schon das Sprite {1} ({2}); {0} unterscheidet sich nur in der Groß-/Kleinschreibung. Ob das Spiel beides trennt, ist nicht gemessen, deshalb ist der Name gesperrt.", name, existing, where);
+
+    public static string ClassicSpriteImageUnreadable(string path) => F("gui.classic.spriteImageUnreadable", "Das Bild lässt sich nicht lesen (erwartet wird eine DDS-, TGA- oder PNG-Datei mit gültigem Kopf): {0}", path);
+
+    public static string ClassicSpriteCopyExists(string path) => F("gui.classic.spriteCopyExists", "Im Mod liegt schon eine Datei mit diesem Namen: {0}. Sie wird nur bei gewähltem Überschreiben ersetzt.", path);
+
+    public static string ClassicSpriteGfxPathInvalid(string path) => F("gui.classic.spriteGfxPathInvalid", "Die .gfx-Datei muss unter interface/ liegen und auf .gfx enden: {0}", path);
+
+    public static string ClassicSpriteGfxPathShadows(string path) => F("gui.classic.spriteGfxPathShadows", "Eine Datei {0} gibt es schon in Vanilla oder einer Abhängigkeit; eine Mod-Datei mit diesem Pfad ersetzte sie ganz.", path);
+
+    public static string ClassicSpriteWindowTitle => T("gui.classic.spriteWindowTitle", "Sprite anlegen");
+
+    public static string ClassicSpriteImage => T("gui.classic.spriteImage", "Bilddatei");
+
+    public static string ClassicSpriteImageFromGfx => T("gui.classic.spriteImageFromGfx", "Aus gfx/ wählen…");
+
+    public static string ClassicSpriteImageExternal => T("gui.classic.spriteImageExternal", "Datei von außen…");
+
+    public static string ClassicSpriteImageFilter => T("gui.classic.spriteImageFilter", "Bilder (*.dds, *.tga, *.png)|*.dds;*.tga;*.png|Alle Dateien (*.*)|*.*");
+
+    public static string ClassicSpriteName => T("gui.classic.spriteName", "Name");
+
+    public static string ClassicSpriteKindLabel => T("gui.classic.spriteKindLabel", "Art");
+
+    public static string ClassicSpriteFrames => T("gui.classic.spriteFrames", "Frames (Bildstreifen)");
+
+    public static string ClassicSpriteBorder => T("gui.classic.spriteBorder", "Rand (borderSize) X / Y");
+
+    public static string ClassicSpriteGfxFile => T("gui.classic.spriteGfxFile", ".gfx-Datei im Mod");
+
+    public static string ClassicSpriteDoCreate => T("gui.classic.spriteDoCreate", "Anlegen");
+
+    public static string ClassicSpriteCancel => T("gui.classic.spriteCancel", "Abbrechen");
+
+    public static string ClassicSpriteNoImage => T("gui.classic.spriteNoImage", "Wähle zuerst ein Bild (DDS, TGA oder PNG).");
+
+    public static string ClassicSpriteFramesInvalid => T("gui.classic.spriteFramesInvalid", "Die Zahl der Frames muss eine ganze Zahl ab 1 sein.");
+
+    public static string ClassicSpriteBorderInvalid => T("gui.classic.spriteBorderInvalid", "Der Rand muss aus ganzen Zahlen ab 0 bestehen.");
+
+    public static string ClassicSpritePreviewNone => T("gui.classic.spritePreviewNone", "(keine Vorschau)");
+
+    public static string ClassicSpriteOverwriteTitle => T("gui.classic.spriteOverwriteTitle", "Datei überschreiben?");
+
+    public static string ClassicSpriteOverwriteText(string path) => F("gui.classic.spriteOverwriteText", "Im Mod liegt schon {0}. Das gewählte Bild ersetzt die Datei; Rückgängig stellt sie wieder her.", path);
+
+    public static string ClassicSpriteCopyWillAsk(string path) => F("gui.classic.spriteCopyWillAsk", "Im Mod liegt schon {0}; beim Anlegen fragt PMT, ob die Datei ersetzt wird.", path);
+
+    public static string ClassicSpritePickerTitle => T("gui.classic.spritePickerTitle", "Sprite auswählen");
+
+    public static string ClassicSpritePickerSearch => T("gui.classic.spritePickerSearch", "Suchen (Teil des Namens)");
+
+    public static string ClassicSpritePickerCount(int shown, int total) => F("gui.classic.spritePickerCount", "{0} von {1} Sprites", shown, total);
+
+    public static string ClassicSpritePickerColName => T("gui.classic.spritePickerColName", "Name");
+
+    public static string ClassicSpritePickerColKind => T("gui.classic.spritePickerColKind", "Art");
+
+    public static string ClassicSpritePickerColFrames => T("gui.classic.spritePickerColFrames", "Frames");
+
+    public static string ClassicSpritePickerColFile => T("gui.classic.spritePickerColFile", "Datei");
+
+    public static string ClassicSpritePickerOk => T("gui.classic.spritePickerOk", "Übernehmen");
+
+    public static string ClassicSpritePickerTexture(string path) => F("gui.classic.spritePickerTexture", "Textur: {0}", path);
+
+    public static string ClassicSpritePickerTextureMissing(string path) => F("gui.classic.spritePickerTextureMissing", "Textur nicht gefunden: {0}", path);
+
+    public static string ClassicSpritePickerNoTexture => T("gui.classic.spritePickerNoTexture", "Dieses Sprite hat keine Textur.");
+
+    public static string ClassicSpriteAction(string name) => F("gui.classic.spriteAction", "Sprite {0} anlegen", name);
+
+    public static string ClassicSpriteImageAction(string file) => F("gui.classic.spriteImageAction", "Bild kopieren: {0}", file);
+
+    public static string ClassicSpriteSnapshotNote => T("gui.classic.spriteSnapshot", "vor Sprite anlegen");
+
+    public static string ClassicLocNoKey => T("gui.classic.locNoKey", "(kein Lokalisierungsschlüssel)");
+
+    public static string ClassicLocMissing => T("gui.classic.locMissing", "(fehlt in der Lokalisierung)");
+
+    public static string ClassicLocLoading => T("gui.classic.locLoading", "(Lokalisierung wird geladen …)");
+
+    public static string ClassicFrameRange(int frames) => F("gui.classic.frameRange", "1 … {0}", frames);
+
+    public static string ClassicFrameZero => T("gui.classic.frameZero", "0 = Frame 1 (gemessen)");
+
+    public static string ClassicPercentTip => T("gui.classic.percentTip", "Wechselt zwischen Pixel (px), Prozent (%) und gemessenem Prozent (%%)");
+
+    public static string ClassicUiScale(double scale) => F("gui.classic.uiScale", "UI-Skalierung {0} angenähert (nicht gemessen)", scale.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+
+    // Erklärungsfeld der klassischen Eigenschaften (Sprite-Skizzen, Beispiele, Quellen).
+    public static string ExplainNone => T("gui.explain.none", "Keine Erklärung vorhanden.");
+
+    public static string ExplainUncertain => T("gui.explain.uncertain", "Unsicher: nicht durch Wiki, Messung oder Vanilla-Zählung belegt.");
+
+    public static string ExplainDefault(string value) => F("gui.explain.default", "Standard: {0}", value);
+
+    public static string ExplainPitfalls => T("gui.explain.pitfalls", "Stolperfallen");
+
+    public static string ExplainChildren(string children) => F("gui.explain.children", "Typische Kinder: {0}", children);
+
+    public static string ExplainExamples => T("gui.explain.examples", "Beispiele aus Vanilla");
+
+    public static string ExplainExamplesLoading => T("gui.explain.examplesLoading", "Beispiele werden gesucht…");
+
+    public static string ExplainExample(string name, string path, int line) => F("gui.explain.example", "{0} ({1}:{2})", name, path, line);
+
+    public static string ExplainExampleTip => T("gui.explain.exampleTip", "Öffnet die Vanilla-Datei schreibgeschützt an dieser Zeile.");
+
+    public static string ExplainSources(string sources) => F("gui.explain.sources", "Quelle: {0}", sources);
+
+    public static string ExplainSourceWiki => T("gui.explain.sourceWiki", "Wiki");
+
+    public static string ExplainSourceMeasured(string date) => F("gui.explain.sourceMeasured", "gemessen am {0}", date);
+
+    public static string ExplainSourceMeasuredNoDate => T("gui.explain.sourceMeasuredNoDate", "gemessen");
+
+    public static string ExplainSourceVanilla => T("gui.explain.sourceVanilla", "Vanilla-Zählung");
+
+    public static string ExplainSourceUnsure => T("gui.explain.sourceUnsure", "unsicher");
+
+    public static string ExplainSketchParent => T("gui.explain.sketchParent", "Eltern");
 
     // Elementbaum.
     public static string TreeUnknownType => T("gui.tree.unknownType", "unbekannter Typ");
@@ -81,6 +348,53 @@ public static class GuiTexts
     public static string DesignerFit => T("gui.designer.fit", "Einpassen");
 
     public static string DesignerFitTip => T("gui.designer.fit.tip", "Vorschau wieder ganz einpassen (Zoom mit dem Mausrad, Verschieben mit der rechten Maustaste)");
+
+    // Designer-Leiste für beide Formate (klassisch HOI IV/EU IV und Jomini): Auflösung, UI-Skalierung, Rahmen, Überstand.
+    public static string DesignerResolution => T("gui.designer.resolution", "Auflösung");
+
+    public static string DesignerResolutionTip => T("gui.designer.resolution.tip", "Bildschirmauflösung der Vorschau. „Spiel“ ist die Auflösung aus den Spieleinstellungen (klassisch settings.txt, Jomini pdx_settings; steht dort keine, die des Hauptbildschirms).");
+
+    public static string DesignerResolutionGame(int width, int height) => F("gui.designer.resolution.game", "Spiel ({0}×{1})", width, height);
+
+    public static string DesignerResolutionCustom => T("gui.designer.resolution.custom", "Eigene…");
+
+    public static string DesignerResolutionCustomTip => T("gui.designer.resolution.custom.tip", "Eigene Auflösung als Breite×Höhe, z. B. 2048×1152; Enter übernimmt");
+
+    public static string DesignerUiScale => T("gui.designer.uiScale", "UI-Skalierung");
+
+    public static string DesignerUiScaleTip => T("gui.designer.uiScale.tip", "UI-Skalierung des Spiels, Voreinstellung aus den Spieleinstellungen (klassisch gui_scale bzw. game_ui_scale in settings.txt, Jomini GUI.scale in pdx_settings), sonst 1. Enter übernimmt. Klassisch: Werte ungleich 1 sind angenähert.");
+
+    // Sprache der Jomini-Vorschautexte.
+    public static string DesignerLanguage => T("gui.designer.language", "Sprache");
+
+    public static string DesignerLanguageGame(string language) => F("gui.designer.languageGame", "Spiel ({0})", language);
+
+    public static string DesignerLanguageTip => T("gui.designer.languageTip", "Sprache der Texte in der Vorschau; fehlende Texte englisch");
+
+    public static string DesignerShowBounds => T("gui.designer.showBounds", "Rahmen zeigen");
+
+    public static string DesignerShowBoundsTip => T("gui.designer.showBounds.tip", "Jedes Element umranden wie guibounds im Spiel.");
+
+    public static string DesignerMarkOverflow => T("gui.designer.markOverflow", "Überstand markieren");
+
+    public static string DesignerMarkOverflowTip => T("gui.designer.markOverflow.tip", "Jedes Element rot umranden, das über seinen Elternrahmen oder den Bildschirm hinausragt. Aus: nur beim gewählten Element.");
+
+    public static string DesignerHideConditional => T("gui.designer.hideConditional", "Bedingtes Element ausblenden");
+
+    public static string DesignerUnhideConditional => T("gui.designer.unhideConditional", "Wieder einblenden");
+
+    public static string DesignerShowAllConditionals => T("gui.designer.showAllConditionals", "Alle einblenden");
+
+    public static string DesignerShowAllConditionalsTip => T("gui.designer.showAllConditionals.tip", "Blendet alle in dieser Datei ausgeblendeten bedingten Elemente wieder ein");
+
+    /// <summary>Banner bei genau einem ausgeblendeten bedingten Element (Einzahl).</summary>
+    public static string DesignerHiddenConditional => T("gui.designer.hiddenConditional", "1 bedingtes Element ausgeblendet");
+
+    /// <summary>Banner mit der Zahl ausgeblendeter bedingter Elemente; bei 1 die Einzahl (<see cref="DesignerHiddenConditional"/>).</summary>
+    public static string DesignerHiddenConditionals(int count) =>
+        count == 1 ? DesignerHiddenConditional : F("gui.designer.hiddenConditionals", "{0} bedingte Elemente ausgeblendet", count);
+
+    public static string DesignerConditionalTip => T("gui.designer.conditionalTip", "Bedingt sichtbar (visible = \"[…]\"): im Spiel nur unter einer Bedingung zu sehen");
 
     public static string ColumnProperty => T("gui.designer.column.property", "Eigenschaft");
 
@@ -162,7 +476,7 @@ public static class GuiTexts
 
     public static string MenuInspect => T("gui.menu.inspect", "GUI-Inspektor");
 
-    public static string MenuInspectTip => T("gui.menu.inspect.tip", "Typen, Templates und benannte Widgets aus Spiel und Mod suchen und im GUI-Inspektor zeigen (Strg+H)");
+    public static string MenuInspectTip => T("gui.menu.inspect.tip", "Typen, Templates, benannte Widgets und ganze Fenster einer Datei aus Spiel und Mod suchen und im GUI-Inspektor zeigen (Strg+H)");
 
     public static string MenuBreadcrumb => T("gui.menu.breadcrumb", "Brotkrumen-Leiste in .gui-Dateien");
 
@@ -182,6 +496,8 @@ public static class GuiTexts
 
     public static string KindWidget => T("gui.kind.widget", "Widget");
 
+    public static string KindUnnamedRoot => T("gui.kind.unnamedRoot", "Oberstes Fenster ohne Namen");
+
     // GUI-Inspektor.
     public static string InspectorTitle => T("gui.inspector.title", "GUI-Inspektor");
 
@@ -194,6 +510,10 @@ public static class GuiTexts
     public static string InspectorForward => T("gui.inspector.forward", "Vorwärts");
 
     public static string InspectorForwardTip => T("gui.inspector.forward.tip", "Wieder zu dem Element, von dem aus Zurück gedrückt wurde");
+
+    public static string InspectorPick => T("gui.inspector.pick", "Element wählen…");
+
+    public static string InspectorPickTip => T("gui.inspector.pick.tip", "Öffnet die Suche: Typ, Template, benanntes Widget oder ein ganzes Fenster einer Datei wählen");
 
     public static string InspectorShowInCode => T("gui.inspector.showInCode", "Im Code zeigen");
 
@@ -254,6 +574,10 @@ public static class GuiTexts
 
     public static string SearchKind => T("gui.search.kind", "Art");
 
+    public static string SearchFile => T("gui.search.file", "Datei enthält");
+
+    public static string SearchFileTip => T("gui.search.file.tip", "Teil des Dateipfads, z. B. window_county_view; mit der Art \"Oberste Fenster einer Datei\" stehen dann nur noch die ganzen Fenster dieser Datei in der Liste");
+
     public static string SearchCount(int visible, int total) => F("gui.search.count", "{0:N0} von {1:N0} Einträgen", visible, total);
 
     public static string SearchBuilding => T("gui.search.building", "Liste wird aufgebaut");
@@ -267,6 +591,7 @@ public static class GuiTexts
         GuiElementFilter.Button => T("gui.filter.button", "Buttons"),
         GuiElementFilter.Tooltip => T("gui.filter.tooltip", "Tooltips"),
         GuiElementFilter.Window => T("gui.filter.window", "Fenster"),
+        GuiElementFilter.FileRoot => T("gui.filter.fileRoot", "Oberste Fenster einer Datei"),
         GuiElementFilter.Text => T("gui.filter.text", "Texte"),
         GuiElementFilter.Icon => T("gui.filter.icon", "Icons"),
         GuiElementFilter.Container => T("gui.filter.container", "Container"),
@@ -507,6 +832,9 @@ public static class GuiTexts
 
     public static string ScopeCopiesFile => T("gui.scope.copiesFile", "Diese Stelle: Widget auf oberster Ebene. Beim Übernehmen wird die ganze Datei in die Mod kopiert.");
 
+    /// <summary>Klassischer Entwurf: Die Einheit der Übernahme ist das oberste Fenster.</summary>
+    public static string ScopeClassicWindow(string window) => F("gui.scope.classicWindow", "Beim Übernehmen schreibt PMT das ganze Fenster {0} in eine eigene Mod-Datei.", window);
+
     public static string TakeOverTitle => T("gui.takeOver.title", "In Mod übernehmen");
 
     public static string TakeOverIntro(string modRoot) => F("gui.takeOver.intro", "Diese Änderungen kommen in die Mod ({0}):", modRoot);
@@ -521,6 +849,42 @@ public static class GuiTexts
 
     public static string TakeOverColumnUsages => T("gui.takeOver.column.usages", "Verwendungen");
 
+    public static string TakeOverColumnRule => T("gui.takeOver.column.rule", "Warum diese Datei");
+
+    public static string TakeOverWarnings => T("gui.takeOver.warnings", "Hinweise:");
+
+    public static string TakeOverCopyFile => T("gui.takeOver.copyFile", "Ganze Datei kopieren…");
+
+    public static string TakeOverCopyFileConfirm => T("gui.takeOver.copyFileConfirm", "Statt nur der geänderten Fenster kommt die ganze Vanilla-Datei unter demselben Pfad in die Mod und ersetzt sie im Spiel ganz. Nachteil: Andere Mods, die Fenster dieser Datei ändern, und spätere Vanilla-Updates der Datei stoßen dann auf die Kopie; neue Vanilla-Fenster dieser Datei kommen nicht mehr an. Trotzdem die ganze Datei kopieren?");
+
+    /// <summary>
+    /// Ein Mod-Fenster, das umzieht (<see cref="Designer.ClassicOverridePlanner.Moves"/>): Es verliert in seiner Mod-Datei. <paramref name="firstWins"/> (EU IV): Die
+    /// Datei lädt später als die gewinnende; sonst (HOI IV) früher (gemessen 2026-10-17). <paramref name="dependency"/>: Etikett der Abhängigkeits-Mod, die
+    /// gewinnt; null = Vanilla.
+    /// </summary>
+    public static string ClassicMoveWarning(string window, string fromFile, string toFile, bool firstWins, string? dependency) => (firstWins, dependency) switch
+    {
+        (true, null) => F("gui.takeOver.moveFirstWins", "Das Fenster {0} steht in {1}, verliert dort aber gegen Vanilla (lädt später). PMT entfernt es dort und schreibt es nach {2}.", window, fromFile, toFile),
+        (false, null) => F("gui.takeOver.move", "Das Fenster {0} steht in {1}, verliert dort aber gegen Vanilla (lädt früher). PMT entfernt es dort und schreibt es nach {2}.", window, fromFile, toFile),
+        (true, _) => F("gui.takeOver.moveDependencyFirstWins", "Das Fenster {0} steht in {1}, verliert dort aber gegen die Abhängigkeits-Mod {3} (lädt später). PMT entfernt es dort und schreibt es nach {2}.", window, fromFile, toFile, dependency),
+        _ => F("gui.takeOver.moveDependency", "Das Fenster {0} steht in {1}, verliert dort aber gegen die Abhängigkeits-Mod {3} (lädt früher). PMT entfernt es dort und schreibt es nach {2}.", window, fromFile, toFile, dependency),
+    };
+
+    /// <summary>Rückfrage vor dem Übernehmen, wenn Fenster umziehen (Florian 2026-10-17).</summary>
+    public static string ClassicMoveConfirm(IReadOnlyList<(string Window, string FromFile, string ToFile, string? Dependency)> moves, bool firstWins) =>
+        string.Join("\n", moves.Select(m => ClassicMoveWarning(m.Window, m.FromFile, m.ToFile, firstWins, m.Dependency))) + " " + T("gui.takeOver.moveContinue", "Fortfahren?");
+
+    /// <summary>Aktion der Übersicht; bei klassischen Fenstern (<see cref="GuiDefinitionKind.NamedWidget"/>) heißt die Einheit "Fenster" statt Typ.</summary>
+    public static string TakeOverKind(GuiPlanEntryKind kind, string? detail, GuiDefinitionKind? definitionKind) => (kind, definitionKind) switch
+    {
+        (GuiPlanEntryKind.Override, GuiDefinitionKind.NamedWidget) => T("gui.takeOver.kind.window.override", "Fenster überschreiben"),
+        (GuiPlanEntryKind.Replace, GuiDefinitionKind.NamedWidget) => T("gui.takeOver.kind.window.replace", "Fenster in der Mod ersetzen"),
+        (GuiPlanEntryKind.NewDefinition, GuiDefinitionKind.NamedWidget) => T("gui.takeOver.kind.window.new", "Neues Fenster anlegen"),
+        (GuiPlanEntryKind.CopiedDefinition, GuiDefinitionKind.NamedWidget) => T("gui.takeOver.kind.window.copied", "Fenster kommt mit der Datei"),
+        (GuiPlanEntryKind.RemoveFromMod, GuiDefinitionKind.NamedWidget) => T("gui.takeOver.kind.window.remove", "Fenster aus Mod-Datei entfernen"),
+        _ => TakeOverKind(kind, detail),
+    };
+
     public static string TakeOverKind(GuiPlanEntryKind kind, string? detail) => kind switch
     {
         GuiPlanEntryKind.Override => T("gui.takeOver.kind.override", "Überschreiben"),
@@ -533,20 +897,65 @@ public static class GuiTexts
         _ => F("gui.takeOver.kind.renameConstant", "Konstante umbenennen in @{0}", detail ?? string.Empty),
     };
 
-    public static string TakeOverReason(GuiCopyReason reason) => reason == GuiCopyReason.TopLevelChanged
+    /// <summary>Warum die ganze Datei kopiert wird; <paramref name="classic"/> (HOI IV, EU IV): Die Einheit ist das Fenster statt type und template.</summary>
+    public static string TakeOverReason(GuiCopyReason reason, bool classic) => (reason, classic) switch
+    {
+        (GuiCopyReason.Requested, _) => T("gui.takeOver.reason.requested", "\"Ganze Datei kopieren\" ist gewählt. Die Kopie ersetzt die Vanilla-Datei; spätere Vanilla-Updates dieser Datei kommen dann nicht mehr an."),
+        (GuiCopyReason.TopLevelChanged, true) => T("gui.takeOver.reason.classicTopLevel", "Inhalt außerhalb der Fenster wurde geändert (z.B. eine @-Konstante oder ein Block ohne name in guiTypes). Das geht nur, indem die ganze Datei in die Mod kopiert wird. Die Kopie ersetzt die Vanilla-Datei; spätere Vanilla-Updates dieser Datei kommen dann nicht mehr an."),
+        (GuiCopyReason.DefinitionDeleted, true) => T("gui.takeOver.reason.classicDeleted", "Ein Fenster wurde gelöscht. Das geht nur, indem die ganze Datei ohne es in die Mod kopiert wird. Die Kopie ersetzt die Vanilla-Datei; spätere Vanilla-Updates dieser Datei kommen dann nicht mehr an."),
+        _ => TakeOverReason(reason),
+    };
+
+    public static string TakeOverReason(GuiCopyReason reason) => reason == GuiCopyReason.Requested ? TakeOverReason(reason, false)
+        : reason == GuiCopyReason.TopLevelChanged
         ? T("gui.takeOver.reason.topLevel", "Inhalt außerhalb von type- und template-Definitionen wurde geändert (z.B. ein Widget auf oberster Ebene). Das geht nur, indem die ganze Datei in die Mod kopiert wird. Die Kopie ersetzt die Vanilla-Datei; spätere Vanilla-Updates dieser Datei kommen dann nicht mehr an.")
         : T("gui.takeOver.reason.deleted", "Eine Definition wurde gelöscht. Das geht nur, indem die ganze Datei ohne sie in die Mod kopiert wird. Die Kopie ersetzt die Vanilla-Datei; spätere Vanilla-Updates dieser Datei kommen dann nicht mehr an.");
 
     public static string TakeOverBlocked => T("gui.takeOver.blocked", "Übernehmen ist so nicht möglich:");
 
+    /// <summary>Text eines Hindernisses; <paramref name="classic"/>: Kopieren scheitert dort an einem DLC-Ordner.</summary>
+    public static string TakeOverBlocker(GuiPlanBlocker blocker, bool classic) => blocker.Kind switch
+    {
+        GuiPlanBlockerKind.CopyNotPossible when classic => F("gui.takeOver.blocker.classicCopy", "Die ganze Datei müsste kopiert werden, sie stammt aber aus dem DLC-Ordner \"{1}\" ({0}). Ob eine Mod-Datei eine Datei eines DLC-Ordners ersetzt, ist nicht gemessen (unsicher). Ändere hier nur Fenster, ohne eines zu löschen.", blocker.Name, string.Join(", ", blocker.Places)),
+        _ => TakeOverBlocker(blocker),
+    };
+
     public static string TakeOverBlocker(GuiPlanBlocker blocker) => blocker.Kind switch
     {
+        GuiPlanBlockerKind.TargetLoses => TargetLosesText(blocker),
         GuiPlanBlockerKind.DraftErrors => T("gui.takeOver.blocker.errors", "Der Entwurf hat Syntaxfehler. Zuerst beheben."),
         GuiPlanBlockerKind.DuplicateInMod => F("gui.takeOver.blocker.duplicate", "\"{0}\" ist in der Mod mehrfach definiert: {1}", blocker.Name, string.Join(", ", blocker.Places)),
         GuiPlanBlockerKind.ModLoadsAfterVanilla => F("gui.takeOver.blocker.loadsLater", "\"{0}\" ist in der Mod in {1} definiert, aber {2} lädt vorher und gewinnt; eine Änderung in der Mod-Datei wirkte nicht. Verschiebe die Definition in eine Datei, die früher lädt (z. B. gui/00_…), dann erneut übernehmen.", blocker.Name, blocker.Places[0], blocker.Places[1]),
         GuiPlanBlockerKind.NameTaken => F("gui.takeOver.blocker.nameTaken", "Den Namen \"{0}\" gibt es schon: {1}", blocker.Name, string.Join(", ", blocker.Places)),
         GuiPlanBlockerKind.ModChangedSince => F("gui.takeOver.blocker.modChanged", "\"{0}\" hat sich in der Mod geändert, seit der Entwurf begonnen hat ({1}). Entwurf verwerfen und neu beginnen, damit die neue Mod-Fassung die Grundlage ist.", blocker.Name, string.Join(", ", blocker.Places)),
         _ => F("gui.takeOver.blocker.copy", "Die ganze Datei müsste kopiert werden, sie stammt aber aus dem Spielordner \"{1}\" ({0}). Ob eine Mod solche Dateien ersetzen kann, ist ungeklärt. Ändere hier nur type- und template-Definitionen.", blocker.Name, string.Join(", ", blocker.Places)),
+    };
+
+    /// <summary>
+    /// Klassische Zieldatei, die nicht wirkt (<see cref="GuiPlanBlocker.TargetProblem"/>). Der Rat, den Dateinamen zu ändern, gilt nur einem gesetzten Namen;
+    /// hat PMT den Namen gewählt, gibt es keinen gewinnenden.
+    /// </summary>
+    private static string TargetLosesText(GuiPlanBlocker blocker) => blocker.TargetProblem switch
+    {
+        GuiTargetProblem.ReplacesFile => F("gui.takeOver.blocker.targetReplaces", "\"{0}\" käme nach {1}. Diese Datei hat denselben Pfad wie eine Datei des Spiels oder einer Abhängigkeits-Mod und ersetzte sie im Spiel ganz. Wähle in den Mod-Einstellungen einen anderen Dateinamen für Überschreibungen oder lass das Feld leer.", blocker.Name, blocker.Places[0]),
+        GuiTargetProblem.NotFound => F("gui.takeOver.blocker.targetNotFound", "\"{0}\" stünde nach dem Schreiben nicht als Fenster in {1}. Bitte die Datei prüfen (z.B. ein nicht geschlossener Block); so wird nichts übernommen.", blocker.Name, blocker.Places[0]),
+        GuiTargetProblem.InvalidName => F("gui.takeOver.blocker.targetInvalidName", "Der Dateiname \"{1}\" für Überschreibungen aus den Mod-Einstellungen enthält einen Ordner oder unzulässige Zeichen. Trage dort nur einen Dateinamen ein (z.B. zz_meine_mod.gui) oder lass das Feld leer.", blocker.Name, blocker.Places[0]),
+        _ when blocker.ConfiguredTarget => F("gui.takeOver.blocker.targetLoses", "\"{0}\" käme nach {1}, im Spiel gälte aber weiter {2}: Die Datei lädt zur falschen Zeit (HOI IV: die zuletzt geladene gewinnt, EU IV: die zuerst geladene; gemessen 2026-10-17). Wähle in den Mod-Einstellungen einen anderen Dateinamen für Überschreibungen oder lass das Feld leer.", blocker.Name, blocker.Places[0], blocker.Places[^1]),
+        _ => F("gui.takeOver.blocker.targetLosesDefault", "\"{0}\" käme nach {1}, im Spiel gälte aber weiter {2}. PMT findet keinen Dateinamen, der zur passenden Zeit lädt (HOI IV: die zuletzt geladene Datei gewinnt, EU IV: die zuerst geladene; gemessen 2026-10-17). Ändere das Fenster dort, wo es gilt, oder setze in den Mod-Einstellungen einen eigenen Dateinamen für Überschreibungen.", blocker.Name, blocker.Places[0], blocker.Places[^1]),
+    };
+
+    public static string TakeOverWarning(GuiPlanWarning warning) => warning.Kind == GuiPlanWarningKind.DependencyWins
+        ? F("gui.takeOver.warning.dependencyWins", "\"{0}\": Im Spiel gilt weiter die Fassung der Abhängigkeits-Mod in {1}, weil sie nach der Ladereihenfolge gewinnt. Die Änderung wirkt nur ohne diese Mod.", warning.Name, string.Join(", ", warning.Places))
+        : F("gui.takeOver.warning.uncertainOrder", "\"{0}\" kommt nach {1}. Ob das Fenster dort gewinnt, hängt an einer Datei aus einem DLC-Ordner; wie das Spiel DLC-Ordner einsortiert, ist nicht gemessen (unsicher).", warning.Name, string.Join(", ", warning.Places));
+
+    /// <summary>Warum ein klassisches Fenster in diese Datei kommt (Übersicht).</summary>
+    public static string TakeOverRule(ClassicTargetRule rule) => rule switch
+    {
+        ClassicTargetRule.RootLastWins => T("gui.takeOver.rule.rootLastWins", "lädt als letzte Datei direkt in interface/ (HOI IV: die zuletzt geladene gewinnt; gemessen 2026-10-17)"),
+        ClassicTargetRule.SubfolderLastWins => T("gui.takeOver.rule.subfolderLastWins", "lädt als letzte Datei im Unterordner des Vanilla-Fensters (HOI IV: die zuletzt geladene gewinnt; gemessen 2026-10-17)"),
+        ClassicTargetRule.ExistingWinner => T("gui.takeOver.rule.existingWinner", "gewinnt nach der Ladereihenfolge (geprüft)"),
+        ClassicTargetRule.RootFirstWins => T("gui.takeOver.rule.rootFirstWins", "lädt vor allen Vanilla-Dateien (EU IV: die zuerst geladene gewinnt; gemessen 2026-10-17)"),
+        _ => T("gui.takeOver.rule.configured", "Dateiname aus den Mod-Einstellungen"),
     };
 
     public static string TakeOverOpenModified(string file) => F("gui.takeOver.openModified", "{0} ist geöffnet und hat ungespeicherte Änderungen. Zuerst speichern oder verwerfen.", file);
@@ -587,6 +996,13 @@ public static class GuiTexts
     /// <summary>Der Hinweis zu den Dateinamen je nach Ladereihenfolge des Spiels (Victoria 3: auch vor Vanilla).</summary>
     public static string ModSettingsFirstWinsHintFor(ParadoxModTool.GuiDesign.Index.GuiLayout layout) =>
         layout.ModsBeforeVanilla ? ModSettingsFirstWinsHint : ModSettingsFirstWinsVanillaHint;
+
+    public static string ModSettingsOverrideFileClassic => T("gui.modSettings.overrideFileClassic", "Überschreibdatei für geänderte Vanilla-Fenster (HOI IV: im Ordner der Vanilla-Datei unter interface/, EU IV: immer direkt in interface/):");
+
+    /// <summary>Gemessene Regel des klassischen Spiels für die Überschreibdatei; <paramref name="firstWins"/>: EU IV, sonst HOI IV.</summary>
+    public static string ModSettingsClassicHint(bool firstWins) => firstWins
+        ? T("gui.modSettings.classicHintFirstWins", "EU IV: Bei doppeltem Fensternamen gewinnt die zuerst geladene Datei; die Dateien direkt in interface/ laden nach Namen, Vanilla und Mods gemischt, vor den Unterordnern (gemessen 2026-10-17). Der Standardname beginnt deshalb mit 00_; sortiert eine Vanilla-Datei noch früher, verlängert PMT das Präfix (000_). Ein eigener Name gilt wie angegeben; verliert er, blockiert die Übernahme.")
+        : T("gui.modSettings.classicHintLastWins", "HOI IV: Bei doppeltem Fensternamen gewinnt die zuletzt geladene Datei; die Dateien eines Ordners laden nach Namen, Vanilla und Mods gemischt (gemessen 2026-10-17). Der Standardname beginnt deshalb mit zz_; sortiert eine Vanilla-Datei noch später, verlängert PMT das Präfix (zzz_). Ein eigener Name gilt wie angegeben; verliert er, blockiert die Übernahme.");
 
     public static string ModSettingsDependencies => T("gui.modSettings.dependencies", "Abhängigkeits-Mods (ihre Typen und Templates kommen in den GUI-Index):");
 

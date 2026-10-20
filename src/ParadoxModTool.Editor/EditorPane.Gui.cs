@@ -193,7 +193,8 @@ public partial class EditorPane
         }
 
         // Vanilla-.gui: im Code schreibgeschützt, außer als Entwurf (Plan-Ruling 3); die Leiste bietet "Für Mod bearbeiten" bzw. die Entwurfsknöpfe.
-        var offered = GuiSettings.DesignerOffered && IsGuiFile(document);
+        // Ohne gui-Abschnitt im Spielprofil (Stellaris) kein Designer; die Datei bleibt als Code offen.
+        var offered = document?.FilePath is { } guiPath && GuiSettings.OffersDesigner(guiPath);
         var vanilla = GuiSettings.IsVanillaGui(document);
 
         // Eine geänderte Vanilla-.gui kann nur ein Entwurf sein (z.B. aus der Wiederherstellung); sonst säße sie schreibgeschützt fest.
@@ -205,8 +206,9 @@ public partial class EditorPane
         var draft = vanilla && document!.IsGuiDraft;
         Editor.IsReadOnly = vanilla && !draft;
 
-        // "Bausteine" nur in bearbeitbaren .gui-Dateien mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 2 und 10), auch ohne Designer.
-        var blocks = GuiSettings.ToolsEnabled && IsGuiFile(document) && !Editor.IsReadOnly;
+        // "Bausteine" nur in bearbeitbaren .gui-Dateien mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 2 und 10), auch ohne Designer; klassisch nicht
+        // (Jomini-Code, siehe GuiSettings.BlocksOffered).
+        var blocks = GuiSettings.BlocksOffered && IsGuiFile(document) && !Editor.IsReadOnly;
         _blocksButton.Visibility = blocks ? Visibility.Visible : Visibility.Collapsed;
         GuiModePanel.Visibility = offered || vanilla || blocks ? Visibility.Visible : Visibility.Collapsed;
         foreach (var button in new[] { GuiModeCodeButton, GuiModeDesignerButton, GuiModeSplitButton })
@@ -214,8 +216,10 @@ public partial class EditorPane
             button.Visibility = offered ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        _draftButton.Visibility = vanilla && !draft ? Visibility.Visible : Visibility.Collapsed;
-        _draftLabel.Visibility = _takeOverButton.Visibility = _discardButton.Visibility = draft ? Visibility.Visible : Visibility.Collapsed;
+        // "Für Mod bearbeiten" und "In Mod übernehmen" in beiden Formaten (klassisch seit Plan 2); der Schalter bleibt die eine Stelle dafür.
+        _draftButton.Visibility = vanilla && !draft && GuiSettings.DraftsOffered ? Visibility.Visible : Visibility.Collapsed;
+        _draftLabel.Visibility = _discardButton.Visibility = draft ? Visibility.Visible : Visibility.Collapsed;
+        _takeOverButton.Visibility = draft && GuiSettings.DraftsOffered ? Visibility.Visible : Visibility.Collapsed;
         var mode = offered && document is not null
             ? _guiModes.TryGetValue(document, out var chosen) ? chosen : GuiSettings.DefaultMode
             : GuiViewMode.Code;
@@ -225,9 +229,9 @@ public partial class EditorPane
         GuiModeSplitButton.IsChecked = mode == GuiViewMode.Split;
 
         // Die gespeicherte Aufteilung erst beim ersten Einblenden übernehmen: Die Arbeitsbereiche entstehen vor dem Laden der Sitzung.
-        if (mode != GuiViewMode.Code && !_guiLayoutApplied && GuiSettings.Layout is not null)
+        if (mode != GuiViewMode.Code && !_guiLayoutApplied && GuiSettings.DesignerLayout is not null)
         {
-            ApplyGuiLayout(GuiSettings.Layout);
+            ApplyGuiLayout(GuiSettings.DesignerLayout);
             _guiLayoutApplied = true;
         }
 
@@ -282,7 +286,7 @@ public partial class EditorPane
                     _editorMenu.Items.Add(item);
                 }
 
-                if (!Editor.IsReadOnly)
+                if (!Editor.IsReadOnly && GuiSettings.BlocksOffered)
                 {
                     var blocks = new MenuItem { Header = GuiTexts.ContextBlocks, InputGestureText = GuiTexts.KeyBlocks };
                     blocks.Click += (_, _) => GuiBlocksRequested?.Invoke(this, EventArgs.Empty);
@@ -421,7 +425,7 @@ public partial class EditorPane
     }
 
     private void SaveGuiLayout() =>
-        GuiSettings.Layout = string.Create(CultureInfo.InvariantCulture, $"{_designerShare:0.###};{_designer?.LayoutState}");
+        GuiSettings.DesignerLayout = string.Create(CultureInfo.InvariantCulture, $"{_designerShare:0.###};{_designer?.LayoutState}");
 
     private void ApplyGuiLayout(string? layout)
     {
