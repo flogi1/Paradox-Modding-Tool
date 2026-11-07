@@ -1,0 +1,12 @@
+# block: Fortschrittsbalken
+# group: Anzeige
+# description: Fortschrittsbalken (Sprite vom Typ progressbartype, wie bei Entscheidungen). Den Füllstand setzt das Spiel in seinen eigenen Fenstern; ein Scripted GUI ändert unter properties nur image, frame und die Lage (nicht im Spiel gemessen). Für einen Wert aus Skript ein Icon mit mehreren Frames nehmen und frame = Variable setzen, wie vanilla paranoia_main_paranoiameter. Vorbild: interface/countrydecisionview.gui, interface/sov_paranoia_system_scripted_gui.gui
+# param: name | Name | my_progress
+# requires: GFX_decision_item_progress_good
+
+iconType = {
+	name = "$name$"
+	position = { x = 20 y = 210 }
+	spriteType = "GFX_decision_item_progress_good"
+	Orientation = "UPPER_LEFT"
+}

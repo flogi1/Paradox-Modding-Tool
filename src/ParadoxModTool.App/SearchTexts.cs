@@ -133,6 +133,12 @@ public static class SearchTexts
 
     public static string ResultsTip => T("searchWindow.results.tip", "Doppelklick springt zum Treffer");
 
+    /// <summary>Reiter "Suche" im rechten Panel.</summary>
+    public static string TabHeader => T("searchWindow.tab.header", "Suche");
+
+    /// <summary>Status im Reiter, nachdem ein anderes Dokument aktiv wurde (Trefferliste geleert).</summary>
+    public static string TabStale => T("searchWindow.tab.stale", "Anderes Dokument aktiv. Enter sucht neu.");
+
     public static string BrowseDialogTitle => T("searchWindow.browse.dialog", "Suchordner auswählen");
 
     public static string EnterQuery => T("searchWindow.status.enterQuery", "Bitte einen Suchbegriff eingeben.");

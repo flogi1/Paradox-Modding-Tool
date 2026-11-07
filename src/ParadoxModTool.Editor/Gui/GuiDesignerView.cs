@@ -6,6 +6,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using ParadoxModTool.GuiDesign;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
@@ -19,7 +20,7 @@ namespace ParadoxModTool.Editor.Gui;
 /// Designer-Ansicht: schematische Vorschau links, Elementbaum und Eigenschaften rechts. Kennt keinen Editor und schreibt nie selbst:
 /// Bearbeiten meldet sie als <see cref="GuiDesignerAction"/>, <see cref="GuiDesignerController"/> führt aus.
 /// </summary>
-public sealed class GuiDesignerView : UserControl
+public sealed partial class GuiDesignerView : UserControl
 {
     /// <summary>Datenformat beim Ziehen eines Baumeintrags (Wert: <see cref="GuiTreeItem"/>).</summary>
     internal const string TreeDragFormat = "ParadoxModTool.GuiTreeItem";
@@ -149,6 +150,9 @@ public sealed class GuiDesignerView : UserControl
 
     // Klassisch: das Sprite im Kasten des gewählten Elements (Frame, Ränder, Textur) für die Skizzen im Erklärungsfeld.
     private GuiSpriteVisual? _selectedSprite;
+
+    // Jomini: das gezeichnete Sprite (ohne Platzhalter) des gewählten Elements für Bildleiste und Randskizze im Eigenschaftenfeld.
+    private JominiSpriteVisual? _selectedJominiSprite;
     private Point? _dragStart;
     private GuiTreeItem? _dragItem;
 
@@ -272,6 +276,7 @@ public sealed class GuiDesignerView : UserControl
         _propertyEditor.ActionRequested += (_, action) => Request(action);
         _propertyEditor.ShowInCodeRequested += (_, node) => ShowInCodeRequested?.Invoke(this, node);
         _propertyEditor.ExampleActivated += (_, origin) => OriginActivated?.Invoke(this, origin);
+        _propertyEditor.ScriptLocationRequested += (_, e) => RaiseFindingLocation(e);
         _propertyEditor.StatusChanged += (_, text) => SetStatus(text);
         _propertyEditor.NewTypeRequested += (_, node) => RequestFor(NewTypeRequested, node);
         _propertyEditor.TypeEverywhereRequested += (_, node) => TypeEverywhereRequested?.Invoke(this, node);
@@ -279,6 +284,11 @@ public sealed class GuiDesignerView : UserControl
         var propertiesPanel = new DockPanel();
         DockPanel.SetDock(_chain, Dock.Top);
         propertiesPanel.Children.Add(_chain);
+
+        // Befundliste (klassische Prüfung, Jomini-Vorschau): ganz unten, unter dem Eigenschaftenfeld.
+        var findings = InitializeFindings();
+        DockPanel.SetDock(findings, Dock.Bottom);
+        propertiesPanel.Children.Add(findings);
         DockPanel.SetDock(_propertyEditor, Dock.Bottom);
         propertiesPanel.Children.Add(_propertyEditor);
         propertiesPanel.Children.Add(_properties);
@@ -935,6 +945,7 @@ public sealed class GuiDesignerView : UserControl
             _treeItems.Clear();
             _tree.Items.Clear();
             _treeMarks.Clear();
+            _shownFindingMarks.Clear();
             foreach (var item in items)
             {
                 _tree.Items.Add(CreateItem(item, string.Empty, 0, expanded));
@@ -1040,19 +1051,24 @@ public sealed class GuiDesignerView : UserControl
         _showAllConditionals.Visibility = GuiSettings.Layout.IsClassic ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    /// <summary>Setzt die Marke "bedingt" bzw. "ausgeblendet" an den Baumeinträgen; Überschriften entstehen nur bei geändertem Zustand neu.</summary>
+    /// <summary>
+    /// Setzt die Marke "bedingt" bzw. "ausgeblendet" und den Befund-Punkt (Prüfung) an den Baumeinträgen; Überschriften entstehen nur bei geändertem
+    /// Zustand neu.
+    /// </summary>
     private void ApplyTreeMarks()
     {
         foreach (var (node, treeItem) in _treeItems)
         {
             bool? mark = _conditionalKeys.TryGetValue(node, out var key) ? GuiSettings.HiddenConditionals.Contains(key) : null;
             bool? shown = _treeMarks.TryGetValue(node, out var current) ? current : null;
-            if (mark == shown || treeItem.Tag is not GuiTreeItem item)
+            GuiFindingSeverity? finding = _findingMarks.TryGetValue(node, out var severity) ? severity : null;
+            GuiFindingSeverity? shownFinding = _shownFindingMarks.TryGetValue(node, out var shownSeverity) ? shownSeverity : null;
+            if ((mark == shown && finding == shownFinding) || treeItem.Tag is not GuiTreeItem item)
             {
                 continue;
             }
 
-            treeItem.Header = HeaderFor(item, mark);
+            treeItem.Header = HeaderFor(item, mark, finding, finding is null ? null : FindingTip(node));
             if (mark is { } hidden)
             {
                 _treeMarks[node] = hidden;
@@ -1060,6 +1076,15 @@ public sealed class GuiDesignerView : UserControl
             else
             {
                 _treeMarks.Remove(node);
+            }
+
+            if (finding is { } marked)
+            {
+                _shownFindingMarks[node] = marked;
+            }
+            else
+            {
+                _shownFindingMarks.Remove(node);
             }
         }
     }
@@ -1069,6 +1094,7 @@ public sealed class GuiDesignerView : UserControl
     {
         _selectedNode = widget;
         _selectedSprite = widget is null ? null : preview?.Scene?.BoxesFor(widget).Select(box => box.Visual).OfType<GuiSpriteVisual>().FirstOrDefault();
+        _selectedJominiSprite = widget is null ? null : preview?.Scene?.BoxesFor(widget).Select(box => box.Sprite).FirstOrDefault(sprite => sprite is { Placeholder: JominiSpritePlaceholder.None });
         _canvas.SetSelection(widget);
         _suppressTreeEvents = true;
         try
@@ -1146,7 +1172,7 @@ public sealed class GuiDesignerView : UserControl
     {
         _shownElement = element;
         var treeItem = _selectedNode is not null && _treeItems.TryGetValue(_selectedNode, out var shownItem) ? shownItem.Tag as GuiTreeItem : null;
-        _propertyEditor.SetElement(element is null ? null : _selectedNode, element, IsEditable, treeItem?.Kind == GuiTreeItemKind.Widget, treeItem?.IsTypeInstance == true, _selectedSprite);
+        _propertyEditor.SetElement(element is null ? null : _selectedNode, element, IsEditable, treeItem?.Kind == GuiTreeItemKind.Widget, treeItem?.IsTypeInstance == true, _selectedSprite, _selectedJominiSprite);
         if (element is null)
         {
             _chain.Visibility = Visibility.Visible;
@@ -1314,7 +1340,7 @@ public sealed class GuiDesignerView : UserControl
     private TreeViewItem CreateItem(GuiTreeItem item, string parentKey, int depth, HashSet<string> expanded)
     {
         var key = parentKey + "/" + item.Label;
-        var treeItem = new TreeViewItem { Header = HeaderFor(item, null), Tag = item, IsExpanded = depth == 0 || expanded.Contains(key) };
+        var treeItem = new TreeViewItem { Header = HeaderFor(item, null, null, null), Tag = item, IsExpanded = depth == 0 || expanded.Contains(key) };
         if (item.Kind != GuiTreeItemKind.OfferedBlock)
         {
             _treeItems.TryAdd(item.Node, treeItem);
@@ -1361,7 +1387,9 @@ public sealed class GuiDesignerView : UserControl
     }
 
     /// <param name="conditional">null: nicht bedingt; false: bedingt und gezeigt; true: ausgeblendet.</param>
-    private static FrameworkElement HeaderFor(GuiTreeItem item, bool? conditional)
+    /// <param name="finding">Schwerster Befund des Elements (Fehler oder Warnung): Punkt links vom Namen; null ohne.</param>
+    /// <param name="findingTip">Tooltip des Punkts (die Befundtexte).</param>
+    private static FrameworkElement HeaderFor(GuiTreeItem item, bool? conditional, GuiFindingSeverity? finding, string? findingTip)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
         panel.Children.Add(new Border
@@ -1372,6 +1400,11 @@ public sealed class GuiDesignerView : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             Background = new SolidColorBrush(GuiSchematicCanvas.ColorOf(item.Category)),
         });
+        if (finding is { } severity)
+        {
+            panel.Children.Add(GuiFindingsPanel.FindingDot(severity, findingTip));
+        }
+
         var label = new TextBlock { Text = item.Label };
         if (item.Kind == GuiTreeItemKind.OfferedBlock)
         {

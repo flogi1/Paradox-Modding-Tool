@@ -92,17 +92,23 @@ public static class EffectiveEntryResolver
             ct.ThrowIfCancellationRequested();
             if (address.Kind == AddressKind.Key)
             {
-                var rule = rules[address];
+                // Verhalten je Hülle (EU IV interface: Fenster "zuerst", Sprites "zuletzt"); eine solche Regel rechnet nach der Ladereihenfolge der Dateien,
+                // auch wenn das Spiel sie sonst nicht nutzt, wie die Mod-Kompatibilität (CompatAnalyzer).
+                var rule = rules[address].ForKey(address.Key);
+                var firstInLoadOrder = input.Rules.FirstWinsInLoadOrder || rule.InLoadOrder;
+                var lastInLoadOrder = input.Rules.LastWinsInLoadOrder || rule.InLoadOrder;
                 result.Addresses[address] = new AddressInfo
                 {
                     Address = address,
                     Behavior = rule.Behavior,
                     Certain = rule.Certain,
+                    InLoadOrder = rule.Behavior == OverrideBehavior.FirstWins ? firstInLoadOrder
+                        : rule.Behavior is OverrideBehavior.LastWins or OverrideBehavior.PartialKeys && lastInLoadOrder,
                     Operators = rule.Operators,
-                    Vanilla = KeyEffective(address, indexV, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
-                    A = KeyEffective(address, indexA, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
-                    B = KeyEffective(address, indexB, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
-                    NoPatch = KeyEffective(address, indexN, rule, input.Rules.InjectAppends, input.Rules.FirstWinsInLoadOrder, input.Rules.LastWinsInLoadOrder, input.Rules.LoadOrder),
+                    Vanilla = KeyEffective(address, indexV, rule, input.Rules.InjectAppends, firstInLoadOrder, lastInLoadOrder, input.Rules.LoadOrder),
+                    A = KeyEffective(address, indexA, rule, input.Rules.InjectAppends, firstInLoadOrder, lastInLoadOrder, input.Rules.LoadOrder),
+                    B = KeyEffective(address, indexB, rule, input.Rules.InjectAppends, firstInLoadOrder, lastInLoadOrder, input.Rules.LoadOrder),
+                    NoPatch = KeyEffective(address, indexN, rule, input.Rules.InjectAppends, firstInLoadOrder, lastInLoadOrder, input.Rules.LoadOrder),
                 };
                 continue;
             }

@@ -51,6 +51,8 @@
     { "folder": "*/map_data", "behavior": "WholeFile", "certain": true }
   ],
   "errorLogRules": "errorlog/eu5.json",
+  "scriptCheckRules": "scriptcheck/eu5.json",
+  "gfxAuditRules": "gfxaudit/eu5.json",
   "desyncRules": "desync/eu5.json",
   "modifierFormats": {
     "source": "definitions",
@@ -91,10 +93,12 @@
   "performance": {
     "restartCommand": "Script.Profiling.Restart",
     "dumpCommand": "Script.Profiling.DumpAll",
+    "stopCommand": "Script.Profiling.Stop",
     "dumpFilePattern": "profiling*.csv",
     "continueSaveArgs": "-continuelastsave",
     "monthlyPulseRow": "on_actions (on_actions) @ common/on_action/location_pulses.txt:38",
-    "dailyOnActions": [ "on_daily_pulse", "on_country_daily_pulse", "on_character_daily_pulse" ]
+    "frequentTickMarkers": [ "ai_tick = daily" ],
+    "frequentPulseNames": []
   },
   "notes": "Quelle für loadOrderRule und launchOptions: https://eu5.paradoxwikis.com/Modding sowie reale Error-Logs des Nutzers (siehe Architektur-Spezifikation Abschnitt 9). Quelle für overrideRules: https://eu5.paradoxwikis.com/Mod_compatibility. replace_paths nennt die Ordner ohne in_game/, main_menu/ oder loading_screen/ davor (common/x blendet in_game/common/x aus; in_game/common/x und main_menu/gui/x wirken nicht). Es blendet Vanilla und die Mods aus, die im Playset davor laden; spätere Mods bleiben (gemessen 2026-09-30 mit zwei Test-Mods in beiden Reihenfolgen). Einmal fehlte dabei auch die eigene Datei der zuerst ladenden Mod im eigenen Ordner; PMT bildet das nicht nach. Profiler-Fakten (performance): Quelle ist die Spezifikation 2026-10-20-performance-checker-design.md, Abschnitt \"Spiele und Fakten\", und der Probelauf 2026-10-20 (probe-notes.md): DumpAll schreibt logs/profiling_roots.csv (81 717 Zeilen, Monatspuls-Zeile 12 Aufrufe), -continuelastsave mit einem Strich lädt den letzten Stand.",
   "gui": {

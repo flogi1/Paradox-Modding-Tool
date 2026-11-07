@@ -1,0 +1,12 @@
+# block: Fortschrittsbalken
+# group: Anzeige
+# description: Fortschrittsbalken (Sprite vom Typ progressbartype, wie die Kolonie-Anzeige). Den Füllstand setzt nur das Spiel in seinen Fenstern; Custom GUI kennt für Icons nur frame und frame_variable (nicht im Spiel gemessen). Vorbild: interface/colonisationpanel.gui
+# param: name | Name | my_progress
+# requires: GFX_provinceView_progressbar
+
+iconType = {
+	name = "$name$"
+	position = { x = 30 y = 210 }
+	spriteType = "GFX_provinceView_progressbar"
+	Orientation = "UPPER_LEFT"
+}

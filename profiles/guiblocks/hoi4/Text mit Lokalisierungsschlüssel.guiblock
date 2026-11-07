@@ -1,0 +1,17 @@
+# block: Text mit Lokalisierungsschlüssel
+# group: Anzeige
+# description: Einzeiliger Text aus einem Lokalisierungsschlüssel. Ohne font meldet das Spiel beim Laden einen Fehler, deshalb steht die Schrift immer dabei. Vorbild: interface/countrydecisionview.gui
+# param: name | Name | my_text
+# param: text | Text (Lokalisierungsschlüssel) | MY_TEXT
+# param: width | Breite | 300
+# requires: hoi_18mbs
+
+instantTextBoxType = {
+	name = "$name$"
+	position = { x = 20 y = 100 }
+	font = "hoi_18mbs"
+	text = "$text$"
+	maxWidth = $width$
+	maxHeight = 20
+	format = left
+}

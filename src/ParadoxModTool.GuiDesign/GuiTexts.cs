@@ -87,6 +87,15 @@ public static class GuiTexts
 
     public static string LayoutAlphaTextUnmeasured => T("gui.layout.alphaTextUnmeasured", "alpha für Text nicht gemessen; Text voll deckend gezeigt");
 
+    /// <summary>Jeder Kasten mit gezeichneten Effekten (<c>modify_texture</c>, <c>glow</c>, <c>effectname</c>): nur Sichtvergleich, daher immer angenähert.</summary>
+    public static string LayoutEffectsApproximated => T("gui.layout.effectsApproximated", "Effekte angenähert (modify_texture, glow, effectname)");
+
+    /// <summary>Ein Teil eines Effekts ist angenähert (<c>blend_mode</c>, <c>visible</c>, <c>translate_uv</c>, <c>rotate_uv</c>, <c>state</c>, <c>glow_generation_rules</c>, <c>resolution</c>, <c>mirror</c>).</summary>
+    public static string LayoutEffectApproximated(string what) => F("gui.layout.effectApproximated", "Effekt angenähert ({0})", what);
+
+    /// <summary>Ein Effekt, den die Vorschau nicht zeichnet (Shader aus <c>effectname</c>, <c>video</c>, Effekte ohne zeichenbares Grund-Sprite).</summary>
+    public static string LayoutEffectNotDrawn(string name) => F("gui.layout.effectNotDrawn", "Effekt nicht dargestellt: {0}", name);
+
     // Bezeichnungen nicht lesbarer Texturen (Platzhalter und Hinweis "Bildformat nicht unterstützt"); technische wie "DDS DXGI 83 (BC5)" bleiben fest.
     public static string TextureFormatNone => T("gui.texture.formatNone", "kein Bildformat");
 
@@ -146,7 +155,23 @@ public static class GuiTexts
 
     public static string ClassicNoTypes => T("gui.classic.noTypes", "HOI IV und EU IV kennen keine Typen.");
 
-    public static string ClassicBlocksLater => T("gui.classic.blocksLater", "Bausteine und neue GUI-Dateien kommen für HOI IV und EU IV mit dem nächsten Ausbau des GUI-Editors; die vorhandenen Bausteine sind im Jomini-Format der neueren Spiele.");
+    public static string NewFileSubfolder => T("gui.newFile.subfolder", "Unterordner von interface (leer lassen für interface selbst):");
+
+    public static string NewFileInvalidSubfolder => T("gui.newFile.invalidSubfolder", "Der Unterordner ist unzulässig: kein absoluter Pfad, kein „..“, nur gültige Ordnernamen.");
+
+    public static string NewFileReplacePathSubfolder(string folder) => F("gui.newFile.replacePathSubfolder", "Die Mod nennt {0} in einem replace_path. Eine .gui-Datei in diesem Ordner lässt EU IV beim Start abstürzen. Wähle einen anderen Unterordner.", folder);
+
+    public static string NewFileShadowsGameFile(string path) => F("gui.newFile.shadowsGameFile", "Das Spiel oder eine Abhängigkeit hat schon {0}. Eine Mod-Datei gleichen Pfads ersetzt sie samt allen Fenstern darin. Wähle einen anderen Namen oder Unterordner.", path);
+
+    public static string NewFileWindowTaken(string window) => F("gui.newFile.windowTaken", "Ein Fenster namens {0} gibt es schon. Das neue Fenster bekäme denselben Namen (aus dem Dateinamen). Wähle einen anderen Dateinamen.", window);
+
+    public static string NewFileClassicHint(string? action) => action is null
+        ? T("gui.newFile.classicHintPlain", "Das neue Fenster enthält Hintergrund, Titel und Schließen-Knopf. Ins Spiel bringt es Skript.")
+        : F("gui.newFile.classicHint", "Das neue Fenster enthält Hintergrund, Titel und Schließen-Knopf. Im Spiel erscheint es erst über Skript: nach dem Anlegen „{0}“.", action);
+
+    public static string NewFileRunAction(string action) => F("gui.newFile.runAction", "Die Datei ist angelegt. Jetzt „{0}“ für das neue Fenster ausführen?", action);
+
+    public static string NewFileNoWindowBlock => T("gui.newFile.noWindowBlock", "Der Baustein „Fenster“ fehlt in der Bibliothek dieses Spiels.");
     public static string ClassicVanillaNameTitle => T("gui.classic.vanillaNameTitle", "Name aus dem Spiel");
     public static string ClassicVanillaNameConfirm(string name) => F("gui.classic.vanillaNameConfirm", "„{0}“ ist ein Name aus den Vanilla-Dateien. Der Spielcode nutzt diesen Namen vielleicht. Trotzdem ändern?", name);
 
@@ -396,6 +421,236 @@ public static class GuiTexts
 
     public static string DesignerConditionalTip => T("gui.designer.conditionalTip", "Bedingt sichtbar (visible = \"[…]\"): im Spiel nur unter einer Bedingung zu sehen");
 
+    // Prüfung der klassischen GUI (Plan 3): Liste unter dem Eigenschaftenfeld, Marken in Baum und Vorschau.
+    public static string FindingsHeader(int count) => F("gui.findings.header", "Prüfung ({0})", count);
+
+    public static string FindingsTip => T("gui.findings.tip", "Probleme in dieser Mod-Datei. Klick wählt das Element bzw. öffnet die Skriptdatei an der Zeile. Vanilla- und Abhängigkeitsdateien werden nicht geprüft.");
+
+    public static string FindingsNone => T("gui.findings.none", "Keine Probleme gefunden");
+
+    public static string FindingError => T("gui.findings.error", "Fehler");
+
+    public static string FindingWarning => T("gui.findings.warning", "Warnung");
+
+    public static string FindingHint => T("gui.findings.hint", "Hinweis");
+
+    // Jomini-Liste und Gruppen der gemeinsamen Befundliste (Designer und Inspektor).
+    public static string FindingsTipJomini => T("gui.findings.tipJomini", "Fehler und Vorschau-Hinweise des angezeigten Fensters, auch für Vanilla- und Abhängigkeitsdateien. Klick wählt das Element.");
+
+    public static string FindingsGroupProblems => T("gui.findings.groupProblems", "Fehler und Warnungen");
+
+    public static string FindingsGroupNotes => T("gui.findings.groupNotes", "Hinweise");
+
+    public static string FindingsGroupPreviewNotes => T("gui.findings.groupPreviewNotes", "Vorschau-Hinweise");
+
+    public static string FindingOutsideParent => T("gui.findings.outsideParent", "Ragt über das Elternelement hinaus");
+
+    public static string FindingCheckFailed(string check, string message) => F("gui.findings.checkFailed", "Prüfung „{0}“ fehlgeschlagen: {1}", check, message);
+
+    public static string FindingWindowLoses(string name, string file, string label, bool firstWins) => firstWins
+        ? F("gui.findings.windowLosesFirst", "Das Fenster „{0}“ wirkt nicht: {1} ({2}) definiert es auch (bei Fenstern: erste Definition gewinnt).", name, file, label)
+        : F("gui.findings.windowLosesLast", "Das Fenster „{0}“ wirkt nicht: {1} ({2}) definiert es auch und lädt später; die zuletzt geladene Definition gewinnt.", name, file, label);
+
+    public static string FindingSpriteLoses(string name, string file, string label, bool firstWins) => firstWins
+        ? F("gui.findings.spriteLosesFirst", "Das Sprite „{0}“ wirkt nicht: {1} ({2}) definiert es auch (bei Sprites: erste Definition gewinnt).", name, file, label)
+        : F("gui.findings.spriteLosesLast", "Das Sprite „{0}“ wirkt nicht: {1} ({2}) definiert es auch und lädt später; die zuletzt geladene Definition gewinnt.", name, file, label);
+
+    public static string FindingLocalisationMissing(string property, string key) =>
+        F("gui.findings.localisationMissing", "Für {0} = „{1}“ gibt es keinen englischen Text in einer Lokalisierungsdatei.", property, key);
+
+    public static string FindingReplacePathSubfolder(string entry) =>
+        F("gui.findings.replacePathSubfolder", "Die Mod nennt {0} als replace_path, und diese .gui-Datei liegt dort. Das Spiel stürzt beim Start ab, weil es die Datei ohne den Unterordner sucht. Nimm den Eintrag heraus oder lege die Datei in einen anderen Ordner.", entry);
+
+    public static string FindingScriptWindowMissing(string entry, string window) =>
+        F("gui.findings.scriptWindowMissing", "Das Scripted GUI „{0}“ nennt window_name = „{1}“, aber kein oberstes Fenster heißt so. Im Spiel erscheint nichts.", entry, window);
+
+    public static string FindingScriptElementUnknown(string entry, string key, string section) =>
+        F("gui.findings.scriptElementUnknown", "Das Scripted GUI „{0}“ hat unter {2} den Schlüssel „{1}“, aber kein Element des Fensters oder seiner Einstiegsfenster passt dazu. Das Spiel übergeht ihn.", entry, key, section);
+
+    public static string FindingCategoryMissing(string entry) =>
+        F("gui.findings.categoryMissing", "Das Scripted GUI „{0}“ ist eine decision_category, aber keine Entscheidungskategorie bindet es mit scripted_gui = {0} ein. Im Spiel erscheint es nicht.", entry);
+
+    public static string FindingScriptButtonWithoutEffect(string button, string entry) =>
+        F("gui.findings.scriptButtonWithoutEffect", "Der Knopf „{0}“ hat im Scripted GUI „{1}“ keinen Effekt ({0}_click unter effects). Ein Klick tut nichts.", button, entry);
+
+    public static string FindingCustomEntryMissing(string element, string type) =>
+        F("gui.findings.customEntryMissing", "Das Element „{0}“ ({1}) hat scripted = yes, aber kein Eintrag in common/custom_gui nennt es (custom_button, custom_text_box, custom_icon, custom_shield oder custom_window mit name = {0}). Im Spiel hat es kein Skript.", element, type);
+
+    public static string FindingCustomElementMissing(string block, string entry) =>
+        F("gui.findings.customElementMissing", "Der Eintrag {0} „{1}“ in common/custom_gui nennt ein Element, das es in keiner .gui-Datei gibt. Laut example.txt muss name ein Element einer .gui-Datei treffen, sonst wirkt der Eintrag nicht.", block, entry);
+
+    public static string FindingCustomKindMismatch(string element, string type, string block, string accepted, bool unsure) =>
+        F("gui.findings.customKindMismatch", "Das Element „{0}“ ist ein {1}, sein Eintrag ist aber {2}; laut example.txt gehört {2} zu {3}.", element, type, block, accepted)
+        + (unsure ? " " + CustomUnsure : string.Empty);
+
+    /// <summary>Zusatz bei <c>custom_shield</c>: welcher Elementtyp passt, ist nicht gemessen.</summary>
+    public static string CustomUnsure =>
+        T("gui.findings.customUnsure", "(unsicher: example.txt nennt guiButtonType, PMT akzeptiert auch shieldtype; nicht im Spiel gemessen)");
+
+    public static string FindingCustomOutsideSupportedWindow(string element, string window) =>
+        F("gui.findings.customOutsideSupportedWindow", "Das Element „{0}“ hat scripted = yes, liegt aber im Fenster „{1}“, und dort liest EU IV keine Custom GUI. Es muss in einem der Fenster aus common/custom_gui/example.txt liegen (z. B. countrydecisionsview oder province_window), jede Tiefe.", element, window);
+
+    /// <summary>Befund und Hinweis im Eigenschaftsfeld: der Eintrag nennt ein Element ohne <c>scripted = yes</c>.</summary>
+    public static string FindingCustomNotScripted(string entry) =>
+        F("gui.findings.customNotScripted", "Eintrag „{0}“: dem Element fehlt `scripted = yes`, ohne das wirkt der Eintrag im Spiel nicht (laut example.txt)", entry);
+
+    // Eigenschaftsfeld (klassisch, EU IV): der Custom-GUI-Eintrag des gewählten Elements und sein Fenster.
+    public static string CustomGuiHeader => T("gui.customGui.header", "Custom GUI:");
+
+    public static string CustomGuiEntry(string block, string name) => F("gui.customGui.entry", "{0} „{1}“", block, name);
+
+    public static string CustomGuiWindow(string window, string root, string from) =>
+        F("gui.customGui.window", "Fenster {0}: ROOT = {1}, FROM = {2}", window, root, from);
+
+    public static string CustomGuiNoWindow => T("gui.customGui.noWindow", "Liegt in keinem Fenster, in dem EU IV Custom GUI liest.");
+
+    public static string CustomGuiCreate => T("gui.customGui.create", "Custom GUI anlegen");
+
+    public static string CustomGuiCreateTip => T("gui.customGui.createTip", "Setzt scripted = yes, legt den passenden Eintrag in common/custom_gui an (bei einem Fenster auch für jedes Element darin mit scripted = yes) und öffnet die Skriptdatei an der neuen Stelle.");
+
+    public static string CustomGuiBuildInto => T("gui.customGui.buildInto", "In Vanilla-Fenster einbauen…");
+
+    public static string CustomGuiBuildIntoTip => T("gui.customGui.buildIntoTip", "Setzt dieses Fenster als Kind mit scripted = yes in ein Fenster, in dem EU IV Custom GUI liest, und legt custom_window und die übrigen Einträge an.");
+
+    public static string CustomGuiNoName => T("gui.customGui.noName", "Das Element hat keinen Namen (name); Custom GUI findet Elemente nur über den Namen.");
+
+    public static string CustomGuiNameInvalid(string name) => F("gui.customGui.nameInvalid", "„{0}“ taugt nicht als Name in common/custom_gui (nur A–Z, a–z, 0–9 und _).", name);
+
+    public static string CustomGuiNameTaken(string name, string file) => F("gui.customGui.nameTaken", "Für {0} gibt es schon einen Eintrag in common/custom_gui ({1}).", name, file);
+
+    public static string CustomGuiTypeUnsupported(string name, string type) =>
+        F("gui.customGui.typeUnsupported", "{0} ist ein {1}; Custom GUI gibt es nur für guiButtonType, instantTextBoxType, iconType und windowType.", name, type);
+
+    public static string CustomGuiNotInSupportedWindow(string name) =>
+        F("gui.customGui.notInSupportedWindow", "{0} liegt in keinem Fenster, in dem EU IV Custom GUI liest. Ein eigenes Fenster setzt „In Vanilla-Fenster einbauen…“ in eines hinein.", name);
+
+    public static string CustomGuiFileNotMod(string file) => F("gui.customGui.fileNotMod", "{0} gehört nicht zur Mod; erst mit „Für Mod bearbeiten“ übernehmen.", file);
+
+    public static string CustomGuiNotWindowType(string name, string type) => F("gui.customGui.notWindowType", "{0} ist ein {1}; einbauen geht nur mit windowType (custom_window).", name, type);
+
+    public static string CustomGuiNotTopLevel(string name) => F("gui.customGui.notTopLevel", "{0} ist kein oberstes Fenster seiner Datei.", name);
+
+    public static string CustomGuiBackgroundSprite(string element, string value) =>
+        F("gui.customGui.backgroundSprite", "{0}: backGround = {1} nennt kein Kindelement. EU IV stürzte in der Probe (2026-10-30) damit ab; nimm als Hintergrund ein iconType-Kind.", element, value);
+
+    public static string CustomGuiHostMissing(string host) => F("gui.customGui.hostMissing", "Das Fenster {0} findet PMT nicht im GUI-Index.", host);
+
+    public static string CustomGuiHostHasChild(string host, string name) => F("gui.customGui.hostHasChild", "{0} enthält schon ein Element {1}.", host, name);
+
+    public static string CustomGuiAction(string name) => F("gui.customGui.action", "Custom GUI {0} anlegen", name);
+
+    public static string CustomGuiBuildAction(string window, string host) => F("gui.customGui.buildAction", "{0} in {1} einbauen", window, host);
+
+    public static string CustomGuiSnapshotNote => T("gui.customGui.snapshotNote", "Vor „Custom GUI anlegen“");
+
+    public static string CustomGuiHostTitle => T("gui.customGui.hostTitle", "In Vanilla-Fenster einbauen");
+
+    public static string CustomGuiHostLabel(string window) => F("gui.customGui.hostLabel", "Fenster {0} einbauen in:", window);
+
+    public static string CustomGuiHostItem(string window, string file, string root, string from) =>
+        F("gui.customGui.hostItem", "{0} ({1}) – ROOT: {2}, FROM: {3}", window, file, root, from);
+
+    public static string CustomGuiHostNone => T("gui.customGui.hostNone", "PMT kennt noch keine unterstützten Fenster (GUI-Index nicht fertig oder Fensterliste nicht lesbar).");
+
+    public static string CustomGuiHostRemove(string window) =>
+        F("gui.customGui.hostRemove", "Das oberste Fenster {0} aus seiner Datei entfernen (sonst gibt es es danach zweimal)", window);
+
+    public static string CustomGuiHostHint => T("gui.customGui.hostHint", "Im Spiel getestet (2026-10-30): ein windowType mit scripted = yes als Kind von countrydecisionsview, mit custom_window und custom_button. Hat die Mod das Gastfenster noch nicht, übernimmt PMT es wie „In Mod übernehmen“. Die neuen Einträge haben potential = { always = yes } wie in der Probe; trigger und effect füllst du selbst.");
+
+    public static string CustomGuiHostDo => T("gui.customGui.hostDo", "Einbauen");
+
+    public static string CustomGuiWarningsConfirm => T("gui.customGui.warningsConfirm", "Trotzdem einbauen?");
+
+    public static string CustomGuiHostKeepsCopy(string window) =>
+        F("gui.customGui.hostKeepsCopy", "Ohne Haken bleibt das oberste Fenster {0} in seiner Datei stehen; seine Elemente mit scripted = yes meldet die Prüfung dort als außerhalb eines unterstützten Fensters.", window);
+
+    public static string CustomGuiElementMoved(string name, string file) =>
+        F("gui.customGui.elementMoved", "{0} steht so nicht mehr in {1}. Datei speichern, Element neu wählen und noch einmal versuchen.", name, file);
+
+    // Eigenschaftsfeld (klassisch, HOI IV): Scripted-GUI-Verbindungen des gewählten Elements.
+    public static string ScriptedGuiBindingsHeader => T("gui.scriptedGui.bindingsHeader", "Scripted GUI:");
+
+    public static string ScriptedGuiBinding(string entry, string key, string section) =>
+        F("gui.scriptedGui.binding", "{0}: {1} ({2})", entry, key, section);
+
+    public static string ScriptedGuiBindingTip(string file, int line) =>
+        F("gui.scriptedGui.bindingTip", "Öffnet {0} an Zeile {1}.", file, line);
+
+    // Scripted GUI anlegen und Effekt anlegen (klassisch, HOI IV, Plan 3 Task 6).
+    public static string ScriptedGuiCreate => T("gui.scriptedGui.create", "Scripted GUI anlegen…");
+
+    public static string ScriptedGuiCreateTip => T("gui.scriptedGui.createTip", "Legt für dieses Fenster einen Eintrag in common/scripted_guis an (HOI IV) und öffnet die Skriptdatei an der neuen Stelle.");
+
+    public static string ScriptedGuiAddEffect(string entry) => F("gui.scriptedGui.addEffect", "Effekt anlegen ({0})", entry);
+
+    public static string ScriptedGuiAddEffectTip(string key, string entry) => F("gui.scriptedGui.addEffectTip", "Fügt {0} = {{ }} unter effects von {1} ein und öffnet die Skriptdatei an der neuen Zeile.", key, entry);
+
+    public static string ScriptedGuiWindowTitle => T("gui.scriptedGui.windowTitle", "Scripted GUI anlegen");
+
+    public static string ScriptedGuiWindowLabel(string window) => F("gui.scriptedGui.windowLabel", "Fenster: {0}", window);
+
+    public static string ScriptedGuiEntryLabel => T("gui.scriptedGui.entryLabel", "Eintragsname:");
+
+    public static string ScriptedGuiPlacementLabel => T("gui.scriptedGui.placementLabel", "Anzeige:");
+
+    public static string ScriptedGuiPlacementParent => T("gui.scriptedGui.placementParent", "Über einem Spielfenster (parent_window_token)");
+
+    public static string ScriptedGuiPlacementCategory => T("gui.scriptedGui.placementCategory", "Als Entscheidungskategorie (decision_category)");
+
+    public static string ScriptedGuiPlacementOther => T("gui.scriptedGui.placementOther", "Anderer Kontext (context_type)");
+
+    public static string ScriptedGuiTokenLabel => T("gui.scriptedGui.tokenLabel", "parent_window_token:");
+
+    public static string ScriptedGuiContextLabel => T("gui.scriptedGui.contextLabel", "context_type:");
+
+    public static string ScriptedGuiCategoryIdLabel => T("gui.scriptedGui.categoryIdLabel", "Kategorie-ID:");
+
+    public static string ScriptedGuiCategoryNameLabel => T("gui.scriptedGui.categoryNameLabel", "Kategoriename:");
+
+    public static string ScriptedGuiButtonsLabel => T("gui.scriptedGui.buttonsLabel", "Effekte (je Knopf ein _click):");
+
+    public static string ScriptedGuiNoButtons => T("gui.scriptedGui.noButtons", "Das Fenster hat keine Knöpfe; effects bleibt leer.");
+
+    public static string ScriptedGuiDoCreate => T("gui.scriptedGui.doCreate", "Anlegen");
+
+    public static string ScriptedGuiCancel => T("gui.scriptedGui.cancel", "Abbrechen");
+
+    public static string ScriptedGuiHintTopBar => T("gui.scriptedGui.hintTopBar", "Im Spiel getestet (2026-10-30): player_context mit parent_window_token = top_bar zeigt das Fenster, ein Klick führt den _click-Effekt aus. Wo das Fenster steht, bestimmt die .gui-Datei.");
+
+    public static string ScriptedGuiHintToken => T("gui.scriptedGui.hintToken", "Nur top_bar ist im Spiel getestet; die übrigen Token nennt die Doku ohne Beschreibung.");
+
+    public static string ScriptedGuiHintCategory => T("gui.scriptedGui.hintCategory", "Im Spiel getestet (2026-10-30): Die Kategorie erscheint im Entscheidungs-Tab. PMT schreibt visible_when_empty = yes, sonst blendet das Spiel eine Kategorie ohne Entscheidungen aus. Vanilla-Kategoriefenster stehen auf Position 0,0 mit Breite 100 % (z. B. AST_cabinet_trust_ui_window); dein Fenster ändert PMT nicht.");
+
+    public static string ScriptedGuiHintOther => T("gui.scriptedGui.hintOther", "Nicht im Spiel getestet: PMT schreibt nur context_type, window_name, visible, effects und triggers. Je nach Kontext braucht das Spiel mehr (siehe common/scripted_guis/_documentation.md).");
+
+    public static string ScriptedGuiEnglishOnly => T("gui.scriptedGui.englishOnly", "Texte nur auf Englisch angelegt: Die Spielsprache steht nicht in settings.txt. Spielst du in einer anderen Sprache, zeigt das Spiel den Schlüssel statt des Namens.");
+
+    public static string ScriptedGuiLanguageToo(string language) => F("gui.scriptedGui.languageToo", "Die Texte kommen auch in die Datei für die Spielsprache ({0}).", language);
+
+    public static string ScriptedGuiNameInvalid(string name) => F("gui.scriptedGui.nameInvalid", "„{0}“ ist kein gültiger Name (nur A–Z, a–z, 0–9 und _).", name);
+
+    public static string ScriptedGuiNameTaken(string name, string file) => F("gui.scriptedGui.nameTaken", "Das Scripted GUI {0} gibt es schon ({1}).", name, file);
+
+    public static string ScriptedGuiWindowHasEntry(string window, string entry) => F("gui.scriptedGui.windowHasEntry", "Das Fenster {0} hat schon den Mod-Eintrag {1}. Neue Effekte legt „Effekt anlegen“ an einem Knopf an.", window, entry);
+
+    public static string ScriptedGuiCategoryTaken(string id) => F("gui.scriptedGui.categoryTaken", "Die Entscheidungskategorie {0} gibt es schon.", id);
+
+    public static string ScriptedGuiEffectExists(string key, string entry) => F("gui.scriptedGui.effectExists", "{0} steht schon unter effects von {1}.", key, entry);
+
+    public static string ScriptedGuiEntryNotMod(string entry) => F("gui.scriptedGui.entryNotMod", "{0} gehört nicht zur Mod; PMT ändert nur Einträge der Mod.", entry);
+
+    public static string ScriptedGuiEntryNotFound(string entry, string file) => F("gui.scriptedGui.entryNotFound", "Den Eintrag {0} findet PMT nicht mehr in {1}.", entry, file);
+
+    public static string ScriptedGuiAction(string entry) => F("gui.scriptedGui.action", "Scripted GUI {0} anlegen", entry);
+
+    public static string ScriptedGuiEffectAction(string key) => F("gui.scriptedGui.effectAction", "Effekt {0} anlegen", key);
+
+    public static string ScriptedGuiEffectTitle => T("gui.scriptedGui.effectTitle", "Effekt anlegen");
+
+    public static string ScriptedGuiSnapshotNote => T("gui.scriptedGui.snapshotNote", "Vor „Scripted GUI anlegen“");
+
+    public static string FindingOutsideScreen => T("gui.findings.outsideScreen", "Ragt über den Bildschirm hinaus");
+
     public static string ColumnProperty => T("gui.designer.column.property", "Eigenschaft");
 
     public static string ColumnValue => T("gui.designer.column.value", "Wert");
@@ -580,6 +835,8 @@ public static class GuiTexts
 
     public static string SearchCount(int visible, int total) => F("gui.search.count", "{0:N0} von {1:N0} Einträgen", visible, total);
 
+    public static string SearchTopWindows(int count) => F("gui.search.topWindows", "{0} oberste Fenster", count);
+
     public static string SearchBuilding => T("gui.search.building", "Liste wird aufgebaut");
 
     public static string SearchFailed(string message) => F("gui.search.failed", "Suche fehlgeschlagen: {0}", message);
@@ -598,6 +855,7 @@ public static class GuiTexts
         GuiElementFilter.List => T("gui.filter.list", "Listen"),
         GuiElementFilter.Template => T("gui.filter.template", "Templates"),
         GuiElementFilter.Other => T("gui.filter.other", "Sonstige"),
+        GuiElementFilter.Files => T("gui.filter.files", "Dateien"),
         _ => T("gui.filter.all", "Alle"),
     };
 
@@ -730,6 +988,8 @@ public static class GuiTexts
     public static string PropertyBlockReadOnly => T("gui.property.blockReadOnly", "Mehrzeiliger Block: im Code bearbeiten");
 
     public static string PropertyPickColor => T("gui.property.pickColor", "Farbe wählen");
+
+    public static string ColorAboveOne => T("gui.property.colorAboveOne", "Werte über 1 kappt das Spiel auf 1 (Crusader Kings III kann sie anders zeigen)");
 
     public static string PropertyBrowse => T("gui.property.browse", "Durchsuchen");
 
@@ -1376,6 +1636,44 @@ public static class GuiTexts
     public static string HandOffReadFailed(string path, string detail) => F("gui.game.handOff.readFailed", "Die Datei aus dem Spiel lässt sich nicht lesen: {0} ({1})", path, detail);
 
     public static string HandOffNotRecognised(string log) => F("gui.game.handOff.notRecognised", "PMT hat im Aufruf keine vorhandene Datei erkannt und öffnet deshalb nichts. Die Kommandozeile steht im Protokoll: {0}", log);
+
+    // Herkunft einer Textur in der Texturauswahl.
+
+    public static string TextureOriginMod => T("gui.texture.originMod", "Mod");
+
+    public static string TextureOriginDependency(string name) => F("gui.texture.originDependency", "Abhängigkeit: {0}", name);
+
+    public static string TextureOriginDlc(string name) => F("gui.texture.originDlc", "DLC: {0}", name);
+
+    public static string TextureOriginVanilla => T("gui.texture.originVanilla", "Vanilla");
+
+    // Texturauswahl (Jomini-Spiele): Knopf im Eigenschaftenfeld und Fenster.
+
+    public static string TexturePickerButton => T("gui.texture.pickerButton", "Textur wählen…");
+
+    public static string TexturePickerTitle => T("gui.texture.pickerTitle", "Textur wählen");
+
+    public static string TexturePickerSearch => T("gui.texture.pickerSearch", "Suchen");
+
+    public static string TexturePickerCount(int shown, int total) => F("gui.texture.pickerCount", "{0} von {1} Texturen", shown, total);
+
+    public static string TexturePickerSize(int width, int height) => F("gui.texture.pickerSize", "Größe: {0} × {1}", width, height);
+
+    /// <summary>Statt der Anzahl, solange die Suche läuft.</summary>
+    public static string TexturePickerSearching => T("gui.texture.pickerSearching", "Texturen werden gesucht …");
+
+    /// <summary>Statt der Anzahl, wenn die Suche fehlschlug; <paramref name="message"/> ist die Meldung der Ausnahme.</summary>
+    public static string TexturePickerFailed(string message) => F("gui.texture.pickerFailed", "Texturen konnten nicht gelistet werden: {0}", message);
+
+    // Bildleiste unter frame/framesize/frame_grid (Jomini-Spiele).
+
+    /// <summary>Das aktuelle Bild (Zahl) liegt nicht im Raster.</summary>
+    public static string FrameStripOutOfRange(string frame, long count) => F("gui.frameStrip.outOfRange", "Frame {0} liegt außerhalb der {1} Frames", frame, count);
+
+    /// <summary>Das aktuelle Bild kommt aus einer Datenbindung (<c>frame = "[…]"</c>): nichts hervorgehoben, Klicks aus.</summary>
+    public static string FrameStripBound => T("gui.frameStrip.bound", "Frame kommt aus einer Datenbindung");
+
+    public static string FrameStripTooMany(long count) => F("gui.frameStrip.tooMany", "{0} Frames – zu viele zum Anzeigen", count);
 
     private static string T(string key, string german) => UiText.Get(key, german);
 

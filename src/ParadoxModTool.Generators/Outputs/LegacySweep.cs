@@ -11,6 +11,19 @@ public static class LegacySweep
 {
     public static (string Text, int Removed) Apply(string text, int scopeStart, int scopeEnd, IReadOnlyList<Regex> patterns, IReadOnlyList<(int Start, int End)> skip)
     {
+        var (result, _, count) = Extract(text, scopeStart, scopeEnd, patterns, skip);
+        return (result, count);
+    }
+
+    /// <summary>
+    /// Wie <see cref="Apply"/> über die ganze Datei, gibt aber auch die entfernten Stellen zurück (in Dateireihenfolge, zeichengleich aneinandergehängt),
+    /// damit <c>migrate</c> sie in eine andere Datei setzen kann. Ein auskommentierter Eintrag (<c>#a = { … #}</c>) geht über die Klammertiefe als Ganzes mit.
+    /// </summary>
+    public static (string Text, string Moved, int Count) Extract(string text, IReadOnlyList<Regex> patterns, Func<string, bool>? dropFromMoved = null) =>
+        Extract(text, 0, text.Length, patterns, Array.Empty<(int, int)>(), dropFromMoved);
+
+    private static (string Text, string Moved, int Count) Extract(string text, int scopeStart, int scopeEnd, IReadOnlyList<Regex> patterns, IReadOnlyList<(int Start, int End)> skip, Func<string, bool>? dropFromMoved = null)
+    {
         var spans = new List<(int Start, int End)>();
         foreach (var pattern in patterns)
         {
@@ -37,13 +50,13 @@ public static class LegacySweep
 
         if (spans.Count == 0)
         {
-            return (text, 0);
+            return (text, string.Empty, 0);
         }
 
         var merged = new List<(int Start, int End)>();
         foreach (var span in spans.OrderBy(s => s.Start))
         {
-            if (merged.Count > 0 && span.Start <= merged[^1].End)
+            if (merged.Count > 0 && span.Start < merged[^1].End)
             {
                 merged[^1] = (merged[^1].Start, Math.Max(merged[^1].End, span.End));
             }
@@ -59,7 +72,7 @@ public static class LegacySweep
             result = result[..start] + result[end..];
         }
 
-        return (result, spans.Select(s => s.Start).Distinct().Count());
+        return (result, string.Concat(merged.Select(s => text[s.Start..s.End]).Where(s => dropFromMoved is null || !dropFromMoved(s))), spans.Select(s => s.Start).Distinct().Count());
     }
 
     /// <summary>Index nach dem Zeilenende der Zeile, in der <paramref name="position"/> liegt (ein Treffer, der mit dem Zeilenende endet, zählt zu seiner Zeile).</summary>

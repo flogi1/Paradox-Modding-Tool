@@ -26,7 +26,7 @@
       { "id": "recalc", "label": { "de": "Neuberechnung auslösen (IV2_calc.2)", "en": "Trigger recalculation (IV2_calc.2)" }, "type": "bool", "default": "no" }
     ]
   },
-  "languages": { "copyEnglish": true },
+  "languages": { "defaultLanguages": [ "german", "english" ], "extendEnglish": false, "copyEnglish": false, "englishForMissing": false },
   "targets": [ "mod", "output" ],
   "outputs": [
     { "id": "ga", "kind": "syncMatching", "path": "in_game/common/generic_actions/iv2_ga_idea_groups_{{ category }}.txt", "template": "ga.sbn", "match": "{{ hm }}" },
@@ -95,14 +95,15 @@
         "en": "{{ arg }} is missing in the AI chooser. After generating, run python \"Idea Variation 2 Skripte/KI-Auswaehler/iv2_build_ai_chooser.py\" (tag it in the tag editor first)."
       } },
     { "id": "static_modifiers", "kind": "syncMatching", "path": "main_menu/common/static_modifiers/01_IV2_ideagroup_modifiers_{{ category }}.txt", "template": "static_modifiers.sbn", "match": "{{ hm }}" },
-    { "id": "messagetypes_select", "kind": "syncMatching", "path": "main_menu/gui/messagetypes.txt", "template": "messagetypes_select.sbn", "match": "WE_PERFORM_iv2_ga_select_ideagroup_{{ gm }}_ACTION" },
-    { "id": "messagetypes_deselect", "kind": "syncMatching", "path": "main_menu/gui/messagetypes.txt", "template": "messagetypes_deselect.sbn", "match": "WE_PERFORM_iv2_ga_deselect_ideagroup_{{ gm }}_ACTION" },
-    { "id": "messagetypes_ideas", "kind": "syncMatching", "path": "main_menu/gui/messagetypes.txt", "template": "messagetypes_ideas.sbn", "match": "WE_PERFORM_iv2_ga_ideagroup_{{ gm }}_[0-9]+_ACTION" },
+    { "id": "messagetypes_select", "kind": "syncMatching", "path": "main_menu/gui/messagetypes/01_IV2_idea_groups_messagetypes.txt", "template": "messagetypes_select.sbn", "match": "(?:WE_)?PERFORM_iv2_ga_select_ideagroup_{{ gm }}_ACTION",
+      "migrate": { "from": "main_menu/gui/messagetypes.txt", "patterns": [ "^#?[ \\t]*WE_PERFORM_iv2_ga_(?:select_|deselect_)?ideagroup_\\w+_ACTION\\s*=\\s*\\{" ] } },
+    { "id": "messagetypes_deselect", "kind": "syncMatching", "path": "main_menu/gui/messagetypes/01_IV2_idea_groups_messagetypes.txt", "template": "messagetypes_deselect.sbn", "match": "(?:WE_)?PERFORM_iv2_ga_deselect_ideagroup_{{ gm }}_ACTION" },
+    { "id": "messagetypes_ideas", "kind": "syncMatching", "path": "main_menu/gui/messagetypes/01_IV2_idea_groups_messagetypes.txt", "template": "messagetypes_ideas.sbn", "match": "(?:WE_)?PERFORM_iv2_ga_ideagroup_{{ gm }}_[0-9]+_ACTION" },
     { "id": "loc_ideas", "kind": "localization", "path": "main_menu/localization/{{ lang }}/02_IV2_{{ category }}_ideas_l_{{ lang }}.yml", "template": "loc_ideas.sbn", "keys": "_{{ g }}(_|$)" },
     { "id": "loc_exclusive", "kind": "localization", "path": "main_menu/localization/{{ lang }}/01_IV2_setup_l_{{ lang }}.yml", "template": "loc_exclusive.sbn", "keys": "^iv2_ideagroup_(title|desc)_text_mut_{{ g }}_1$" },
-    { "id": "loc_msg_select", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_select.sbn", "keys": "^WE_PERFORM_iv2_ga_select_ideagroup_{{ g }}_ACTION_" },
-    { "id": "loc_msg_deselect", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_deselect.sbn", "keys": "^WE_PERFORM_iv2_ga_deselect_ideagroup_{{ g }}_ACTION_" },
-    { "id": "loc_msg_ideas", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_ideas.sbn", "keys": "^WE_PERFORM_iv2_ga_ideagroup_{{ g }}_[0-9]+_ACTION_" }
+    { "id": "loc_msg_select", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_select.sbn", "keys": "^(?:WE_)?PERFORM_iv2_ga_select_ideagroup_{{ g }}_ACTION_" },
+    { "id": "loc_msg_deselect", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_deselect.sbn", "keys": "^(?:WE_)?PERFORM_iv2_ga_deselect_ideagroup_{{ g }}_ACTION_" },
+    { "id": "loc_msg_ideas", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_ideas.sbn", "keys": "^(?:WE_)?PERFORM_iv2_ga_ideagroup_{{ g }}_[0-9]+_ACTION_" }
   ],
   "read": {
     "keys": {

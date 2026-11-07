@@ -30,6 +30,7 @@ public partial class MainWindow
         nameof(AppSettings.PathBarVisible),
         nameof(AppSettings.DocumentBarVisible),
         nameof(AppSettings.WorkspaceFilterButtonVisible),
+        nameof(AppSettings.SearchInSidePanel),
         nameof(AppSettings.NotesPanelVisible),
         nameof(AppSettings.TileBarVisible),
         nameof(AppSettings.WorkspaceCategoryButtonVisible),
@@ -147,6 +148,11 @@ public partial class MainWindow
             case nameof(AppSettings.NotesPanelVisible):
             case nameof(AppSettings.NotesPanelAlwaysVisible):
                 NotesPanelToggle.IsChecked = _settings.NotesPanelVisible;
+                UpdateNotesPanelVisibility();
+                break;
+            case nameof(AppSettings.SearchInSidePanel):
+                // Reiter "Suche" (MainWindow.SearchTab.cs); mit der Option zählt er als Inhalt für die Panel-Sichtbarkeit.
+                NotesPanelControl.SearchTabEnabled = _settings.SearchInSidePanel;
                 UpdateNotesPanelVisibility();
                 break;
             case nameof(AppSettings.HiddenToolbarItems):

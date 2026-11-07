@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ParadoxModTool.GameProfiles;
 using ParadoxModTool.ModCompat;
 using ParadoxModTool.VanillaDiff;
 
@@ -69,7 +70,7 @@ public static class PatchPlanner
                         break;
                     }
 
-                    plan.Entries.Add(EntryOp(info, state, form, target, resolved));
+                    plan.Entries.Add(EntryOp(info, state, form, target, resolved, input.Rules.LoadOrder));
                     break;
             }
         }
@@ -147,7 +148,13 @@ public static class PatchPlanner
     /// des Bereichs, sonst nach allen (Prüfbefund I1: Mods nutzen <c>zzz_</c>). Deshalb wird das Präfix verlängert, bis es alle schlägt.
     /// Der Name kann sich ändern, wenn eine Mod neue Dateien bekommt; Plan 2 räumt frühere PMT-Dateien des Bereichs dann auf.
     /// </summary>
-    internal static string OwnFile(AddressInfo info, ResolvedEntries resolved)
+    /// <remarks>
+    /// Klassisches <c>interface/</c> (HOI IV, EU IV): Fenster (<c>guiTypes</c>) in eine .gui-, Sprites (<c>spriteTypes</c>, <c>objectTypes</c>) in eine .gfx-Datei,
+    /// sonst lädt das Spiel sie nicht. Zählt die Ladereihenfolge der Dateien (<see cref="AddressInfo.InLoadOrder"/>) und gewinnt der zuletzt geladene, laden
+    /// Unterordner nach den Dateien des Bereichs (<see cref="GameLoadOrder"/>): Liegt die zuletzt geladene Definition in einem Unterordner, kommt der Patch
+    /// dorthin, mit einem Namen nach allen Dateien dieses Ordners. "Zuerst geladen gewinnt" bleibt direkt im Bereich (lädt vor allen Unterordnern).
+    /// </remarks>
+    internal static string OwnFile(AddressInfo info, ResolvedEntries resolved, GameLoadOrder? loadOrder = null)
     {
         var scope = info.Address.Scope;
         if (info.Behavior == OverrideBehavior.LocalizationKeys)
@@ -157,11 +164,24 @@ public static class PatchPlanner
         }
 
         var firstWins = info.Behavior == OverrideBehavior.FirstWins;
-        var extension = IsGuiKey(info.Address.Key) ? ".gui" : ".txt";
+        var extension = ExtensionFor(info.Address.Key);
+        var folder = scope;
+        if (info.InLoadOrder && info.Behavior == OverrideBehavior.LastWins && IsClassicInterfaceKey(info.Address.Key)
+            && new[] { info.Vanilla, info.A, info.B, info.NoPatch }.Select(e => e.RelativePath).OfType<string>()
+                .OrderBy(p => p, loadOrder ?? GameLoadOrder.Instance).LastOrDefault() is { } latest
+            && latest.LastIndexOf('/') is var slash and > 0
+            && latest[..slash].StartsWith(scope + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            folder = latest[..slash];
+        }
+
         var names = resolved.NoPatchFiles.Keys
-            .Where(p => p.StartsWith(scope + "/", StringComparison.OrdinalIgnoreCase))
+            .Where(p => folder == scope
+                ? p.StartsWith(scope + "/", StringComparison.OrdinalIgnoreCase)
+                : p.StartsWith(folder + "/", StringComparison.OrdinalIgnoreCase) && p.IndexOf('/', folder.Length + 1) < 0)
             .Select(p => Path.GetFileName(p).ToLowerInvariant())
             .ToList();
+        scope = folder;
         var prefix = firstWins ? "00_" : "zz_";
         for (var i = 0; i < 32; i++)
         {
@@ -180,7 +200,7 @@ public static class PatchPlanner
         return $"{scope}/{prefix}{OwnFileName}{extension}";
     }
 
-    private static PatchEntryOp EntryOp(AddressInfo info, DesiredState state, PatchForm form, PatchTarget target, ResolvedEntries resolved)
+    private static PatchEntryOp EntryOp(AddressInfo info, DesiredState state, PatchForm form, PatchTarget target, ResolvedEntries resolved, GameLoadOrder loadOrder)
     {
         var key = info.Address.Key;
         var body = form switch
@@ -207,7 +227,7 @@ public static class PatchPlanner
         };
         var inline = string.Concat(notes.Select(n => "# PMT offen: " + n + "\n")) + inlineBody;
         var dependsOnOrder = form == PatchForm.PlainKey || (form == PatchForm.Replace && target != PatchTarget.Compatch);
-        return new PatchEntryOp(info.Address, form, OwnFile(info, resolved), text, notes, dependsOnOrder, info.Uncertain, inline);
+        return new PatchEntryOp(info.Address, form, OwnFile(info, resolved, loadOrder), text, notes, dependsOnOrder, info.Uncertain, inline);
     }
 
     /// <summary>
@@ -701,6 +721,36 @@ public static class PatchPlanner
         }
 
         return string.Join(eol, lines);
+    }
+
+    /// <summary>
+    /// Ein Schlüssel in einer klassischen <c>interface</c>-Hülle (<c>guiTypes</c>, <c>spriteTypes</c>, <c>objectTypes</c>). Nur für diese gilt die
+    /// Unterordner-Ablage in <see cref="OwnFile"/> (gemessen für interface); andere LastWins-Ordner mit Ladereihenfolge (HOI IV, Stellaris spielweit)
+    /// behalten <c>zz_</c> direkt im Bereich.
+    /// </summary>
+    private static bool IsClassicInterfaceKey(string key) =>
+        RuleKeys.UnwrapKeyOf(key) is { } unwrap
+        && (string.Equals(unwrap, "guiTypes", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(unwrap, "spriteTypes", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(unwrap, "objectTypes", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Endung der PMT-eigenen Datei: Jomini-GUI-Typen und klassische Fenster .gui, klassische Sprites .gfx, sonst .txt.</summary>
+    private static string ExtensionFor(string key)
+    {
+        if (IsGuiKey(key))
+        {
+            return ".gui";
+        }
+
+        var unwrap = RuleKeys.UnwrapKeyOf(key);
+        if (string.Equals(unwrap, "guiTypes", StringComparison.OrdinalIgnoreCase))
+        {
+            return ".gui";
+        }
+
+        return string.Equals(unwrap, "spriteTypes", StringComparison.OrdinalIgnoreCase) || string.Equals(unwrap, "objectTypes", StringComparison.OrdinalIgnoreCase)
+            ? ".gfx"
+            : ".txt";
     }
 
     private static bool IsGuiKey(string key) =>

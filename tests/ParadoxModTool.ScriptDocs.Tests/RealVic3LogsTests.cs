@@ -21,8 +21,9 @@ public class RealVic3LogsTests
 
         int Count(ScriptDocKind kind) => ScriptDocLogParser.Parse(kind, File.ReadAllText(Path.Combine(Docs, ScriptDocLogFiles.FileNameOf(kind)))).Count;
 
-        // Logs vom 2026-10-10: 7090 Modifier in drei Abschnitten.
-        Assert.Equal(7090, Count(ScriptDocKind.Modifier));
+        // Logs vom 2026-10-10: 7090 Modifier in drei Abschnitten, vom 2026-11-07: 7293. Ein Spielpatch ändert die Zahl, darum nur die Untergrenze
+        // (sie fällt unter 7000, wenn ein Abschnitt nicht mehr gelesen wird).
+        Assert.True(Count(ScriptDocKind.Modifier) >= 7000);
         Assert.True(Count(ScriptDocKind.Trigger) > 0);
         Assert.True(Count(ScriptDocKind.Effect) > 0);
         Assert.True(Count(ScriptDocKind.EventTarget) > 0);

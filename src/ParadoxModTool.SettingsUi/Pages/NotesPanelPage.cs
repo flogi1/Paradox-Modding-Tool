@@ -12,6 +12,7 @@ public sealed class NotesPanelPage : SettingsPage
         var settings = Host.Settings;
         AddCheckBox(SettingsTexts.NotesPanelVisible, SettingsTexts.NotesPanelVisibleTip, () => settings.NotesPanelVisible, value => settings.NotesPanelVisible = value);
         AddCheckBox(SettingsTexts.NotesPanelKeepOpen, SettingsTexts.NotesPanelKeepOpenTip, () => settings.NotesPanelAlwaysVisible, value => settings.NotesPanelAlwaysVisible = value);
+        AddCheckBox(SettingsTexts.NotesPanelSearchTab, SettingsTexts.NotesPanelSearchTabTip, () => settings.SearchInSidePanel, value => settings.SearchInSidePanel = value);
         AddCheckBox(SettingsTexts.NotesPanelScope, SettingsTexts.NotesPanelScopeTip, () => ScopeSettings.PanelEnabled, ScopeSettings.SetPanelEnabled);
 
         RefreshOnSettings();

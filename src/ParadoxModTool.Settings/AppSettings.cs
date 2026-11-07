@@ -19,6 +19,7 @@ public sealed class AppSettings
     private bool _replaceWarningsInWindow;
     private bool _notesPanelVisible = true;
     private bool _notesPanelAlwaysVisible;
+    private bool _searchInSidePanel;
     private bool _documentBarVisible = true;
     private bool _workspaceFilterButtonVisible = true;
     private bool _workspaceIconButtonVisible = true;
@@ -48,6 +49,10 @@ public sealed class AppSettings
     private WindowBoundsState? _errorLogWindowBounds;
     private bool _saveExplorerStandalone;
     private WindowBoundsState? _saveExplorerWindowBounds;
+    private WindowBoundsState? _performanceWindowBounds;
+    private WindowBoundsState? _flagTrackerWindowBounds;
+    private WindowBoundsState? _scriptCheckWindowBounds;
+    private WindowBoundsState? _gfxAuditWindowBounds;
     private string _myModsView = "Tiles";
     private string _myModsGrouping = "Games";
     private string _myModsSort = "Name";
@@ -117,6 +122,9 @@ public sealed class AppSettings
 
     /// <summary>Panel auch bei Dateien ohne Notiz und Lesezeichen offen halten.</summary>
     public bool NotesPanelAlwaysVisible { get => _notesPanelAlwaysVisible; set => Set(ref _notesPanelAlwaysVisible, value); }
+
+    /// <summary>Suche &amp; Ersetzen für das aktive Dokument als Reiter "Suche" im rechten Panel statt im Fenster anzeigen.</summary>
+    public bool SearchInSidePanel { get => _searchInSidePanel; set => Set(ref _searchInSidePanel, value); }
 
     public bool DocumentBarVisible { get => _documentBarVisible; set => Set(ref _documentBarVisible, value); }
 
@@ -228,6 +236,70 @@ public sealed class AppSettings
 
             _saveExplorerWindowBounds = Copy(value);
             Changed?.Invoke(this, nameof(SaveExplorerWindowBounds));
+        }
+    }
+
+    /// <summary>Position und Größe des Fensters "Performance-Checker". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? PerformanceWindowBounds
+    {
+        get => Copy(_performanceWindowBounds);
+        set
+        {
+            if (SameBounds(_performanceWindowBounds, value))
+            {
+                return;
+            }
+
+            _performanceWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(PerformanceWindowBounds));
+        }
+    }
+
+    /// <summary>Position und Größe des Fensters "Flag-Tracker". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? FlagTrackerWindowBounds
+    {
+        get => Copy(_flagTrackerWindowBounds);
+        set
+        {
+            if (SameBounds(_flagTrackerWindowBounds, value))
+            {
+                return;
+            }
+
+            _flagTrackerWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(FlagTrackerWindowBounds));
+        }
+    }
+
+    /// <summary>Position und Größe des Fensters "Skript-Prüfung". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? ScriptCheckWindowBounds
+    {
+        get => Copy(_scriptCheckWindowBounds);
+        set
+        {
+            if (SameBounds(_scriptCheckWindowBounds, value))
+            {
+                return;
+            }
+
+            _scriptCheckWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(ScriptCheckWindowBounds));
+        }
+    }
+
+    /// <summary>Position und Größe des Fensters "GFX-Prüfung". Liefert und übernimmt Kopien.</summary>
+    public WindowBoundsState? GfxAuditWindowBounds
+    {
+        get => Copy(_gfxAuditWindowBounds);
+        set
+        {
+            if (SameBounds(_gfxAuditWindowBounds, value))
+            {
+                return;
+            }
+
+            _gfxAuditWindowBounds = Copy(value);
+            Changed?.Invoke(this, nameof(GfxAuditWindowBounds));
         }
     }
 
@@ -437,6 +509,7 @@ public sealed class AppSettings
         _replaceWarningsInWindow = state.ReplaceWarningsInWindow;
         _notesPanelVisible = state.NotesPanelVisible;
         _notesPanelAlwaysVisible = state.NotesPanelAlwaysVisible;
+        _searchInSidePanel = state.SearchInSidePanel;
         _documentBarVisible = state.DocumentBarVisible;
         _workspaceFilterButtonVisible = state.WorkspaceFilterButtonVisible;
         _workspaceIconButtonVisible = state.WorkspaceIconButtonVisible;
@@ -463,6 +536,10 @@ public sealed class AppSettings
         _errorLogWindowBounds = Copy(state.ErrorLogWindowBounds);
         _saveExplorerStandalone = state.SaveExplorerStandalone;
         _saveExplorerWindowBounds = Copy(state.SaveExplorerWindowBounds);
+        _performanceWindowBounds = Copy(state.PerformanceWindowBounds);
+        _flagTrackerWindowBounds = Copy(state.FlagTrackerWindowBounds);
+        _scriptCheckWindowBounds = Copy(state.ScriptCheckWindowBounds);
+        _gfxAuditWindowBounds = Copy(state.GfxAuditWindowBounds);
         _myModsView = OneOf(state.MyModsView, "Tiles", "List");
         _myModsGrouping = OneOf(state.MyModsGrouping, "Games", "All");
         _myModsSort = OneOf(state.MyModsSort, "Name", "Subscribers", "OpenBugs", "LastRelease");
@@ -505,6 +582,7 @@ public sealed class AppSettings
         state.ReplaceWarningsInWindow = _replaceWarningsInWindow;
         state.NotesPanelVisible = _notesPanelVisible;
         state.NotesPanelAlwaysVisible = _notesPanelAlwaysVisible;
+        state.SearchInSidePanel = _searchInSidePanel;
         state.DocumentBarVisible = _documentBarVisible;
         state.WorkspaceFilterButtonVisible = _workspaceFilterButtonVisible;
         state.WorkspaceIconButtonVisible = _workspaceIconButtonVisible;
@@ -531,6 +609,10 @@ public sealed class AppSettings
         state.ErrorLogWindowBounds = Copy(_errorLogWindowBounds);
         state.SaveExplorerStandalone = _saveExplorerStandalone;
         state.SaveExplorerWindowBounds = Copy(_saveExplorerWindowBounds);
+        state.PerformanceWindowBounds = Copy(_performanceWindowBounds);
+        state.FlagTrackerWindowBounds = Copy(_flagTrackerWindowBounds);
+        state.ScriptCheckWindowBounds = Copy(_scriptCheckWindowBounds);
+        state.GfxAuditWindowBounds = Copy(_gfxAuditWindowBounds);
         state.MyModsView = _myModsView;
         state.MyModsGrouping = _myModsGrouping;
         state.MyModsSort = _myModsSort;

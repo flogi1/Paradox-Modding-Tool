@@ -1,0 +1,12 @@
+{
+  "textExtensions": [".txt", ".gui", ".gfx", ".yml", ".asset", ".settings", ".shader", ".fxh"],
+  "spriteBlocks": ["spriteType"],
+  "spriteTextureKeys": ["texturefile", "texturefile1", "texturefile2", "texturefile3", "alphamaskfile", "animationtexturefile", "animationmaskfile"],
+  "spriteRefPrefix": null,
+  "namePrefixes": ["mod_"],
+  "nameSuffixes": ["_shine", "_notachieved", "_not_eligible", "_grey", "_locked", "_opposite", "_small", "_medium"],
+  "alwaysUsedFolders": ["gfx/models", "gfx/particles", "gfx/map", "gfx/cursors", "gfx/loadingscreens", "gfx/flags", "gfx/terrain", "gfx/terrain2", "gfx/portraits/environments", "map/terrain", "gfx/interface/bookmarks"],
+  "ignoredFolderReferences": ["gfx/interface/illustrations", "gfx/interface/skinned"],
+  "pathRoots": [""],
+  "notes": "Measured in the installed Vanilla game, 2026-11-06 (GFX check plan 1, task 1); calibrated in task 6 (unused images 2.3 % -> 1.8 %). Sprites only in tweakergui; sprite references are not prefixed. Task 6 added gfx/interface/bookmarks: bookmark pictures are named bm_<bookmark group>_<bookmark character key> (105 of them), a name the engine builds and no script writes out. The paths.settings folders illustration (gfx/interface/illustrations) and gfx_skins_base_path (gfx/interface/skinned) are ignored as folder references: script and GUI name the images there by full path or key (skins swap the same path under gfx/interface/skins/<skin>); measured 2026-11-07 (backlog round, task 2): Vanilla 389 -> 429 unused (1.8 % -> 2.0 %), 40 new images whose name no text contains, Flogi's mod unchanged (14)."
+}

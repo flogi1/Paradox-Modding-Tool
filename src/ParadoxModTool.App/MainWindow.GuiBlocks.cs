@@ -34,19 +34,13 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// Fenster "Bausteine" für den aktiven Arbeitsbereich; nur mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 10). Klassisch (HOI IV, EU IV) ein Hinweis
-    /// statt des Fensters (Menü, Kachel, Strg+Umschalt+B): die Bausteine sind Jomini-Code.
+    /// Fenster "Bausteine" für den aktiven Arbeitsbereich; nur mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 10). Klassisch (HOI IV, EU IV)
+    /// prüft das Fenster die Voraussetzungen gegen die Sprites und Schriften des Spiels.
     /// </summary>
     private void OpenGuiBlocks()
     {
-        if (!GuiSettings.ToolsEnabled)
+        if (!GuiSettings.ToolsEnabled || !ToolStateOf(ParadoxModTool.Settings.TileIds.Gui).Available)
         {
-            return;
-        }
-
-        if (!GuiSettings.BlocksOffered)
-        {
-            MessageBox.Show(this, GuiTexts.ClassicBlocksLater, GuiTexts.MenuBlocks, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -55,7 +49,8 @@ public partial class MainWindow
             LoadGuiBlockLibrary(),
             GuiSettings.Workspace?.Index,
             _activeHighlighting,
-            WithGame(new GuiBlockWindowOptions(null, null, GuiTexts.BlocksInsert, pane.HasActiveDocument)))
+            WithGame(new GuiBlockWindowOptions(null, null, GuiTexts.BlocksInsert, pane.HasActiveDocument)),
+            GuiSettings.Workspace?.Classic?.Sprites)
         {
             Owner = this,
         };
@@ -116,7 +111,8 @@ public partial class MainWindow
             LoadGuiBlockLibrary(),
             GuiSettings.Workspace?.Index,
             _activeHighlighting,
-            WithGame(new GuiBlockWindowOptions(name, null, GuiTexts.BlocksInsert, CanAct: true)))
+            WithGame(new GuiBlockWindowOptions(name, null, GuiTexts.BlocksInsert, CanAct: true)),
+            GuiSettings.Workspace?.Classic?.Sprites)
         {
             Owner = this,
         };
@@ -150,7 +146,8 @@ public partial class MainWindow
             library,
             GuiSettings.Workspace?.Index,
             _activeHighlighting,
-            WithGame(new GuiBlockWindowOptions(block.Name, presets, GuiTexts.NewFileCreate, CanAct: true)))
+            WithGame(new GuiBlockWindowOptions(block.Name, presets, GuiTexts.NewFileCreate, CanAct: true)),
+            GuiSettings.Workspace?.Classic?.Sprites)
         {
             Owner = this,
         };

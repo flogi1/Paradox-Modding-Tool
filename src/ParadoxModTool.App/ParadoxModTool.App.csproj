@@ -14,7 +14,7 @@
     <StartupObject>ParadoxModTool.App.Program</StartupObject>
     <!-- Versionsnummer des Programms: erscheint im Startbild, im Über-Fenster, im Update-Vergleich und im
          Fehlerbericht. Bei jedem veröffentlichten Release hier hochzählen (und den Git-Tag "v<Version>" setzen). -->
-    <Version>0.12.0</Version>
+    <Version>1.0.0</Version>
     <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -30,7 +30,12 @@
     <ProjectReference Include="..\ParadoxModTool.Modifiers\ParadoxModTool.Modifiers.csproj" />
     <ProjectReference Include="..\ParadoxModTool.ErrorLog\ParadoxModTool.ErrorLog.csproj" />
     <ProjectReference Include="..\ParadoxModTool.SaveGames\ParadoxModTool.SaveGames.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Performance\ParadoxModTool.Performance.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Explorer\ParadoxModTool.Explorer.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.FlagTracker\ParadoxModTool.FlagTracker.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ScriptCheck\ParadoxModTool.ScriptCheck.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GfxAudit\ParadoxModTool.GfxAudit.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ReferenceTree\ParadoxModTool.ReferenceTree.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GitIntegration\ParadoxModTool.GitIntegration.csproj" />
     <ProjectReference Include="..\ParadoxModTool.GuiDesign\ParadoxModTool.GuiDesign.csproj" />
@@ -80,6 +85,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\profiles\errorlog\*.json" Link="profiles\errorlog\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\scriptcheck\*.json" Link="profiles\scriptcheck\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\profiles\gfxaudit\*.json" Link="profiles\gfxaudit\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\profiles\desync\*.json" Link="profiles\desync\%(Filename)%(Extension)">

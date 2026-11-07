@@ -188,6 +188,17 @@ public sealed class WorkspacePagesTests
     });
 
     [Fact]
+    public void NotesPanelPageTogglesSearchInSidePanel() => Sta.Run(() =>
+    {
+        var host = new FakeHost();
+        using var page = new NotesPanelPage(host);
+
+        UiFind.Toggle(UiFind.CheckBox(page, SettingsTexts.NotesPanelSearchTab));
+
+        Assert.True(host.Settings.SearchInSidePanel);
+    });
+
+    [Fact]
     public void DisposedWorkspacePageUnsubscribesFromStaticEvents() => Sta.Run(() =>
     {
         ScopeSettings.SetHoverEnabled(true);

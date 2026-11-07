@@ -12,7 +12,7 @@ namespace ParadoxModTool.Editor.Gui;
 /// <summary>
 /// Suchfenster "GUI-Element inspizieren": alle Typen, Templates und benannten Widgets aus Spiel und Mod, dazu die unbenannten obersten
 /// Fenster jeder Datei unter ihrem Dateinamen; filterbar nach Name, Dateipfad und Art (Plan-Rulings 6 und 7). Enter, Doppelklick oder
-/// "Inspizieren" öffnet den Eintrag im GUI-Inspektor. Die Liste entsteht im Hintergrund und neu, sobald ein neuer GUI-Index da ist.
+/// "Inspizieren" öffnet den Eintrag im GUI-Inspektor (bei der Art "Dateien" das erste oberste Fenster der Datei). Die Liste entsteht im Hintergrund und neu, sobald ein neuer GUI-Index da ist.
 /// </summary>
 public sealed class GuiElementSearchWindow : Window
 {
@@ -21,15 +21,18 @@ public sealed class GuiElementSearchWindow : Window
         public override string ToString() => GuiTexts.FilterText(Filter);
     }
 
-    private sealed record Row(GuiElementEntry Entry)
+    /// <summary>Elementzeile, oder bei <paramref name="File"/> eine Dateizeile der Art "Dateien"; <c>Entry</c> ist dann das erste oberste Fenster.</summary>
+    private sealed record Row(GuiElementEntry Entry, GuiFileEntry? File = null)
     {
-        public string Name => Entry.Name;
+        public string Name => File is null
+            ? Entry.Name
+            : File.Roots.Count > 1 ? $"{File.DisplayPath}  ({GuiTexts.SearchTopWindows(File.Roots.Count)})" : File.DisplayPath;
 
-        public string KindText => Entry.IsUnnamed ? GuiTexts.KindUnnamedRoot : GuiTexts.KindOf(Entry.Kind);
+        public string KindText => File is not null ? string.Empty : Entry.IsUnnamed ? GuiTexts.KindUnnamedRoot : GuiTexts.KindOf(Entry.Kind);
 
-        public string BaseWidget => GuiWidgetKinds.Normalize(Entry.BaseWidget);
+        public string BaseWidget => File is not null ? string.Empty : GuiWidgetKinds.Normalize(Entry.BaseWidget);
 
-        public string Location => $"{Entry.Definition.File.RelativePath}:{Entry.Definition.Line}";
+        public string Location => File is not null ? string.Empty : $"{Entry.Definition.File.RelativePath}:{Entry.Definition.Line}";
 
         public string Layer => Entry.Definition.File.Label;
     }
@@ -44,6 +47,7 @@ public sealed class GuiElementSearchWindow : Window
     private GuiWorkspace? _workspace;
     private ListCollectionView? _view;
     private int _total;
+    private int _fileTotal;
     private string _text = string.Empty;
     private string _fileText = string.Empty;
     private GuiElementFilter _filterValue = GuiElementFilter.All;
@@ -200,6 +204,9 @@ public sealed class GuiElementSearchWindow : Window
 
                 var rows = task.Result.Select(entry => new Row(entry)).ToList();
                 _total = rows.Count;
+                var files = GuiElementSearch.Files(task.Result);
+                _fileTotal = files.Count;
+                rows.AddRange(files.Select(file => new Row(file.Roots[0], file)));
                 _view = new ListCollectionView(rows) { Filter = Accept };
                 _list.ItemsSource = _view;
                 ApplyFilter();
@@ -220,10 +227,13 @@ public sealed class GuiElementSearchWindow : Window
         }
 
         _view.Refresh();
-        _count.Text = GuiTexts.SearchCount(_view.Count, _total);
+        _count.Text = GuiTexts.SearchCount(_view.Count, _filterValue == GuiElementFilter.Files ? _fileTotal : _total);
     }
 
-    private bool Accept(object item) => item is Row row && GuiElementSearch.Matches(row.Entry, _text, _filterValue, _fileText);
+    private bool Accept(object item) => item is Row row
+        && (row.File is { } file
+            ? _filterValue == GuiElementFilter.Files && GuiElementSearch.MatchesFile(file, _text, _fileText)
+            : GuiElementSearch.Matches(row.Entry, _text, _filterValue, _fileText));
 
     private void InspectSelected(bool firstIfNone)
     {

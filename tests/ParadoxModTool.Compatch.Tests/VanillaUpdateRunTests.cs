@@ -32,8 +32,8 @@ public class VanillaUpdateRunTests : CompatchTestBase
             ModFullPath = Path.Combine(BDir, p.Replace('/', Path.DirectorySeparatorChar)),
         }).ToList();
 
-    private UpdateScan Scan(IReadOnlyList<OverriddenFile> files, string current, string? pattern = null, string? forced = null, IEnumerable<string>? modPaths = null) =>
-        VanillaUpdateRun.Scan(files, modPaths ?? files.Select(f => f.RelativePath), VanillaDir, Store, current, VanillaVersionLedger.Load(LedgerDir), pattern, forced);
+    private UpdateScan Scan(IReadOnlyList<OverriddenFile> files, string current, string? pattern = null, string? forced = null) =>
+        VanillaUpdateRun.Scan(files, Store, current, VanillaVersionLedger.Load(LedgerDir), pattern, forced);
 
     [Fact]
     public void Scan_splits_changed_unchanged_and_without_old_version()
@@ -51,18 +51,6 @@ public class VanillaUpdateRunTests : CompatchTestBase
         Assert.Equal(new[] { Z }, scan.WithoutOldVersion.Select(f => f.RelativePath));
         Assert.Null(scan.WithoutOldVersion[0].OldVersion);
         Assert.Equal(new[] { "1.37" }, scan.RecordedVersionsBelowCurrent);
-    }
-
-    [Fact]
-    public void Scan_lists_removed_vanilla_files()
-    {
-        Snapshot(X, "1.37", "a = 1\n");
-        File.Delete(Path.Combine(VanillaDir, X.Replace('/', Path.DirectorySeparatorChar)));
-
-        var scan = Scan(Overridden(), "1.38", modPaths: new[] { X, Y });
-
-        Assert.Equal(new[] { X }, scan.RemovedInVanilla);
-        Assert.Empty(scan.Changed);
     }
 
     [Fact]

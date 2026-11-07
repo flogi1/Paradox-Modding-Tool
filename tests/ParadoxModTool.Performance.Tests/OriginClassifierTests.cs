@@ -123,6 +123,29 @@ public sealed class OriginClassifierTests
     }
 
     [Fact]
+    public void ResolveModFileFindsPhaseFolderPath()
+    {
+        using var mod = new TempTree(("in_game/" + Path, "x"), ("common/bare.txt", "x"));
+        using var other = new TempTree(("common/elsewhere.txt", "x"));
+        var classifier = Create(mod, other);
+
+        Assert.Equal(mod.PathOf("in_game/" + Path), classifier.ResolveModFile(Path));
+        Assert.Equal(mod.PathOf("common/bare.txt"), classifier.ResolveModFile("common/bare.txt"));
+        Assert.Null(classifier.ResolveModFile("common/missing.txt"));
+        Assert.Null(classifier.ResolveModFile("common/elsewhere.txt"));
+    }
+
+    [Fact]
+    public void ResolveModFileUsesTheInjectedFileExistsAndSkipsBlankRoot()
+    {
+        var probed = new List<string>();
+        var classifier = new OriginClassifier("", Array.Empty<string>(), Array.Empty<string>(), p => { probed.Add(p); return true; });
+
+        Assert.Null(classifier.ResolveModFile(Path));
+        Assert.Empty(probed);
+    }
+
+    [Fact]
     public void ModSideIsModAndBothOnly()
     {
         Assert.Equal(new[] { RowOrigin.Mod, RowOrigin.Both }.Order(), OriginClassifier.ModSide.Order());

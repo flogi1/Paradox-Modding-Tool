@@ -1,4 +1,5 @@
 using System.Globalization;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Imaging;
 using ParadoxModTool.GuiDesign.Resolve;
 using ParadoxModTool.GuiDesign.Text;
@@ -35,6 +36,9 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
     private LayoutOptions _options = new();
     private IReadOnlyDictionary<ResolvedElement, string> _conditionalKeys = new Dictionary<ResolvedElement, string>();
 
+    /// <summary>Effekte der Kästen aus <see cref="SetSprite"/>, bis <see cref="ApplyEffects"/> die Rezepte mit der fertigen Kastengröße baut.</summary>
+    private readonly Dictionary<LayoutBox, JominiEffectVisual> _effects = new();
+
     /// <param name="text">Texte mit den Spielschriften messen und setzen; ohne Dienst bleibt die grobe Schätzung (<see cref="GuiTexts.LayoutTextEstimated"/>).</param>
     /// <param name="textures">Texturfinder für die Texturbilder der Kästen (<see cref="LayoutBox.Sprite"/>); gelesen werden nur Köpfe. Ohne ihn gibt es keine Sprites.</param>
     public GuiLayoutEngine(GuiRules rules, Func<string, (int Width, int Height)?> textureSize, JominiTextService? text = null, TextureLocator? textures = null)
@@ -49,6 +53,7 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
     {
         _options = options ?? new LayoutOptions();
         _measureCache.Clear();
+        _effects.Clear();
         // Schlüssel der bedingten Elemente beim Absteigen durch den ganzen aufgelösten Baum (auch unsichtbare Geschwister zählen mit).
         _conditionalKeys = GuiConditionalKeys.Collect(root, _options.ViewedFile, _options.PreviewRootNode);
         // Regel 14: Die UI-Skalierung verkleinert den virtuellen Bildschirm (Auflösung / Skalierung); alles darauf ist linear.
@@ -64,8 +69,10 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
         NoteScaledVisuals(box);
         ApplyClips(box, null);
         ApplyAlpha(box, 1);
+        ApplyEffects(box);
 
         MarkOverflow(box, null, screen);
+        JominiNoteKinds.Apply(box);
         box.ConditionalKeys = _conditionalKeys;
         return box;
     }
@@ -471,10 +478,48 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
 
         var notes = new List<string>();
         box.Sprite = JominiSprites.Build(element, _textures, notes, IsBackground(element));
+        if (JominiEffects.Build(element, box.Sprite, _textures, notes) is { } effects)
+        {
+            _effects[box] = effects;
+        }
+
         foreach (var note in notes.Where(note => !box.Notes.Contains(note)))
         {
             box.Notes.Add(note);
         }
+    }
+
+    /// <summary>
+    /// Rezepte der Effekte (<see cref="LayoutBox.Effects"/>), wenn die Kästen fertig sind (nach <c>scale</c> und geerbtem Alpha, so ist das Grund-Sprite das
+    /// gezeichnete). Nur Kästen mit gezeichnetem Sprite, Fläche und nicht leeren Effekten (auch nach dem Wegfall eines Leuchtens ohne Radius in <see cref="JominiEffectRecipe.Create"/>); sie bekommen <see cref="GuiTexts.LayoutEffectsApproximated"/>.
+    /// </summary>
+    private void ApplyEffects(LayoutBox root)
+    {
+        foreach (var box in root.Descendants().Prepend(root))
+        {
+            if (!_effects.TryGetValue(box, out var effects) || effects.IsEmpty || !HasArea(box)
+                || box.Sprite is not { Placeholder: JominiSpritePlaceholder.None } sprite)
+            {
+                continue;
+            }
+
+            var notes = new List<string>();
+            var recipe = JominiEffectRecipe.Create(sprite, effects, box.Width, box.Height, box.RenderScale, notes);
+            if (recipe.Effects.IsEmpty)
+            {
+                // Nur ein Leuchten ohne Kastenfilter-Radius: nichts zu zeichnen, kein Effektbild und kein Hinweis.
+                continue;
+            }
+
+            box.Effects = recipe;
+            AddNoteOnce(box, GuiTexts.LayoutEffectsApproximated);
+            foreach (var note in notes)
+            {
+                AddNoteOnce(box, note);
+            }
+        }
+
+        _effects.Clear();
     }
 
     /// <summary>
@@ -531,16 +576,16 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
             // Mit ignore_layout = yes (Vanilla, z.B. EU-V-Cooltip-Vorlagen) sind Anker gewollt: kein Fehlerhinweis.
             if (element.Property("parentanchor") is not null)
             {
-                notes.Add(GuiTexts.LayoutGameError("parentanchor in hbox/vbox"));
+                notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutGameError("parentanchor in hbox/vbox"), GuiFindingKind.GameError));
             }
             else if (element.Property("widgetanchor") is not null)
             {
-                notes.Add(GuiTexts.LayoutGameError("widgetanchor in hbox/vbox"));
+                notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutGameError("widgetanchor in hbox/vbox"), GuiFindingKind.GameError));
             }
 
             if (JominiShowState.Property(element, "position") is not null)
             {
-                notes.Add(GuiTexts.LayoutGameError("position in hbox/vbox"));
+                notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutGameError("position in hbox/vbox"), GuiFindingKind.GameError));
             }
         }
 
@@ -738,7 +783,7 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
             // Sprite mit seinem Formathinweis.
             if (_textures?.Locate(texture) is null)
             {
-                notes.Add(GuiTexts.LayoutTextureMissing(texture));
+                notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextureMissing(texture), GuiFindingKind.TextureMissing));
             }
 
             return null;
@@ -837,13 +882,13 @@ public sealed class GuiLayoutEngine : IGuiLayoutEngine
         if (Kind(element) == "widget" && MarginNames.Any(name => element.Property(name) is not null))
         {
             // Regel 9: margin wirkt nur an Boxen und background; an einem widget meldet das Spiel einen Fehler.
-            box.Notes.Add(GuiTexts.LayoutGameError("margin an widget"));
+            box.Notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutGameError("margin an widget"), GuiFindingKind.GameError));
         }
 
         if (Kind(element) is "hbox" or "vbox" && element.Property("align") is not null)
         {
             // align gilt in Boxen nicht (Probe 3b–3e).
-            box.Notes.Add(GuiTexts.LayoutGameError("align an hbox/vbox"));
+            box.Notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutGameError("align an hbox/vbox"), GuiFindingKind.GameError));
         }
 
         // Regel 12: background füllt den ganzen Kasten (um seinen margin verändert), belegt kein Fach und wird zuerst gezeichnet.

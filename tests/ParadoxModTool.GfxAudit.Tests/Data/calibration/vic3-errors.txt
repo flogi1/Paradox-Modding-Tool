@@ -1,0 +1,5 @@
+# Restliste der GFX-Prüfung für vic3 (Kalibrierung „Installation als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+MissingTexture|gfx/interface/icons/timed_fervor_target_modifier_icons/modifier_flag_negative.dds	Vanilla: Textur fehlt in der Installation (common/static_modifiers/11_culture_fervor_target_modifiers.txt:3217)
+MissingTexture|gfx/interface/icons/timed_fervor_target_modifier_icons/modifier_flag_positive.dds	Vanilla: Textur fehlt in der Installation (common/static_modifiers/11_culture_fervor_target_modifiers.txt:3212)

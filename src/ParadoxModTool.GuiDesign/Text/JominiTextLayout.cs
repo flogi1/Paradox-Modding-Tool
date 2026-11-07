@@ -1,4 +1,5 @@
 using System.Text;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Layout;
 
 namespace ParadoxModTool.GuiDesign.Text;
@@ -475,7 +476,7 @@ public static class JominiTextLayout
                 }
                 else if (_locateTexture(sizeTexture) is null && _missingTextures.Add(sizeTexture))
                 {
-                    _notes.Add(GuiTexts.LayoutTextureMissing(sizeTexture));
+                    _notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextureMissing(sizeTexture), GuiFindingKind.TextureMissing));
                 }
             }
 
@@ -485,7 +486,7 @@ public static class JominiTextLayout
                 if (_missingIcons.Add(missing))
                 {
                     MissingIcons.Add(missing);
-                    _notes.Add(GuiTexts.LayoutTextIconMissing(missing));
+                    _notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextIconMissing(missing), GuiFindingKind.TextIconMissing));
                 }
 
                 return new Atom(JominiTextRunKind.Icon, missing, style, face, null, style.Size, false, false, false, false, group, null, style.Size, 0);
@@ -502,7 +503,7 @@ public static class JominiTextLayout
             var texture = string.IsNullOrEmpty(definition.Texture) ? null : _locateTexture(definition.Texture);
             if (texture is null && !string.IsNullOrEmpty(definition.Texture) && _missingTextures.Add(definition.Texture))
             {
-                _notes.Add(GuiTexts.LayoutTextureMissing(definition.Texture));
+                _notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextureMissing(definition.Texture), GuiFindingKind.TextureMissing));
             }
 
             return new Atom(JominiTextRunKind.Icon, name!, style, face, null, width, false, false, false, false, group, texture, height, definition.OffsetY * _scale);
@@ -527,7 +528,7 @@ public static class JominiTextLayout
                     MissingFonts.Add(missing);
                     if (_request.NoteMissingFonts)
                     {
-                        _notes.Add(GuiTexts.LayoutTextFontMissing(missing));
+                        _notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextFontMissing(missing), GuiFindingKind.FontMissing));
                     }
                 }
 

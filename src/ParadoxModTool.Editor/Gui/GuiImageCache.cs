@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ParadoxModTool.GuiDesign.Imaging;
+using ParadoxModTool.GuiDesign.Layout;
 
 namespace ParadoxModTool.Editor.Gui;
 
@@ -37,7 +38,7 @@ public enum GuiImageState
 /// Stand (altes Bild bzw. unlesbar) und lassen einen Hintergrund-Thread prüfen; hat sich die Datei geändert, meldet <see cref="ImageReady"/> das neue Bild.
 /// </para>
 /// </summary>
-public sealed class GuiImageCache
+public sealed partial class GuiImageCache
 {
     /// <summary>Gemeinsamer Puffer aller Vorschauen (256 MB Pixeldaten).</summary>
     public static GuiImageCache Shared { get; } = new(256L * 1024 * 1024);
@@ -67,7 +68,7 @@ public sealed class GuiImageCache
     /// <summary>Schlüssel, die in diesem Lauf schon zur Prüfung (Eintrag oder Fehlschlag aus einem früheren Lauf) eingestellt wurden.</summary>
     private readonly HashSet<Key> _checkedThisRun = new(KeyComparer.Instance);
 
-    private readonly Queue<Key> _queue = new();
+    private readonly Queue<Job> _queue = new();
 
     /// <summary>Schlüssel in der Warteschlange oder in Arbeit.</summary>
     private readonly HashSet<Key> _queued = new(KeyComparer.Instance);
@@ -113,9 +114,10 @@ public sealed class GuiImageCache
     /// Das Bild (oder sein Fehlschlag) ist in diesem Lauf geprüft und nicht mehr in der Warteschlange (für Tests: <see cref="TryGet"/> liefert bis zur
     /// Prüfung den letzten bekannten Stand, das ist kein Zeichen, dass der Hintergrund fertig ist).
     /// </summary>
-    internal bool IsSettled(string fullPath, GuiTint tint)
+    internal bool IsSettled(string fullPath, GuiTint tint) => IsSettled(new Key(fullPath, tint));
+
+    private bool IsSettled(Key key)
     {
-        var key = new Key(fullPath, tint);
         lock (_gate)
         {
             if (_queued.Contains(key))
@@ -128,7 +130,7 @@ public sealed class GuiImageCache
                 return node.Value.Generation == _generation;
             }
 
-            return (_failed.TryGetValue(fullPath, out var failure) && failure.Generation == _generation) || _decodedThisRun.Contains(key);
+            return (_failed.TryGetValue(key.Path, out var failure) && failure.Generation == _generation) || _decodedThisRun.Contains(key);
         }
     }
 
@@ -152,6 +154,28 @@ public sealed class GuiImageCache
             _generation++;
             _decodedThisRun.Clear();
             _checkedThisRun.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Verwirft alle wartenden Aufträge (etwa wenn das Fenster eines eigenen Puffers schließt). Was ein Hintergrund-Thread schon bearbeitet, läuft zu
+    /// Ende; danach enden die Threads, weil die Warteschlange leer ist. Verworfene Bilder sind nicht als dekodiert gemerkt, ein späterer Abruf stellt
+    /// sie wieder ein. Gibt die Zahl der verworfenen Aufträge zurück.
+    /// </summary>
+    public int CancelQueued()
+    {
+        lock (_gate)
+        {
+            var dropped = 0;
+            while (_queue.TryDequeue(out var job))
+            {
+                // Nur wartende Schlüssel: Schlüssel in Arbeit entfernt der Thread selbst (und weckt dabei Wartende).
+                _queued.Remove(job.Key);
+                _checkedThisRun.Remove(job.Key);
+                dropped++;
+            }
+
+            return dropped;
         }
     }
 
@@ -218,9 +242,11 @@ public sealed class GuiImageCache
     /// Fragt das Bild ab, ohne je zu dekodieren. Fehlt es noch, kommt es in die Warteschlange der Hintergrund-Threads (<see cref="GuiImageState.Pending"/>)
     /// und <see cref="ImageReady"/> meldet es später. Die Färbung wird aus dem weißen Bild gemacht und zählt als eigener Eintrag im Puffer.
     /// </summary>
-    public GuiImageState TryGet(string fullPath, GuiTint tint, out BitmapSource? bitmap)
+    public GuiImageState TryGet(string fullPath, GuiTint tint, out BitmapSource? bitmap) => TryGet(new Key(fullPath, tint), null, out bitmap);
+
+    /// <summary>Wie <see cref="TryGet(string, GuiTint, out BitmapSource?)"/> für Texturen und Effektbilder (<paramref name="recipe"/> nur bei diesen).</summary>
+    private GuiImageState TryGet(Key key, JominiEffectRecipe? recipe, out BitmapSource? bitmap)
     {
-        var key = new Key(fullPath, tint);
         bitmap = null;
         lock (_gate)
         {
@@ -232,18 +258,18 @@ public sealed class GuiImageCache
                 bitmap = node.Value.Bitmap;
                 if (node.Value.Generation != _generation)
                 {
-                    RevalidateLocked(key);
+                    RevalidateLocked(key, recipe);
                 }
 
                 return GuiImageState.Ready;
             }
 
             // Bekannter Fehlschlag: ebenso sofort unlesbar (schraffiert) und im Hintergrund geprüft.
-            if (_failed.TryGetValue(fullPath, out var failure))
+            if (_failed.TryGetValue(key.Path, out var failure))
             {
                 if (failure.Generation != _generation)
                 {
-                    RevalidateLocked(key);
+                    RevalidateLocked(key, recipe);
                 }
 
                 return GuiImageState.Unreadable;
@@ -254,7 +280,7 @@ public sealed class GuiImageCache
                 return GuiImageState.OverBudget;
             }
 
-            EnqueueLocked(key);
+            EnqueueLocked(key, recipe);
             return GuiImageState.Pending;
         }
     }
@@ -271,46 +297,51 @@ public sealed class GuiImageCache
         {
             foreach (var (path, tint) in list)
             {
-                var key = new Key(path, tint);
-                if (_queued.Contains(key) || _decodedThisRun.Contains(key))
-                {
-                    continue;
-                }
-
-                if (_entries.TryGetValue(key, out var node))
-                {
-                    if (node.Value.Generation != _generation)
-                    {
-                        RevalidateLocked(key);
-                    }
-
-                    continue;
-                }
-
-                if (_failed.TryGetValue(path, out var failure))
-                {
-                    if (failure.Generation != _generation)
-                    {
-                        RevalidateLocked(key);
-                    }
-
-                    continue;
-                }
-
-                EnqueueLocked(key);
+                PrefetchLocked(new Key(path, tint), null);
             }
         }
+    }
+
+    /// <summary>Ein Bild oder Effektbild (<paramref name="recipe"/> nur bei diesen) für <see cref="Prefetch"/>. Unter der Sperre.</summary>
+    private void PrefetchLocked(Key key, JominiEffectRecipe? recipe)
+    {
+        if (_queued.Contains(key) || _decodedThisRun.Contains(key))
+        {
+            return;
+        }
+
+        if (_entries.TryGetValue(key, out var node))
+        {
+            if (node.Value.Generation != _generation)
+            {
+                RevalidateLocked(key, recipe);
+            }
+
+            return;
+        }
+
+        if (_failed.TryGetValue(key.Path, out var failure))
+        {
+            if (failure.Generation != _generation)
+            {
+                RevalidateLocked(key, recipe);
+            }
+
+            return;
+        }
+
+        EnqueueLocked(key, recipe);
     }
 
     /// <summary>
     /// Stellt einen Eintrag oder Fehlschlag aus einem früheren Lauf zur Prüfung in die Warteschlange, höchstens einmal je Lauf: so stellt ein Neuzeichnen
     /// nach <see cref="ImageReady"/> nichts erneut ein, auch wenn der Hintergrund-Thread den Eintrag nicht auf den neuen Lauf heben konnte. Unter der Sperre.
     /// </summary>
-    private void RevalidateLocked(Key key)
+    private void RevalidateLocked(Key key, JominiEffectRecipe? recipe)
     {
         if (_checkedThisRun.Add(key))
         {
-            EnqueueLocked(key);
+            EnqueueLocked(key, recipe);
         }
     }
 
@@ -326,14 +357,15 @@ public sealed class GuiImageCache
         }
     }
 
-    private void EnqueueLocked(Key key)
+    /// <summary>Stellt ein Bild oder ein Effektbild (mit seinem <paramref name="recipe"/>) in die Warteschlange, höchstens einmal. Unter der Sperre.</summary>
+    private void EnqueueLocked(Key key, JominiEffectRecipe? recipe)
     {
         if (!_queued.Add(key))
         {
             return;
         }
 
-        _queue.Enqueue(key);
+        _queue.Enqueue(new Job(key, recipe));
 
         // Die Threads starten erst mit dem ersten Eintrag (Tests legen viele Puffer an) und enden, wenn die Warteschlange leer ist.
         if (_workers < WorkerCount)
@@ -347,16 +379,18 @@ public sealed class GuiImageCache
     {
         while (true)
         {
-            Key key;
+            Job job;
             lock (_gate)
             {
-                if (!_queue.TryDequeue(out key))
+                if (!_queue.TryDequeue(out job))
                 {
                     _workers--;
                     return;
                 }
 
-                // Dieselbe Datei nie zweimal zugleich: der zweite Thread wartet und findet das Ergebnis dann im Puffer.
+                // Dieselbe Datei nie zweimal zugleich: der zweite Thread wartet und findet das Ergebnis dann im Puffer. Ein Effektbild belegt nur
+                // seinen Schlüssel (nie eine Datei, auf die eine Textur warten könnte); seine Bestandteile belegt LoadComponent einzeln.
+                var key = job.Key;
                 while (_busyPaths.Contains(key.Path))
                 {
                     Monitor.Wait(_gate);
@@ -368,23 +402,40 @@ public sealed class GuiImageCache
 
             try
             {
-                Process(key);
+                if (job.Recipe is { } recipe)
+                {
+                    ProcessComposite(job.Key, recipe);
+                }
+                else
+                {
+                    Process(job.Key);
+                }
             }
             catch (Exception)
             {
-                // Ein Bild, bei dem das Dekodieren oder Färben wirft, gilt als unlesbar; der Thread läuft weiter.
-                var stamp = StampOf(key.Path);
-                lock (_gate)
+                // Ein Bild, bei dem das Dekodieren, Färben oder Zusammensetzen wirft, gilt als unlesbar; der Thread läuft weiter.
+                if (job.Key.Composite)
                 {
-                    FailLocked(key, stamp);
+                    lock (_gate)
+                    {
+                        FailCompositeLocked(job.Key);
+                    }
+                }
+                else
+                {
+                    var stamp = StampOf(job.Key.Path);
+                    lock (_gate)
+                    {
+                        FailLocked(job.Key, stamp);
+                    }
                 }
             }
 
             bool raise;
             lock (_gate)
             {
-                _queued.Remove(key);
-                _busyPaths.Remove(key.Path);
+                _queued.Remove(job.Key);
+                _busyPaths.Remove(job.Key.Path);
                 _active--;
                 Monitor.PulseAll(_gate);
 
@@ -502,12 +553,16 @@ public sealed class GuiImageCache
         }
     }
 
-    /// <summary>Speichert das Bild und verdrängt die ältesten; gibt es schon einen gleich alten Eintrag, gilt dieser. Unter der Sperre.</summary>
-    private BitmapSource StoreLocked(Key key, BitmapSource bitmap, (DateTime WriteTime, long Length) stamp)
+    /// <summary>
+    /// Speichert das Bild und verdrängt die ältesten; gibt es schon einen gleich alten Eintrag, gilt dieser. Ein Effektbild bringt die Stempel seiner
+    /// Bestandteile mit (in der Reihenfolge von <see cref="JominiEffectRecipe.ComponentPaths"/>). Unter der Sperre.
+    /// </summary>
+    private BitmapSource StoreLocked(
+        Key key, BitmapSource bitmap, (DateTime WriteTime, long Length) stamp, (DateTime WriteTime, long Length)[]? componentStamps = null)
     {
         if (_entries.TryGetValue(key, out var existing))
         {
-            if (existing.Value.Stamp == stamp)
+            if (existing.Value.Stamp == stamp && SameStamps(existing.Value.ComponentStamps, componentStamps))
             {
                 existing.Value.Generation = _generation;
                 Touch(existing);
@@ -519,7 +574,7 @@ public sealed class GuiImageCache
 
         _failed.Remove(key.Path);
         var bytes = (long)bitmap.PixelWidth * bitmap.PixelHeight * 4;
-        _entries[key] = _recent.AddFirst(new Entry(key, bitmap, bytes, stamp) { Generation = _generation });
+        _entries[key] = _recent.AddFirst(new Entry(key, bitmap, bytes, stamp) { Generation = _generation, ComponentStamps = componentStamps });
         _decodedThisRun.Add(key);
         CachedBytes += bytes;
         while (CachedBytes > _maxBytes && _recent.Count > 1)
@@ -599,6 +654,20 @@ public sealed class GuiImageCache
     private BitmapSource? LoadCounted(string fullPath)
     {
         Interlocked.Increment(ref _decodeCount);
+        RecordDecodeThread();
+        try
+        {
+            return Load(fullPath);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Merkt den aufrufenden Thread in <see cref="DecodeThreadIds"/> (Dekodieren und Zusammensetzen von Effektbildern).</summary>
+    private void RecordDecodeThread()
+    {
         lock (_gate)
         {
             // Nur die letzten Einträge behalten: der gemeinsame Puffer läuft so lange wie die Anwendung.
@@ -608,15 +677,6 @@ public sealed class GuiImageCache
             }
 
             _decodeThreads.Add(Environment.CurrentManagedThreadId);
-        }
-
-        try
-        {
-            return Load(fullPath);
-        }
-        catch (Exception)
-        {
-            return null;
         }
     }
 
@@ -700,22 +760,32 @@ public sealed class GuiImageCache
         return bitmap;
     }
 
-    /// <summary>Pfad (ohne Beachtung der Groß-/Kleinschreibung) und Färbung.</summary>
-    private readonly record struct Key(string Path, GuiTint Tint);
+    /// <summary>
+    /// Pfad (ohne Beachtung der Groß-/Kleinschreibung) und Färbung. Bei einem Effektbild (<paramref name="Composite"/>) steht statt des Pfads
+    /// <see cref="JominiEffectRecipe.CacheKey"/>, die Färbung ist weiß.
+    /// </summary>
+    private readonly record struct Key(string Path, GuiTint Tint, bool Composite = false);
+
+    /// <summary>Ein Auftrag der Warteschlange: eine Textur in einer Färbung, oder ein Effektbild mit seinem Rezept.</summary>
+    private readonly record struct Job(Key Key, JominiEffectRecipe? Recipe);
 
     private sealed class KeyComparer : IEqualityComparer<Key>
     {
         public static readonly KeyComparer Instance = new();
 
-        public bool Equals(Key x, Key y) => x.Tint.Equals(y.Tint) && string.Equals(x.Path, y.Path, StringComparison.OrdinalIgnoreCase);
+        public bool Equals(Key x, Key y) =>
+            x.Composite == y.Composite && x.Tint.Equals(y.Tint) && string.Equals(x.Path, y.Path, StringComparison.OrdinalIgnoreCase);
 
-        public int GetHashCode(Key key) => HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(key.Path), key.Tint);
+        public int GetHashCode(Key key) => HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(key.Path), key.Tint, key.Composite);
     }
 
     private sealed record Entry(Key Key, BitmapSource Bitmap, long Bytes, (DateTime WriteTime, long Length) Stamp)
     {
         /// <summary>Lauf, in dem die Datei zuletzt geprüft wurde.</summary>
         public int Generation { get; set; }
+
+        /// <summary>Stempel der Bestandteile eines Effektbilds in der Reihenfolge von <see cref="JominiEffectRecipe.ComponentPaths"/>; bei Texturen <see langword="null"/>.</summary>
+        public (DateTime WriteTime, long Length)[]? ComponentStamps { get; init; }
     }
 
     private sealed record Failure((DateTime WriteTime, long Length) Stamp, int Generation);

@@ -332,7 +332,7 @@
       "name": { "de": "Nachrichtentyp fehlt", "en": "Missing message type" },
       "severity": "info",
       "pattern": "^Failed to find message type: (?<name>[^\\s.]+)",
-      "explain": { "de": "Für eine Aktion ist kein Nachrichtentyp definiert. Meist harmlos.", "en": "No message type is defined for an action. Usually harmless." },
+      "explain": { "de": "Für eine Aktion ist kein Nachrichtentyp definiert. Meist harmlos. EU V liest Nachrichtentypen nur aus dem Ordner main_menu/gui/messagetypes/ und ignoriert die Datei main_menu/gui/messagetypes.txt; liegt der Typ noch dort, muss er in eine Datei in den Ordner verschoben werden.", "en": "No message type is defined for an action. Usually harmless. EU V reads message types only from the folder main_menu/gui/messagetypes/ and ignores the file main_menu/gui/messagetypes.txt; if the type is still in that file, move it into a file in the folder." },
       "fixes": [ "findDefinition", "suppress" ]
     },
     {

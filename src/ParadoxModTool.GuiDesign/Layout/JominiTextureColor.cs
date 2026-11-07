@@ -34,7 +34,12 @@ public static class JominiTextureColor
             return null;
         }
 
-        var items = property.Items;
+        return ParseItems(property.Items, notes);
+    }
+
+    /// <summary>Die Texturfarbregel auf den Einträgen des Tupels (ohne <c>ResolvedProperty</c>, z. B. für den Eingabetext im Eigenschaftenfeld).</summary>
+    internal static JominiColor? ParseItems(IReadOnlyList<string> items, List<string> notes)
+    {
         if (items.Count < 3 || items.Count > 4)
         {
             AddOnce(notes, GuiTexts.LayoutTextureApproximated("color"));

@@ -1,0 +1,7 @@
+# Restliste der Skriptprüfung für hoi4 (Kalibrierung „Vanilla als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+BrokenReference|EST_events.3	Event nirgends definiert (Namespace EST_events in events/NSB_Estonia.txt hat 1, 2, 4 … aber keine 3); news_event in common/decisions/formable_nation_decisions.txt:519
+BrokenReference|NSB_news.201	Event nirgends definiert (nsb_news in events/NSB_NewsEvents.txt hat .200, danach .301, keine .201); news_event in events/Poland.txt:1725
+BrokenReference|mtg_usa_civil_war_fascists.1000	Event nirgends definiert (Namespace in events/MTG_USA.txt endet bei .331, keine .1000); state_event in common/on_actions/00_on_actions.txt:5380
+BrokenReference|is_Subject	Schreibweise: common/national_focus/china_communist_sea.txt:4807 (is_Subject = no), gemeint is_subject

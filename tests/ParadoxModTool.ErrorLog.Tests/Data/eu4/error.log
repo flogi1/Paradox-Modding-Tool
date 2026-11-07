@@ -1,0 +1,4 @@
+[dlc.cpp:254]: Invalid supported_version in  file: mod/Example Mod.mod line: 3
+[persistent.cpp:88]: Parsing Error. File: "interface/countrydecisionsview.gui", Error: Already Defined. Key: countrydecisionsview: clicksound, near line: 511
+[persistent.cpp:88]: Parsing Error. File: "interface/frontend.gui", Error: Already Defined. Key: frontend_link_item: alwaystransparent, near line: 28
+[news_banner.cpp:96]: Failed to get server data for key: 'steam_depot_id'

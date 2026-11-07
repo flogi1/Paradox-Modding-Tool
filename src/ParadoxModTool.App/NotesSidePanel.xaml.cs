@@ -8,6 +8,7 @@ using UserControl = System.Windows.Controls.UserControl;
 using ParadoxModTool.Editor;
 using ParadoxModTool.ErrorLog;
 using ParadoxModTool.Notes;
+using ParadoxModTool.ReferenceTree;
 
 namespace ParadoxModTool.App;
 
@@ -25,6 +26,81 @@ public partial class NotesSidePanel : UserControl
     public NotesSidePanel()
     {
         InitializeComponent();
+        NotesTab.Header = ReferenceTreeTexts.TabNotes;
+        ReferencesTab.Header = ReferenceTreeTexts.TabReferences;
+        ReferencesHost.Content = References;
+        SearchTab.Header = SearchTexts.TabHeader;
+        UpdateCheckHeader();
+    }
+
+    /// <summary>Setzt den Inhalt des Reiters "Suche" (einmal, vom Hauptfenster, siehe MainWindow.SearchTab.cs).</summary>
+    public void SetSearchContent(UIElement content) => SearchHost.Content = content;
+
+    /// <summary>
+    /// Reiter "Suche" ein- oder ausgeblendet (Einstellung "Suche im rechten Panel anzeigen"). Beim Ausblenden wird "Notizen" gewählt, falls
+    /// "Suche" gewählt war. Zählt beim Auto-Ausblenden der Leiste mit, daher <see cref="ContentChanged"/>.
+    /// </summary>
+    public bool SearchTabEnabled
+    {
+        get => SearchTab.Visibility == Visibility.Visible;
+        set
+        {
+            if (SearchTabEnabled == value)
+            {
+                return;
+            }
+
+            if (!value && ReferenceEquals(Tabs.SelectedItem, SearchTab))
+            {
+                Tabs.SelectedItem = NotesTab;
+            }
+
+            SearchTab.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+            ContentChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>Wählt den Reiter "Suche" (Strg+F, Menü und Werkzeugleiste bei eingeschalteter Option).</summary>
+    public void ShowSearchTab() => Tabs.SelectedItem = SearchTab;
+
+    /// <summary>Der Verweisbaum im Reiter "Verweise" (verdrahtet vom Hauptfenster, siehe MainWindow.ReferenceTree.cs).</summary>
+    public ReferenceTreePanel References { get; } = new();
+
+    /// <summary>
+    /// Nach jeder möglichen Änderung von <see cref="HasContent"/>, <see cref="ScopeAvailable"/> oder <see cref="ReferencesHaveContent"/>;
+    /// das Hauptfenster blendet daraufhin die Leiste ein oder aus.
+    /// </summary>
+    public event EventHandler? ContentChanged;
+
+    private bool _referencesHaveContent;
+
+    /// <summary>Ob der Verweisbaum etwas zeigt (setzt der Baum); zählt beim Auto-Ausblenden der Leiste mit, auch wenn ein anderer Reiter gewählt ist.</summary>
+    public bool ReferencesHaveContent
+    {
+        get => _referencesHaveContent;
+        set
+        {
+            if (_referencesHaveContent == value)
+            {
+                return;
+            }
+
+            _referencesHaveContent = value;
+            ContentChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>Wählt den Reiter "Verweise". Sonst wechselt die Leiste den Reiter nie von selbst.</summary>
+    public void ShowReferencesTab() => Tabs.SelectedItem = ReferencesTab;
+
+    private int _errorCount;
+    private int _warningCount;
+
+    /// <summary>Kopf des Reiters "Prüfung": mit Anzahl der Fehler und Warnungen nach dem Ersetzen, sonst nur der Name.</summary>
+    private void UpdateCheckHeader()
+    {
+        var count = _errorCount + _warningCount;
+        CheckTab.Header = count > 0 ? ReferenceTreeTexts.TabCheckCount(count) : ReferenceTreeTexts.TabCheck;
     }
 
     /// <summary>Ob es für die aktuell angezeigte Datei eine Notiz, ein Lesezeichen oder einen Bug gibt (Grundlage des Auto-Ausblendens).</summary>
@@ -112,7 +188,9 @@ public partial class NotesSidePanel : UserControl
 
         _baseHasContent = !string.IsNullOrEmpty(note) || bookmarks.Count > 0 || bugsVisible;
         HasContent = _baseHasContent || ErrorsSection.Visibility == Visibility.Visible || _hasWarnings;
-        EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
+        // Der Hinweis gilt nur dem Reiter "Notizen": Fehler, Warnungen und Scope stehen im Reiter "Prüfung".
+        EmptyHint.Visibility = _baseHasContent ? Visibility.Collapsed : Visibility.Visible;
+        ContentChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Eine Zeile im Abschnitt "⚠ Nach dem Ersetzen".</summary>
@@ -144,7 +222,9 @@ public partial class NotesSidePanel : UserControl
         WarningsSection.Visibility = _hasWarnings ? Visibility.Visible : Visibility.Collapsed;
         WarningsRow.Height = _hasWarnings ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
         HasContent = _baseHasContent || ErrorsSection.Visibility == Visibility.Visible || _hasWarnings;
-        EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
+        _warningCount = hits.Count;
+        UpdateCheckHeader();
+        ContentChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void WarningsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -167,7 +247,7 @@ public partial class NotesSidePanel : UserControl
     {
         ScopeAvailable = insight is { Available: true };
         ScopeSection.Visibility = ScopeAvailable ? Visibility.Visible : Visibility.Collapsed;
-        EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
+        ContentChanged?.Invoke(this, EventArgs.Empty);
         if (insight is not { Available: true })
         {
             return;
@@ -317,7 +397,9 @@ public partial class NotesSidePanel : UserControl
         ErrorsSection.Visibility = errors.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         ErrorsRow.Height = errors.Count == 0 ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         HasContent = _baseHasContent || errors.Count > 0 || _hasWarnings;
-        EmptyHint.Visibility = HasContent || ScopeAvailable ? Visibility.Collapsed : Visibility.Visible;
+        _errorCount = errors.Count;
+        UpdateCheckHeader();
+        ContentChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ErrorsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)

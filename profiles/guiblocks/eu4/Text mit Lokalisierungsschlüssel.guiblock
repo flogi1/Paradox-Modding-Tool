@@ -1,0 +1,18 @@
+# block: Text mit Lokalisierungsschlüssel
+# group: Anzeige
+# description: Einzeiliger Text aus einem Lokalisierungsschlüssel, mit scripted = yes. Mit „Custom GUI anlegen“ (custom_text_box) steuert potential, ob er erscheint, und tooltip seinen Tooltip; [Root.GetName] und Ähnliches wirken im Lokalisierungstext. Vorbild: interface/countrydiplomacyview.gui
+# param: name | Name | my_text
+# param: text | Text (Lokalisierungsschlüssel) | MY_TEXT
+# param: width | Breite | 300
+# requires: vic_18
+
+instantTextBoxType = {
+	name = "$name$"
+	position = { x = 30 y = 120 }
+	font = "vic_18"
+	text = "$text$"
+	maxWidth = $width$
+	maxHeight = 20
+	format = left
+	scripted = yes
+}

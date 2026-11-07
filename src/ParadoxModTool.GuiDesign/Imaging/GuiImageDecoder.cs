@@ -19,9 +19,16 @@ public static class GuiImageDecoder
     /// <summary>Aufrufe von <see cref="TryDecode"/> seit Programmstart; Tests prüfen damit, dass der Aufbau des Arbeitsstands kein Bild dekodiert.</summary>
     internal static long DecodeCalls => Interlocked.Read(ref _decodeCalls);
 
+    [ThreadStatic]
+    private static long _threadDecodeCalls;
+
+    /// <summary>Aufrufe von <see cref="TryDecode"/> im aufrufenden Thread; für Tests, die nur ihren eigenen Thread prüfen (parallele Tests ändern <see cref="DecodeCalls"/>).</summary>
+    internal static long ThreadDecodeCalls => _threadDecodeCalls;
+
     public static GuiImage? TryDecode(string path)
     {
         Interlocked.Increment(ref _decodeCalls);
+        _threadDecodeCalls++;
         var extension = Path.GetExtension(path);
         var isDds = extension.Equals(".dds", StringComparison.OrdinalIgnoreCase);
         var isTga = extension.Equals(".tga", StringComparison.OrdinalIgnoreCase);

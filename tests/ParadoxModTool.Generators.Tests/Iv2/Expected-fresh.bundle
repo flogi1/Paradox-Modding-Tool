@@ -12,7 +12,7 @@ iv2_ga_list_nat_ideas_progress_cost_TST = {
 			limit = {
 				has_variable = iv2_var_progress_points_adm
 			}
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			
 		}
 	}
@@ -34,7 +34,7 @@ iv2_ga_list_nat_ideas_innovation_cost_TST = {
 			limit = {
 				has_variable = iv2_var_innovation_points_adm
 			}
-			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+			var:iv2_var_innovation_points_adm >= iv2_nat_icost_live_adm
 		}
 	}
 	actions = {
@@ -88,7 +88,7 @@ iv2_ga_select_historic_TST_1 = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -128,17 +128,17 @@ iv2_ga_select_historic_TST_1 = {
 			text = iv2_tt_sub_points_adm
 				change_variable = {
 					name = iv2_var_progress_points_adm
-					subtract = var:iv2_var_national_idea_cost_adm
+					subtract = iv2_nat_cost_live_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_cost_adm
+					name = iv2_var_nat_cost_inc_adm
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_adm
+					name = iv2_var_nat_cost_inc_expensive_adm
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -178,7 +178,7 @@ iv2_ga_deselect_historic_TST_1 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_1
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 				}			
@@ -222,7 +222,7 @@ iv2_ga_select_historic_TST_2 = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -262,17 +262,17 @@ iv2_ga_select_historic_TST_2 = {
 			text = iv2_tt_sub_points_adm
 				change_variable = {
 					name = iv2_var_progress_points_adm
-					subtract = var:iv2_var_national_idea_cost_adm
+					subtract = iv2_nat_cost_live_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_cost_adm
+					name = iv2_var_nat_cost_inc_adm
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_adm
+					name = iv2_var_nat_cost_inc_expensive_adm
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -302,7 +302,7 @@ iv2_ga_select_historic_TST_2_1 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_expensive_adm
 			has_country_modifier = national_idea_modifier_TST_2
-			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm
+			var:iv2_var_innovation_points_adm >= iv2_nat_icost_live_expensive_adm
 			}
 			iv2_sct_nat_idea_TST_2_1 = yes
 		}
@@ -327,17 +327,17 @@ iv2_ga_select_historic_TST_2_1 = {
 			text = iv2_tt_sub_points_innovation_expensive_adm
 				change_variable = {
 					name = iv2_var_innovation_points_adm
-					subtract = var:iv2_var_national_idea_innovation_cost_expensive_adm
+					subtract = iv2_nat_icost_live_expensive_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_adm
+					name = iv2_var_nat_icost_inc_adm
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					name = iv2_var_nat_icost_inc_expensive_adm
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -378,7 +378,7 @@ iv2_ga_deselect_historic_TST_2 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_2
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 				}
@@ -389,11 +389,11 @@ iv2_ga_deselect_historic_TST_2 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_2_1
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_adm
+						name = iv2_var_nat_icost_inc_adm
 						subtract = iv2_innovation_cost_increase
 					}
 				}			
@@ -439,7 +439,7 @@ iv2_ga_select_historic_TST_3 = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_expensive_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_expensive_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -479,17 +479,17 @@ iv2_ga_select_historic_TST_3 = {
 			text = iv2_tt_sub_points_expensive_adm
 				change_variable = {
 					name = iv2_var_progress_points_adm
-					subtract = var:iv2_var_national_idea_cost_expensive_adm
+					subtract = iv2_nat_cost_live_expensive_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_cost_adm
+					name = iv2_var_nat_cost_inc_adm
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_adm
+					name = iv2_var_nat_cost_inc_expensive_adm
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -519,7 +519,7 @@ iv2_ga_select_historic_TST_3_1 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_adm
 			has_country_modifier = national_idea_modifier_TST_3
-			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+			var:iv2_var_innovation_points_adm >= iv2_nat_icost_live_adm
 			}
 			iv2_sct_nat_idea_TST_3_1 = yes
 		}
@@ -544,17 +544,17 @@ iv2_ga_select_historic_TST_3_1 = {
 			text = iv2_tt_sub_points_innovation_adm
 				change_variable = {
 					name = iv2_var_innovation_points_adm
-					subtract = var:iv2_var_national_idea_innovation_cost_adm
+					subtract = iv2_nat_icost_live_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_adm
+					name = iv2_var_nat_icost_inc_adm
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					name = iv2_var_nat_icost_inc_expensive_adm
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -584,7 +584,7 @@ iv2_ga_select_historic_TST_3_2 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_adm
 			has_country_modifier = national_idea_modifier_TST_3_1
-			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+			var:iv2_var_innovation_points_adm >= iv2_nat_icost_live_adm
 			}
 			iv2_sct_nat_idea_TST_3_2 = yes
 		}
@@ -609,17 +609,17 @@ iv2_ga_select_historic_TST_3_2 = {
 			text = iv2_tt_sub_points_innovation_adm
 				change_variable = {
 					name = iv2_var_innovation_points_adm
-					subtract = var:iv2_var_national_idea_innovation_cost_adm
+					subtract = iv2_nat_icost_live_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_adm
+					name = iv2_var_nat_icost_inc_adm
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					name = iv2_var_nat_icost_inc_expensive_adm
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -649,7 +649,7 @@ iv2_ga_select_historic_TST_3_3 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_expensive_adm
 			has_country_modifier = national_idea_modifier_TST_3_2
-			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm
+			var:iv2_var_innovation_points_adm >= iv2_nat_icost_live_expensive_adm
 			}
 			iv2_sct_nat_idea_TST_3_3 = yes
 		}
@@ -674,17 +674,17 @@ iv2_ga_select_historic_TST_3_3 = {
 			text = iv2_tt_sub_points_innovation_expensive_adm
 				change_variable = {
 					name = iv2_var_innovation_points_adm
-					subtract = var:iv2_var_national_idea_innovation_cost_expensive_adm
+					subtract = iv2_nat_icost_live_expensive_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_adm
+					name = iv2_var_nat_icost_inc_adm
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_adm
+					name = iv2_var_nat_icost_inc_expensive_adm
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -727,7 +727,7 @@ iv2_ga_deselect_historic_TST_3 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_3
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 				}
@@ -738,11 +738,11 @@ iv2_ga_deselect_historic_TST_3 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_3_1
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_adm
+						name = iv2_var_nat_icost_inc_adm
 						subtract = iv2_innovation_cost_increase
 					}
 				}
@@ -753,11 +753,11 @@ iv2_ga_deselect_historic_TST_3 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_3_2
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_adm
+						name = iv2_var_nat_icost_inc_adm
 						subtract = iv2_innovation_cost_decrease_x2
 					}
 				}
@@ -768,11 +768,11 @@ iv2_ga_deselect_historic_TST_3 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_3_3
 					change_variable = {
-						name = iv2_var_national_idea_cost_adm
+						name = iv2_var_nat_cost_inc_adm
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_adm
+						name = iv2_var_nat_icost_inc_adm
 						subtract = iv2_innovation_cost_decrease_x3
 					}
 				}			
@@ -818,7 +818,7 @@ iv2_ga_select_historic_TST_11 = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_dip
-			var:iv2_var_progress_points_dip >= var:iv2_var_national_idea_cost_dip
+			var:iv2_var_progress_points_dip >= iv2_nat_cost_live_dip
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -858,17 +858,17 @@ iv2_ga_select_historic_TST_11 = {
 			text = iv2_tt_sub_points_dip
 				change_variable = {
 					name = iv2_var_progress_points_dip
-					subtract = var:iv2_var_national_idea_cost_dip
+					subtract = iv2_nat_cost_live_dip
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_dip
 				change_variable = {
-					name = iv2_var_national_idea_cost_dip
+					name = iv2_var_nat_cost_inc_dip
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_dip
+					name = iv2_var_nat_cost_inc_expensive_dip
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -898,7 +898,7 @@ iv2_ga_select_historic_TST_11_1 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_dip
 			has_country_modifier = national_idea_modifier_TST_11
-			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
+			var:iv2_var_innovation_points_dip >= iv2_nat_icost_live_dip
 			}
 			iv2_sct_nat_idea_TST_11_1 = yes
 		}
@@ -923,17 +923,17 @@ iv2_ga_select_historic_TST_11_1 = {
 			text = iv2_tt_sub_points_innovation_dip
 				change_variable = {
 					name = iv2_var_innovation_points_dip
-					subtract = var:iv2_var_national_idea_innovation_cost_dip
+					subtract = iv2_nat_icost_live_dip
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_dip
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_dip
+					name = iv2_var_nat_icost_inc_dip
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_dip
+					name = iv2_var_nat_icost_inc_expensive_dip
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -963,7 +963,7 @@ iv2_ga_select_historic_TST_11_2 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_dip
 			has_country_modifier = national_idea_modifier_TST_11_1
-			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
+			var:iv2_var_innovation_points_dip >= iv2_nat_icost_live_dip
 			}
 			iv2_sct_nat_idea_TST_11_2 = yes
 		}
@@ -988,17 +988,17 @@ iv2_ga_select_historic_TST_11_2 = {
 			text = iv2_tt_sub_points_innovation_dip
 				change_variable = {
 					name = iv2_var_innovation_points_dip
-					subtract = var:iv2_var_national_idea_innovation_cost_dip
+					subtract = iv2_nat_icost_live_dip
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_dip
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_dip
+					name = iv2_var_nat_icost_inc_dip
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_dip
+					name = iv2_var_nat_icost_inc_expensive_dip
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -1028,7 +1028,7 @@ iv2_ga_select_historic_TST_11_3 = {
 			custom_tooltip = {
 			text = iv2_tt_no_innovation_points_for_nat_idea_dip
 			has_country_modifier = national_idea_modifier_TST_11_2
-			var:iv2_var_innovation_points_dip >= var:iv2_var_national_idea_innovation_cost_dip
+			var:iv2_var_innovation_points_dip >= iv2_nat_icost_live_dip
 			}
 			iv2_sct_nat_idea_TST_11_3 = yes
 		}
@@ -1053,17 +1053,17 @@ iv2_ga_select_historic_TST_11_3 = {
 			text = iv2_tt_sub_points_innovation_dip
 				change_variable = {
 					name = iv2_var_innovation_points_dip
-					subtract = var:iv2_var_national_idea_innovation_cost_dip
+					subtract = iv2_nat_icost_live_dip
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_innovation_points_dip
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_dip
+					name = iv2_var_nat_icost_inc_dip
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_dip
+					name = iv2_var_nat_icost_inc_expensive_dip
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -1106,7 +1106,7 @@ iv2_ga_deselect_historic_TST_11 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_11
 					change_variable = {
-						name = iv2_var_national_idea_cost_dip
+						name = iv2_var_nat_cost_inc_dip
 						subtract = iv2_progress_cost_increase
 					}
 				}
@@ -1117,11 +1117,11 @@ iv2_ga_deselect_historic_TST_11 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_11_1
 					change_variable = {
-						name = iv2_var_national_idea_cost_dip
+						name = iv2_var_nat_cost_inc_dip
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_dip
+						name = iv2_var_nat_icost_inc_dip
 						subtract = iv2_innovation_cost_increase
 					}
 				}
@@ -1132,11 +1132,11 @@ iv2_ga_deselect_historic_TST_11 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_11_2
 					change_variable = {
-						name = iv2_var_national_idea_cost_dip
+						name = iv2_var_nat_cost_inc_dip
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_dip
+						name = iv2_var_nat_icost_inc_dip
 						subtract = iv2_innovation_cost_decrease_x2
 					}
 				}
@@ -1147,11 +1147,11 @@ iv2_ga_deselect_historic_TST_11 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_11_3
 					change_variable = {
-						name = iv2_var_national_idea_cost_dip
+						name = iv2_var_nat_cost_inc_dip
 						subtract = iv2_progress_cost_increase
 					}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_dip
+						name = iv2_var_nat_icost_inc_dip
 						subtract = iv2_innovation_cost_decrease_x3
 					}
 				}			
@@ -1194,7 +1194,7 @@ iv2_ga_select_historic_TST_31 = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_navy
-			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			var:iv2_var_progress_points_navy >= iv2_nat_cost_live_navy
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1234,17 +1234,17 @@ iv2_ga_select_historic_TST_31 = {
 			text = iv2_tt_sub_points_navy
 				change_variable = {
 					name = iv2_var_progress_points_navy
-					subtract = var:iv2_var_national_idea_cost_navy
+					subtract = iv2_nat_cost_live_navy
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_navy
 				change_variable = {
-					name = iv2_var_national_idea_cost_navy
+					name = iv2_var_nat_cost_inc_navy
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_navy
+					name = iv2_var_nat_cost_inc_expensive_navy
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1284,7 +1284,7 @@ iv2_ga_deselect_historic_TST_31 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_31
 					change_variable = {
-						name = iv2_var_national_idea_cost_navy
+						name = iv2_var_nat_cost_inc_navy
 						subtract = iv2_progress_cost_increase
 					}
 				}			
@@ -1327,7 +1327,7 @@ iv2_ga_select_historic_TST_32 = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_navy
-			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			var:iv2_var_progress_points_navy >= iv2_nat_cost_live_navy
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1367,17 +1367,17 @@ iv2_ga_select_historic_TST_32 = {
 			text = iv2_tt_sub_points_navy
 				change_variable = {
 					name = iv2_var_progress_points_navy
-					subtract = var:iv2_var_national_idea_cost_navy
+					subtract = iv2_nat_cost_live_navy
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_navy
 				change_variable = {
-					name = iv2_var_national_idea_cost_navy
+					name = iv2_var_nat_cost_inc_navy
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_navy
+					name = iv2_var_nat_cost_inc_expensive_navy
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1417,7 +1417,7 @@ iv2_ga_deselect_historic_TST_32 = {
 					}
 					remove_country_modifier = national_idea_modifier_TST_32
 					change_variable = {
-						name = iv2_var_national_idea_cost_navy
+						name = iv2_var_nat_cost_inc_navy
 						subtract = iv2_progress_cost_increase
 					}
 				}			
@@ -1459,7 +1459,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1476,7 +1476,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1495,7 +1495,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_expensive_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_expensive_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1514,7 +1514,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_dip
-			var:iv2_var_progress_points_dip >= var:iv2_var_national_idea_cost_dip
+			var:iv2_var_progress_points_dip >= iv2_nat_cost_live_dip
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1530,7 +1530,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_navy
-			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			var:iv2_var_progress_points_navy >= iv2_nat_cost_live_navy
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1546,7 +1546,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_navy
-			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			var:iv2_var_progress_points_navy >= iv2_nat_cost_live_navy
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1570,7 +1570,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1603,17 +1603,17 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_sub_points_adm
 				change_variable = {
 					name = iv2_var_progress_points_adm
-					subtract = var:iv2_var_national_idea_cost_adm
+					subtract = iv2_nat_cost_live_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_cost_adm
+					name = iv2_var_nat_cost_inc_adm
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_adm
+					name = iv2_var_nat_cost_inc_expensive_adm
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1629,7 +1629,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1662,17 +1662,17 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_sub_points_adm
 				change_variable = {
 					name = iv2_var_progress_points_adm
-					subtract = var:iv2_var_national_idea_cost_adm
+					subtract = iv2_nat_cost_live_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_cost_adm
+					name = iv2_var_nat_cost_inc_adm
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_adm
+					name = iv2_var_nat_cost_inc_expensive_adm
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1690,7 +1690,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_expensive_adm
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_expensive_adm
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1723,17 +1723,17 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_sub_points_expensive_adm
 				change_variable = {
 					name = iv2_var_progress_points_adm
-					subtract = var:iv2_var_national_idea_cost_expensive_adm
+					subtract = iv2_nat_cost_live_expensive_adm
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_adm
 				change_variable = {
-					name = iv2_var_national_idea_cost_adm
+					name = iv2_var_nat_cost_inc_adm
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_adm
+					name = iv2_var_nat_cost_inc_expensive_adm
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1751,7 +1751,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_dip
-			var:iv2_var_progress_points_dip >= var:iv2_var_national_idea_cost_dip
+			var:iv2_var_progress_points_dip >= iv2_nat_cost_live_dip
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1784,17 +1784,17 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_sub_points_dip
 				change_variable = {
 					name = iv2_var_progress_points_dip
-					subtract = var:iv2_var_national_idea_cost_dip
+					subtract = iv2_nat_cost_live_dip
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_dip
 				change_variable = {
-					name = iv2_var_national_idea_cost_dip
+					name = iv2_var_nat_cost_inc_dip
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_dip
+					name = iv2_var_nat_cost_inc_expensive_dip
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1809,7 +1809,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_navy
-			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			var:iv2_var_progress_points_navy >= iv2_nat_cost_live_navy
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1842,17 +1842,17 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_sub_points_navy
 				change_variable = {
 					name = iv2_var_progress_points_navy
-					subtract = var:iv2_var_national_idea_cost_navy
+					subtract = iv2_nat_cost_live_navy
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_navy
 				change_variable = {
-					name = iv2_var_national_idea_cost_navy
+					name = iv2_var_nat_cost_inc_navy
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_navy
+					name = iv2_var_nat_cost_inc_expensive_navy
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -1867,7 +1867,7 @@ iv2_ga_ai_choose_historic_TST = {
 			}
 			custom_tooltip = {
 			text = iv2_tt_no_points_for_nat_idea_navy
-			var:iv2_var_progress_points_navy >= var:iv2_var_national_idea_cost_navy
+			var:iv2_var_progress_points_navy >= iv2_nat_cost_live_navy
 			}
 			custom_tooltip = {
 			text = iv2_tt_not_reached_national_idea_limit
@@ -1900,17 +1900,17 @@ iv2_ga_ai_choose_historic_TST = {
 			text = iv2_tt_sub_points_navy
 				change_variable = {
 					name = iv2_var_progress_points_navy
-					subtract = var:iv2_var_national_idea_cost_navy
+					subtract = iv2_nat_cost_live_navy
 				}
 			}
 			custom_tooltip = {
 			text = iv2_tt_increase_points_navy
 				change_variable = {
-					name = iv2_var_national_idea_cost_navy
+					name = iv2_var_nat_cost_inc_navy
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_navy
+					name = iv2_var_nat_cost_inc_expensive_navy
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -4837,7 +4837,7 @@ national_idea_modifier_TST_32 = {
 	e = 5
 }
 
-##FILE main_menu/gui/messagetypes.txt
+##FILE main_menu/gui/messagetypes/01_IV2_messagetypes.txt
 # This file has no immediate game effect and its content needs to be copied to Idea Variation main after replacing
 
 # === IV2Generator:TST:START ===
@@ -5031,6 +5031,196 @@ pausepopup=no
 sound=no
 message_category = economy
 }
+PERFORM_iv2_ga_select_historic_TST_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_deselect_historic_TST_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_2_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_deselect_historic_TST_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_3_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_3_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_3_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_deselect_historic_TST_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_11_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_11_1_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_11_2_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_11_3_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_deselect_historic_TST_11_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_31_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_deselect_historic_TST_31_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_select_historic_TST_32_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
+PERFORM_iv2_ga_deselect_historic_TST_32_ACTION={
+log=yes
+onmap=no
+popup=no
+idle=no
+option=yes
+pausepopup=no
+sound=no
+message_category = economy
+}
 # === IV2Generator:TST:END ===
 ##FILE main_menu/localization/english/04_IV2_TST_l_english.yml
 l_english:
@@ -5134,6 +5324,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
@@ -5143,6 +5334,7 @@ l_english:
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
@@ -5152,6 +5344,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
@@ -5161,6 +5354,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
@@ -5170,6 +5364,7 @@ l_english:
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
@@ -5179,6 +5374,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
@@ -5188,6 +5384,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
@@ -5197,6 +5394,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
@@ -5206,6 +5404,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
@@ -5215,6 +5414,7 @@ l_english:
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
@@ -5224,6 +5424,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
@@ -5233,6 +5434,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
@@ -5242,6 +5444,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
@@ -5251,6 +5454,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
@@ -5260,6 +5464,7 @@ l_english:
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
@@ -5269,6 +5474,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
@@ -5278,6 +5484,7 @@ l_english:
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
@@ -5287,6 +5494,7 @@ l_english:
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
@@ -5296,11 +5504,202 @@ l_english:
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
 ##FILE main_menu/localization/french/04_IV2_TST_l_french.yml
 l_french:
  iv2_hist_idea_flag_tt_title_TST: "Historic National Idea of $TST$"
@@ -5403,6 +5802,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
@@ -5412,6 +5812,7 @@ l_french:
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
@@ -5421,6 +5822,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
@@ -5430,6 +5832,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
@@ -5439,6 +5842,7 @@ l_french:
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
@@ -5448,6 +5852,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
@@ -5457,6 +5862,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
@@ -5466,6 +5872,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
@@ -5475,6 +5882,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
@@ -5484,6 +5892,7 @@ l_french:
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
@@ -5493,6 +5902,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
@@ -5502,6 +5912,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
@@ -5511,6 +5922,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
@@ -5520,6 +5932,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
@@ -5529,6 +5942,7 @@ l_french:
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
@@ -5538,6 +5952,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
@@ -5547,6 +5962,7 @@ l_french:
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
@@ -5556,6 +5972,7 @@ l_french:
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
@@ -5565,11 +5982,202 @@ l_french:
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
 ##FILE main_menu/localization/german/04_IV2_TST_l_german.yml
 l_german:
  iv2_hist_idea_flag_tt_title_TST: "Historic National Idea of $TST$"
@@ -5672,6 +6280,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
@@ -5681,6 +6290,7 @@ l_german:
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
@@ -5690,6 +6300,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
@@ -5699,6 +6310,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
@@ -5708,6 +6320,7 @@ l_german:
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
@@ -5717,6 +6330,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
@@ -5726,6 +6340,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
@@ -5735,6 +6350,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
@@ -5744,6 +6360,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
@@ -5753,6 +6370,7 @@ l_german:
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
@@ -5762,6 +6380,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
@@ -5771,6 +6390,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
@@ -5780,6 +6400,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
@@ -5789,6 +6410,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
@@ -5798,6 +6420,7 @@ l_german:
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
@@ -5807,6 +6430,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
@@ -5816,6 +6440,7 @@ l_german:
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
@@ -5825,6 +6450,7 @@ l_german:
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
@@ -5834,8 +6460,199 @@ l_german:
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
  WE_PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_2_1$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_2_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_2$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_2$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_adm_3_3$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_3_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_adm_3$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_1_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_2$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_2_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_dip_11_3$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_11_3_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_dip_11$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_11_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_31_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_31$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_31_ACTION_MAP: ""
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_SETUP: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_EFFECTS: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_DESC: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_LOG: "$iv2_message_selected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_select_historic_TST_32_ACTION_MAP: ""
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_SETUP: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_EFFECTS: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_DESC: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_LOG: "$iv2_message_deselected_ig$ $iv2_dynamic_nat_idea_navy_32$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN1: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN2: "OK"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_BTN3: "$common_string_go_to$"
+ PERFORM_iv2_ga_deselect_historic_TST_32_ACTION_MAP: ""

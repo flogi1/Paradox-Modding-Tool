@@ -1,0 +1,24 @@
+# block: Checkbox
+# group: Bedienelemente
+# description: Checkbox mit Beschriftung. Den Haken zeigt das Sprite über seine zwei Frames; in einem eigenen Fenster steuert ihn ein Scripted GUI (properties frame, Klick über <name>_click; nicht im Spiel gemessen). Vorbild: interface/countrydiplomacyview.gui, interface/countrydecisionview.gui
+# param: name | Name | my_checkbox
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_CHECKBOX
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_CHECKBOX_TT
+# requires: GFX_generic_checkbox, hoi_18mbs
+
+checkboxType = {
+	name = "$name$"
+	position = { x = 20 y = 240 }
+	quadTextureSprite = "GFX_generic_checkbox"
+	pdx_tooltip = "$tooltip$"
+}
+
+instantTextBoxType = {
+	name = "$name$_text"
+	position = { x = 50 y = 244 }
+	font = "hoi_18mbs"
+	text = "$text$"
+	maxWidth = 250
+	maxHeight = 20
+	format = left
+}

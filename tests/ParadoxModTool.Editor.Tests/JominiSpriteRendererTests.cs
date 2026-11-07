@@ -14,7 +14,8 @@ using Xunit;
 
 namespace ParadoxModTool.Editor.Tests;
 
-/// <summary>Zeichnen der Jomini-Sprites: Bild nur wenn fertig, Spiegeln, Färbung mit Deckkraft, Platzhalter und Kacheln.</summary>
+/// <summary>Zeichnen der Jomini-Sprites: Bild nur wenn fertig, Spiegeln, Färbung mit Deckkraft, Platzhalter und Kacheln, Effektbilder.</summary>
+[Collection(nameof(JominiEffectRules))]
 public sealed class JominiSpriteRendererTests
 {
     private static readonly (byte B, byte G, byte R) Red = (0, 0, 255);
@@ -261,6 +262,160 @@ public sealed class JominiSpriteRendererTests
             var (_, pixels) = Render(sprite, cache, 20, 20);
 
             Assert.All(pixels, pixel => Assert.Equal(0, pixel));
+        });
+    }
+
+    /// <summary>Ein gezeichnetes Bild mit der Deckkraft und den Transformationen der umgebenden Gruppen.</summary>
+    private sealed record Recorded(ImageDrawing Image, double Opacity, IReadOnlyList<Transform> Transforms);
+
+    /// <summary>Zeichnet in eine <see cref="DrawingGroup"/> (Zoom 2, Kasten 10/10 bis 50/50 auf dem Bildschirm) und liefert die gezeichneten Bilder.</summary>
+    private static (bool Drawn, List<Recorded> Images) Record(JominiSpriteVisual sprite, GuiImageCache cache, JominiEffectRecipe? effects)
+    {
+        var group = new DrawingGroup();
+        bool drawn;
+        using (var dc = group.Open())
+        {
+            drawn = JominiSpriteRenderer.Draw(dc, sprite, new Rect(10, 10, 40, 40), 2, cache, 1, 1, effects);
+        }
+
+        var images = new List<Recorded>();
+        Collect(group, 1, new List<Transform>(), images);
+        return (drawn, images);
+    }
+
+    private static void Collect(Drawing drawing, double opacity, List<Transform> transforms, List<Recorded> images)
+    {
+        switch (drawing)
+        {
+            case ImageDrawing image:
+                images.Add(new Recorded(image, opacity, transforms.ToList()));
+                break;
+            case DrawingGroup group:
+                var inner = transforms.ToList();
+                if (group.Transform is { } transform && !transform.Value.IsIdentity)
+                {
+                    inner.Add(transform);
+                }
+
+                foreach (var child in group.Children)
+                {
+                    Collect(child, opacity * group.Opacity, inner, images);
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>Grundbild Rot, Ebene Grün (4 × 4); Kasten 20 × 20 GUI-Einheiten.</summary>
+    private static (JominiSpriteVisual Sprite, JominiEffectRecipe Recipe) EffectBox(string name, double ppu = 1, int padding = 0, bool mirror = false, double opacity = 1)
+    {
+        var basePath = WriteTga($"sprite/fx-{name}-base.tga", 4, 4, Red);
+        var layerPath = WriteTga($"sprite/fx-{name}-layer.tga", 4, 4, Green);
+        var sprite = Sprite(basePath, 4, 4, mirrorHorizontal: mirror, opacity: opacity);
+        var recipe = GuiImageCacheCompositeTests.Recipe(sprite, GuiImageCacheCompositeTests.Sprite(layerPath, 4, 4), 20, 20, ppu, padding);
+        return (sprite, recipe);
+    }
+
+    [Fact]
+    public void Draw_PendingComposite_DrawsPlainSprite()
+    {
+        Sta.Run(() =>
+        {
+            var (sprite, recipe) = EffectBox("pending", padding: 3);
+            var cache = new GuiImageCache(1024 * 1024);
+            WaitReady(cache, sprite.TextureFullPath!, GuiTint.White);
+
+            // Das Effektbild wurde nie angefragt: der erste Abruf steht aus, gezeichnet wird das schlichte Bild im Kasten (nicht vergrößert).
+            var (drawn, images) = Record(sprite, cache, recipe);
+
+            Assert.True(drawn);
+            var image = Assert.Single(images);
+            Assert.Equal(new Rect(10, 10, 40, 40), image.Image.Rect);
+            Assert.Equal(4, ((BitmapSource)image.Image.ImageSource).PixelWidth);
+        });
+    }
+
+    [Fact]
+    public void Draw_UnreadableComposite_DrawsPlainSprite()
+    {
+        Sta.Run(() =>
+        {
+            // Das Grundbild des Rezepts fehlt (Effektbild unlesbar), das schlichte Sprite des Kastens lädt.
+            var (sprite, recipe) = EffectBox("unreadable", padding: 3);
+            var missing = Path.Combine(Path.GetDirectoryName(sprite.TextureFullPath!)!, "fx-unreadable-missing.tga");
+            recipe = recipe with { Base = recipe.Base with { TextureFullPath = missing } };
+            var cache = new GuiImageCache(1024 * 1024);
+            Assert.Equal(GuiImageState.Unreadable, GuiImageCacheCompositeTests.WaitForComposite(cache, recipe, out _));
+            WaitReady(cache, sprite.TextureFullPath!, GuiTint.White);
+
+            var (drawn, images) = Record(sprite, cache, recipe);
+
+            Assert.True(drawn);
+            var image = Assert.Single(images);
+            Assert.Equal(new Rect(10, 10, 40, 40), image.Image.Rect);
+            Assert.Equal(4, ((BitmapSource)image.Image.ImageSource).PixelWidth);
+        });
+    }
+
+    [Fact]
+    public void Draw_Composite_InflatedByPadding()
+    {
+        Sta.Run(() =>
+        {
+            // ppu 2, Polsterung 3 Pixel: 3 / 2 × Zoom 2 = 3 Bildschirmpixel je Seite; das Bild ist 20 × 2 + 2 × 3 = 46 Pixel breit.
+            var (sprite, recipe) = EffectBox("padding", ppu: 2, padding: 3);
+            var cache = new GuiImageCache(1024 * 1024);
+            Assert.Equal(GuiImageState.Ready, GuiImageCacheCompositeTests.WaitForComposite(cache, recipe, out _));
+
+            var (drawn, images) = Record(sprite, cache, recipe);
+
+            Assert.True(drawn);
+            var image = Assert.Single(images);
+            Assert.Equal(new Rect(7, 7, 46, 46), image.Image.Rect);
+            Assert.Equal(46, ((BitmapSource)image.Image.ImageSource).PixelWidth);
+            Assert.Equal(1, image.Opacity);
+            Assert.Empty(image.Transforms);
+        });
+    }
+
+    [Fact]
+    public void Draw_Composite_AppliesOpacityAndMirror()
+    {
+        Sta.Run(() =>
+        {
+            var (sprite, recipe) = EffectBox("mirror", mirror: true, opacity: 0.5);
+            var cache = new GuiImageCache(1024 * 1024);
+            var original = JominiEffectRules.ElementMirrorFlipsLayers;
+            try
+            {
+                // Die Spiegelung des Elements dreht das ganze Effektbild um die Kastenmitte (30/30).
+                JominiEffectRules.ElementMirrorFlipsLayers = true;
+                Assert.Equal(GuiImageState.Ready, GuiImageCacheCompositeTests.WaitForComposite(cache, recipe, out var flipped));
+                var (drawn, images) = Record(sprite, cache, recipe);
+                Assert.True(drawn);
+                var image = Assert.Single(images);
+                Assert.Same(flipped, image.Image.ImageSource);
+                Assert.Equal(0.5, image.Opacity, 6);
+                var mirror = Assert.IsType<ScaleTransform>(Assert.Single(image.Transforms));
+                Assert.Equal((-1d, 1d, 30d, 30d), (mirror.ScaleX, mirror.ScaleY, mirror.CenterX, mirror.CenterY));
+
+                // Sonst spiegelt das Zusammensetzen nur das Grundbild, der Zeichner nicht noch einmal.
+                // Die Regeln sind Prozess-Einstellungen: nach einer Änderung kommt ein neues Rezept (neues Layout), sein Schlüssel ist frisch.
+                JominiEffectRules.ElementMirrorFlipsLayers = false;
+                var rebuilt = recipe with { };
+                Assert.Equal(GuiImageState.Ready, GuiImageCacheCompositeTests.WaitForComposite(cache, rebuilt, out var composed));
+                Assert.NotSame(flipped, composed);
+                (drawn, images) = Record(sprite, cache, rebuilt);
+                Assert.True(drawn);
+                image = Assert.Single(images);
+                Assert.Same(composed, image.Image.ImageSource);
+                Assert.Equal(0.5, image.Opacity, 6);
+                Assert.Empty(image.Transforms);
+            }
+            finally
+            {
+                JominiEffectRules.ElementMirrorFlipsLayers = original;
+            }
         });
     }
 

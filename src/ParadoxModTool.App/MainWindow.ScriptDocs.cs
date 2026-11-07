@@ -64,6 +64,12 @@ public partial class MainWindow
             _scriptHintIndex.SetDatabase(ScriptDocs.Database);
             RefreshModifierFormats();
 
+            // Nach einem Import im Fenster "Script-Datenbank": Hinweis "keine Script-Doku" an Kachel und Menü nachziehen.
+            if (_scriptDocsChecked)
+            {
+                ApplyToolAvailability();
+            }
+
             // Neue Logs können neue Scopes bedeuten, geänderte Spieldateien neue Felder: Regeln abgleichen (lernt nur bei Bedarf).
             await UpdateScopeRulesAsync(force: false);
             _ = UpdateLocProfilesAsync(force: false);
@@ -78,6 +84,9 @@ public partial class MainWindow
             // Ohne Datenbank gibt es einfach keine Hinweise im Editor; das Fenster "Script-Datenbank" zeigt den Zustand.
         }
 
+        // Erst jetzt weiß PMT, ob es Script-Doku gibt: Hinweis an Kachel/Menü "Script-Doku" und "Scope Finder" setzen.
+        _scriptDocsChecked = true;
+        ApplyToolAvailability();
         RefreshModifierFormats();
     }
 
@@ -135,7 +144,8 @@ public partial class MainWindow
     {
         if (ParadoxModTool.Editor.ScopeSettings.Engine is not { } engine)
         {
-            MessageBox.Show(this, ScopeFinderTexts.DatabaseMissing, ScopeFinderTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
+            var text = ToolStateOf(TileIds.ScopeFinder).Hint is { } noDocs ? ScopeFinderTexts.DatabaseMissing + "\n\n" + noDocs : ScopeFinderTexts.DatabaseMissing;
+            MessageBox.Show(this, text, ScopeFinderTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

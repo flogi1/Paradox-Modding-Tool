@@ -188,6 +188,9 @@ public sealed class AppSessionState
     /// <summary>Notiz/Lesezeichen-Panel auch dann zeigen, wenn die aktive Datei weder Notiz noch Lesezeichen hat (kein Auto-Ausblenden). Standard: aus.</summary>
     public bool NotesPanelAlwaysVisible { get; set; }
 
+    /// <summary>Suchen &amp; Ersetzen für das aktive Dokument als Reiter "Suche" im rechten Panel statt als eigenes Fenster. Standard: aus.</summary>
+    public bool SearchInSidePanel { get; set; }
+
     /// <summary>
     /// Frei editierbare Dateikategorien (Name, Farbe, Regeln). <see langword="null"/> in einer alten Session
     /// bedeutet: die sieben Standardkategorien. Eingebaute Kategorien behalten ihre alten Enum-Namen als Kennung.
@@ -374,6 +377,18 @@ public sealed class AppSessionState
     /// <summary>Position und Größe des Fensters "Spielstand-Explorer"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
     public WindowBoundsState? SaveExplorerWindowBounds { get; set; }
 
+    /// <summary>Position und Größe des Fensters "Performance-Checker"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? PerformanceWindowBounds { get; set; }
+
+    /// <summary>Position und Größe des Fensters "Flag-Tracker"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? FlagTrackerWindowBounds { get; set; }
+
+    /// <summary>Position und Größe des Fensters "Skript-Prüfung"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? ScriptCheckWindowBounds { get; set; }
+
+    /// <summary>Position und Größe des Fensters "GFX-Prüfung"; <see langword="null"/> vor dem ersten Schließen. Gilt für alle Spiele.</summary>
+    public WindowBoundsState? GfxAuditWindowBounds { get; set; }
+
     /// <summary>Meine Mods: Ansicht "Tiles" (Kacheln) oder "List". Gilt für alle Spiele.</summary>
     public string MyModsView { get; set; } = "Tiles";
 
@@ -472,6 +487,12 @@ public sealed class AppSessionState
 
     /// <summary>Kompatch-Merge: die Angaben des zuletzt gestarteten Laufs dieses Spiels (Vorbelegung des Startdialogs); <see langword="null"/> vor dem ersten Start.</summary>
     public CompatchStartMemory? CompatchLastStart { get; set; }
+
+    /// <summary>Performance-Checker: relative Rauschschwelle des Laufvergleichs für dieses Spiel (0,10 = 10 %); <see langword="null"/> = Standard aus <c>NoiseSettings</c>.</summary>
+    public double? PerformanceNoiseRelative { get; set; }
+
+    /// <summary>Performance-Checker: absolute Untergrenze der Zeitänderung für dieses Spiel (Rohwert des Dumps); <see langword="null"/> = Standard aus <c>NoiseSettings</c>.</summary>
+    public double? PerformanceNoiseFloor { get; set; }
 }
 
 /// <summary>Angaben des Kompatch-Startdialogs, die PMT sich merkt: Ordner von Mod A und B, Zielart (<c>new</c>, <c>existing</c>, <c>base</c>), Ziel-Mod und Name.</summary>

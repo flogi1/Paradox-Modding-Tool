@@ -45,7 +45,7 @@ iv2_ga_ai_choose_historic_{{ tag }} = {
 						}
 						custom_tooltip = {
 							text = iv2_tt_no_points_for_nat_idea{{ exp0 }}_{{ c.key }}
-							var:iv2_var_progress_points_{{ c.key }} >= var:iv2_var_national_idea_cost{{ exp0 }}_{{ c.key }}
+							var:iv2_var_progress_points_{{ c.key }} >= iv2_nat_cost_live{{ exp0 }}_{{ c.key }}
 						}
 						custom_tooltip = {
 							text = iv2_tt_not_reached_national_idea_limit
@@ -83,7 +83,7 @@ iv2_ga_ai_choose_historic_{{ tag }} = {
 							}
 							custom_tooltip = {
 								text = iv2_tt_no_points_for_nat_idea{{ exp0 }}_{{ c.key }}
-								var:iv2_var_progress_points_{{ c.key }} >= var:iv2_var_national_idea_cost{{ exp0 }}_{{ c.key }}
+								var:iv2_var_progress_points_{{ c.key }} >= iv2_nat_cost_live{{ exp0 }}_{{ c.key }}
 							}
 							custom_tooltip = {
 								text = iv2_tt_not_reached_national_idea_limit
@@ -115,17 +115,17 @@ iv2_ga_ai_choose_historic_{{ tag }} = {
 							text = iv2_tt_sub_points{{ exp0 }}_{{ c.key }}
 							change_variable = {
 								name = iv2_var_progress_points_{{ c.key }}
-								subtract = var:iv2_var_national_idea_cost{{ exp0 }}_{{ c.key }}
+								subtract = iv2_nat_cost_live{{ exp0 }}_{{ c.key }}
 							}
 						}
 						custom_tooltip = {
 							text = iv2_tt_increase_points_{{ c.key }}
 							change_variable = {
-								name = iv2_var_national_idea_cost_{{ c.key }}
+								name = iv2_var_nat_cost_inc_{{ c.key }}
 								add = iv2_progress_cost_increase
 							}
 							change_variable = {
-								name = iv2_var_national_idea_cost_expensive_{{ c.key }}
+								name = iv2_var_nat_cost_inc_expensive_{{ c.key }}
 								add = iv2_progress_cost_increase
 							}
 						}

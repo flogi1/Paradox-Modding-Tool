@@ -167,4 +167,133 @@ public class EuIvKeyTests : CompatchTestBase
 
         Assert.Equal(new[] { "guiTypes > win" }, keys);
     }
+
+    [Fact]
+    public void Eu4_windows_first_wins_and_sprites_last_wins_in_load_order()
+    {
+        // Gemessen 2026-10-17: Fenster gewinnt die zuerst geladene Datei, Sprites die zuletzt geladene, über Vanilla und Mods nach Dateinamen.
+        var input = new CompatchInput
+        {
+            VanillaFolder = VanillaDir,
+            ModAFolder = ADir,
+            ModBFolder = BDir,
+            Rules = new OverrideRules(new[]
+            {
+                new OverrideRule("interface", OverrideBehavior.LastWins, true, new[] { "guiTypes", "spriteTypes" }, "name",
+                    UnwrapBehaviors: new Dictionary<string, OverrideBehavior> { ["guiTypes"] = OverrideBehavior.FirstWins, ["spriteTypes"] = OverrideBehavior.LastWins }),
+            }),
+        };
+        PutA("interface/a.gui", "guiTypes = {\n\twindowType = { name = \"win\" size = { x = 1 } }\n}\n");
+        PutB("interface/b.gui", "guiTypes = {\n\twindowType = { name = \"win\" size = { x = 2 } }\n}\n");
+        PutA("interface/z.gfx", "spriteTypes = {\n\tspriteType = { name = \"GFX_x\" texturefile = \"a.dds\" }\n}\n");
+        PutB("interface/b.gfx", "spriteTypes = {\n\tspriteType = { name = \"GFX_x\" texturefile = \"b.dds\" }\n}\n");
+
+        var resolved = EffectiveEntryResolver.Resolve(input);
+
+        var window = resolved.Addresses[EntryAddress.ForKey("interface", "guiTypes > win")];
+        Assert.Equal(OverrideBehavior.FirstWins, window.Behavior);
+        Assert.Equal("interface/a.gui", window.NoPatch.RelativePath);
+        var sprite = resolved.Addresses[EntryAddress.ForKey("interface", "spriteTypes > GFX_x")];
+        Assert.Equal(OverrideBehavior.LastWins, sprite.Behavior);
+        Assert.Equal("interface/z.gfx", sprite.NoPatch.RelativePath);
+    }
+
+    private CompatchInput ClassicInput(bool euIv) => new()
+    {
+        VanillaFolder = VanillaDir,
+        ModAFolder = ADir,
+        ModBFolder = BDir,
+        Rules = euIv
+            ? new OverrideRules(new[]
+            {
+                new OverrideRule("interface", OverrideBehavior.LastWins, true, new[] { "guiTypes", "spriteTypes", "objectTypes" }, "name",
+                    UnwrapBehaviors: new Dictionary<string, OverrideBehavior>
+                    {
+                        ["guiTypes"] = OverrideBehavior.FirstWins, ["spriteTypes"] = OverrideBehavior.LastWins, ["objectTypes"] = OverrideBehavior.LastWins,
+                    }),
+            })
+            : new OverrideRules(new[] { new OverrideRule("interface", OverrideBehavior.LastWins, true, new[] { "guiTypes", "spriteTypes", "objectTypes" }, "name") })
+            {
+                FirstWinsInLoadOrder = true, LastWinsInLoadOrder = true, LoadOrderCaseSensitive = true,
+            },
+    };
+
+    private const string WindowV = "guiTypes = {\n\tcontainerWindowType = { name = \"win\" size = { x = 1 y = 1 } }\n}\n";
+    private const string WindowA = "guiTypes = {\n\tcontainerWindowType = { name = \"win\" size = { x = 2 y = 1 } }\n}\n";
+    private const string WindowB = "guiTypes = {\n\tcontainerWindowType = { name = \"win\" size = { x = 1 y = 2 } }\n}\n";
+    private const string SpriteV = "spriteTypes = {\n\tspriteType = { name = \"GFX_x\" texturefile = \"v.dds\" noOfFrames = 1 }\n}\n";
+    private const string SpriteA = "spriteTypes = {\n\tspriteType = { name = \"GFX_x\" texturefile = \"a.dds\" noOfFrames = 1 }\n}\n";
+    private const string SpriteB = "spriteTypes = {\n\tspriteType = { name = \"GFX_x\" texturefile = \"v.dds\" noOfFrames = 2 }\n}\n";
+
+    private string PatchFileFor(CompatchInput input, string key)
+    {
+        var run = CompatchEngine.Run(input, PatchTarget.Compatch, null, null);
+        return Assert.Single(run.Plan.Entries, e => e.Address.Key == key).TargetFile;
+    }
+
+    [Fact]
+    public void Eu4_window_patch_is_a_gui_file_loading_first()
+    {
+        PutVanilla("interface/v.gui", WindowV);
+        PutA("interface/a.gui", WindowA);
+        PutB("interface/b.gui", WindowB);
+
+        Assert.Equal("interface/00_" + PatchPlanner.OwnFileName + ".gui", PatchFileFor(ClassicInput(euIv: true), "guiTypes > win"));
+    }
+
+    [Fact]
+    public void Eu4_sprite_patch_is_a_gfx_file_loading_last()
+    {
+        PutVanilla("interface/core.gfx", SpriteV);
+        PutA("interface/mod_a.gfx", SpriteA);
+        PutB("interface/mod_b.gfx", SpriteB);
+
+        Assert.Equal("interface/zz_" + PatchPlanner.OwnFileName + ".gfx", PatchFileFor(ClassicInput(euIv: true), "spriteTypes > GFX_x"));
+    }
+
+    [Fact]
+    public void Hoi4_window_patch_goes_into_the_subfolder_that_loads_last()
+    {
+        // Unterordner laden nach den Dateien direkt in interface/; ein zz_-Patch dort verlöre gegen interface/sub/mod_b.gui.
+        PutVanilla("interface/core.gui", WindowV);
+        PutA("interface/mod_a.gui", WindowA);
+        PutB("interface/sub/mod_b.gui", WindowB);
+
+        Assert.Equal("interface/sub/zz_" + PatchPlanner.OwnFileName + ".gui", PatchFileFor(ClassicInput(euIv: false), "guiTypes > win"));
+    }
+
+    [Fact]
+    public void Hoi4_sprite_patch_is_a_gfx_file()
+    {
+        PutVanilla("interface/core.gfx", SpriteV);
+        PutA("interface/mod_a.gfx", SpriteA);
+        PutB("interface/mod_b.gfx", SpriteB);
+
+        Assert.Equal("interface/zz_" + PatchPlanner.OwnFileName + ".gfx", PatchFileFor(ClassicInput(euIv: false), "spriteTypes > GFX_x"));
+    }
+
+    [Fact]
+    public void Hoi4_common_patch_stays_in_the_root_even_if_a_subfolder_loads_last()
+    {
+        // Die Unterordner-Ablage gilt nur für klassische interface-Hüllen (guiTypes, spriteTypes, objectTypes); andere LastWins-Ordner mit
+        // Ladereihenfolge (HOI IV, Stellaris spielweit) behalten zz_ direkt im Bereich.
+        var input = new CompatchInput
+        {
+            VanillaFolder = VanillaDir,
+            ModAFolder = ADir,
+            ModBFolder = BDir,
+            Rules = new OverrideRules(new[] { new OverrideRule("common/scripted_effects", OverrideBehavior.LastWins) })
+            {
+                FirstWinsInLoadOrder = true, LastWinsInLoadOrder = true, LoadOrderCaseSensitive = true,
+            },
+        };
+        PutVanilla("common/scripted_effects/core.txt", "effect_x = { add_political_power = 1 add_stability = 1 }\neffect_v = { add_war_support = 1 }\n");
+        PutA("common/scripted_effects/mod_a.txt", "effect_x = { add_political_power = 2 add_stability = 1 }\neffect_a = { add_war_support = 1 }\n");
+        PutB("common/scripted_effects/sub/mod_b.txt", "effect_x = { add_political_power = 1 add_stability = 2 }\neffect_b = { add_war_support = 1 }\n");
+
+        var run = CompatchEngine.Run(input, PatchTarget.Compatch, null, null);
+
+        var entry = Assert.Single(run.Plan.Entries, e => e.Address.Key == "effect_x");
+        Assert.Equal("common/scripted_effects/zz_" + PatchPlanner.OwnFileName + ".txt", entry.TargetFile);
+    }
 }

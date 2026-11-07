@@ -81,7 +81,7 @@ public sealed class LayoutSettingsTests
         Assert.True(s.TileLabelsVisible);
         Assert.Equal(TileCatalog.DefaultOrder, s.TileOrder);
         Assert.Equal(
-            new[] { TileIds.GeneratorPackages, TileIds.PackageEditor, TileIds.Desync },
+            new[] { TileIds.FlagTracker, TileIds.ScriptCheck, TileIds.GfxAudit, TileIds.GeneratorPackages, TileIds.PackageEditor, TileIds.Desync },
             s.HiddenTiles.OrderBy(id => TileCatalog.DefaultOrder.ToList().IndexOf(id)));
         Assert.Empty(s.IconOnlyTiles);
         Assert.True(s.WorkspaceCategoryButtonVisible && s.WorkspaceSortButtonVisible && s.WorkspaceMarkButtonsVisible);
@@ -127,6 +127,18 @@ public sealed class LayoutSettingsTests
         Assert.Equal(ToolbarCatalog.All.Count, s.ToolbarOrder.Count(id => !ToolbarCatalog.IsSeparator(id)));
         Assert.Equal(1, s.ToolbarOrder.Count(id => id == "sep:1"));
         Assert.DoesNotContain("bogus", s.ToolbarOrder);
+    }
+
+    [Fact]
+    public void NormalizeTileOrder_AppendsMods_ToSavedOrder()
+    {
+        // Gespeicherte Reihenfolge aus der Zeit vor der Kachel "mods": sie fehlt und wird angehängt.
+        var saved = TileCatalog.DefaultOrder.Where(id => id != TileIds.Mods).Reverse().ToList();
+        var s = Loaded(new AppSessionState { TileOrder = saved });
+
+        Assert.Equal(saved, s.TileOrder.Take(saved.Count));
+        Assert.Equal(TileIds.Mods, s.TileOrder[^1]);
+        Assert.Equal(TileCatalog.DefaultOrder.Count, s.TileOrder.Count);
     }
 
     [Fact]

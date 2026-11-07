@@ -10,7 +10,7 @@ public sealed class PerformanceTextsTests
     [Fact]
     public void EveryKeyExistsInGermanAndEnglishWithMatchingGermanTextAndPlaceholders()
     {
-        var code = File.ReadAllText(RepoFiles.PathOf("src/ParadoxModTool.Performance/PerformanceTexts.cs"));
+        var code = SourceCode();
         var german = UiTextTable.Read(RepoFiles.PathOf("locales/de.json"));
         var english = UiTextTable.Read(RepoFiles.PathOf("locales/en.json"));
         var matches = Regex.Matches(code, "\\b[TF]\\(\"(?<key>performance\\.[^\"]+)\",\\s*\"(?<text>(?:[^\"\\\\]|\\\\.)*)\"");
@@ -26,7 +26,7 @@ public sealed class PerformanceTextsTests
     [Fact]
     public void EveryPerformanceKeyInTheLocaleFilesIsUsedByTheCode()
     {
-        var code = File.ReadAllText(RepoFiles.PathOf("src/ParadoxModTool.Performance/PerformanceTexts.cs"));
+        var code = SourceCode();
         var used = Regex.Matches(code, "\\b[TF]\\(\"(?<key>performance\\.[^\"]+)\"").Select(m => m.Groups["key"].Value).ToHashSet();
         var german = UiTextTable.Read(RepoFiles.PathOf("locales/de.json"));
 
@@ -34,6 +34,26 @@ public sealed class PerformanceTextsTests
         {
             Assert.Contains(key, used);
         }
+    }
+
+    [Fact]
+    public void EveryHelpKeyIsDefinedByPerformanceHelpTexts()
+    {
+        var help = File.ReadAllText(RepoFiles.PathOf("src/ParadoxModTool.Performance/PerformanceHelpTexts.cs"));
+        var german = UiTextTable.Read(RepoFiles.PathOf("locales/de.json"));
+        var used = Regex.Matches(help, "\\bT\\(\"(?<key>performance\\.[^\"]+)\"").Select(m => m.Groups["key"].Value).ToList();
+
+        Assert.True(used.Count >= 20, $"nur {used.Count} Hilfetexte gefunden");
+        Assert.All(used, key => Assert.StartsWith("performance.help.", key));
+        Assert.Equal(used.Count, german.Keys.Count(k => k.StartsWith("performance.help.", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void HelpTextsFallBackToGermanWithoutLoadedTable()
+    {
+        Assert.Equal("Anleitung: Performance-Checker", PerformanceHelpTexts.Title);
+        Assert.Equal("Welche Spiele", PerformanceHelpTexts.GamesHeading);
+        Assert.Contains("Script.Profiling.DumpAll", PerformanceHelpTexts.FlowSteps);
     }
 
     [Fact]
@@ -57,6 +77,13 @@ public sealed class PerformanceTextsTests
         Assert.Contains("A: 12, B: 24", PerformanceTexts.MonthsDiffer(12, 24));
         Assert.Contains("A: ?, B: 24", PerformanceTexts.MonthsDiffer(null, 24));
         Assert.Contains("unbekannt", PerformanceTexts.MonthsUnknown);
+        Assert.Equal(" (Dauer ungleich oder unbekannt)", PerformanceTexts.VerdictMonthsDiffer);
+        Assert.Equal("Save unbekannt (nicht geprüft)", PerformanceTexts.CheckSaveUnknown);
+        Assert.Equal("Mod-Stand nicht geprüft", PerformanceTexts.CheckModUnknown);
+        Assert.Contains("(A: s1, B: s2)", PerformanceTexts.WarnSaveDiffers("s1", "s2"));
+        Assert.Contains("(A: ?, B: s2)", PerformanceTexts.WarnSaveDiffers(null, "s2"));
+        Assert.Contains("(A: P1, B: P2)", PerformanceTexts.WarnPlaysetDiffers("P1", "P2"));
+        Assert.Contains("seit Lauf A", PerformanceTexts.WarnModChangedSinceA);
     }
 
     [Fact]
@@ -79,6 +106,11 @@ public sealed class PerformanceTextsTests
         Assert.Contains(0.05.ToString("N3", CultureInfo.CurrentCulture) + " " + PerformanceTexts.TimeUnit, note);
         Assert.Contains(0.25.ToString("P0", CultureInfo.CurrentCulture), note);
     }
+
+    /// <summary>Quelltext der Textdateien der Bibliothek: <c>PerformanceTexts.cs</c> und <c>PerformanceHelpTexts.cs</c>.</summary>
+    private static string SourceCode() =>
+        File.ReadAllText(RepoFiles.PathOf("src/ParadoxModTool.Performance/PerformanceTexts.cs")) + "\n"
+        + File.ReadAllText(RepoFiles.PathOf("src/ParadoxModTool.Performance/PerformanceHelpTexts.cs"));
 
     private static void AssertLocalized(string key, string text, IReadOnlyDictionary<string, string> german, IReadOnlyDictionary<string, string> english)
     {

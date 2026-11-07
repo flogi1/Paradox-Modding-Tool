@@ -99,7 +99,7 @@
       "label": { "de": "Idee", "en": "Idea", "fr": "Idée", "es": "Idea", "ru": "Идея", "pl": "Idea", "pt-br": "Ideia", "zh-hans": "理念" }
     }
   ],
-  "languages": { "extendEnglish": false, "copyEnglish": true, "englishForMissing": true },
+  "languages": { "defaultLanguages": [ "german", "english" ], "extendEnglish": false, "copyEnglish": false, "englishForMissing": true },
   "targets": [ "mod", "output" ],
   "outputs": [
     { "id": "genericActions", "kind": "ownFile", "path": "in_game/common/generic_actions/iv2_GA_ideas_{{ tag }}.txt", "template": "generic_actions.sbn" },
@@ -138,10 +138,15 @@
       "legacyPatterns": [ "if\\s*=\\s*\\{\\s*\\n\\s*limit\\s*=\\s*\\{\\s*has_or_had_tag\\s*=\\s*{{ tag }}\\s*\\}" ]
     },
     {
-      "id": "messagetypes", "kind": "insertSection", "path": "main_menu/gui/messagetypes.txt",
+      "id": "messagetypes", "kind": "insertSection", "path": "main_menu/gui/messagetypes/01_IV2_messagetypes.txt",
       "template": "messagetypes.sbn", "skeleton": "messagetypes_skeleton.sbn",
       "legacyBegin": "# === IV2Generator:{{ tag }}:START ===", "legacyEnd": "# === IV2Generator:{{ tag }}:END ===",
-      "legacyPatterns": [ "WE_PERFORM_iv2_ga_(?:select|deselect)_historic_{{ tag }}_\\d+\\w*_ACTION\\s*=\\s*\\{" ]
+      "legacyPatterns": [ "(?:WE_)?PERFORM_iv2_ga_(?:select|deselect)_historic_{{ tag }}_\\d+\\w*_ACTION\\s*=\\s*\\{" ],
+      "migrate": { "from": "main_menu/gui/messagetypes.txt", "patterns": [
+        "^#?[ \\t]*WE_PERFORM_iv2_ga_(?:select|deselect)_historic_\\w+_ACTION\\s*=\\s*\\{",
+        "^# === IV2Generator:\\w+:(?:START|END) ===[ \\t]*$",
+        "^# PMT-Generator [^/\\s]+/messagetypes/.*$",
+        "^# This file has no immediate game effect.*$" ] }
     },
     {
       "id": "uniqueTrigger", "kind": "ensureLine", "path": "in_game/common/scripted_triggers/iv2_scripted_triggers_national_ideas_setup.txt",

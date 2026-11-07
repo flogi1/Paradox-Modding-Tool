@@ -82,6 +82,17 @@ public class PlaysetModListsTests : IDisposable
     }
 
     [Fact]
+    public void Collect_skips_gfx_archive_folders()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "MyMod"));
+        Directory.CreateDirectory(Path.Combine(_root, "MyMod_gfx_archiv"));
+
+        var result = PlaysetInstalledMods.Collect(Array.Empty<PlaysetModEntry>(), _root, Array.Empty<PlaysetData>(), requireDescriptor: false);
+
+        Assert.Equal(new[] { "MyMod" }, result.Select(m => m.DisplayName));
+    }
+
+    [Fact]
     public void Collect_names_fall_back_to_the_folder_name()
     {
         Directory.CreateDirectory(Path.Combine(_root, "Plain"));

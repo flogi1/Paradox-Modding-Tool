@@ -81,11 +81,11 @@ public sealed class OutputNode
     {
         OutputKind.OwnFile => new[] { "template", "newLine" },
         OutputKind.Localization => new[] { "template", "keys", "insertAfter", "newLine" },
-        OutputKind.InsertSection => new[] { "template", "block", "forEach", "skeleton", "legacyBegin", "legacyEnd", "legacyPatterns", "newLine" },
+        OutputKind.InsertSection => new[] { "template", "block", "forEach", "skeleton", "legacyBegin", "legacyEnd", "legacyPatterns", "migrate", "newLine" },
         OutputKind.EnsureLine => new[] { "block", "line", "skeleton", "newLine" },
         OutputKind.SyncBlocks => new[] { "template", "keyPattern", "keep", "checkUnreferenced", "newLine" },
         OutputKind.CopyBinary => new[] { "source", "newLine" },
-        OutputKind.SyncMatching => new[] { "template", "block", "forEach", "match", "insertAfter", "ifLimit", "skeleton", "newLine" },
+        OutputKind.SyncMatching => new[] { "template", "block", "forEach", "match", "insertAfter", "ifLimit", "skeleton", "migrate", "newLine" },
         OutputKind.Check => new[] { "template", "message" },
         OutputKind.JsonEntry => new[] { "external", "jsonPath", "entryKey", "template" },
         _ => new[] { "newLine" },

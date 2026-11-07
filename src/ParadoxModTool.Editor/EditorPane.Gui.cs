@@ -80,6 +80,43 @@ public partial class EditorPane
     /// <summary>"Wird angezeigt in (GUI)" in einer Skriptdatei: Das Hauptfenster sucht das Wort in allen .gui-Dateien.</summary>
     public event EventHandler<string>? GuiShownInRequested;
 
+    /// <summary>"Im Flag-Tracker suchen" im Kontextmenü: Das Hauptfenster öffnet den Flag-Tracker und sucht den Namen.</summary>
+    public event EventHandler<string>? FlagTrackerRequested;
+
+    /// <summary>Ob der Flag-Tracker für das aktuelle Spiel angeboten wird; vom Hauptfenster gesetzt (ohne Verweis auf die Flag-Bibliothek).</summary>
+    public Func<bool>? FlagTrackerOffered { get; set; }
+
+    /// <summary>Suchbegriff aus Zeilentext, Spalte (0-basiert) und Auswahl (FlagQuery.FromEditor); null, wenn nichts Brauchbares dort steht.</summary>
+    public Func<string, int, string?, string?>? FlagQueryAt { get; set; }
+
+    /// <summary>Beschriftung des Menüeintrags für einen Suchbegriff.</summary>
+    public Func<string, string>? FlagTrackerHeader { get; set; }
+
+    /// <summary>"Im Verweisbaum zeigen" im Kontextmenü: Das Hauptfenster zeigt den Namen im Reiter "Verweise".</summary>
+    public event EventHandler<string>? ReferenceTreeRequested;
+
+    /// <summary>
+    /// Name für den Verweisbaum aus Zeilentext, Spalte (0-basiert) und Auswahl (ReferenceQuery.FromEditor); null, wenn nichts Brauchbares
+    /// dort steht oder der Verweisbaum im Spiel nicht verfügbar ist. Vom Hauptfenster gesetzt (der Editor kennt den Verweisbaum nicht).
+    /// </summary>
+    public Func<string, int, string?, string?>? ReferenceNamePicker { get; set; }
+
+    /// <summary>Beschriftung des Menüeintrags "Im Verweisbaum zeigen" für einen Namen.</summary>
+    public Func<string, string>? ReferenceTreeHeader { get; set; }
+
+    /// <summary>Name für den Verweisbaum an der Cursorstelle des aktiven Dokuments (über <see cref="ReferenceNamePicker"/>); null ohne Dokument oder Namen.</summary>
+    public string? ReferenceNameAtCaret()
+    {
+        if (ActiveDocument is null || ReferenceNamePicker is not { } picker)
+        {
+            return null;
+        }
+
+        var offset = Editor.CaretOffset;
+        var line = Editor.Document.GetLineByOffset(offset);
+        return picker(Editor.Document.GetText(line.Offset, line.Length), offset - line.Offset, Editor.SelectedText);
+    }
+
     private void InitializeGuiDesigner()
     {
         GuiModeCodeButton.Content = GuiTexts.ModeCode;
@@ -98,6 +135,8 @@ public partial class EditorPane
                 OpenLocationRequested?.Invoke(this, new GuiLocationEventArgs(path, origin.Line));
             }
         };
+        // Befund mit Skriptdatei (Prüfung): Datei an der Zeile öffnen, wie "Herkunft öffnen".
+        _designer.FindingLocationRequested += (_, e) => OpenLocationRequested?.Invoke(this, e);
         _designer.LayoutChanged += (_, _) => SaveGuiLayout();
         _designer.ShowInCodeRequested += (_, node) => ShowGuiNodeInCode(node);
         _designer.ViewInGameRequested += (_, _) => GuiViewInGameRequested?.Invoke(this, EventArgs.Empty);
@@ -206,8 +245,8 @@ public partial class EditorPane
         var draft = vanilla && document!.IsGuiDraft;
         Editor.IsReadOnly = vanilla && !draft;
 
-        // "Bausteine" nur in bearbeitbaren .gui-Dateien mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 2 und 10), auch ohne Designer; klassisch nicht
-        // (Jomini-Code, siehe GuiSettings.BlocksOffered).
+        // "Bausteine" nur in bearbeitbaren .gui-Dateien mit eingeschalteten GUI-Werkzeugen (Plan-Ruling 2 und 10), auch ohne Designer; in beiden Formaten
+        // (siehe GuiSettings.BlocksOffered).
         var blocks = GuiSettings.BlocksOffered && IsGuiFile(document) && !Editor.IsReadOnly;
         _blocksButton.Visibility = blocks ? Visibility.Visible : Visibility.Collapsed;
         GuiModePanel.Visibility = offered || vanilla || blocks ? Visibility.Visible : Visibility.Collapsed;
@@ -274,7 +313,8 @@ public partial class EditorPane
     {
         _editorMenu.Items.Clear();
         var document = ActiveDocument;
-        if (ContextOffset(e) is { } offset)
+        var contextOffset = ContextOffset(e);
+        if (contextOffset is { } offset)
         {
             if (GuiSettings.ToolsEnabled && IsGuiFile(document))
             {
@@ -325,6 +365,44 @@ public partial class EditorPane
             var attachBug = new MenuItem { Header = ParadoxModTool.Settings.MenuTexts.EditorAttachBug };
             attachBug.Click += (_, _) => AttachBugHereRequested?.Invoke(this, EventArgs.Empty);
             _editorMenu.Items.Add(attachBug);
+        }
+
+        // Am Ende, damit die übrigen Einträge ihre Plätze behalten. Zeile und Spalte (0-basiert) der Klickstelle; die Auswahl gilt nach
+        // ContextOffset. TextBlock statt Zeichenkette: WPF würde "_" im Namen als Zugriffstaste lesen.
+        if (contextOffset is { } flagOffset && FlagTrackerOffered?.Invoke() == true && FlagQueryAt is { } flagQuery && FlagTrackerHeader is { } flagHeader)
+        {
+            var flagLine = Editor.Document.GetLineByOffset(flagOffset);
+            var flagWord = flagQuery(Editor.Document.GetText(flagLine.Offset, flagLine.Length), flagOffset - flagLine.Offset, Editor.SelectedText);
+            if (flagWord is not null)
+            {
+                if (_editorMenu.Items.Count > 0)
+                {
+                    _editorMenu.Items.Add(new Separator());
+                }
+
+                var flagItem = new MenuItem { Header = new TextBlock { Text = flagHeader(flagWord) }, Tag = "flag" };
+                flagItem.Click += (_, _) => FlagTrackerRequested?.Invoke(this, flagWord);
+                _editorMenu.Items.Add(flagItem);
+            }
+        }
+
+        // "Im Verweisbaum zeigen" unter den übrigen Einträgen, direkt nach "Im Flag-Tracker suchen" ohne Trenner (dieselbe Gruppe). Der
+        // Picker liefert null, wenn das Spiel keinen Verweisbaum hat.
+        if (contextOffset is { } referenceOffset && ReferenceNamePicker is { } picker && ReferenceTreeHeader is { } referenceHeader)
+        {
+            var referenceLine = Editor.Document.GetLineByOffset(referenceOffset);
+            var referenceName = picker(Editor.Document.GetText(referenceLine.Offset, referenceLine.Length), referenceOffset - referenceLine.Offset, Editor.SelectedText);
+            if (referenceName is not null)
+            {
+                if (_editorMenu.Items.Count > 0 && _editorMenu.Items[^1] is not MenuItem { Tag: "flag" })
+                {
+                    _editorMenu.Items.Add(new Separator());
+                }
+
+                var referenceItem = new MenuItem { Header = new TextBlock { Text = referenceHeader(referenceName) } };
+                referenceItem.Click += (_, _) => ReferenceTreeRequested?.Invoke(this, referenceName);
+                _editorMenu.Items.Add(referenceItem);
+            }
         }
 
         if (_editorMenu.Items.Count == 0)

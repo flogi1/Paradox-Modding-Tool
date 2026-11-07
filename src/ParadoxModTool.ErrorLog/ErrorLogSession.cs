@@ -138,6 +138,12 @@ public sealed class ErrorLogSession
     /// <summary>Zeitpunkt des Laufs (letzte Änderung der Logdatei). Später geänderte Dateien gelten als "seit dem Lauf geändert".</summary>
     public DateTime RunTimeUtc { get; private set; } = DateTime.MaxValue;
 
+    /// <summary>
+    /// Länge der Spielsitzung des Laufs: von der ersten bis zur letzten Zeile mit Zeitstempel über alle Dateien (<see cref="LogFileTimes"/>).
+    /// Nur bekannt, wenn der Lauf über <see cref="LoadRun(LogRun)"/> geladen wurde; sonst (auch im Live-Betrieb) <see langword="null"/>.
+    /// </summary>
+    public TimeSpan? SessionLength { get; private set; }
+
     public IReadOnlyList<ErrorEntry> Entries => _entries;
 
     /// <summary>Scope-Spuren in den eigenen Mods (aus <see cref="TraceMarkers.Scan"/>).</summary>
@@ -234,12 +240,14 @@ public sealed class ErrorLogSession
 
     /// <summary>Lädt alle Dateien eines Laufs als ein Protokoll (das Spiel wechselt error.log mitten im Lauf).</summary>
     public void LoadRun(LogRun run) =>
-        LoadRun(run.Newest.Path, LogReader.ReadRun(run).Lines, run.Newest.LastWriteUtc, run.Files.Select(f => f.FileName).ToList());
+        LoadRun(run.Newest.Path, LogReader.ReadRun(run).Lines, run.Newest.LastWriteUtc, run.Files.Select(f => f.FileName).ToList(), LengthOf(run));
 
-    public void LoadRun(string path, IReadOnlyList<LogLine> lines, DateTime runTimeUtc, IReadOnlyList<string>? fileNames = null)
+    /// <param name="sessionLength">Länge der Spielsitzung (<see cref="SessionLength"/>); <see langword="null"/>, wenn unbekannt.</param>
+    public void LoadRun(string path, IReadOnlyList<LogLine> lines, DateTime runTimeUtc, IReadOnlyList<string>? fileNames = null, TimeSpan? sessionLength = null)
     {
         RunPath = path;
         RunTimeUtc = runTimeUtc;
+        SessionLength = sessionLength;
         RunFileNames = fileNames ?? new[] { Path.GetFileName(path) };
         _lines = lines.ToList();
         _entries = ErrorClassifier.Classify(_lines, Catalog);
@@ -253,6 +261,7 @@ public sealed class ErrorLogSession
         RunPath = null;
         RunFileNames = Array.Empty<string>();
         RunTimeUtc = DateTime.MaxValue;
+        SessionLength = null;
         _entries = new List<ErrorEntry>();
         _lines = new List<LogLine>();
         _liveFrom = null;
@@ -357,6 +366,9 @@ public sealed class ErrorLogSession
 
         return attribution;
     }
+
+    /// <summary>Die Datei zum Pfad aus dem Log über die Mods des Playsets und Vanilla, wie bei der Zuordnung; <see langword="null"/>, wenn sie fehlt.</summary>
+    public ResolvedSource? Resolve(string logPath) => _resolver.Resolve(logPath);
 
     public bool IsSuppressed(ErrorEntry entry) => Suppressions.IsSuppressed(entry, AttributionOf(entry));
 
@@ -712,6 +724,21 @@ public sealed class ErrorLogSession
     {
         _attributions.Clear();
         _resolver = CreateResolver();
+    }
+
+    /// <summary>Erste bis letzte Zeile mit Zeitstempel über alle Dateien des Laufs; <see langword="null"/>, wenn keine Datei Zeitstempel hat.</summary>
+    private static TimeSpan? LengthOf(LogRun run)
+    {
+        var times = run.Files.Select(LogFileTimes.For).ToList();
+        var firsts = times.Select(t => t.First).OfType<DateTime>().ToList();
+        var lasts = times.Select(t => t.Last).OfType<DateTime>().ToList();
+        if (firsts.Count == 0 || lasts.Count == 0)
+        {
+            return null;
+        }
+
+        var length = lasts.Max() - firsts.Min();
+        return length >= TimeSpan.Zero ? length : null;
     }
 
     private SourceResolver CreateResolver() => new(Mods, VanillaRoots, RunTimeUtc);

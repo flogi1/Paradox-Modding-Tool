@@ -35,12 +35,10 @@ public partial class MainWindow
     private IEnumerable<UIElement> ClassicOnlyMenuItems => new UIElement[]
     {
         ProjectMenuItem, CuToolMenuItem, PatchRecipesMenuItem, GeneratorPackagesMenuItem, PackageEditorMenuItem, ModCompatMenuItem, PlaysetsMenuItem,
-        CompatchMenuItem, ErrorLogMenuItem, DesyncMenuItem, SaveExplorerMenuItem, ScriptDocsMenuItem, GuiMenuItem, TemplatesMenuItem,
-        SupportMenuItem,
+        CompatchMenuItem, ErrorLogMenuItem, DesyncMenuItem, PerformanceMenuItem, FlagTrackerMenuItem, ScriptCheckMenuItem, GfxAuditMenuItem, ReferenceTreeMenuItem, SaveExplorerMenuItem, ScriptDocsMenuItem,
+        GuiMenuItem,
+        TemplatesMenuItem, SupportMenuItem,
     };
-
-    /// <summary>Menüpunkte, die das Spiel nicht unterstützt, bleiben auch im klassischen Layout verborgen (Desync-Analyse nur mit <c>desyncRules</c>).</summary>
-    private bool IsMenuItemAvailable(UIElement item) => item != DesyncMenuItem || DesyncAvailable;
 
     /// <summary>Elemente, die es nur im neuen Layout gibt (senkrechte Trennstriche, Abschnitt "Unterstützen" in Hilfe).</summary>
     private IEnumerable<UIElement> TilesOnlyMenuItems => new UIElement[]
@@ -82,7 +80,7 @@ public partial class MainWindow
         var tiles = IsTilesLayout;
         foreach (var item in ClassicOnlyMenuItems)
         {
-            item.Visibility = tiles || !IsMenuItemAvailable(item) ? Visibility.Collapsed : Visibility.Visible;
+            item.Visibility = tiles ? Visibility.Collapsed : Visibility.Visible;
         }
 
         foreach (var item in TilesOnlyMenuItems)
@@ -150,7 +148,7 @@ public partial class MainWindow
             return true;
         }
 
-        if (id == ToolbarItemIds.GuiDataHelper && !GuiSettings.DataHelperOffered)
+        if (id == ToolbarItemIds.GuiDataHelper && (!GuiSettings.DataHelperOffered || !ToolStateOf(TileIds.GuiDataHelper).Available))
         {
             return false;
         }
@@ -301,7 +299,9 @@ public partial class MainWindow
     private string ToolbarTipFor(string id) =>
         id == ToolbarItemIds.BugTracker && BugRefreshError(ActiveBugProjectId) is not null
             ? MenuTexts.ToolbarTip(id) + "\n" + BugTexts.RefreshFailedTip
-            : MenuTexts.ToolbarTip(id);
+            : id == ToolbarItemIds.ScopeFinder && ToolStateOf(TileIds.ScopeFinder).Hint is { } hint
+                ? MenuTexts.ToolbarTip(id) + "\n" + hint
+                : MenuTexts.ToolbarTip(id);
 
     // ---- Dateiknöpfe der kleinen Leiste: wirken auf den fokussierten Arbeitsbereich ----
 

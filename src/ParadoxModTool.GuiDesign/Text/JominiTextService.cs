@@ -1,4 +1,5 @@
 using System.Globalization;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Layout;
 using ParadoxModTool.GuiDesign.Resolve;
@@ -170,7 +171,7 @@ public sealed class JominiTextService
         }
         else if (!fonts.Defines(font) && !fonts.IsEmpty)
         {
-            notes.Add(GuiTexts.LayoutTextFontUnknown(font));
+            notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextFontUnknown(font), GuiFindingKind.FontMissing));
             return new JominiTextVisual(Array.Empty<JominiTextLine>(), 0, 0, alignH, alignV, false, false, Array.Empty<string>(), Array.Empty<string>());
         }
 
@@ -284,7 +285,7 @@ public sealed class JominiTextService
         // Mit Leerraum, Klammern oder $ ist es Text oder Auszeichnung, kein Schlüssel.
         if (!key.Any(c => char.IsWhiteSpace(c) || c is '[' or ']' or '(' or ')' or '$'))
         {
-            notes.Add(GuiTexts.LayoutTextKeyMissing(key));
+            notes.Add(JominiNoteKinds.Tag(GuiTexts.LayoutTextKeyMissing(key), GuiFindingKind.LocalisationMissing));
         }
 
         return key;
@@ -333,23 +334,39 @@ public sealed class JominiTextService
     /// <summary>
     /// <c>fontcolor = { r g b a }</c>; ist eine Komponente über 1, gilt das ganze Tupel als 0–255. Nicht auswertbar (z.B. eine Datenbindung) = null.
     /// </summary>
-    private static JominiColor? Color(ResolvedProperty? property)
+    private static JominiColor? Color(ResolvedProperty? property) =>
+        property is null ? null : FontColor(property.Items, out _);
+
+    /// <summary>
+    /// Die <c>fontcolor</c>-Regel auf einem Tupeltext (<c>{ r g b a }</c>, Einträge durch Leerzeichen oder Komma getrennt). <paramref name="byteForm"/>
+    /// ist wahr, wenn die Regel das Tupel als 0–255 gelesen hat.
+    /// </summary>
+    internal static JominiColor? FontColor(string text, out bool byteForm)
     {
-        if (property is null || property.Items.Count < 3)
+        var items = text.Trim().TrimStart('{').TrimEnd('}').Split(new[] { ',', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        return FontColor(items, out byteForm);
+    }
+
+    /// <summary>Die <c>fontcolor</c>-Regel auf den Einträgen des Tupels; null bei weniger als drei Einträgen oder einem Eintrag ohne Zahl.</summary>
+    internal static JominiColor? FontColor(IReadOnlyList<string> items, out bool byteForm)
+    {
+        byteForm = false;
+        if (items.Count < 3)
         {
             return null;
         }
 
-        var numbers = new double[property.Items.Count];
+        var numbers = new double[items.Count];
         for (var i = 0; i < numbers.Length; i++)
         {
-            if (!double.TryParse(property.Items[i], NumberStyles.Float, CultureInfo.InvariantCulture, out numbers[i]))
+            if (!double.TryParse(items[i], NumberStyles.Float, CultureInfo.InvariantCulture, out numbers[i]))
             {
                 return null;
             }
         }
 
-        var scale = numbers.Any(n => n > 1) ? 255.0 : 1.0;
+        byteForm = numbers.Any(n => n > 1);
+        var scale = byteForm ? 255.0 : 1.0;
         return new JominiColor(numbers[0] / scale, numbers[1] / scale, numbers[2] / scale, numbers.Length > 3 ? numbers[3] / scale : 1);
     }
 

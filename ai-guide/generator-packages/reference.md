@@ -17,7 +17,7 @@ A package is a folder with `package.json`, a folder `templates/` with Scriban te
 | `root` | Optional first level (see Levels). |
 | `constants` | Tables for fixed levels: `{ "<table>": [ { "<column>": value, ... }, ... ] }`. |
 | `targets` | Allowed targets: `["mod", "output"]` (default both). |
-| `languages` | Default language rules: `extendEnglish`, `copyEnglish`, `englishForMissing` (booleans). |
+| `languages` | Default language rules: `extendEnglish`, `copyEnglish`, `englishForMissing` (booleans), and `defaultLanguages` (list of language names, e.g. `["german", "english"]`: the languages ticked in a new work state; english is always on; omitted = all languages of the game profile). |
 | `assets` | `{ "<asset id>": { "path": "assets/file.zip", "origin": "mod" } }`; `origin` is `game` or `mod`. |
 | `externals` | `{ "<external id>": { "label": ..., "hint": ... } }`: files outside the mod that a `jsonEntry` output writes into. `label` names the file in the generator window, `hint` (optional) is its tooltip; the user chooses the path there, it is not part of the package. |
 | `afterGenerate` | Optional hint (text or language map) that the generator window appends to its message after a successful "Generate" ("Erzeugen"), e.g. "Run iv2_build_ai_chooser.py". Not shown when generating fails. |
@@ -47,6 +47,7 @@ translation is missing.
 | `default` | Start value. |
 | `asset` | For `image` fields: id of the asset library (zip or folder) to choose from. |
 | `lookup` | "From database": `{ "sources": [ "<lookup id>" ], "fills": { "name": "<field>", "desc": "<field>" } }`. |
+| `suggest` | On a `multilineText` field: `{ "external": "<external id>", "jsonPath": "<dot path to an array>", "idKey": "id", "labelKey": "label" }`. The generator window shows one checkbox per entry of that array in the chosen external file (`idKey` = the id, one line in the field; `labelKey` = optional caption, both default as shown) under the text box. Ticking adds or removes the id line; ids typed in the field that the list does not know stay. Entries may also be plain strings. No file chosen = a short note instead of boxes. |
 | `autoNumber` | `true` on the last key field of type `number`: "New" ("Neu", a new work state) prefills it with the highest number found for the other key parts plus 1 (gaps stay free); the user may overwrite it. Before the preview PMT hashes every localization key the plan adds (MurmurHash3) and compares them with the keys of the game and the mod; a new state whose keys collide moves to the next number and says so (only in a package with a `read` section), an existing state (its key is in the mod) only gets a warning. Not allowed on any other field. |
 
 ## Levels
@@ -106,6 +107,9 @@ output once per element of that level (the element is `item`). `newLine` forces 
 `block` is a path of keys separated by `.` (`sw_setup.sw_tags`); in `.gui` files also `types name` / `type name`.
 `legacyBegin`/`legacyEnd` name markers of an older tool that PMT keeps; `legacyPatterns` are regular expressions for
 unmarked old entries that PMT removes before inserting.
+`migrate` (only `insertSection` and `syncMatching`, fixed `path`) is `{ "from": "<old file>", "patterns": [ "<regex>" ] }` (`from` = path template of the old file, `patterns` = regex templates): matches in the old file
+(any tag, with their `{ }` block) are moved to the end of the output's file before the output runs, so the entries of the current run are regenerated
+once; an old file left with only whitespace is deleted (not with an output folder).
 
 ## Reading back (`read`)
 

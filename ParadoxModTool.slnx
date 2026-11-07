@@ -22,6 +22,10 @@
     <Project Path="src/ParadoxModTool.BugTracking/ParadoxModTool.BugTracking.csproj" />
     <Project Path="src/ParadoxModTool.SaveGames/ParadoxModTool.SaveGames.csproj" />
     <Project Path="src/ParadoxModTool.Performance/ParadoxModTool.Performance.csproj" />
+    <Project Path="src/ParadoxModTool.FlagTracker/ParadoxModTool.FlagTracker.csproj" />
+    <Project Path="src/ParadoxModTool.ScriptCheck/ParadoxModTool.ScriptCheck.csproj" />
+    <Project Path="src/ParadoxModTool.ReferenceTree/ParadoxModTool.ReferenceTree.csproj" />
+    <Project Path="src/ParadoxModTool.GfxAudit/ParadoxModTool.GfxAudit.csproj" />
     <Project Path="src/ParadoxModTool.SearchReplace/ParadoxModTool.SearchReplace.csproj" />
     <Project Path="src/ParadoxModTool.ScriptDocs/ParadoxModTool.ScriptDocs.csproj" />
     <Project Path="src/ParadoxModTool.Scopes/ParadoxModTool.Scopes.csproj" />
@@ -62,6 +66,10 @@
     <Project Path="tests/ParadoxModTool.Release.Tests/ParadoxModTool.Release.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.SaveGames.Tests/ParadoxModTool.SaveGames.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Performance.Tests/ParadoxModTool.Performance.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.FlagTracker.Tests/ParadoxModTool.FlagTracker.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.ScriptCheck.Tests/ParadoxModTool.ScriptCheck.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.ReferenceTree.Tests/ParadoxModTool.ReferenceTree.Tests.csproj" />
+    <Project Path="tests/ParadoxModTool.GfxAudit.Tests/ParadoxModTool.GfxAudit.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.SearchReplace.Tests/ParadoxModTool.SearchReplace.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.ScriptDocs.Tests/ParadoxModTool.ScriptDocs.Tests.csproj" />
     <Project Path="tests/ParadoxModTool.Scopes.Tests/ParadoxModTool.Scopes.Tests.csproj" />

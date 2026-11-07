@@ -26,7 +26,80 @@ public sealed record FieldDef(
     string? Default = null,
     string? Asset = null,
     Lookups.FieldLookupDef? Lookup = null,
-    bool AutoNumber = false);
+    bool AutoNumber = false,
+    FieldSuggest? Suggest = null);
+
+/// <summary>
+/// Vorschlagsliste eines Mehrzeilen-Felds (<c>suggest</c>): die Einträge des Arrays unter <see cref="JsonPath"/> in einer externen Datei des Pakets
+/// (<see cref="External"/>); <see cref="IdKey"/> liefert die Kennung (eine Zeile im Feld), <see cref="LabelKey"/> die Beschriftung.
+/// </summary>
+public sealed record FieldSuggest(string External, string JsonPath, string IdKey, string? LabelKey);
+
+/// <summary>Liest die Vorschläge eines Felds aus der gewählten externen Datei.</summary>
+public static class FieldSuggestions
+{
+    /// <summary>
+    /// Kennung und Beschriftung je Eintrag; ohne gewählte Datei, bei unlesbarer Datei oder fehlendem Array ist die Liste leer (das Formular darf nicht abstürzen).
+    /// Einträge ohne Kennung und doppelte Kennungen fallen weg.
+    /// </summary>
+    public static IReadOnlyList<(string Id, string Label)> Load(FieldSuggest suggest, IReadOnlyDictionary<string, string> externalPaths)
+    {
+        var result = new List<(string, string)>();
+        if (!externalPaths.TryGetValue(suggest.External, out var path) || !File.Exists(path))
+        {
+            return result;
+        }
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            var node = document.RootElement;
+            foreach (var segment in suggest.JsonPath.Split('.', StringSplitOptions.RemoveEmptyEntries))
+            {
+                node = node.ValueKind == System.Text.Json.JsonValueKind.Object && node.TryGetProperty(segment, out var next) ? next : default;
+            }
+
+            if (node.ValueKind != System.Text.Json.JsonValueKind.Array)
+            {
+                return result;
+            }
+
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var item in node.EnumerateArray())
+            {
+                string? id;
+                string? label = null;
+                if (item.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    id = item.GetString();
+                }
+                else if (item.ValueKind == System.Text.Json.JsonValueKind.Object && item.TryGetProperty(suggest.IdKey, out var idValue) && idValue.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    id = idValue.GetString();
+                    if (suggest.LabelKey is not null && item.TryGetProperty(suggest.LabelKey, out var labelValue) && labelValue.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        label = labelValue.GetString();
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(id) && seen.Add(id))
+                {
+                    result.Add((id, label ?? string.Empty));
+                }
+            }
+        }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or IOException or UnauthorizedAccessException)
+        {
+            result.Clear();
+        }
+
+        return result;
+    }
+}
 
 /// <summary>
 /// Eine Ebene des Formulars. Mit <see cref="ConstantsTable"/> eine feste Gruppe (ein Element je Tabellenzeile, deren Werte wie Felder lesbar sind),
@@ -68,6 +141,7 @@ public enum OutputKind
 /// <see cref="Message"/>: Meldung einer Prüfung ("check") in der Oberflächensprache, Scriban mit <c>arg</c>.
 /// <see cref="External"/>, <see cref="JsonPath"/>, <see cref="EntryKey"/>: nur "jsonEntry" — Kennung der externen Datei (siehe <see cref="GeneratorPackage.Externals"/>),
 /// Punkt-Pfad zum Objekt in der JSON-Datei (leer = Wurzel) und Scriban-Vorlage des Schlüssels; <see cref="Template"/> rendert den JSON-Wert des Eintrags.
+/// <see cref="Migrate"/>: nur "insertSection" und "Abgleich nach Treffer" mit festem Pfad — verschiebt Einträge aus einer alten Datei in diese.
 /// </summary>
 public sealed record OutputDef(
     string Id,
@@ -93,7 +167,14 @@ public sealed record OutputDef(
     string? IfLimit = null,
     string? External = null,
     string? JsonPath = null,
-    string? EntryKey = null);
+    string? EntryKey = null,
+    MigrateDef? Migrate = null);
+
+/// <summary>
+/// <c>migrate</c> einer Ausgabe: Einträge, die auf <see cref="Patterns"/> (Scriban-Vorlagen, mit dem Arbeitsstand gerendert) treffen, wandern aus der alten Datei
+/// <see cref="From"/> ans Ende der Datei der Ausgabe. Die Einträge dieses Laufs schreibt die Ausgabe danach wie gewohnt neu.
+/// </summary>
+public sealed record MigrateDef(string From, IReadOnlyList<string> Patterns);
 
 /// <summary>Herkunft eines Assets: aus dem Spiel (wird nie exportiert) oder aus einer Mod bzw. vom Autor.</summary>
 public enum AssetOrigin
@@ -112,7 +193,7 @@ public sealed record WarningDef(string When, string Message);
 public sealed record ExternalDef(string Label, string? Hint);
 
 /// <summary>Regeln für mehrsprachige Texte (Spec Abschnitt 1), als Vorgabe des Pakets und je Arbeitsstand änderbar.</summary>
-public sealed record LanguageDefaults(bool ExtendEnglish = false, bool CopyEnglish = false, bool EnglishForMissing = false);
+public sealed record LanguageDefaults(bool ExtendEnglish = false, bool CopyEnglish = false, bool EnglishForMissing = false, IReadOnlyList<string>? DefaultLanguages = null);
 
 /// <summary>
 /// Ein Generator-Paket (Spec 2026-10-03-generator-packages-core). <see cref="Functions"/>: Text von <c>functions.sbn</c> (leer ohne Datei);

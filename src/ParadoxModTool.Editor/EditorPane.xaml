@@ -161,6 +161,7 @@
                                  OpenDocument kommt. -->
                             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                 <MenuItem Header="{x:Static local:EditorTexts.TabOpenFolder}" Click="OpenContainingFolderFromTab_Click" />
+                                <MenuItem Header="{x:Static local:EditorTexts.TabMoveToOtherPane}" Click="MoveTabToOtherPane_Click" />
                             </ContextMenu>
                         </StackPanel.ContextMenu>
                         <Border Width="4" Margin="0,1,4,1" Background="{Binding CategoryColor}" />

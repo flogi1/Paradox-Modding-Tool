@@ -49,6 +49,12 @@ public static class RuleKeys
         return at > 0 ? key[..at] : null;
     }
 
+    /// <summary>
+    /// Die äußere Hülle eines Schlüssels (<c>guiTypes &gt; w</c> → <c>guiTypes</c>), für <see cref="RuleMatch.BehaviorFor"/>; ohne Hülle
+    /// <see langword="null"/>. Bei <c>*</c> ist die Hülle ein frei benannter Block (HOI IV-Entscheidungskategorie), der kein Verhalten je Hülle hat.
+    /// </summary>
+    public static string? UnwrapKeyOf(string key) => WrappersOf(key).FirstOrDefault();
+
     /// <summary>Die einzelnen Hüllen eines Schlüssels, die äußere zuerst (leer ohne Hülle).</summary>
     public static IReadOnlyList<string> WrappersOf(string key) =>
         WrapperOf(key) is { } wrappers ? wrappers.Split(WrapSeparator) : Array.Empty<string>();

@@ -134,6 +134,8 @@ internal static class GeneratorTexts
 
     public static string ExternalSaveFailed(string error) => F("generatorWindow.external.saveFailed", "Der Dateipfad konnte nicht gespeichert werden:\n{0}", error);
 
+    public static string SuggestionsNone => T("generatorWindow.suggestions.none", "Keine Vorschläge: die Datei ist nicht gewählt oder enthält keine Liste.");
+
     public static string Languages => T("generatorWindow.languages", "Sprachen");
 
     public static string RuleExtend => T("generatorWindow.rule.extend", "Englisch in alle Sprachen");

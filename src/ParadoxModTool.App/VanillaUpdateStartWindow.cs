@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,7 +15,6 @@ public sealed record VanillaUpdateContext(
     string VanillaRoot,
     string CurrentVersion,
     IReadOnlyList<OverriddenFile> Overridden,
-    IReadOnlyList<string> ModRelativePaths,
     OverriddenFile? Selected,
     VanillaHistoryStore Store,
     VanillaVersionLedger Ledger,
@@ -25,6 +25,7 @@ public sealed record VanillaUpdateContext(
 
 /// <summary>
 /// Startfenster "Mod an neue Vanilla anpassen" (Spec 2026-09-30-vanilla-update-merge, Abschnitt 8): alte Version, Umfang, Zähler und Hinweise.
+/// Listet Mod-Dateien, die eine Strukturänderung von Vanilla trifft (<see cref="VanillaStructureCheck"/>, im Hintergrund).
 /// Liest beim Öffnen einmal die installierte Vanilla-Version ein (Abschnitt 7.1).
 /// </summary>
 public sealed class VanillaUpdateStartWindow : Window
@@ -39,6 +40,13 @@ public sealed class VanillaUpdateStartWindow : Window
     private readonly Controls.Button _read = new() { Content = VanillaUpdateTexts.ReadVersionButton, ToolTip = VanillaUpdateTexts.ReadVersionTip, Padding = new Thickness(10, 1, 10, 1), HorizontalAlignment = System.Windows.HorizontalAlignment.Left, Margin = new Thickness(0, 8, 0, 0) };
     private readonly Controls.Button _start = new() { Content = VanillaUpdateTexts.StartButton, Width = 100, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
     private readonly FileKindFilterBar _kinds;
+    private readonly Controls.TextBlock _structureBusy = new() { Text = VanillaUpdateTexts.StructureBusy, Margin = new Thickness(0, 6, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly Controls.StackPanel _structurePanel = new() { Margin = new Thickness(0, 8, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly Controls.ListView _structureList = new() { MaxHeight = 140, Margin = new Thickness(0, 4, 0, 4) };
+    private readonly Controls.Button _openVanilla = new() { Content = VanillaUpdateTexts.StructureOpen, ToolTip = VanillaUpdateTexts.StructureOpenTip, Padding = new Thickness(10, 1, 10, 1), HorizontalAlignment = System.Windows.HorizontalAlignment.Left, IsEnabled = false };
+    private readonly CancellationTokenSource _closing = new();
+    private CancellationTokenSource? _structureRun;
+    private bool _structureNoHistory;
     private UpdateScan? _scan;
     private IReadOnlyList<UpdateFile> _files = Array.Empty<UpdateFile>();
 
@@ -70,6 +78,16 @@ public sealed class VanillaUpdateStartWindow : Window
         _counts.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
         _notes.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
         panel.Children.Add(_counts);
+        panel.Children.Add(_structureBusy);
+        _structurePanel.Children.Add(new Controls.TextBlock { Text = VanillaUpdateTexts.StructureHeader, TextWrapping = TextWrapping.Wrap });
+        var grid = new Controls.GridView();
+        grid.Columns.Add(new Controls.GridViewColumn { Header = VanillaUpdateTexts.StructureColFile, Width = 220, DisplayMemberBinding = new System.Windows.Data.Binding(nameof(StructureRow.File)) });
+        grid.Columns.Add(new Controls.GridViewColumn { Header = VanillaUpdateTexts.StructureColChange, Width = 120, DisplayMemberBinding = new System.Windows.Data.Binding(nameof(StructureRow.Label)) });
+        grid.Columns.Add(new Controls.GridViewColumn { Header = VanillaUpdateTexts.StructureColNew, Width = 180, DisplayMemberBinding = new System.Windows.Data.Binding(nameof(StructureRow.NewPlace)) });
+        _structureList.View = grid;
+        _structurePanel.Children.Add(_structureList);
+        _structurePanel.Children.Add(_openVanilla);
+        panel.Children.Add(_structurePanel);
         panel.Children.Add(_notes);
         panel.Children.Add(_read);
 
@@ -87,6 +105,17 @@ public sealed class VanillaUpdateStartWindow : Window
         _allChanged.Checked += (_, _) => RefreshSelection();
         _includeWithoutOld.Click += (_, _) => RefreshSelection();
         _read.Click += async (_, _) => await RecordAsync();
+        _structureList.SelectionChanged += (_, _) => _openVanilla.IsEnabled = _structureList.SelectedItem is StructureRow { CanOpenVanilla: true };
+        _structureList.MouseDoubleClick += OnStructureDoubleClick;
+        _openVanilla.Click += (_, _) => OpenVanillaPlace();
+        Closed += (_, _) =>
+        {
+            _closing.Cancel();
+            _structureRun?.Cancel();
+            _structureRun?.Dispose();
+            _structureRun = null;
+            _closing.Dispose();
+        };
         Loaded += async (_, _) => await RecordAsync();
         Rescan();
     }
@@ -132,12 +161,147 @@ public sealed class VanillaUpdateStartWindow : Window
         {
             _read.IsEnabled = true;
         }
+
+        // Nach dem Einlesen: eine frisch aufgezeichnete Verzeichnisliste kann neue Treffer bringen.
+        await CheckStructureAsync();
+    }
+
+    /// <summary>Strukturprüfung im Hintergrund; ein neuer Lauf bricht den alten ab, Schließen des Fensters ebenfalls.</summary>
+    private async Task CheckStructureAsync()
+    {
+        // Nach dem Schließen ist _closing abgebrochen und freigegeben (IsCancellationRequested geht dann noch, Cancel und Token nicht mehr).
+        if (_closing.IsCancellationRequested)
+        {
+            return;
+        }
+
+        // Der alte Lauf hält seinen Token vorab fest (siehe unten); Freigeben löst auch die Verknüpfung mit _closing.
+        _structureRun?.Cancel();
+        _structureRun?.Dispose();
+        _structureRun = null;
+
+        // Ohne Vanilla-Ordner würde jeder alte Vanilla-Ordner als verschwunden gelten: dann nicht prüfen.
+        if (!Directory.Exists(_context.VanillaRoot))
+        {
+            ShowStructure(Array.Empty<StructureChange>(), noHistory: false);
+            return;
+        }
+
+        var run = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token);
+        _structureRun = run;
+        var token = run.Token;
+        _structureBusy.Text = VanillaUpdateTexts.StructureBusy;
+        _structureBusy.Visibility = Visibility.Visible;
+        var hasSnapshots = _scan is { RecordedVersionsBelowCurrent.Count: > 0 };
+        try
+        {
+            var (changes, noHistory) = await Task.Run(() =>
+            {
+                var found = VanillaStructureCheck.Find(_context.ModFolder, _context.VanillaRoot, _context.Store, _context.CurrentVersion, token);
+                var comparer = GameVersionComparer.Instance;
+                var hasListing = _context.Store.ListStructureListingVersions().Any(v => comparer.Compare(v, _context.CurrentVersion) < 0);
+                return (found, !hasSnapshots && !hasListing);
+            }, token);
+            if (!token.IsCancellationRequested)
+            {
+                ShowStructure(changes, noHistory);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Neuer Lauf oder Fenster geschlossen: nichts mehr anzeigen.
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _structureBusy.Text = ex.Message;
+            }
+        }
+    }
+
+    private void ShowStructure(IReadOnlyList<StructureChange> changes, bool noHistory)
+    {
+        _structureBusy.Visibility = Visibility.Collapsed;
+        _structureNoHistory = noHistory;
+        _structureList.ItemsSource = changes.Select(c => new StructureRow(c)).ToList();
+        _structurePanel.Visibility = changes.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        RefreshSelection();
+    }
+
+    /// <summary>Doppelklick nur auf einer Zeile (nicht auf leerer Fläche, Spaltenkopf oder Bildlaufleiste).</summary>
+    private void OnStructureDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject source
+            && Controls.ItemsControl.ContainerFromElement(_structureList, source) is Controls.ListViewItem { Content: StructureRow row })
+        {
+            OpenModEntry(row);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Mod-Datei zum Lesen zeigen, einen Mod-Ordner (verschwundener Vanilla-Ordner) im Explorer.</summary>
+    private void OpenModEntry(StructureRow row)
+    {
+        if (row.Change.Kind == StructureChangeKind.FolderGone || row.Change.ModFullPath.EndsWith(Path.DirectorySeparatorChar))
+        {
+            OpenFolder(row.Change.ModFullPath);
+        }
+        else
+        {
+            ShowFile(row.Change.ModFullPath);
+        }
+    }
+
+    /// <summary>Zeigt eine Datei nur zum Lesen in einem Fenster über diesem (das Hauptfenster dahinter ist gesperrt, ein Laden dort bliebe unsichtbar).</summary>
+    private void ShowFile(string path)
+    {
+        try
+        {
+            TextViewWindow.ShowDialog(this, path, File.ReadAllText(path));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Windows.MessageBox.Show(this, ex.Message, VanillaUpdateTexts.StartTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    /// <summary>Den ersten neuen Vanilla-Ort öffnen: Ordner im Explorer, Datei zum Lesen.</summary>
+    private void OpenVanillaPlace()
+    {
+        if (_structureList.SelectedItem is not StructureRow { CanOpenVanilla: true } row)
+        {
+            return;
+        }
+
+        var relative = row.Change.NewVanillaPaths[0];
+        var full = Path.Combine(_context.VanillaRoot, relative.TrimEnd('/').Replace('/', Path.DirectorySeparatorChar));
+        if (relative.EndsWith('/'))
+        {
+            OpenFolder(full);
+        }
+        else
+        {
+            ShowFile(full);
+        }
+    }
+
+    private void OpenFolder(string path)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{ParadoxModTool.Explorer.PathNormalization.ToWindowsPath(path.TrimEnd(Path.DirectorySeparatorChar))}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            System.Windows.MessageBox.Show(this, MiscWindowTexts.DiffExplorerFailed(ex.Message), VanillaUpdateTexts.StartTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void Rescan()
     {
         var forced = _oldVersion.SelectedIndex > 0 ? _oldVersion.SelectedItem as string : null;
-        _scan = VanillaUpdateRun.Scan(_context.Overridden, _context.ModRelativePaths, _context.VanillaRoot, _context.Store, _context.CurrentVersion, _context.Ledger, _context.SupportedPattern, forced);
+        _scan = VanillaUpdateRun.Scan(_context.Overridden, _context.Store, _context.CurrentVersion, _context.Ledger, _context.SupportedPattern, forced);
         if (_oldVersion.Items.Count == 0 || !_scan.RecordedVersionsBelowCurrent.SequenceEqual(_oldVersion.Items.Cast<object>().Skip(1).OfType<string>()))
         {
             var keep = forced;
@@ -182,9 +346,9 @@ public sealed class VanillaUpdateStartWindow : Window
 
         _counts.Text = string.Join("\n", lines);
         var notes = new List<string>();
-        if (scan.RemovedInVanilla.Count > 0)
+        if (_structureNoHistory)
         {
-            notes.Add(VanillaUpdateTexts.Removed(_context.CurrentVersion, string.Join(", ", scan.RemovedInVanilla)));
+            notes.Add(VanillaUpdateTexts.StructureNoHistory);
         }
 
         if (withoutOld.Count > 0)
@@ -199,3 +363,16 @@ public sealed class VanillaUpdateStartWindow : Window
 
 /// <summary>Auftrag an das Hauptfenster: Lauf vorbereiten und den Kompatch-Merge im Update-Modus öffnen.</summary>
 public sealed record VanillaUpdateLaunch(IReadOnlyList<UpdateFile> Files, string ModFolder, string ModName, string CurrentVersion, VanillaHistoryStore Store, Action AfterWrite);
+
+/// <summary>Zeile der Strukturliste: Anzeige-Texte einer <see cref="StructureChange"/>.</summary>
+internal sealed record StructureRow(StructureChange Change)
+{
+    public string File => Change.ModRelativePath;
+
+    public string Label => VanillaDiffTexts.StructureChangeLabel(Change.Kind);
+
+    public string NewPlace => Change.NewVanillaPaths.Count > 0 ? string.Join(", ", Change.NewVanillaPaths) : "–";
+
+    /// <summary>"Vanilla-Ort öffnen" geht nur mit einem neuen Ort (nicht bei "Datei entfernt").</summary>
+    public bool CanOpenVanilla => Change.Kind != StructureChangeKind.FileRemoved && Change.NewVanillaPaths.Count > 0;
+}

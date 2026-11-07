@@ -24,6 +24,16 @@ public class ScriptTreeTests
     }
 
     [Fact]
+    public void Lexer_ReadsEscapedQuotesOutsideAStringAsString()
+    {
+        // EU IV: Skript in einem mehrzeiligen String (effect = "…"); darin has_dlc = \"Mandate of Heaven\" — die Klammer danach gehört nicht in den String.
+        var tokens = ScopeLexer.Tokenize("limit = { has_dlc = \\\"Mandate of Heaven\\\" } b = 1");
+
+        Assert.Equal(new[] { "limit", "=", "{", "has_dlc", "=", "Mandate of Heaven", "}", "b", "=", "1" }, tokens.Select(t => t.Text));
+        Assert.Equal(ScopeTokenKind.String, tokens[5].Kind);
+    }
+
+    [Fact]
     public void Tree_BuildsBlocksScalarsAndListItems()
     {
         var tree = ScriptTree.Parse("obj = { a = 1 list = { x y } { z } }");

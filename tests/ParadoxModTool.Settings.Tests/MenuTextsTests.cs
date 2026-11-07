@@ -77,7 +77,9 @@ public sealed class MenuTextsTests
     public void TileLabelsReuseMenuTexts()
     {
         Assert.Equal("Projekt verwalten", MenuTexts.TileLabel(TileIds.Project));
-        Assert.Equal(MenuTexts.ProjectTip, MenuTexts.TileTip(TileIds.Project));
+        Assert.Equal(MenuTexts.ProjectSyncTip, MenuTexts.TileTip(TileIds.Project));
+        Assert.Equal("Mods verwalten", MenuTexts.TileLabel(TileIds.Mods));
+        Assert.Equal("Übersicht aller eigenen Mods", MenuTexts.TileTip(TileIds.Mods));
         Assert.Equal(MenuTexts.CuTool, MenuTexts.TileLabel(TileIds.CuTool));
         Assert.Equal(MenuTexts.CompatchTip, MenuTexts.TileTip(TileIds.Compatch));
         Assert.Equal(SettingsTexts.ToolbarItemLabel(ToolbarItemIds.ScopeFinder), MenuTexts.TileLabel(TileIds.ScopeFinder));

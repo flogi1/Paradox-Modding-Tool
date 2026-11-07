@@ -250,4 +250,39 @@ public sealed class PerformanceReportTests
         Assert.Contains($"{N0(10)} -> -", missing);
         Assert.Contains($"{N3(3)} -> -", missing);
     }
+
+    [Fact]
+    public void SummaryAppendsHintsBlock()
+    {
+        var hints = new[]
+        {
+            new PerformanceHint("error-spam", HintSeverity.Warning, "common/x.txt", 12, "Titel A", "Detail A", 5),
+            new PerformanceHint("many-calls", HintSeverity.Info, "common/y.txt", 3, "Titel B", "Detail B", 1),
+        };
+
+        var text = PerformanceReport.Summary("vorher", SummarySample(), Twelve, 3, hints, "Notiz");
+        var lines = Lines(text);
+
+        var block = Array.IndexOf(lines, PerformanceTexts.ReportHintsTitle(2));
+        Assert.True(block > 0);
+        Assert.Equal(PerformanceTexts.ReportHintLine(HintSeverity.Warning, "common/x.txt", 12, "Titel A"), lines[block + 1]);
+        Assert.Equal("  Detail A", lines[block + 2]);
+        Assert.Contains("common/x.txt:12", lines[block + 1]);
+        Assert.Contains("Titel A", lines[block + 1]);
+        Assert.Equal(PerformanceTexts.ReportHintLine(HintSeverity.Info, "common/y.txt", 3, "Titel B"), lines[block + 3]);
+        Assert.Equal("  Detail B", lines[block + 4]);
+        Assert.Equal("Notiz", lines[block + 5]);
+    }
+
+    [Fact]
+    public void SummaryHasNoHintsBlockWithoutHintsAndNote()
+    {
+        var plain = PerformanceReport.Summary("vorher", SummarySample(), Twelve, 3);
+
+        Assert.Equal(plain, PerformanceReport.Summary("vorher", SummarySample(), Twelve, 3, Array.Empty<PerformanceHint>(), null));
+        Assert.Equal(plain, PerformanceReport.Summary("vorher", SummarySample(), Twelve, 3, null, null));
+        Assert.DoesNotContain(PerformanceTexts.ReportHintsTitle(0), plain);
+        var onlyNote = Lines(PerformanceReport.Summary("vorher", SummarySample(), Twelve, 3, null, "Notiz"));
+        Assert.Equal("Notiz", onlyNote[^1]);
+    }
 }

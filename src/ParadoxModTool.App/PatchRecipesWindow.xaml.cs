@@ -66,6 +66,9 @@ public partial class PatchRecipesWindow : Window
 
     internal string? ModRoot => _modRoot;
 
+    /// <summary>Was das Fenster vom Hauptfenster bekommt; für Rezepte, die aus einem anderen KI-Fenster (Performance-Checker) kommen.</summary>
+    internal PatchWindowHost Host => _host;
+
     /// <summary>Wählt eine Mod (z. B. nach "Merge nach Update") und lädt ihre Rezepte.</summary>
     public void SelectMod(string modRoot)
     {

@@ -26,9 +26,11 @@ public static class GeneratorPackageLoader
         "checkUnreferenced", "source", "newLine", "match", "insertAfter", "ifLimit", "autoNumber",
         "keys", "elements", "file", "level", "body", "except", "localization", "key", "field", "flags", "contains", "localizationOutput", "values", "pattern", "join", "output",
         "json", "property",
+        "migrate", "from", "patterns",
         "folder", "depth", "namedOnly", "tagFromFile", "tagInBlock", "items",
         "sources", "fills",
         "externals", "hint", "external", "jsonPath", "entryKey", "afterGenerate",
+        "suggest", "idKey", "labelKey", "defaultLanguages",
         "candidates", "category", "used", "groups", "hidden", "create", "ask", "modifiers",
     };
 
@@ -293,6 +295,20 @@ public static class GeneratorPackageLoader
                 }
             }
 
+            // migrate verschiebt Einträge in eine feste Datei: nur bei "Abschnitt einfügen" und "Abgleich nach Treffer", und der Pfad darf nicht vom Element abhängen
+            if (output.Migrate is not null)
+            {
+                if (output.Kind is not (OutputKind.InsertSection or OutputKind.SyncMatching))
+                {
+                    throw new GeneratorPackageException(GeneratorsTexts.KeyNotAllowed($"outputs[{output.Id}].migrate"));
+                }
+
+                if (System.Text.RegularExpressions.Regex.IsMatch(output.Path, @"\bitem\b") || System.Text.RegularExpressions.Regex.IsMatch(output.Migrate.From, @"\bitem\b"))
+                {
+                    throw new GeneratorPackageException(GeneratorsTexts.MigrateItemPath(output.Id));
+                }
+            }
+
             // insertAfter ordnet nur neue Einheiten ein: bei "Abgleich nach Treffer" und bei Lokalisierung in gemeinsamen Dateien
             if (output.InsertAfter is not null && output.Kind != OutputKind.SyncMatching && !(output.Kind == OutputKind.Localization && output.Keys is not null))
             {
@@ -357,7 +373,14 @@ public static class GeneratorPackageLoader
         Optional(e, "default"),
         Optional(e, "asset"),
         e.TryGetProperty("lookup", out var lookup) && lookup.ValueKind == JsonValueKind.Object ? FieldLookup(lookup) : null,
-        Bool(e, "autoNumber"));
+        Bool(e, "autoNumber"),
+        e.TryGetProperty("suggest", out var suggest) && suggest.ValueKind == JsonValueKind.Object ? FieldSuggestion(suggest) : null);
+
+    private static FieldSuggest FieldSuggestion(JsonElement e) => new(
+        Required(e, "external"),
+        Optional(e, "jsonPath") ?? string.Empty,
+        Optional(e, "idKey") is { Length: > 0 } idKey ? idKey : "id",
+        Optional(e, "labelKey"));
 
     private static FieldLookupDef FieldLookup(JsonElement e) => new(
         Strings(e, "sources") ?? Array.Empty<string>(),
@@ -559,7 +582,32 @@ public static class GeneratorPackageLoader
             Optional(e, "ifLimit"),
             Optional(e, "external"),
             Optional(e, "jsonPath"),
-            Optional(e, "entryKey"));
+            Optional(e, "entryKey"),
+            Migrate(e));
+    }
+
+    /// <summary><c>migrate</c> einer Ausgabe: Objekt mit <c>from</c> und <c>patterns</c>; fehlt es, gibt es keine Migration.</summary>
+    private static MigrateDef? Migrate(JsonElement output)
+    {
+        if (!output.TryGetProperty("migrate", out var migrate) || migrate.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var id = Required(output, "id");
+        var from = Optional(migrate, "from");
+        if (string.IsNullOrWhiteSpace(from))
+        {
+            throw new GeneratorPackageException(GeneratorsTexts.FieldMissing($"outputs[{id}].migrate.from"));
+        }
+
+        var patterns = Strings(migrate, "patterns");
+        if (patterns is null || patterns.Count == 0 || patterns.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new GeneratorPackageException(GeneratorsTexts.FieldMissing($"outputs[{id}].migrate.patterns"));
+        }
+
+        return new MigrateDef(from, patterns);
     }
 
     /// <summary>Abschnitt <c>externals</c>: Kennung → <c>label</c> (ohne Angabe die Kennung) und <c>hint</c>.</summary>
@@ -655,7 +703,7 @@ public static class GeneratorPackageLoader
 
     private static LanguageDefaults Languages(JsonElement root) =>
         root.TryGetProperty("languages", out var l)
-            ? new LanguageDefaults(Bool(l, "extendEnglish"), Bool(l, "copyEnglish"), Bool(l, "englishForMissing"))
+            ? new LanguageDefaults(Bool(l, "extendEnglish"), Bool(l, "copyEnglish"), Bool(l, "englishForMissing"), Strings(l, "defaultLanguages"))
             : new LanguageDefaults();
 
     /// <summary>

@@ -11,7 +11,7 @@ public static class MainTexts
 {
     // Hauptfenster: Statusleiste und Ergebnisleiste (MainWindow.xaml)
 
-    public static string ModStatusTip => T("main.modStatus.tip", "Die aktive Mod (z. B. Ziel für GUI-Übernahmen und Vorgabe für Patch-Rezepte und Generator). Klick: andere Mod wählen oder \"Automatisch (offene Datei)\"; auch im Menü \"Mods\".");
+    public static string ModStatusTip => T("main.modStatus.tip", "Die aktive Mod (z. B. Ziel für GUI-Übernahmen und Vorgabe für Patch-Rezepte und Generator). Klick: \"Mods verwalten\" öffnen; die aktive Mod wählst du im Menü \"Mods\".");
 
     public static string ModStatusFixed(string name) => F("main.modStatus.fixed", "Mod: {0}", name);
 

@@ -88,11 +88,12 @@ public class VanillaSnapshotRecorderTests : IDisposable
     }
 
     [Fact]
-    public void LocalModFolders_skips_dot_folders()
+    public void LocalModFolders_skips_dot_and_gfx_archive_folders()
     {
         Directory.CreateDirectory(Path.Combine(Mods, "b"));
         Directory.CreateDirectory(Path.Combine(Mods, "a"));
         Directory.CreateDirectory(Path.Combine(Mods, ".git"));
+        Directory.CreateDirectory(Path.Combine(Mods, "a_gfx_archiv"));
 
         Assert.Equal(new[] { "a", "b" }, VanillaSnapshotRecorder.LocalModFolders(Mods).Select(Path.GetFileName));
         Assert.Empty(VanillaSnapshotRecorder.LocalModFolders(Path.Combine(_root, "missing")));

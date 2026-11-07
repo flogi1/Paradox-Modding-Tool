@@ -5,6 +5,7 @@ using ParadoxModTool.Editor.Gui;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
+using ParadoxModTool.GuiDesign.Imaging;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.UndoRedo;
 using ParadoxModTool.VersionManager;
@@ -18,11 +19,35 @@ namespace ParadoxModTool.App;
 /// </summary>
 public partial class MainWindow
 {
-    /// <summary>Verbindet das Eigenschaftenfeld mit der Sprite-Auswahl und "Sprite anlegen"; nur klassisch (sonst fehlen die Knöpfe).</summary>
+    /// <summary>
+    /// Verbindet das Eigenschaftenfeld mit der Sprite-Auswahl und "Sprite anlegen" (nur klassisch) bzw. mit der Texturauswahl (nur Jomini); im
+    /// jeweils anderen Dialekt fehlen die Knöpfe.
+    /// </summary>
     private void WireClassicSpriteTools(bool classic)
     {
         GuiSettings.SpritePicker = classic ? PickClassicSprite : null;
         GuiSettings.SpriteCreator = classic ? CreateClassicSprite : null;
+        GuiSettings.TexturePicker = classic ? null : PickJominiTexture;
+        WireScriptedGuiTools(classic);
+    }
+
+    /// <summary>"Textur wählen…" (Jomini): der gewählte Pfad ab <c>gfx/</c> oder <see langword="null"/> (abgebrochen, oder noch kein Index).</summary>
+    private string? PickJominiTexture(string? current)
+    {
+        if (GuiSettings.Workspace is not { } workspace)
+        {
+            MessageBox.Show(this, GuiTexts.DraftNoIndex, GuiTexts.TexturePickerTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        // Wurzeln und Optionen jetzt festhalten: die Suche im Hintergrund liest GuiSettings nie.
+        var roots = workspace.Textures.Roots;
+        var options = workspace.Options;
+        var window = new JominiTexturePickerWindow(
+            token => GuiTextureCatalog.Scan(roots, options.InstallDirectory, options.ModRoot, options.DependencyRoots, token),
+            current)
+        { Owner = this };
+        return window.ShowDialog() == true && window.Chosen.Length > 0 ? window.Chosen : null;
     }
 
     /// <summary>"Auswählen…": das gewählte Sprite oder <see langword="null"/> (abgebrochen, oder noch kein Index).</summary>

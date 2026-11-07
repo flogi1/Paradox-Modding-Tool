@@ -1,0 +1,5 @@
+# Restliste der Skriptprüfung für stellaris (Kalibrierung „Vanilla als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+BrokenReference|paragon.5265	Event nirgends definiert (paragon.52xx endet bei .5223); country_event in common/scripted_effects/paragon_effects.txt:1636
+BrokenReference|give_breakthrough_tech_option_or_progress_effect	nirgends definiert (kein Skripteffekt, nicht in Script-Docs, nicht in stellaris.exe); aufgerufen in give_next_breakthrough_effect, common/scripted_effects/00_scripted_effects.txt:3581-3590

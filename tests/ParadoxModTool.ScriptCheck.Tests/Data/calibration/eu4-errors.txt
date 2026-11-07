@@ -1,0 +1,5 @@
+# Restliste der Skriptprüfung für eu4 (Kalibrierung „Vanilla als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+BrokenReference|owner_is_colonial_nation	nirgends als Trigger definiert; common/achievements.txt:3729 ff. (5 Stellen)
+BrokenReference|religion_enforced	nirgends als Trigger definiert; decisions/HussiteFaith.txt:15 (eine Stelle, unter allow)

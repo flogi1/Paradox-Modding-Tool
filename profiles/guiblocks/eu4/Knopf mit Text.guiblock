@@ -1,0 +1,16 @@
+# block: Knopf mit Text
+# group: Bedienelemente
+# description: Knopf mit Beschriftung aus einem Lokalisierungsschlüssel, mit scripted = yes. Die Wirkung kommt aus „Custom GUI anlegen“ (custom_button mit effect, trigger, tooltip); so im Spiel geprüft (Probe 2026-10-30), in Fenstern, in denen Custom GUI liest. Vorbild: interface/colonisationpanel.gui, interface/countrymissionsview.gui
+# param: name | Name | my_button
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_BUTTON
+# requires: GFX_button_straight_87_32, vic_18
+
+guiButtonType = {
+	name = "$name$"
+	position = { x = 30 y = 160 }
+	quadTextureSprite = "GFX_button_straight_87_32"
+	buttonText = "$text$"
+	buttonFont = "vic_18"
+	Orientation = "UPPER_LEFT"
+	scripted = yes
+}

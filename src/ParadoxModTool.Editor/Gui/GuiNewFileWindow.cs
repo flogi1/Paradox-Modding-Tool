@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Blocks;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Index;
 
 namespace ParadoxModTool.Editor.Gui;
@@ -22,16 +23,22 @@ public sealed class GuiNewFileWindow : Window
     private readonly ListBox _list = new() { Width = 280, Height = 150, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 2) };
     private readonly TextBlock _description = new() { TextWrapping = TextWrapping.Wrap, Width = 280, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 8) };
     private readonly TextBlock _error = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly TextBox _subfolder = new() { MinWidth = 280, Margin = new Thickness(0, 2, 0, 8) };
     private readonly IReadOnlyList<GuiBlock> _blocks;
     private readonly GuiLayout _layout;
+    private readonly GuiIndex? _index;
     private List<GuiBlock> _offered = new();
 
     /// <param name="blocks">Wirksame Bausteine der Bibliothek; angeboten werden die fehlerfreien, vorgewählt "Fenster", sonst "Leere Datei".</param>
     /// <param name="layout">Kontextordner des Spiels; im flachen Layout (Crusader Kings III) gibt es keine Kontextauswahl, die Datei kommt nach gui/.</param>
-    /// <param name="layout">Kontextordner des Spiels; im flachen Layout (Crusader Kings III) gibt es keine Kontextauswahl, die Datei kommt nach gui/.</param>
-    public GuiNewFileWindow(string modRoot, IReadOnlyList<GuiBlock> blocks, GuiLayout? layout = null)
+    /// <param name="index">
+    /// Klassisch: GUI-Index des Arbeitsbereichs; damit lehnt der Dialog einen Pfad ab, den das Spiel oder eine Abhängigkeit schon hat (die Mod-Datei ersetzte
+    /// sie samt Fenstern), und einen Fensternamen, den es schon gibt. Ohne Index entfällt diese Prüfung.
+    /// </param>
+    public GuiNewFileWindow(string modRoot, IReadOnlyList<GuiBlock> blocks, GuiLayout? layout = null, GuiIndex? index = null)
     {
         _modRoot = modRoot;
+        _index = index;
         _layout = layout ?? GuiLayout.Default;
         _context.ItemsSource = _layout.Contexts;
         _context.SelectedIndex = _layout.IsFlat ? -1 : 0;
@@ -51,8 +58,9 @@ public sealed class GuiNewFileWindow : Window
         var target = new TextBlock { Text = GuiTexts.NewFileTarget(Folder), TextWrapping = TextWrapping.Wrap, MaxWidth = 460, Margin = new Thickness(0, 0, 0, 6) };
         _context.ToolTip = GuiTexts.NewFileContextTip;
         _context.SelectionChanged += (_, _) => target.Text = GuiTexts.NewFileTarget(Folder);
+        _subfolder.TextChanged += (_, _) => target.Text = GuiTexts.NewFileTarget(Folder);
         target.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
-        var hint = new TextBlock { Text = GuiTexts.NewFileHint, TextWrapping = TextWrapping.Wrap, MaxWidth = 460 };
+        var hint = new TextBlock { Text = Hint, TextWrapping = TextWrapping.Wrap, MaxWidth = 460 };
         hint.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
 
         var create = new Button { Content = GuiTexts.NewFileCreate, IsDefault = true, MinWidth = 90, Padding = new Thickness(8, 2, 8, 2) };
@@ -71,16 +79,26 @@ public sealed class GuiNewFileWindow : Window
         var panel = new StackPanel { Margin = new Thickness(14) };
         panel.Children.Add(new TextBlock { Text = GuiTexts.NewFileName });
         panel.Children.Add(_name);
-        if (!_layout.IsFlat)
+        if (_layout.IsClassic)
         {
-            panel.Children.Add(new TextBlock { Text = GuiTexts.NewFileContext });
-            panel.Children.Add(_context);
+            // Klassisch gibt es weder Kontextordner noch Bausteinauswahl: Die Datei kommt nach interface und enthält das Fenster aus dem Baustein "Fenster".
+            panel.Children.Add(new TextBlock { Text = GuiTexts.NewFileSubfolder });
+            panel.Children.Add(_subfolder);
+        }
+        else
+        {
+            if (!_layout.IsFlat)
+            {
+                panel.Children.Add(new TextBlock { Text = GuiTexts.NewFileContext });
+                panel.Children.Add(_context);
+            }
+
+            panel.Children.Add(new TextBlock { Text = GuiTexts.NewFileBlock });
+            panel.Children.Add(_search);
+            panel.Children.Add(_list);
+            panel.Children.Add(_description);
         }
 
-        panel.Children.Add(new TextBlock { Text = GuiTexts.NewFileBlock });
-        panel.Children.Add(_search);
-        panel.Children.Add(_list);
-        panel.Children.Add(_description);
         panel.Children.Add(target);
         panel.Children.Add(hint);
         panel.Children.Add(_error);
@@ -134,27 +152,78 @@ public sealed class GuiNewFileWindow : Window
         _ => block.Name,
     };
 
-    /// <summary>Ordner der neuen Datei: <c>&lt;Mod&gt;/&lt;Kontext&gt;/gui</c>.</summary>
-    public string Folder => GuiContexts.GuiFolder(_modRoot, _context.SelectedItem as string ?? GuiContexts.DefaultOf(_layout));
+    /// <summary>Hinweistext: klassisch mit dem Namen der Aktion, die das Fenster ins Spiel bringt (Scripted GUI anlegen, In Vanilla-Fenster einbauen).</summary>
+    public string Hint => _layout.IsClassic ? GuiTexts.NewFileClassicHint(ClassicNewFile.ScriptActionName(_layout)) : GuiTexts.NewFileHint;
 
-    private bool Validate()
+    /// <summary>Klassisch: Unterordner von <c>interface</c> (leer = <c>interface</c> selbst).</summary>
+    public string Subfolder
+    {
+        get => _subfolder.Text.Trim();
+        set => _subfolder.Text = value;
+    }
+
+    /// <summary>Dateiname wie eingegeben (für Tests).</summary>
+    public string NameText
+    {
+        get => _name.Text;
+        set => _name.Text = value;
+    }
+
+    /// <summary>Ordner der neuen Datei: <c>&lt;Mod&gt;/&lt;Kontext&gt;/gui</c>, klassisch <c>&lt;Mod&gt;/interface[/&lt;Unterordner&gt;]</c>.</summary>
+    public string Folder => _layout.IsClassic
+        ? ClassicNewFile.Folder(_modRoot, ClassicNewFile.SubfolderProblem(_modRoot, _layout, Subfolder) is null ? Subfolder : null)
+        : GuiContexts.GuiFolder(_modRoot, _context.SelectedItem as string ?? GuiContexts.DefaultOf(_layout));
+
+    /// <summary>Fehlertext der Eingabe oder <see langword="null"/>, wenn die Datei angelegt werden kann.</summary>
+    public string? Problem()
     {
         var name = _name.Text.Trim();
         var stem = name.EndsWith(".gui", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
-        string? error = null;
         if (stem.Trim().Length == 0 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
         {
-            error = GuiTexts.NewFileInvalidName;
-        }
-        else if (File.Exists(Path.Combine(Folder, FileName)))
-        {
-            error = GuiTexts.NewFileExists(FileName);
-        }
-        else if (Block is null)
-        {
-            error = GuiTexts.NewFileNoBlock;
+            return GuiTexts.NewFileInvalidName;
         }
 
+        if (_layout.IsClassic && ClassicNewFile.SubfolderProblem(_modRoot, _layout, Subfolder) is { } subfolder)
+        {
+            return subfolder;
+        }
+
+        if (File.Exists(Path.Combine(Folder, FileName)))
+        {
+            return GuiTexts.NewFileExists(FileName);
+        }
+
+        if (_layout.IsClassic && _index is not null && ClassicCollision() is { } collision)
+        {
+            return collision;
+        }
+
+        return _layout.IsClassic || Block is not null ? null : GuiTexts.NewFileNoBlock;
+    }
+
+    /// <summary>
+    /// Klassisch: Eine Mod-Datei mit dem Pfad einer Datei des Spiels oder einer Abhängigkeit ersetzt diese samt allen Fenstern darin; das neue Fenster heißt wie
+    /// der Dateiname (<see cref="GuiBlockNames.WidgetNameFor"/>) und darf kein vorhandenes oberstes Fenster doppeln. Groß-/Kleinschreibung zählt nicht.
+    /// </summary>
+    private string? ClassicCollision()
+    {
+        var relative = ClassicNewFile.RelativePath(ClassicNewFile.SubfolderProblem(_modRoot, _layout, Subfolder) is null ? Subfolder : null, FileName);
+        if (_index!.Files.Any(f => f.Layer != GuiLayer.Mod && string.Equals(f.RelativePath, relative, StringComparison.OrdinalIgnoreCase)))
+        {
+            return GuiTexts.NewFileShadowsGameFile(relative);
+        }
+
+        var window = GuiBlockNames.WidgetNameFor(FileName);
+        return _index.Definitions.Any(d => d.Kind == GuiDefinitionKind.NamedWidget && d.IsTopLevel && ClassicWindows.IsWindow(d.Node)
+                && string.Equals(ClassicWindows.NameOf(d.Node), window, StringComparison.OrdinalIgnoreCase))
+            ? GuiTexts.NewFileWindowTaken(window)
+            : null;
+    }
+
+    private bool Validate()
+    {
+        var error = Problem();
         _error.Text = error ?? string.Empty;
         _error.Visibility = error is null ? Visibility.Collapsed : Visibility.Visible;
         return error is null;

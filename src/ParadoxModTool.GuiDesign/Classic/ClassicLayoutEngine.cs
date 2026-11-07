@@ -1,3 +1,4 @@
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Layout;
 using ParadoxModTool.GuiDesign.Resolve;
 using ParadoxModTool.GuiDesign.Syntax;
@@ -91,7 +92,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
             return null;
         }
 
-        var notes = new List<string>();
+        var notes = new NoteList();
         var kind = KindOf(element);
         if (kind == Kind.Approximated)
         {
@@ -123,14 +124,14 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
                 : kind == Kind.Text && shape.Text is { } text ? TextVisual(text, shape.Width, shape.Height) : null,
         };
         Remember(box, rect, drawn);
-        box.Notes.AddRange(notes);
+        AddNotes(box, notes);
         Arrange(element, props, kind, shape, box, rect);
         box.Notes.AddRange(props.Notes);
         return box;
     }
 
     /// <summary>Position (vor dem Anker) und Größe eines Elements; legt dabei Sprite und Text fest.</summary>
-    private Shape Compute(ResolvedElement element, ClassicElementProps props, Kind kind, Rect content, List<string> notes)
+    private Shape Compute(ResolvedElement element, ClassicElementProps props, Kind kind, Rect content, NoteList notes)
     {
         var position = Position(props, notes);
         var sprite = kind is Kind.Icon or Kind.Button or Kind.Approximated ? FindSprite(props, notes, required: kind != Kind.Approximated) : null;
@@ -230,7 +231,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
                 continue;
             }
 
-            var shape = Compute(child, childProps, KindOf(child), default, new List<string>());
+            var shape = Compute(child, childProps, KindOf(child), default, new NoteList());
             right = Math.Max(right, shape.Position.X + shape.Width);
             bottom = Math.Max(bottom, shape.Position.Y + shape.Height);
             any = true;
@@ -319,7 +320,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
             return null;
         }
 
-        var notes = new List<string>();
+        var notes = new NoteList();
         var sprite = FindSprite(props, notes, required: true);
         var drawn = Drawn(sprite, parent, notes);
         var box = new LayoutBox
@@ -332,7 +333,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
             Visual = sprite is null ? null : SpriteVisual(sprite, props, background: true, notes),
         };
         Remember(box, parent, drawn);
-        box.Notes.AddRange(notes);
+        AddNotes(box, notes);
         box.Notes.AddRange(props.Notes);
         return box;
     }
@@ -405,7 +406,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         return 0;
     }
 
-    private static (double X, double Y) Anchor(ClassicElementProps props, Rect content, (double X, double Y) position, double width, double height, List<string> notes)
+    private static (double X, double Y) Anchor(ClassicElementProps props, Rect content, (double X, double Y) position, double width, double height, NoteList notes)
     {
         var (ox, oy) = Factors(props.Scalar("orientation"), notes);
         var (gx, gy) = Factors(props.Scalar("origo"), notes);
@@ -420,7 +421,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         return (x, y);
     }
 
-    private static (double X, double Y) Factors(string? value, List<string> notes)
+    private static (double X, double Y) Factors(string? value, NoteList notes)
     {
         if (value is null)
         {
@@ -429,7 +430,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
 
         if (!ClassicAnchors.TryParse(value, out var fx, out var fy, out var alias))
         {
-            notes.Add(GuiTexts.ClassicAnchorUnknown(ClassicAnchors.Clean(value)));
+            notes.Add(GuiTexts.ClassicAnchorUnknown(ClassicAnchors.Clean(value)), GuiFindingKind.AnchorUnknown);
             return (0, 0);
         }
 
@@ -543,7 +544,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         return new Rect(rect.X + left, rect.Y + top, Math.Max(0, rect.W - left - right), Math.Max(0, rect.H - top - bottom));
     }
 
-    private SpriteRef? FindSprite(ClassicElementProps props, List<string> notes, bool required)
+    private SpriteRef? FindSprite(ClassicElementProps props, NoteList notes, bool required)
     {
         var name = props.Scalar("spriteType") ?? props.Scalar("quadTextureSprite");
         if (string.IsNullOrEmpty(name))
@@ -554,7 +555,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         var (sprite, caseMismatch) = _assets.Sprites.Find(name);
         if (sprite is null)
         {
-            notes.Add(GuiTexts.ClassicSpriteMissing(name));
+            notes.Add(GuiTexts.ClassicSpriteMissing(name), GuiFindingKind.SpriteMissing);
             return new SpriteRef(name, null, null, null);
         }
 
@@ -571,7 +572,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         var path = string.IsNullOrEmpty(sprite.TexturePath) ? null : _assets.Textures.Locate(sprite.TexturePath);
         if (path is null)
         {
-            notes.Add(GuiTexts.ClassicTextureMissing(sprite.TexturePath ?? string.Empty));
+            notes.Add(GuiTexts.ClassicTextureMissing(sprite.TexturePath ?? string.Empty), GuiFindingKind.TextureMissing);
             return new SpriteRef(name, sprite, null, null);
         }
 
@@ -585,7 +586,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         return new SpriteRef(name, sprite, path, size);
     }
 
-    private static GuiSpriteVisual SpriteVisual(SpriteRef sprite, ClassicElementProps props, bool background, List<string> notes)
+    private static GuiSpriteVisual SpriteVisual(SpriteRef sprite, ClassicElementProps props, bool background, NoteList notes)
     {
         if (sprite.Sprite is not { } found)
         {
@@ -601,7 +602,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         }
         else if (frame > frames)
         {
-            notes.Add(GuiTexts.ClassicFrameClamped(frame, frames));
+            notes.Add(GuiTexts.ClassicFrameClamped(frame, frames), GuiFindingKind.FrameOutOfRange);
             frame = frames;
         }
 
@@ -613,7 +614,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
     /// sonst <c>text</c>/<c>font</c> (HOI IV <c>single_player_button</c>). Textfelder brechen an Leerzeichen innerhalb von <c>maxWidth</c> um. Gemessen mit
     /// der Bitmap-Schrift, ohne Farbcodes.
     /// </summary>
-    private TextRef? FindText(ClassicElementProps props, Kind kind, List<string> notes)
+    private TextRef? FindText(ClassicElementProps props, Kind kind, NoteList notes)
     {
         var button = kind == Kind.Button;
         var key = (button ? props.Scalar("buttonText") ?? props.Scalar("text") : props.Scalar("text")) ?? string.Empty;
@@ -637,7 +638,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         }
         else
         {
-            notes.Add(GuiTexts.ClassicFontMissing(fontName ?? string.Empty));
+            notes.Add(GuiTexts.ClassicFontMissing(fontName ?? string.Empty), GuiFindingKind.FontMissing);
             measure = line => ClassicText.StripColorCodes(line).Length * 7;
             lineHeight = 20;
         }
@@ -653,7 +654,7 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         }
         else if (unknownFormat)
         {
-            notes.Add(GuiTexts.ClassicFormatUnknown(rawFormat));
+            notes.Add(GuiTexts.ClassicFormatUnknown(rawFormat), GuiFindingKind.FormatUnknown);
         }
 
         var text = new TextRef(lines, fontName, format, maxWidth is > 0 ? maxWidth : null, maxHeight is > 0 ? maxHeight : null, lineHeight, measure);
@@ -753,6 +754,25 @@ public sealed class ClassicLayoutEngine : IGuiLayoutEngine
         element.Role != GuiRole.WidgetHolder && string.Equals(element.Key, "background", StringComparison.OrdinalIgnoreCase);
 
     private static double Finite(double value) => double.IsFinite(value) ? Math.Max(0, value) : 0;
+
+    /// <summary>Hinweise eines Kastens auf einen Rutsch an den Kasten: Text in <see cref="LayoutBox.Notes"/>, die Arten in <see cref="LayoutBox.NoteKinds"/>.</summary>
+    private static void AddNotes(LayoutBox box, NoteList notes)
+    {
+        box.Notes.AddRange(notes);
+        box.NoteKinds.AddRange(notes.Kinds);
+    }
+
+    /// <summary>Hinweise beim Legen eines Elements; echte Probleme tragen ihre Befund-Art daneben (Annäherungen nicht).</summary>
+    private sealed class NoteList : List<string>
+    {
+        public List<LayoutNoteKind> Kinds { get; } = new();
+
+        public void Add(string text, GuiFindingKind kind)
+        {
+            Add(text);
+            Kinds.Add(new LayoutNoteKind(kind, text));
+        }
+    }
 
     private readonly record struct Rect(double X, double Y, double W, double H);
 

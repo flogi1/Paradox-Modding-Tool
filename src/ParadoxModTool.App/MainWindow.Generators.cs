@@ -49,6 +49,7 @@ public partial class MainWindow
                 () => _activeProfile?.LocalizationLanguages ?? new List<string>(),
                 PromptForGameExecutablePath)) { Owner = this };
             _packageEditor.Closed += (_, _) => _packageEditor = null;
+            _packageEditor.PackagesChanged += (_, _) => RefreshGeneratorPackageCount();
         }
 
         if (_packageEditor.IsVisible)
@@ -214,6 +215,22 @@ public partial class MainWindow
 
         _history.Record(action);
         ReloadOpenTabsAffectedBy(action);
+        // Gelöschte Dateien (nach "migrate"): ihre Tabs schließen, sonst legt ein späteres Speichern die Datei still wieder an.
+        // Ungespeicherte Änderungen gibt es hier nicht, die Prüfung oben hat den Plan sonst abgewiesen.
+        var deleted = plan.Files.Where(f => f.Delete).Select(f => Path.Combine(plan.WriteRoot, f.RelativePath.Replace('/', Path.DirectorySeparatorChar))).ToList();
+        if (deleted.Count > 0)
+        {
+            foreach (var pane in AllPanes)
+            {
+                foreach (var document in pane.Documents.Where(d => d.FilePath is not null && deleted.Any(p => EditorPane.PathsEqual(d.FilePath, p))).ToList())
+                {
+                    pane.CloseDocument(document);
+                }
+            }
+
+            SyncRecovery();
+        }
+
         // Die Sicherung einer externen Datei zählt nicht als geschriebene Datei
         return new FixOutcome(true, GeneratorTexts.Written(written.Count(w => w is not ExternalBackupAction)));
     }

@@ -8,9 +8,9 @@ public sealed record UpdateFile(string RelativePath, string VanillaFullPath, str
 
 /// <summary>
 /// Ergebnis von <see cref="VanillaUpdateRun.Scan"/>: Dateien, deren Vanilla-Fassung sich seit der alten Version geändert hat; Dateien ohne alte
-/// Fassung; Mod-Dateien, deren Vanilla-Datei es nicht mehr gibt; alle gespeicherten Versionen unter der aktuellen (Auswahl im Startfenster).
+/// Fassung; alle gespeicherten Versionen unter der aktuellen (Auswahl im Startfenster).
 /// </summary>
-public sealed record UpdateScan(IReadOnlyList<UpdateFile> Changed, IReadOnlyList<UpdateFile> WithoutOldVersion, IReadOnlyList<string> RemovedInVanilla, IReadOnlyList<string> RecordedVersionsBelowCurrent);
+public sealed record UpdateScan(IReadOnlyList<UpdateFile> Changed, IReadOnlyList<UpdateFile> WithoutOldVersion, IReadOnlyList<string> RecordedVersionsBelowCurrent);
 
 /// <summary>Findet die Dateien eines Update-Laufs und legt seine Ordner an (Spec 2026-09-30-vanilla-update-merge, Abschnitte 3, 4 und 7.2).</summary>
 public static class VanillaUpdateRun
@@ -18,8 +18,6 @@ public static class VanillaUpdateRun
     /// <param name="forcedOldVersion">Im Startfenster gewählte Version für alle Dateien; <see langword="null"/> = je Datei automatisch.</param>
     public static UpdateScan Scan(
         IReadOnlyList<OverriddenFile> overridden,
-        IEnumerable<string> modRelativePaths,
-        string vanillaRoot,
         VanillaHistoryStore store,
         string currentVersion,
         VanillaVersionLedger ledger,
@@ -55,19 +53,12 @@ public static class VanillaUpdateRun
             }
         }
 
-        var present = overridden.Select(f => Norm(f.RelativePath)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var removed = modRelativePaths
-            .Where(p => !present.Contains(Norm(p)) && !File.Exists(Path.Combine(vanillaRoot, p.Replace('/', Path.DirectorySeparatorChar))))
-            .Where(p => store.ListRecordedVersions(p).Count > 0)
-            .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
         var versions = below
             .GroupBy(v => GameVersionComparer.Normalize(v) ?? v, StringComparer.Ordinal)
             .Select(g => g.First())
             .OrderByDescending(v => v, comparer)
             .ToList();
-        return new UpdateScan(changed, without, removed, versions);
+        return new UpdateScan(changed, without, versions);
     }
 
     /// <summary>

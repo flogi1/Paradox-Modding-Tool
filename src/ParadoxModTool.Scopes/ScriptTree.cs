@@ -69,6 +69,28 @@ public static class ScopeLexer
                 continue;
             }
 
+            // \"…\" außerhalb eines Strings: Skript in einem mehrzeiligen String (EU IV effect = "…") mit maskierten Anführungszeichen.
+            // Endet am nächsten \" oder am Zeilenende, sonst schluckte der normale String die schließende Klammer dahinter.
+            if (c == '\\' && i + 1 < n && text[i + 1] == '"')
+            {
+                var start = i;
+                i += 2;
+                var valueStart = i;
+                while (i < n && text[i] != '\n' && !(text[i] == '\\' && i + 1 < n && text[i + 1] == '"'))
+                {
+                    i++;
+                }
+
+                var value = text[valueStart..i];
+                if (i < n && text[i] == '\\')
+                {
+                    i += 2;
+                }
+
+                tokens.Add(new ScopeToken(ScopeTokenKind.String, value, start, i));
+                continue;
+            }
+
             if (c == '{')
             {
                 tokens.Add(new ScopeToken(ScopeTokenKind.Open, "{", i, i + 1));

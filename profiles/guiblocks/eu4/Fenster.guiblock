@@ -1,0 +1,41 @@
+# block: Fenster
+# group: Fenster
+# description: Fenster mit Hintergrund-Icon, Titel und Schließen-Knopf. Der Hintergrund ist ein iconType-Kind (nie backGround mit einem Sprite-Namen: daran stürzte EU IV in der Probe 2026-10-30 ab). EU IV zeigt ein Mod-Fenster nur als Kind eines Spielfensters, in dem Custom GUI liest („In Vanilla-Fenster einbauen…“); der Schließen-Knopf wirkt dann über „Custom GUI anlegen“ mit einem Effekt, der die potential-Bedingung des Fensters falsch macht (nicht im Spiel gemessen). Das Fenster trägt scripted = yes wie in der Probe 2026-10-30 (Kindfenster mit custom_window, im Spiel geprüft). Vorbild: interface/countrynativesview.gui, interface/countrydiplomacyview.gui
+# param: name | Name des Fensters | my_window
+# param: title | Titel (Lokalisierungsschlüssel) | MY_WINDOW_TITLE
+# requires: GFX_court_view_select_advisor_bg, vic_22, GFX_closebutton2
+
+windowType = {
+	name = "$name$"
+	position = { x = 0 y = 0 }
+	size = { x = 573 y = 589 }
+	Orientation = "UPPER_LEFT"
+	moveable = 1
+	scripted = yes
+
+	iconType = {
+		name = "$name$_bg"
+		spriteType = "GFX_court_view_select_advisor_bg"
+		position = { x = 0 y = 0 }
+		Orientation = "UPPER_LEFT"
+	}
+
+	instantTextBoxType = {
+		name = "$name$_title"
+		position = { x = 30 y = 30 }
+		font = "vic_22"
+		text = "$title$"
+		maxWidth = 460
+		maxHeight = 32
+		format = left
+	}
+
+	guiButtonType = {
+		name = "$name$_close_button"
+		position = { x = 520 y = 24 }
+		quadTextureSprite = "GFX_closebutton2"
+		Orientation = "UPPER_LEFT"
+		clicksound = close_window
+		scripted = yes
+	}
+}

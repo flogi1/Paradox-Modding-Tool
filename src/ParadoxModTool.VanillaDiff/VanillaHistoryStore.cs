@@ -84,6 +84,33 @@ public sealed class VanillaHistoryStore
     public bool HasSnapshot(string relativePath, string gameVersion) =>
         File.Exists(Path.Combine(_historyRoot, SanitizeRelativePathForFolder(relativePath), SanitizeForFileName(gameVersion) + ".txt"));
 
+    /// <summary>Datei der Verzeichnisliste für eine Spielversion (<see cref="VanillaStructureListing"/>); der Punkt-Ordner kollidiert nicht mit den Snapshot-Ordnern.</summary>
+    public string StructureListingPath(string gameVersion) =>
+        Path.Combine(_historyRoot, ".pmt-structure", SanitizeForFileName(gameVersion) + ".txt");
+
+    public bool HasStructureListing(string gameVersion) => File.Exists(StructureListingPath(gameVersion));
+
+    /// <summary>
+    /// Spielversionen mit gespeicherter Verzeichnisliste (bereinigte Namen wie im Dateinamen, alphabetisch); nur genau "*.txt",
+    /// eine liegengebliebene "*.txt.tmp" eines abgebrochenen Speicherns zählt nicht.
+    /// </summary>
+    public IReadOnlyList<string> ListStructureListingVersions()
+    {
+        var dir = Path.Combine(_historyRoot, ".pmt-structure");
+        if (!Directory.Exists(dir))
+        {
+            return Array.Empty<string>();
+        }
+
+        return Directory.EnumerateFiles(dir, "*.txt")
+            .Where(file => string.Equals(Path.GetExtension(file), ".txt", StringComparison.OrdinalIgnoreCase))
+            .Select(Path.GetFileNameWithoutExtension)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Select(name => name!)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     private static string SanitizeRelativePathForFolder(string relativePath) =>
         relativePath.Replace('\\', '/').Replace('/', '_');
 

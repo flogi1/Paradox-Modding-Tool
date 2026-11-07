@@ -1,0 +1,15 @@
+# block: Knopf mit Text
+# group: Bedienelemente
+# description: Knopf mit Beschriftung aus einem Lokalisierungsschlüssel. Die Wirkung kommt aus einem Scripted GUI: „Scripted GUI anlegen…“ am Fenster, dann „Effekt anlegen“ am Knopf ergibt den Effekt <name>_click (so im Spiel geprüft, Probe 2026-10-30). Vorbild: interface/frontendmainview.gui
+# param: name | Name | my_button
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_BUTTON
+# requires: GFX_button_238x38, hoi_18mbs
+
+buttonType = {
+	name = "$name$"
+	position = { x = 20 y = 160 }
+	quadTextureSprite = "GFX_button_238x38"
+	buttonText = "$text$"
+	buttonFont = "hoi_18mbs"
+	Orientation = "UPPER_LEFT"
+}

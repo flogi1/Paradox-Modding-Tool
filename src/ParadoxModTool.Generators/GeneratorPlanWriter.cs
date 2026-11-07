@@ -4,7 +4,7 @@ using ParadoxModTool.UndoRedo;
 namespace ParadoxModTool.Generators;
 
 /// <summary>
-/// Macht aus einem Plan einen Rückgängig-Schritt (neue und geänderte Texte und Binärdateien) und prüft, ob sich Dateien seit der Vorschau geändert haben.
+/// Macht aus einem Plan einen Rückgängig-Schritt (neue und geänderte Texte und Binärdateien, Löschungen nach <c>migrate</c>) und prüft, ob sich Dateien seit der Vorschau geändert haben.
 /// Vor dem Überschreiben einer externen Datei legt der Schritt eine Sicherung im Ordner <c>backups</c> neben ihr an (<see cref="ExternalBackupAction"/>).
 /// </summary>
 public static class GeneratorPlanWriter
@@ -16,6 +16,12 @@ public static class GeneratorPlanWriter
         var actions = new List<IUndoableAction>();
         foreach (var file in ToWrite(plan))
         {
+            if (file.Delete)
+            {
+                actions.Add(new FileDeleteUndoableAction(description, FullPath(plan, file)));
+                continue;
+            }
+
             var encoding = TextFile.EncodingFor(file.HasBom, file.EncodingName);
             if (file.ExternalPath is { } external && file.OriginalText is not null)
             {

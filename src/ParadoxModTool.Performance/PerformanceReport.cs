@@ -17,9 +17,9 @@ public static class PerformanceReport
     /// <summary>
     /// Kopfzeile mit Laufname und Monaten, die Eigenzeit je Herkunft (eine Zeile je <see cref="RowOrigin"/>, dazu Summe und Mod-Seite)
     /// und zwei Ranglisten nach Gesamtzeit mit je den <paramref name="top"/> ersten Zeilen: zuerst nur die Mod-Seite (Mod und Both, Standard laut Spec),
-    /// dann alle Herkünfte (damit auch ein Vanilla-Basislauf etwas zeigt).
+    /// dann alle Herkünfte (damit auch ein Vanilla-Basislauf etwas zeigt). Mit <paramref name="hints"/> oder <paramref name="hintsNote"/> folgt ein Block "Hinweise".
     /// </summary>
-    public static string Summary(string runName, ProfilingSummary summary, RunDuration duration, int top)
+    public static string Summary(string runName, ProfilingSummary summary, RunDuration duration, int top, IReadOnlyList<PerformanceHint>? hints = null, string? hintsNote = null)
     {
         var report = new StringBuilder();
         report.AppendLine(PerformanceTexts.ReportHeader(runName, duration.Months));
@@ -38,7 +38,30 @@ public static class PerformanceReport
         report.AppendLine();
         report.AppendLine(PerformanceTexts.ReportTopAllTitle(top));
         AppendRanked(report, summary.Rank(RankBy.Total, AllOrigins, top));
+        AppendHints(report, hints, hintsNote);
         return report.ToString();
+    }
+
+    /// <summary>Block "Hinweise": je Hinweis eine Zeile mit Schwere, Fundstelle und Titel, darunter eingerückt die Erklärung; danach die Notiz. Ohne Hinweise und Notiz entfällt der Block.</summary>
+    private static void AppendHints(StringBuilder report, IReadOnlyList<PerformanceHint>? hints, string? note)
+    {
+        if ((hints is null || hints.Count == 0) && note is null)
+        {
+            return;
+        }
+
+        report.AppendLine();
+        report.AppendLine(PerformanceTexts.ReportHintsTitle(hints?.Count ?? 0));
+        foreach (var hint in hints ?? Array.Empty<PerformanceHint>())
+        {
+            report.AppendLine(PerformanceTexts.ReportHintLine(hint.Severity, hint.Path, hint.Line, hint.Title));
+            report.AppendLine("  " + hint.Detail);
+        }
+
+        if (note is not null)
+        {
+            report.AppendLine(note);
+        }
     }
 
     private static void AppendRanked(StringBuilder report, IReadOnlyList<RankedRow> ranked)

@@ -1,0 +1,51 @@
+<UserControl x:Class="ParadoxModTool.App.ReferenceTreePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ParadoxModTool.App">
+    <!--
+        Verweisbaum im Reiter "Verweise" der rechten Leiste (Mockup Variante A): oben Zurück, Eingabefeld und Neu laden, darunter die
+        Statuszeile, dann der Baum. Kinder lädt erst das Aufklappen (Platzhalter, siehe ReferenceTreeItem); der Baum virtualisiert.
+    -->
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+            <Button x:Name="BackButton" DockPanel.Dock="Left" Content="◀" Padding="5,0" Click="Back_Click" />
+            <Button x:Name="RefreshButton" DockPanel.Dock="Right" Content="⟳" Padding="5,0" Click="Refresh_Click" />
+            <TextBox x:Name="InputBox" Margin="4,0" VerticalContentAlignment="Center" KeyDown="InputBox_KeyDown" />
+        </DockPanel>
+
+        <TextBlock x:Name="StatusLine" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,4" Visibility="Collapsed"
+                   Foreground="{DynamicResource Theme.TextMuted}" />
+
+        <!-- Die Theme-Vorlage scrollt nur mit IsVirtualizing inhaltsweise (Trigger in Themes/Controls.xaml); Panels hier ausdrücklich virtualisierend. -->
+        <TreeView x:Name="Tree"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  VirtualizingPanel.ScrollUnit="Pixel"
+                  PreviewMouseLeftButtonDown="Tree_PreviewMouseLeftButtonDown"
+                  ContextMenuOpening="Tree_ContextMenuOpening">
+            <TreeView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </TreeView.ItemsPanel>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type local:ReferenceTreeItem}" ItemsSource="{Binding Children}">
+                    <!-- TextBlock: Namen mit "_" bleiben unverändert (keine Zugriffstaste). -->
+                    <TextBlock Text="{Binding Text}" ToolTip="{Binding Tooltip}" />
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+    </DockPanel>
+</UserControl>

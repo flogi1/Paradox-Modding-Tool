@@ -21,7 +21,7 @@ namespace ParadoxModTool.Editor.Gui;
 /// Leiste unter der Eigenschaftenliste (Plan-Ruling 3, 4, 5): Geltungsbereich "Diese Stelle", Eingabefeld passend zur Eigenschaft,
 /// Übernehmen, Zurücksetzen und "Eigenschaft hinzufügen". Schreibt nie selbst, sondern meldet <see cref="GuiDesignerAction"/>s.
 /// </summary>
-public sealed class GuiPropertyEditor : UserControl
+public sealed partial class GuiPropertyEditor : UserControl
 {
     private static readonly GuiPropertyCatalog EmptyCatalog = new();
     private readonly TextBlock _scope = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(4, 4, 4, 2) };
@@ -54,8 +54,20 @@ public sealed class GuiPropertyEditor : UserControl
     private readonly ClassicExplainBox _explain = new() { Visibility = Visibility.Collapsed };
     private GuiSpriteVisual? _sprite;
 
+    // Klassisch (HOI IV): Scripted-GUI-Verbindungen des gewählten Elements, je eine Zeile mit Sprung zur Stelle im Skript.
+    private readonly StackPanel _scripted = new() { Margin = new Thickness(4, 0, 4, 2), Visibility = Visibility.Collapsed };
+
+    /// <summary>Der Custom-GUI-Index, auf den <see cref="RefreshWhenCustomGuisReady"/> schon wartet.</summary>
+    private Task<CustomGuiIndex>? _awaitedCustomGuis;
+
+    /// <summary>Der Scripted-GUI-Index (HOI IV), auf den <see cref="RefreshWhenScriptedGuisReady"/> schon wartet.</summary>
+    private Task<ScriptedGuiIndex>? _awaitedScriptedGuis;
+
     public GuiPropertyEditor()
     {
+        // Neuer Arbeitsbereich (z. B. nach "Custom GUI anlegen" neu gelesene Skripte): Bereich Scripted/Custom GUI neu, solange das Feld sichtbar ist.
+        Loaded += (_, _) => GuiSettings.Changed += OnGuiSettingsChanged;
+        Unloaded += (_, _) => GuiSettings.Changed -= OnGuiSettingsChanged;
         _scope.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
         _scope.ToolTip = GuiTexts.ScopeTip;
         _apply.Content = GuiTexts.PropertyApply;
@@ -131,6 +143,7 @@ public sealed class GuiPropertyEditor : UserControl
         scopeRow.Children.Add(_scopeButtons);
         scopeRow.Children.Add(_scope);
         panel.Children.Add(scopeRow);
+        panel.Children.Add(_scripted);
         panel.Children.Add(_adapt);
         panel.Children.Add(editRow);
         panel.Children.Add(_explain);
@@ -157,6 +170,12 @@ public sealed class GuiPropertyEditor : UserControl
     /// <summary>Ein Vanilla-Beispiel im Erklärungsfeld wurde angeklickt (klassisch): Datei und Zeile zum Öffnen.</summary>
     public event EventHandler<GuiOrigin>? ExampleActivated;
 
+    /// <summary>Eine Scripted-GUI-Verbindung angeklickt (klassisch, HOI IV): Skriptdatei und Zeile zum Öffnen.</summary>
+    public event EventHandler<GuiLocationEventArgs>? ScriptLocationRequested;
+
+    /// <summary>Die gezeigten Scripted-GUI-Zeilen (für Tests).</summary>
+    internal IReadOnlyList<TextBlock> ScriptedGuiRows => _scripted.Children.OfType<TextBlock>().Skip(1).ToList();
+
     private static GuiPropertyCatalog Catalog => GuiSettings.Workspace?.Catalog ?? EmptyCatalog;
 
     /// <summary>
@@ -182,11 +201,15 @@ public sealed class GuiPropertyEditor : UserControl
     /// <summary>
     /// Neues gewähltes Element: Geltungsbereich und "Eigenschaft hinzufügen" neu, Eingabe leer. <paramref name="canDerive"/>: ein Widget, von dem
     /// "Neuer Typ" ableiten kann; <paramref name="isTypeInstance"/>: "Typ überall" ist möglich. <paramref name="sprite"/>: das Sprite des Elements
-    /// in der Vorschau (klassisch), für die Skizzen im Erklärungsfeld.
+    /// in der Vorschau (klassisch), für die Skizzen im Erklärungsfeld. <paramref name="jominiSprite"/>: das gezeichnete Sprite des Elements in der Vorschau
+    /// (Jomini), für Bildleiste und Randskizze.
     /// </summary>
-    public void SetElement(GuiNode? selected, ResolvedElement? element, bool editable, bool canDerive = false, bool isTypeInstance = false, GuiSpriteVisual? sprite = null)
+    public void SetElement(
+        GuiNode? selected, ResolvedElement? element, bool editable, bool canDerive = false, bool isTypeInstance = false, GuiSpriteVisual? sprite = null,
+        JominiSpriteVisual? jominiSprite = null)
     {
         _sprite = sprite;
+        _jominiSprite = jominiSprite;
         _selected = selected;
         _element = element;
         _editable = editable;
@@ -207,8 +230,259 @@ public sealed class GuiPropertyEditor : UserControl
         }
 
         UpdateScope();
+        UpdateScriptedGuis();
         ShowFor(null, null);
     }
+
+    /// <summary>
+    /// Klassisch (HOI IV): die Schlüssel der Scripted GUIs, die das gewählte Element meinen, je mit Sprung zur Zeile im Skript. Nur, wenn der Index schon
+    /// fertig ist (er entsteht im Hintergrund; hier wird nie gewartet); sonst, ohne Element oder ohne Verbindung bleibt der Bereich weg.
+    /// </summary>
+    private void UpdateScriptedGuis()
+    {
+        _scripted.Children.Clear();
+        _scripted.Visibility = Visibility.Collapsed;
+        if (GuiSettings.Workspace?.Classic?.CustomGuis is not null)
+        {
+            UpdateCustomGui();
+            return;
+        }
+
+        RefreshWhenScriptedGuisReady();
+        if (!GuiSettings.Layout.IsClassic
+            || _selected is not { } selected
+            || _element is null
+            || GuiSettings.Workspace?.Classic?.ScriptedGuis is not { IsCompletedSuccessfully: true } task
+            || ClassicWindows.EnclosingOf(selected) is not { } window)
+        {
+            return;
+        }
+
+        var name = ClassicWindows.NameOf(selected);
+        var windowName = ClassicWindows.NameOf(window);
+        var bindings = name.Length == 0
+            ? Array.Empty<(ScriptedGuiEntry Entry, ScriptedGuiBinding Binding)>()
+            : task.Result.BindingsFor(windowName, name);
+        if (bindings.Count > 0)
+        {
+            _scripted.Children.Add(new TextBlock { Text = GuiTexts.ScriptedGuiBindingsHeader, FontWeight = FontWeights.SemiBold });
+        }
+
+        foreach (var (entry, binding) in bindings)
+        {
+            var link = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run(GuiTexts.ScriptedGuiBinding(entry.Name, binding.Key, binding.Section)))
+            {
+                ToolTip = GuiTexts.ScriptedGuiBindingTip(Path.GetFileName(entry.FilePath), binding.Line),
+            };
+            var path = entry.FilePath;
+            var line = binding.Line;
+            link.Click += (_, _) => ScriptLocationRequested?.Invoke(this, new GuiLocationEventArgs(path, line));
+            var row = new TextBlock { TextWrapping = TextWrapping.Wrap };
+            row.Inlines.Add(link);
+            _scripted.Children.Add(row);
+        }
+
+        AddScriptButtons(task.Result, selected, window, windowName, name);
+        _scripted.Visibility = _scripted.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// Klassisch (HOI IV, Plan 3 Task 6): "Scripted GUI anlegen…" am obersten Fenster, wenn die Mod noch keinen Eintrag mit diesem <c>window_name</c> hat;
+    /// "Effekt anlegen" an einem Knopf, je Mod-Eintrag des Fensters, der noch kein <c>&lt;Knopf&gt;_click</c> unter <c>effects</c> hat. Ohne die
+    /// Funktionen der App (<see cref="GuiSettings.ScriptedGuiCreator"/>, <see cref="GuiSettings.ScriptedGuiEffectCreator"/>) keine Knöpfe.
+    /// </summary>
+    private void AddScriptButtons(ScriptedGuiIndex index, GuiNode selected, GuiNode window, string windowName, string name)
+    {
+        var modEntries = index.ForWindow(windowName)
+            .Where(e => e.IsMod && string.Equals(e.WindowName, windowName, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (ReferenceEquals(selected, window) && modEntries.Count == 0 && GuiSettings.ScriptedGuiCreator is { } creator)
+        {
+            var buttons = ScriptButtonNames(window);
+            var create = ScriptButton(GuiTexts.ScriptedGuiCreate, GuiTexts.ScriptedGuiCreateTip);
+            create.Click += (_, _) => creator(windowName, buttons);
+            _scripted.Children.Add(create);
+        }
+
+        if (name.Length == 0 || !IsScriptButton(selected) || GuiSettings.ScriptedGuiEffectCreator is not { } effect)
+        {
+            return;
+        }
+
+        var key = name + "_click";
+        foreach (var entry in modEntries.Where(e => !e.Bindings.Any(b => b.Section == "effects" && string.Equals(b.Key, key, StringComparison.OrdinalIgnoreCase))))
+        {
+            var add = ScriptButton(GuiTexts.ScriptedGuiAddEffect(entry.Name), GuiTexts.ScriptedGuiAddEffectTip(key, entry.Name));
+            add.Click += (_, _) => effect(entry, name);
+            _scripted.Children.Add(add);
+        }
+    }
+
+    private static Button ScriptButton(string text, string tip) => new()
+    {
+        Content = text,
+        ToolTip = tip,
+        Padding = new Thickness(6, 1, 6, 1),
+        Margin = new Thickness(0, 2, 0, 2),
+        HorizontalAlignment = HorizontalAlignment.Left,
+    };
+
+    /// <summary>Die "Scripted GUI"-Knöpfe im Bereich (für Tests).</summary>
+    internal IReadOnlyList<Button> ScriptedGuiButtons => _scripted.Children.OfType<Button>().ToList();
+
+    /// <summary>Knöpfe (<c>buttonType</c>, <c>guiButtonType</c>; jede Schreibweise) mit Namen, jede Tiefe, in Textreihenfolge, jeder Name einmal.</summary>
+    public static IReadOnlyList<string> ScriptButtonNames(GuiNode window) =>
+        window.Descendants()
+            .Where(IsScriptButton)
+            .Select(ClassicWindows.NameOf)
+            .Where(n => n.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    private static bool IsScriptButton(GuiNode node) =>
+        node.Kind == GuiNodeKind.KeyedBlock
+        && (string.Equals(node.Name, "buttonType", StringComparison.OrdinalIgnoreCase) || string.Equals(node.Name, "guiButtonType", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Klassisch (EU IV): die <c>custom_*</c>-Einträge mit dem Namen des gewählten Elements, je mit Sprung zur Zeile in <c>common/custom_gui</c>, und das
+    /// unterstützte Fenster mit ROOT und FROM, in dem es liegt (bei <c>scripted = yes</c> ohne solches Fenster ein Hinweis). Nur, wenn der Index schon fertig
+    /// ist (er entsteht im Hintergrund; hier wird nie gewartet); ohne Element oder ohne Eintrag und ohne <c>scripted = yes</c> bleibt der Bereich weg.
+    /// </summary>
+    private void UpdateCustomGui()
+    {
+        RefreshWhenCustomGuisReady();
+        if (!GuiSettings.Layout.IsClassic
+            || _selected is not { } selected
+            || _element is null
+            || GuiSettings.Workspace?.Classic?.CustomGuis is not { IsCompletedSuccessfully: true } task)
+        {
+            return;
+        }
+
+        var name = ClassicWindows.NameOf(selected);
+        var scripted = ParadoxModTool.GuiDesign.Checks.CustomGuiChecks.IsScripted(selected);
+        IReadOnlyList<CustomGuiEntry> entries = name.Length == 0 ? Array.Empty<CustomGuiEntry>() : task.Result.FindAll(name);
+        var actions = CustomGuiButtons(task.Result, selected, name, entries.Count > 0);
+        if (entries.Count == 0 && !scripted && actions.Count == 0)
+        {
+            return;
+        }
+
+        _scripted.Children.Add(new TextBlock { Text = GuiTexts.CustomGuiHeader, FontWeight = FontWeights.SemiBold });
+        foreach (var entry in entries)
+        {
+            var link = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run(GuiTexts.CustomGuiEntry(CustomGuiIndex.BlockName(entry.Kind), entry.Name)))
+            {
+                ToolTip = GuiTexts.ScriptedGuiBindingTip(Path.GetFileName(entry.FilePath), entry.Line),
+            };
+            var path = entry.FilePath;
+            var line = entry.Line;
+            link.Click += (_, _) => ScriptLocationRequested?.Invoke(this, new GuiLocationEventArgs(path, line));
+            var row = new TextBlock { TextWrapping = TextWrapping.Wrap };
+            row.Inlines.Add(link);
+            _scripted.Children.Add(row);
+        }
+
+        if (entries.Count > 0 && !scripted)
+        {
+            var warning = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = GuiTexts.FindingCustomNotScripted(name) };
+            warning.SetResourceReference(TextBlock.ForegroundProperty, "Theme.Warning");
+            _scripted.Children.Add(warning);
+        }
+
+        if (task.Result.Supported.Count > 0)
+        {
+            var window = CustomGuiWindows.Enclosing(task.Result.Supported, selected);
+            _scripted.Children.Add(new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                Text = window is null ? GuiTexts.CustomGuiNoWindow : GuiTexts.CustomGuiWindow(window.WindowName, window.Root, window.From),
+            });
+        }
+
+        foreach (var action in actions)
+        {
+            _scripted.Children.Add(action);
+        }
+
+        _scripted.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Klassisch (EU IV, Plan 3 Task 7), nur in einer bearbeitbaren Mod-Datei (kein Entwurf einer Vanilla-Datei): "Custom GUI anlegen" an einem benannten
+    /// Knopf, Text, Symbol oder Fenster ohne Eintrag, das in einem unterstützten Fenster liegt; "In Vanilla-Fenster einbauen…" an einem obersten
+    /// <c>windowType</c> ohne Eintrag, das selbst kein unterstütztes Fenster ist. Ohne die Funktionen der App keine Knöpfe.
+    /// </summary>
+    private List<Button> CustomGuiButtons(CustomGuiIndex index, GuiNode selected, string name, bool hasEntry)
+    {
+        var buttons = new List<Button>();
+        if (!_editable || _isDraft || FilePath is not { } path || name.Length == 0 || hasEntry)
+        {
+            return buttons;
+        }
+
+        if (GuiSettings.CustomGuiCreator is { } creator && CustomGuiDraft.KindFor(selected.Name) is not null
+            && CustomGuiWindows.Enclosing(index.Supported, selected) is not null)
+        {
+            var create = ScriptButton(GuiTexts.CustomGuiCreate, GuiTexts.CustomGuiCreateTip);
+            create.Click += (_, _) => creator(selected, path);
+            buttons.Add(create);
+        }
+
+        if (GuiSettings.CustomGuiBuilder is { } builder && ClassicWindows.IsWindow(selected)
+            && CustomGuiWindows.Accepts(CustomGuiKind.Window, selected.Name)
+            && index.Supported.Count > 0
+            && !index.Supported.Any(s => string.Equals(s.TopLevelWindow, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            var build = ScriptButton(GuiTexts.CustomGuiBuildInto, GuiTexts.CustomGuiBuildIntoTip);
+            build.Click += (_, _) => builder(selected, path);
+            buttons.Add(build);
+        }
+
+        return buttons;
+    }
+
+    private void OnGuiSettingsChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(UpdateScriptedGuis);
+            return;
+        }
+
+        UpdateScriptedGuis();
+    }
+
+    /// <summary>
+    /// Der Custom-GUI-Index (EU IV) bzw. der Scripted-GUI-Index (HOI IV) entsteht im Hintergrund: Ist er beim Anzeigen noch nicht fertig, zeichnet der
+    /// Bereich sich neu, sobald er es ist (einmal je Index). So stehen die Einträge (und keine veralteten Knöpfe) da, ohne dass das Element neu gewählt
+    /// werden muss.
+    /// </summary>
+    private void RefreshWhenIndexReady<T>(Task<T>? task, Func<Task<T>?> current, ref Task<T>? awaited)
+        where T : class
+    {
+        if (task is not { IsCompleted: false } || ReferenceEquals(task, awaited))
+        {
+            return;
+        }
+
+        awaited = task;
+        task.ContinueWith(
+            _ => Dispatcher.BeginInvoke(() =>
+            {
+                if (ReferenceEquals(current(), task))
+                {
+                    UpdateScriptedGuis();
+                }
+            }),
+            TaskScheduler.Default);
+    }
+
+    private void RefreshWhenCustomGuisReady() =>
+        RefreshWhenIndexReady(GuiSettings.Workspace?.Classic?.CustomGuis, () => GuiSettings.Workspace?.Classic?.CustomGuis, ref _awaitedCustomGuis);
+
+    private void RefreshWhenScriptedGuisReady() =>
+        RefreshWhenIndexReady(GuiSettings.Workspace?.Classic?.ScriptedGuis, () => GuiSettings.Workspace?.Classic?.ScriptedGuis, ref _awaitedScriptedGuis);
 
     /// <summary>Hinweis und Knöpfe des Geltungsbereichs für das gewählte Element; ohne Element (oder bei einem geerbten) bleiben die Knöpfe weg.</summary>
     private void UpdateScope()
@@ -241,9 +515,11 @@ public sealed class GuiPropertyEditor : UserControl
     {
         _selected = null;
         _element = null;
+        _jominiSprite = null;
         _editable = editable;
         _addName.ItemsSource = null;
         UpdateScope();
+        UpdateScriptedGuis();
         var source = GuiBlockOverrides.ContainingBlock(inner);
         _scope.Text = source is null
             ? GuiTexts.InnerNoBlock(GuiBlockOverrides.DefinitionLabelOf(inner.Origin.Node))
@@ -296,6 +572,7 @@ public sealed class GuiPropertyEditor : UserControl
         _property = property;
         _condition = condition;
         _classicRead = null;
+        _liveInputs = null;
         _addName.IsEnabled = _add.IsEnabled = _editable && _element is not null;
         _adapt.IsEnabled = _editable && _adaptAction is not null;
         if (name is null || _element is null || _selected is null)
@@ -315,7 +592,7 @@ public sealed class GuiPropertyEditor : UserControl
         }
 
         var editor = GuiPropertyInput.EditorFor(name, _element.BaseWidget, Catalog, property);
-        _input.Content = CreateInput(editor, name, GuiPropertyInput.InputOf(property), property?.IsQuoted == true);
+        _input.Content = WithJominiHelpers(name, CreateInput(editor, name, GuiPropertyInput.InputOf(property), property?.IsQuoted == true));
         _apply.IsEnabled = _editable && _read is not null;
         _reset.IsEnabled = _editable && property is not null && GuiPropertyInput.TargetFor(property, _selected).InPlace;
     }
@@ -446,6 +723,7 @@ public sealed class GuiPropertyEditor : UserControl
                     IsEnabled = _editable,
                 };
                 _read = () => GuiPropertyInput.ValueText(editor, choice.Text, wasQuoted);
+                _liveInputs = new Control[] { choice };
                 return WithDataHelper(choice, () => EditableField(choice), name, input, always: false);
 
             case GuiValueEditor.Binding:
@@ -458,6 +736,7 @@ public sealed class GuiPropertyEditor : UserControl
                     IsEnabled = _editable,
                 };
                 _read = () => GuiPropertyInput.ValueText(editor, binding.Text, wasQuoted);
+                _liveInputs = new Control[] { binding };
                 return WithDataHelper(binding, () => EditableField(binding), name, input, always: true);
 
             case GuiValueEditor.Pair:
@@ -465,15 +744,31 @@ public sealed class GuiPropertyEditor : UserControl
                 var a = new TextBox { Text = first, Width = 64, IsEnabled = _editable };
                 var b = new TextBox { Text = second, Width = 64, Margin = new Thickness(6, 0, 0, 0), IsEnabled = _editable };
                 _read = () => GuiPropertyInput.ValueText(editor, a.Text + " " + b.Text, wasQuoted);
+                _liveInputs = new Control[] { a, b };
                 return Row(a, PercentToggle(a), b, PercentToggle(b));
 
             case GuiValueEditor.Color:
                 var text = new TextBox { Text = input, MinWidth = 150, IsEnabled = _editable };
                 var swatch = new Border { Width = 18, Height = 18, Margin = new Thickness(0, 0, 6, 0), BorderThickness = new Thickness(1) };
                 swatch.SetResourceReference(Border.BorderBrushProperty, "Theme.ControlBorder");
-                void UpdateSwatch() => swatch.Background = GuiPropertyInput.TryParseColor(text.Text, out var shown)
-                    ? new SolidColorBrush(ToMedia(shown))
-                    : Brushes.Transparent;
+                // Jomini: color/tintcolor/fontcolor lesen den Wert nach der Regel der Vorschau (0–255 beim Text, Vielfache über 1 gekappt).
+                var colorKind = GuiSettings.Layout.IsClassic ? null : JominiColorForm.KindOf(name);
+                JominiColorValue? ReadJomini() => colorKind is { } k ? JominiColorForm.Read(text.Text, k) : null;
+                void UpdateSwatch()
+                {
+                    if (colorKind is not null)
+                    {
+                        var read = ReadJomini();
+                        swatch.Background = read is null ? Brushes.Transparent : new SolidColorBrush(ToMedia(read.Shown));
+                        swatch.ToolTip = read is { AboveOne: true } ? GuiTexts.ColorAboveOne : null;
+                        return;
+                    }
+
+                    swatch.Background = GuiPropertyInput.TryParseColor(text.Text, out var shown)
+                        ? new SolidColorBrush(ToMedia(shown))
+                        : Brushes.Transparent;
+                }
+
                 text.TextChanged += (_, _) => UpdateSwatch();
                 UpdateSwatch();
                 var colorRow = Row(swatch, text);
@@ -482,6 +777,18 @@ public sealed class GuiPropertyEditor : UserControl
                     var pick = new Button { Content = GuiTexts.PropertyPickColor, Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(6, 0, 0, 0), IsEnabled = _editable };
                     pick.Click += (_, _) =>
                     {
+                        if (colorKind is not null)
+                        {
+                            var original = ReadJomini();
+                            var start = original?.Shown ?? new GuiColor(1, 1, 1, 1);
+                            if (picker(ToMedia(start)) is { } picked)
+                            {
+                                text.Text = JominiColorForm.FormatLike(picked.R, picked.G, picked.B, original);
+                            }
+
+                            return;
+                        }
+
                         var current = GuiPropertyInput.TryParseColor(text.Text, out var parsed) ? parsed : new GuiColor(1, 1, 1, 1);
                         if (picker(ToMedia(current)) is { } chosen)
                         {
@@ -506,11 +813,27 @@ public sealed class GuiPropertyEditor : UserControl
                 var browse = new Button { Content = GuiTexts.PropertyBrowse, ToolTip = GuiTexts.PropertyBrowseTip, Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(6, 0, 0, 0), IsEnabled = _editable };
                 browse.Click += (_, _) => BrowseTexture(path, UpdateSize);
                 _read = () => GuiPropertyInput.ValueText(editor, path.Text, wasQuoted);
-                return Row(path, browse, size);
+                if (GuiSettings.TexturePicker is not { } texturePicker)
+                {
+                    return Row(path, browse, size);
+                }
+
+                // "Textur wählen…" (Jomini): der gewählte Pfad kommt ins Feld wie bei "Durchsuchen…"; geschrieben wird erst mit "Übernehmen".
+                var choose = new Button { Content = GuiTexts.TexturePickerButton, Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(6, 0, 0, 0), IsEnabled = _editable };
+                choose.Click += (_, _) =>
+                {
+                    if (texturePicker(path.Text) is { Length: > 0 } chosen)
+                    {
+                        path.Text = chosen;
+                        UpdateSize();
+                    }
+                };
+                return Row(path, browse, choose, size);
 
             default:
                 var box = new TextBox { Text = input, MinWidth = 220, IsEnabled = _editable };
                 _read = () => GuiPropertyInput.ValueText(editor, box.Text, wasQuoted);
+                _liveInputs = new Control[] { box };
                 return editor == GuiValueEditor.Text ? WithDataHelper(box, () => box, name, input, always: false) : box;
         }
     }

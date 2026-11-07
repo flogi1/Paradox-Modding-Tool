@@ -11,6 +11,7 @@
     <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
     <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
     <ProjectReference Include="..\ParadoxModTool.ErrorLog\ParadoxModTool.ErrorLog.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Patches\ParadoxModTool.Patches.csproj" />
   </ItemGroup>
 
 </Project>

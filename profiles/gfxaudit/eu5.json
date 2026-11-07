@@ -1,0 +1,12 @@
+{
+  "textExtensions": [".txt", ".gui", ".gfx", ".yml", ".asset", ".settings", ".shader", ".fxh", ".profile"],
+  "spriteBlocks": [],
+  "spriteTextureKeys": [],
+  "spriteRefPrefix": null,
+  "namePrefixes": ["mod_", "dip_"],
+  "nameSuffixes": ["_shine", "_notachieved", "_not_eligible", "_grey", "_locked", "_opposite", "_small", "_medium"],
+  "alwaysUsedFolders": ["gfx/models", "gfx/particles", "gfx/map", "gfx/cursors", "gfx/loadingscreens", "gfx/flags", "gfx/terrain", "gfx/terrain2", "gfx/portraits/environments"],
+  "ignoredFolderReferences": ["gfx/interface/icons", "gfx/interface/advance"],
+  "pathRoots": ["", "in_game", "main_menu", "loading_screen"],
+  "notes": "Measured in the installed Vanilla game, 2026-11-06 (GFX check plan 1, task 1); calibrated in task 6 (unused images 3.6 %, nothing added: the largest group, coat-of-arms colored emblems, are emblems missing from common/coat_of_arms/template_lists, i.e. really unused). No sprite definitions; a gfx/ reference resolves in all phase folders. ICON_PATH and ADVANCE_ICON_PATH from 00_graphics.txt are ignored as folder references (Florian, 2026-11-06). dip_ is the engine prefix of country interaction icons; .profile (input_profile) names unit action icons."
+}

@@ -1,0 +1,16 @@
+# block: Icon mit Tooltip
+# group: Anzeige
+# description: Icon mit festem Tooltip aus einem Lokalisierungsschlüssel (pdx_tooltip) und scripted = yes. Wechselnden Tooltip und potential setzt „Custom GUI anlegen“ (custom_icon mit tooltip, bei Bedarf frame); welcher Tooltip gilt, wenn beide gesetzt sind, ist nicht im Spiel gemessen. Custom GUI wirkt nur in Fenstern, in denen es liest. Vorbild: interface/endgamedialog.gui, interface/countrycourtview.gui, interface/countrymissionsview.gui
+# param: name | Name | my_icon
+# param: sprite | Sprite | GFX_icon_powers_administrative
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_ICON_TT
+# requires: GFX_icon_powers_administrative
+
+iconType = {
+	name = "$name$"
+	position = { x = 30 y = 80 }
+	spriteType = "$sprite$"
+	Orientation = "UPPER_LEFT"
+	pdx_tooltip = "$tooltip$"
+	scripted = yes
+}

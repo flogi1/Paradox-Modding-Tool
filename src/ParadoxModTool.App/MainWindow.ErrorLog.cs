@@ -75,6 +75,7 @@ public partial class MainWindow
     {
         var service = ErrorLogServiceFor();
         service.WantIndex();
+        _ = service.RefreshBomAsync();
         if (_errorLogWindow is null)
         {
             // Plan-2b-Ruling 5: Die Einstellung gilt ab dem nächsten Öffnen.
@@ -132,7 +133,10 @@ public partial class MainWindow
             ApplyCommentOut,
             (plans, texts) => ApplyModEdits(plans, texts.Description, texts.SnapshotNote, texts.Nothing, texts.Failed, texts.Done),
             () => ParadoxModTool.LaunchControl.GameProcess.IsRunning(_gameExecutablePath),
-            ShowSaveObject);
+            ShowSaveObject,
+            profile?.Performance,
+            Profile: profile,
+            RemoveBoms: RemoveBoms);
         _errorLog = new ErrorLogService(
             host,
             catalog,

@@ -146,7 +146,10 @@ public static class CompatAnalyzer
         foreach (var group in index.KeyGroups.Values.OrderBy(g => g.Scope, StringComparer.OrdinalIgnoreCase).ThenBy(g => g.Key, StringComparer.Ordinal))
         {
             ct.ThrowIfCancellationRequested();
-            if (request.Rules.LastWinsInLoadOrder && vanilla is not null && group.Contributions.Select(c => c.Participant.Id).Distinct().Count() == 1)
+            // Ladereihenfolge der Dateien: für das ganze Spiel (Stellaris, HOI IV, Victoria 3) oder nur für eine Regel mit Verhalten je Hülle (EU IV interface).
+            var firstInLoadOrder = request.Rules.FirstWinsInLoadOrder || group.InLoadOrder;
+            var lastInLoadOrder = request.Rules.LastWinsInLoadOrder || group.InLoadOrder;
+            if (lastInLoadOrder && vanilla is not null && group.Contributions.Select(c => c.Participant.Id).Distinct().Count() == 1)
             {
                 if (LosesToVanilla(request, index, group, vanilla, vanillaByScope, vanillaLastByScope) is { } loss)
                 {
@@ -162,14 +165,14 @@ public static class CompatAnalyzer
             }
 
             // Victoria 3: Vanilla zählt in derselben Ladereihenfolge mit; lädt seine Fassung zuerst, gewinnt sie (gemessen 2026-10-11).
-            var vanillaFirst = request.Rules.FirstWinsInLoadOrder && group.Behavior == OverrideBehavior.FirstWins && vanilla is not null
+            var vanillaFirst = firstInLoadOrder && group.Behavior == OverrideBehavior.FirstWins && vanilla is not null
                 ? VanillaEdge(request, index, vanilla, group.Scope, vanillaByScope, last: false).GetValueOrDefault(group.Key)
                 : null;
             // Stellaris (Wiki): bei "zuletzt geladen gewinnt" ebenso; lädt die Vanilla-Fassung nach allen Mods, gewinnt sie.
-            var vanillaLast = request.Rules.LastWinsInLoadOrder && (group.Behavior is OverrideBehavior.LastWins or OverrideBehavior.PartialKeys) && vanilla is not null
+            var vanillaLast = lastInLoadOrder && (group.Behavior is OverrideBehavior.LastWins or OverrideBehavior.PartialKeys) && vanilla is not null
                 ? VanillaEdge(request, index, vanilla, group.Scope, vanillaLastByScope, last: true).GetValueOrDefault(group.Key)
                 : null;
-            if (KeyClassifier.Classify(group, request.Rules.FirstWinsInLoadOrder, request.Rules.InjectAppends, vanillaFirst, request.Rules.LastWinsInLoadOrder, vanillaLast, request.Rules.LoadOrder) is { } finding
+            if (KeyClassifier.Classify(group, firstInLoadOrder, request.Rules.InjectAppends, vanillaFirst, lastInLoadOrder, vanillaLast, request.Rules.LoadOrder) is { } finding
                 && ApplyRelation(request, finding) is { } kept)
             {
                 yield return kept;
@@ -196,7 +199,7 @@ public static class CompatAnalyzer
         {
             last = true;
         }
-        else if (group.Behavior == OverrideBehavior.FirstWins && request.Rules.FirstWinsInLoadOrder)
+        else if (group.Behavior == OverrideBehavior.FirstWins && (request.Rules.FirstWinsInLoadOrder || group.InLoadOrder))
         {
             last = false;
         }
@@ -262,7 +265,8 @@ public static class CompatAnalyzer
     /// <summary>
     /// Je Schlüssel die zuerst (<paramref name="last"/> = false, Regel "zuerst geladen gewinnt") bzw. zuletzt geladene Vanilla-Definition (Regeln "zuletzt
     /// geladen gewinnt" und einzelne Schlüssel) im Ordner <paramref name="scope"/> samt Unterordnern; je Ordner einmal gelesen. Stellaris: Vanilla-Dateien,
-    /// die eine Mod des Laufs mit gleichem Pfad ersetzt, lädt das Spiel nicht und zählen nicht (Victoria 3 noch nicht, siehe Backlog).
+    /// die eine Mod des Laufs mit gleichem Pfad ersetzt, lädt das Spiel nicht und zählen nicht (Victoria 3 noch nicht, siehe Backlog; EU IV interface ebenso
+    /// wie Stellaris). Ob ein Eintrag zählt, entscheidet sein eigenes Verhalten (je Hülle, <see cref="RuleMatch.ForKey"/>), nicht das der Datei.
     /// </summary>
     private static Dictionary<string, CompatContribution> VanillaEdge(CompatRequest request, ContributionIndex index, CompatParticipant vanilla, string scope, Dictionary<string, Dictionary<string, CompatContribution>> cache, bool last)
     {
@@ -283,14 +287,20 @@ public static class CompatAnalyzer
         {
             var relative = Path.GetRelativePath(vanilla.Folder, full).Replace('\\', '/');
             var rule = request.Rules.Match(relative);
-            var wanted = last ? (rule.Behavior is OverrideBehavior.LastWins or OverrideBehavior.PartialKeys) : rule.Behavior == OverrideBehavior.FirstWins;
-            if (!wanted || request.IsHidden(vanilla, relative) || (request.Rules.LastWinsInLoadOrder && index.PathGroups.ContainsKey(relative)))
+            bool Wanted(OverrideBehavior behavior) => last ? behavior is OverrideBehavior.LastWins or OverrideBehavior.PartialKeys : behavior == OverrideBehavior.FirstWins;
+            var anyWanted = rule.UnwrapBehaviors is { } perWrapper ? perWrapper.Values.Append(rule.Behavior).Any(Wanted) : Wanted(rule.Behavior);
+            if (!anyWanted || request.IsHidden(vanilla, relative) || ((request.Rules.LastWinsInLoadOrder || rule.InLoadOrder) && index.PathGroups.ContainsKey(relative)))
             {
                 continue;
             }
 
             foreach (var contribution in ContributionExtractor.Extract(vanilla, relative, full, rule, request.Cache, out _))
             {
+                if (!Wanted(contribution.Behavior))
+                {
+                    continue;
+                }
+
                 // Gleiche Ladeposition (eine Datei mit dem Schlüssel zweimal): bei "zuletzt" gilt die spätere Stelle.
                 if (!result.TryGetValue(contribution.Key, out var seen) || (last ? request.Rules.LoadOrder.Compare(relative, seen.RelativePath) >= 0 : request.Rules.LoadOrder.Compare(relative, seen.RelativePath) < 0))
                 {

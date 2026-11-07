@@ -1,0 +1,7 @@
+# Restliste der GFX-Prüfung für eu5 (Kalibrierung „Installation als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+MissingTexture|gfx/map/environment/mondarrain_3_edit_cube_specularggx_burley_mo-2_dxt1.dds	Vanilla: Textur fehlt in der Installation (main_menu/gfx/character_visuals/portrait_environment.txt:35)
+MissingTexture|gfx/models/buildings/bridge_test/bridge_test_phong_diffuse.dds	Vanilla: Textur fehlt in der Installation (loading_screen/common/defines/jomini/roads.txt:9)
+MissingTexture|gfx/models/buildings/bridge_test/bridge_test_phong_normal.dds	Vanilla: Textur fehlt in der Installation (loading_screen/common/defines/jomini/roads.txt:10)
+MissingTexture|gfx/models/buildings/bridge_test/bridge_test_phong_properties.dds	Vanilla: Textur fehlt in der Installation (loading_screen/common/defines/jomini/roads.txt:11)

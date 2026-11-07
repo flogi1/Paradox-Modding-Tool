@@ -35,6 +35,10 @@ public enum GuiPlacement
 /// </summary>
 public static class GuiDesignerEdits
 {
+    /// <summary>Klassische Elementtypen, die Kinder halten (wie Container in der klassischen Layout-Engine), jede Schreibweise.</summary>
+    public static IReadOnlySet<string> ClassicContainerKeys { get; } =
+        new HashSet<string>(new[] { "containerWindowType", "windowType", "eu3dialogtype" }, StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Derselbe Knoten im neu geparsten Dokument: per Pfad (Art, Name, Position unter gleichartigen Geschwistern) gefunden und mit unverändertem
     /// Text. Null, wenn der Knoten nicht aus <paramref name="shown"/> stammt, im neuen Dokument fehlt oder sein Text sich geändert hat (dann
@@ -55,8 +59,15 @@ public static class GuiDesignerEdits
         return GuiNodePath.Of(node).FindExact(fresh) is { } found && shown.TextOf(node) == fresh.TextOf(found) ? found : null;
     }
 
-    /// <summary>Nimmt Widgets als Kinder auf: Dateiebene, Typ- und Template-Definition, block, blockoverride, Widget, Widget-Halter.</summary>
-    public static bool AcceptsWidgets(GuiNode node, GuiResolver resolver) => node.Kind switch
+    /// <summary>
+    /// Nimmt Widgets als Kinder auf: Dateiebene, Typ- und Template-Definition, block, blockoverride, Widget, Widget-Halter. Klassisch (HOI IV, EU IV):
+    /// nur <c>guiTypes</c> und die Container-Elemente (<see cref="ClassicContainerKeys"/>); auf Dateiebene liest das Spiel keine Elemente, und Icons,
+    /// Knöpfe, Texte, Listen und <c>background</c> nehmen keine Kinder, obwohl sie als Engine-Widget gelten.
+    /// </summary>
+    public static bool AcceptsWidgets(GuiNode node, GuiResolver resolver) => resolver.Rules.Layout.IsClassic
+        ? node.Kind == GuiNodeKind.KeyedBlock && node.HasBody
+            && (string.Equals(node.Name, "guiTypes", StringComparison.OrdinalIgnoreCase) || ClassicContainerKeys.Contains(node.Name))
+        : node.Kind switch
     {
         GuiNodeKind.Document or GuiNodeKind.TypeDefinition or GuiNodeKind.TemplateDefinition or GuiNodeKind.Block or GuiNodeKind.BlockOverride => true,
         GuiNodeKind.KeyedBlock => node.HasBody && resolver.Classify(node) is GuiRole.TypeInstance or GuiRole.EngineWidget or GuiRole.WidgetHolder,
@@ -80,7 +91,8 @@ public static class GuiDesignerEdits
     };
 
     /// <summary>
-    /// Einfügestelle für ein neues Widget. Ohne Ziel (oder Dateiebene): ans Dateiende. <see cref="GuiPlacement.AtSelection"/>: als letztes
+    /// Einfügestelle für ein neues Widget. Ohne Ziel (oder Dateiebene): ans Dateiende, klassisch ans Ende des ersten <c>guiTypes</c> (ohne
+    /// <c>guiTypes</c> ans Dateiende). <see cref="GuiPlacement.AtSelection"/>: als letztes
     /// Kind, wenn das Ziel Widgets aufnimmt, sonst direkt dahinter. <see cref="GuiPlacement.Drop"/>: oberes Viertel davor, unteres Viertel
     /// dahinter, Mitte wie AtSelection. Null, wenn an dieser Stelle kein Widget stehen darf.
     /// </summary>
@@ -88,7 +100,8 @@ public static class GuiDesignerEdits
     {
         if (target is null || target.Kind == GuiNodeKind.Document)
         {
-            return new GuiInsertion(document.Root, InsertPosition.LastChild, null);
+            var parent = resolver.Rules.Layout.IsClassic ? Classic.ClassicWindows.ContainerOf(document) ?? document.Root : document.Root;
+            return new GuiInsertion(parent, InsertPosition.LastChild, null);
         }
 
         return placement switch

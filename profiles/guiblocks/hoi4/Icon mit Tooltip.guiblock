@@ -1,0 +1,15 @@
+# block: Icon mit Tooltip
+# group: Anzeige
+# description: Icon mit Tooltip aus einem Lokalisierungsschlüssel (pdx_tooltip; $-Verschachtelung wirkt dort laut Wiki nicht, nicht im Spiel gemessen). Bild und Frame lassen sich über einen Scripted GUI unter properties ändern (image, frame). Vorbild: interface/MTG_naval_treaty_scripted_gui.gui, interface/countrypoliticsview.gui
+# param: name | Name | my_icon
+# param: sprite | Sprite | GFX_manpower_icon
+# param: tooltip | Tooltip (Lokalisierungsschlüssel) | MY_ICON_TT
+# requires: GFX_manpower_icon
+
+iconType = {
+	name = "$name$"
+	position = { x = 20 y = 60 }
+	spriteType = "$sprite$"
+	Orientation = "UPPER_LEFT"
+	pdx_tooltip = "$tooltip$"
+}

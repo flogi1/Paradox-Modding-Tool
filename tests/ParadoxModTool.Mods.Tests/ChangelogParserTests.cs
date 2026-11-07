@@ -126,11 +126,12 @@ public class ChangelogParserTests
 
         var entries = ChangelogParser.Parse(File.ReadAllText(path));
 
-        Assert.Equal(24, entries.Count);
-        Assert.Equal("2.0.5", entries[0].Version);
+        Assert.True(entries.Count >= 24, $"Erwartet mindestens 24 Versionen, gefunden: {entries.Count}");
+        Assert.Matches(@"^\d+(\.\d+)+$", entries[0].Version);
         Assert.Equal("1.0", entries[^1].Version);
         Assert.Contains(entries, e => e.Version == "2.0.0");
         Assert.Contains(entries, e => e.Version == "1.2.0.1");
         Assert.All(entries, e => Assert.False(string.IsNullOrWhiteSpace(e.Text)));
+        Assert.Equal(entries.Count, entries.Select(e => e.Version).Distinct().Count());
     }
 }

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.GfxAudit</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.FlagTracker\ParadoxModTool.FlagTracker.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ScriptCheck\ParadoxModTool.ScriptCheck.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Scopes\ParadoxModTool.Scopes.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SearchReplace\ParadoxModTool.SearchReplace.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParadoxModTool.GfxAudit.Tests" />
+  </ItemGroup>
+
+</Project>

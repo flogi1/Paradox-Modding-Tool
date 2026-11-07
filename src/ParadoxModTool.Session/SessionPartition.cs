@@ -21,6 +21,7 @@ public static class SessionPartition
         nameof(AppSessionState.ReplaceWarningsInWindow),
         nameof(AppSessionState.NotesPanelVisible),
         nameof(AppSessionState.NotesPanelAlwaysVisible),
+        nameof(AppSessionState.SearchInSidePanel),
         nameof(AppSessionState.HiddenTabIcons),
         nameof(AppSessionState.HiddenFilterEntries),
         nameof(AppSessionState.ShowDoneBugs),
@@ -64,6 +65,10 @@ public static class SessionPartition
         nameof(AppSessionState.ErrorLogWindowBounds),
         nameof(AppSessionState.SaveExplorerStandalone),
         nameof(AppSessionState.SaveExplorerWindowBounds),
+        nameof(AppSessionState.PerformanceWindowBounds),
+        nameof(AppSessionState.FlagTrackerWindowBounds),
+        nameof(AppSessionState.ScriptCheckWindowBounds),
+        nameof(AppSessionState.GfxAuditWindowBounds),
         nameof(AppSessionState.MyModsView),
         nameof(AppSessionState.MyModsGrouping),
         nameof(AppSessionState.MyModsSort),
@@ -142,6 +147,8 @@ public static class SessionPartition
         nameof(AppSessionState.CompatchLastStart),
         nameof(AppSessionState.FolderFilters),
         nameof(AppSessionState.GuiHiddenConditionals),
+        nameof(AppSessionState.PerformanceNoiseRelative),
+        nameof(AppSessionState.PerformanceNoiseFloor),
     };
 
     /// <summary>Kopiert die genannten Eigenschaften (tiefe Kopie); fehlende bleiben weg.</summary>

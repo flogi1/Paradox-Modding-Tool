@@ -30,6 +30,9 @@ public sealed class ResolvedProperty
 
     public required GuiOrigin Origin { get; init; }
 
+    /// <summary>Aufgelöster Inhalt eines strukturierten Blocks aus <see cref="GuiRules.ResolvedBlockNames"/> (<c>modify_texture</c>, <c>glow</c>); sonst null. <see cref="Value"/> bleibt der Rohtext.</summary>
+    public ResolvedElement? Block { get; init; }
+
     /// <summary>Frühere, jetzt überschriebene Stellen, älteste zuerst.</summary>
     public List<GuiOrigin> Overridden { get; } = new();
 
@@ -55,7 +58,7 @@ public sealed class ResolvedElement
     /// <summary>Schlüssel wie geschrieben, z.B. <c>button_standard</c> oder <c>hbox</c>.</summary>
     public required string Key { get; init; }
 
-    /// <summary><see cref="GuiRole.TypeInstance"/>, <see cref="GuiRole.EngineWidget"/> oder <see cref="GuiRole.WidgetHolder"/>.</summary>
+    /// <summary><see cref="GuiRole.TypeInstance"/>, <see cref="GuiRole.EngineWidget"/>, <see cref="GuiRole.WidgetHolder"/> oder <see cref="GuiRole.StructuredBlock"/> (Unterelement von <see cref="ResolvedProperty.Block"/>).</summary>
     public required GuiRole Role { get; init; }
 
     /// <summary>Engine-Widget am Ende der Typkette (bei Haltern der Halter-Name).</summary>

@@ -292,6 +292,13 @@ public partial class GeneratorWindow
                     line.Children.Add(fromMod);
                 }
 
+                if (file.Delete)
+                {
+                    var delete = new TextBlock { Text = " · " + GeneratorsTexts.MigratedDelete };
+                    delete.SetResourceReference(TextBlock.ForegroundProperty, "Theme.Warning");
+                    line.Children.Add(delete);
+                }
+
                 if (file.RemovedBlocks.Count > 0)
                 {
                     var warning = new TextBlock { Text = " ⚠ " + GeneratorTexts.BlocksRemovedShort(file.RemovedBlocks.Count), ToolTip = string.Join(Environment.NewLine, file.RemovedBlocks) };

@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 using ParadoxModTool.GuiDesign;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Layout;
@@ -82,6 +83,13 @@ public sealed class GuiInspectorWindow : Window
     private CancellationTokenSource? _run;
     private CancellationTokenSource? _layoutRun;
 
+    // Befunde: gemeinsame Liste unter dem Eigenschaftenfeld, schwerster Befund je Syntaxknoten (Vorschau) und die im Baum gezeigte Marke je Element.
+    private readonly GuiFindingsPanel _findingsPanel = new();
+    private readonly GuiFindingsScheduler _findingsScheduler;
+    private IReadOnlyDictionary<GuiNode, GuiFindingSeverity> _findingMarks = new Dictionary<GuiNode, GuiFindingSeverity>();
+    private readonly Dictionary<ResolvedElement, GuiFindingSeverity> _shownFindingMarks = new();
+    private Action? _rescheduleFindings;
+
     public GuiInspectorWindow()
     {
         Title = GuiTexts.InspectorTitle;
@@ -90,6 +98,9 @@ public sealed class GuiInspectorWindow : Window
         MinWidth = 640;
         MinHeight = 400;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+        _findingsScheduler = new GuiFindingsScheduler(SetFindings, TimeSpan.FromMilliseconds(300));
+        _findingsPanel.FindingActivated += (_, finding) => ActivateFinding(finding);
 
         _back.Content = GuiTexts.InspectorBack;
         _back.ToolTip = GuiTexts.InspectorBackTip;
@@ -202,6 +213,7 @@ public sealed class GuiInspectorWindow : Window
         resolvedGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         resolvedGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         resolvedGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        resolvedGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         Grid.SetRow(_tree, 0);
         resolvedGrid.Children.Add(_tree);
         var rowSplitter = new GridSplitter { Height = 5, HorizontalAlignment = HorizontalAlignment.Stretch, ResizeDirection = GridResizeDirection.Rows };
@@ -210,6 +222,8 @@ public sealed class GuiInspectorWindow : Window
         resolvedGrid.Children.Add(rowSplitter);
         Grid.SetRow(_properties, 2);
         resolvedGrid.Children.Add(_properties);
+        Grid.SetRow(_findingsPanel, 3);
+        resolvedGrid.Children.Add(_findingsPanel);
 
         // Reiter "Wie geschrieben": Originaltext, darunter die Verweise darin als Links (Plan-Ruling 5).
         var writtenPanel = new DockPanel();
@@ -306,7 +320,11 @@ public sealed class GuiInspectorWindow : Window
             Margin = new Thickness(8, 0, 8, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        markOverflow.Click += (_, _) => _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow = markOverflow.IsChecked == true;
+        markOverflow.Click += (_, _) =>
+        {
+            _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow = markOverflow.IsChecked == true;
+            _rescheduleFindings?.Invoke();
+        };
         _canvas.MarkAllOverflow = GuiSettings.MarkAllOverflow;
         previewBar.Children.Add(markOverflow);
         previewBar.Children.Add(fit);
@@ -366,6 +384,7 @@ public sealed class GuiInspectorWindow : Window
             GuiSettings.PreviewLanguageChanged -= OnPreviewLanguageChanged;
             _run?.Cancel();
             _layoutRun?.Cancel();
+            _findingsScheduler.Cancel();
         };
     }
 
@@ -488,12 +507,14 @@ public sealed class GuiInspectorWindow : Window
         {
             bool? mark = _conditionalKeys.TryGetValue(element, out var key) ? GuiSettings.HiddenConditionals.Contains(key) : null;
             bool? shown = _treeMarks.TryGetValue(element, out var current) ? current : null;
-            if (mark == shown)
+            GuiFindingSeverity? finding = _findingMarks.TryGetValue(element.Origin.Node, out var severity) ? severity : null;
+            GuiFindingSeverity? shownFinding = _shownFindingMarks.TryGetValue(element, out var shownSeverity) ? shownSeverity : null;
+            if (mark == shown && finding == shownFinding)
             {
                 continue;
             }
 
-            treeItem.Header = HeaderFor(element, mark);
+            treeItem.Header = HeaderFor(element, mark, finding, finding is null ? null : _findingsPanel.NodeTip(element.Origin.Node));
             if (mark is { } hidden)
             {
                 _treeMarks[element] = hidden;
@@ -501,6 +522,15 @@ public sealed class GuiInspectorWindow : Window
             else
             {
                 _treeMarks.Remove(element);
+            }
+
+            if (finding is { } marked)
+            {
+                _shownFindingMarks[element] = marked;
+            }
+            else
+            {
+                _shownFindingMarks.Remove(element);
             }
         }
 
@@ -650,6 +680,7 @@ public sealed class GuiInspectorWindow : Window
     {
         _treeItems.Clear();
         _treeMarks.Clear();
+        _shownFindingMarks.Clear();
         _tree.Items.Clear();
         _properties.ItemsSource = null;
         if (root is null)
@@ -665,7 +696,7 @@ public sealed class GuiInspectorWindow : Window
 
     private TreeViewItem CreateTreeItem(ResolvedElement element, int depth)
     {
-        var item = new TreeViewItem { Header = HeaderFor(element, null), Tag = element, IsExpanded = depth < 2 };
+        var item = new TreeViewItem { Header = HeaderFor(element, null, null, null), Tag = element, IsExpanded = depth < 2 };
         _treeItems.TryAdd(element, item);
         foreach (var child in element.Children)
         {
@@ -676,9 +707,15 @@ public sealed class GuiInspectorWindow : Window
     }
 
     /// <param name="conditional">null: nicht bedingt; false: bedingt und gezeigt; true: ausgeblendet.</param>
-    private static FrameworkElement HeaderFor(ResolvedElement element, bool? conditional)
+    /// <param name="finding">Schwerster Befund des Elements (roter bzw. gelber Punkt), null ohne.</param>
+    private static FrameworkElement HeaderFor(ResolvedElement element, bool? conditional, GuiFindingSeverity? finding, string? findingTip)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
+        if (finding is { } severity)
+        {
+            panel.Children.Add(GuiFindingsPanel.FindingDot(severity, findingTip));
+        }
+
         panel.Children.Add(new Border
         {
             Width = 8,
@@ -829,6 +866,7 @@ public sealed class GuiInspectorWindow : Window
         GuiSchematicCanvas.ApplyMessageForeground(_previewMessage, _canvas.DarkBackground);
         _canvas.SetScene(preview?.Scene, keepView, _workspace?.Classic?.Fonts);
         PreviewScene = preview?.Scene;
+        ScheduleFindings(preview?.Scene);
         _conditionalKeys = preview?.Scene?.Root.ConditionalKeys ?? new Dictionary<ResolvedElement, string>();
         UpdateConditionalState();
         _previewMessage.Text = preview?.Scene is not null
@@ -837,6 +875,85 @@ public sealed class GuiInspectorWindow : Window
         if (_tree.SelectedItem is TreeViewItem { Tag: ResolvedElement element })
         {
             _canvas.SetSelection(element.Origin.Node);
+        }
+    }
+
+    /// <summary>Im Baum gewähltes Element (für Tests).</summary>
+    internal ResolvedElement? SelectedElement => (_tree.SelectedItem as TreeViewItem)?.Tag as ResolvedElement;
+
+    /// <summary>Die gezeigten Befunde (für Tests).</summary>
+    internal IReadOnlyList<GuiFinding> Findings => _findingsPanel.Findings;
+
+    /// <summary>Zeilen der Befundliste (für Tests).</summary>
+    internal IReadOnlyList<ListBoxItem> FindingRows => _findingsPanel.Rows;
+
+    /// <summary>Befundliste sichtbar (für Tests).</summary>
+    internal bool FindingsVisible => _findingsPanel.Visibility == Visibility.Visible;
+
+    /// <summary>Marke im Baum: schwerster Befund (Fehler oder Warnung) des Elements, null ohne (für Tests).</summary>
+    internal GuiFindingSeverity? TreeFinding(ResolvedElement element) => _shownFindingMarks.TryGetValue(element, out var severity) ? severity : null;
+
+    /// <summary>
+    /// Befundlauf für die angezeigte Vorschau. Jomini: Hinweise der Vorschau für jede Datei, aber nur mit geladenem Arbeitsbereich (ohne ihn fehlt der
+    /// Textur-Finder der Vorschau und jede Textur gälte als fehlend). Klassisch: die Prüfungen, nur für Dateien der Mod. Sonst keine Liste.
+    /// </summary>
+    private void ScheduleFindings(GuiSchematicScene? scene)
+    {
+        _rescheduleFindings = null;
+        if (scene is null || _workspace is not { } workspace)
+        {
+            ScheduleFindingRun(null, jomini: false);
+            return;
+        }
+
+        var overflow = GuiSettings.MarkAllOverflow;
+        if (!workspace.Rules.Layout.IsClassic)
+        {
+            ScheduleFindingRun(cancellation => JominiFindings.Collect(scene, overflow, cancellation), jomini: true);
+        }
+        else if (workspace.Classic is not null && _target is { FilePath: { } path } target && _index.FileOf(target.Node) is { Layer: GuiLayer.Mod })
+        {
+            var context = new ClassicCheckContext(workspace, target.Document, path, scene, IsModFile: true, overflow);
+            ScheduleFindingRun(cancellation => ClassicCheckRunner.Run(context, ClassicCheckRunner.DefaultChecks, cancellation), jomini: false);
+        }
+        else
+        {
+            ScheduleFindingRun(null, jomini: false);
+            return;
+        }
+
+        _rescheduleFindings = () => ScheduleFindings(scene);
+    }
+
+    private void ScheduleFindingRun(Func<CancellationToken, IReadOnlyList<GuiFinding>>? run, bool jomini)
+    {
+        _findingsPanel.JominiHeadings = jomini;
+        _findingsScheduler.Schedule(run);
+        if (run is null)
+        {
+            _findingsPanel.Hide();
+        }
+    }
+
+    /// <summary>Zeigt die Befunde in Liste, Baum und Vorschau.</summary>
+    private void SetFindings(IReadOnlyList<GuiFinding> findings)
+    {
+        _findingsPanel.SetFindings(findings);
+        _findingMarks = GuiFindingsPanel.Marks(findings);
+        _canvas.SetFindingMarks(_findingMarks);
+        UpdateConditionalState();
+    }
+
+    /// <summary>Klick auf einen Befund: Skriptdatei an der Zeile öffnen, sonst das Element im Baum wählen (wie ein Klick in die Vorschau).</summary>
+    private void ActivateFinding(GuiFinding finding)
+    {
+        if (finding.JumpPath is { } path)
+        {
+            OpenLocation(path, finding.JumpLine);
+        }
+        else if (finding.Node is { } node && _treeItems.Keys.FirstOrDefault(e => ReferenceEquals(e.Origin.Node, node)) is { } element)
+        {
+            SelectElement(element);
         }
     }
 

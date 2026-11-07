@@ -1,0 +1,5 @@
+# Restliste der Skriptprüfung für vic3 (Kalibrierung „Vanilla als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+BrokenReference|list_scopes	Vanilla-Argument (Tooltip-Schalter) in scripted_buttons/journal_entries, nicht in den Script-Docs
+BrokenReference|show_trigger_per_scope	Vanilla-Argument (Tooltip-Schalter) in scripted_buttons/journal_entries, nicht in den Script-Docs

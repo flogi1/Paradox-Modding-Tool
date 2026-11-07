@@ -1,0 +1,44 @@
+{
+  "notes": "Messung 2026-10-31 an der Vanilla-Installation (events, common/on_actions); Event-Bloecke = Schluessel von eventBlockScopes in profiles/hoi4.json; on_actions loesen Events per effect-Block und random_events (100 = id, 13x in 3 Vanilla-Dateien) aus; kein common/script_values. extraBuiltins (Kalibrierung 2026-11-01): Argument-Schalter eingebauter Effekte/Trigger (z. B. set_rule = { can_join_factions = yes }, division_template = { is_locked = yes }, create_equipment_variant = { obsolete = yes }), Schluessel von game_rules-Optionen (option = { name = yes allow_achievements = yes }), danach die Scope-Schluesselwoerter FROM, PREV, ROOT, THIS und owner (FROM = { TAG = SIA } und owner = { NOR_AAT = yes } sehen wie ein Parameterblock aus); zuletzt Exists, NOR_aat, has_War, has_civil_War: Schreibvarianten echter Namen; HOI IV error.log (30.10.) meldet sie nicht, die Engine nimmt sie vermutlich an.; x = no als Aufrufform: Argument-Schalter ergänzt, Kalibrierung 2026-11-06; performance (2026-11-06, Vanilla + imported script docs): globalIterators = script-doc iterators over world-wide sets in every prefix form the docs have (databases, lists, variable maps and small sets left out), narrower only where the game has a well-known scoped form; pulseOnActions from common/on_actions/_documentation.md: on_daily/on_weekly and their TAG forms as defined in Vanilla = daily, on_monthly(_TAG) = monthly, on_army_leader_daily and on_justifying_wargoal_pulse ('triggered daily') = daily; no on_action call lists; decisions with wrapper * (free category names, about 585 in Vanilla; visible/available/ai_will_do), national focus with wrapper focus_tree and nameField id (focus owner = its id; shared_focus/joint_focus stay top-level owners). common/decisions/categories excluded (excludeFolders, category files are not decisions; their own visible/available stay unchecked). Plan 2 (source: Vanilla, 2026-11-06): nameField id also names top-level shared_focus/joint_focus blocks of common/national_focus (owner = their id); rule common/decisions/categories with blocks visible only (437 direct children of a category in the 57 Vanilla category files; the 24 visible inside custom_icon stay unchecked; no wrappers, owner = category key). Open: scripted_gui, TAG forms a mod adds, category available",
+  "eventFolders": ["events"],
+  "eventSubfolders": true,
+  "eventBlocks": ["country_event", "news_event", "state_event", "unit_leader_event", "operative_leader_event"],
+  "eventCallKeys": ["country_event", "news_event", "state_event", "unit_leader_event", "operative_leader_event"],
+  "onActionFolders": ["common/on_actions"],
+  "onActionEventLists": ["events","random_events"],
+  "effectFolders": ["common/scripted_effects"],
+  "triggerFolders": ["common/scripted_triggers"],
+  "valueFolders": [],
+  "selfFiringFields": ["mean_time_to_happen"],
+  "triggeredOnlyField": "is_triggered_only",
+  "scriptContextKeys": ["immediate","option","after","effect","trigger","limit","potential","allow","is_shown","is_valid","on_accept","on_decline","mean_time_to_happen","hidden_effect","ai_chance"],
+  "callContextKeys": ["effect_tooltip","custom_trigger_tooltip","available","completion_reward","bypass","joint_trigger","remove_effect","complete_effect","cancel_effect","timeout_effect","cancel_trigger","target_trigger","target_root_trigger","visible","allowed","allowed_civil_war","on_add","on_remove","enable","completed"],
+  "transparentKeys": ["AND","OR","NOT","NOR","hidden_effect","custom_effect_tooltip"],
+  "extraBuiltins": ["owner","show_current","round","manpower","first","extracted","dont_fire_events","delivered","can_join_opposite_factions","can_be_fired","activate","active","all_provinces","allow_achievements","allow_foreign_equipment","allow_new_equipment","allow_spawning_on_enemy_provs","allow_without_tech","append","army","attacker_win","available_to_spy_master","build_only_on_allied","bypass_recruitment","can_access_market","can_boost_other_ideologies","can_create_factions","can_declare_war_on_same_ideology","can_decline_call_to_war","can_generate_female_aces","can_generate_female_country_leaders","can_generate_female_unit_leaders","can_guarantee_other_ideologies","can_join_factions","can_not_declare_war","can_only_justify_war_on_threat_country","can_puppet","can_send_volunteers","can_use_kamikaze_pilots","characters","clear","default","defender_win","disband","display_individual_scopes","elections_allowed","end_civil_wars","end_wars","exclude_refitting","fallback","female","force_allow_recruiting","include_field_marshal","include_invisible","include_locked","ingame_set_template_counter","instant","instant_build","integer","is_fake_intel_division","is_locked","keep_all_characters","keep_completed","keep_political_leader","keep_political_party_members","keep_subjects","limit_to_border","limit_to_coastal","limit_to_naval_base","limit_to_supply_node","limit_to_victory_point","mark_older_equipment_obsolete","name","navy","obsolete","old_prioritised","popup","ratio","refund_political_power","release_non_owned_controlled","remember_old_capital","ruling_only","set_default","show_effect_tooltip","show_modifiers","single_target_only","slot","transfer_troops","uncomplete_children","use_side_message","value","visible_when_empty","FROM","PREV","ROOT","THIS","Exists","NOR_aat","has_War","has_civil_War","can_boost_own_ideology","can_create_collaboration_government","change_state_after_war","contributes_operatives","force_change_controller_for_non_ally_controlled","show_state_in_tooltip"],
+  "engineEvents": [],
+  "performance": {
+    "globalIterators": [
+      {"name": "every_country", "narrower": ["every_neighbor_country", "every_allied_country"]},
+      {"name": "any_country", "narrower": ["any_neighbor_country", "any_allied_country"]},
+      {"name": "random_country", "narrower": ["random_neighbor_country", "random_allied_country"]},
+      {"name": "all_country", "narrower": ["all_neighbor_country", "all_allied_country"]},
+      {"name": "every_other_country", "narrower": ["every_neighbor_country", "every_allied_country"]},
+      {"name": "any_other_country", "narrower": ["any_neighbor_country", "any_allied_country"]},
+      {"name": "random_other_country", "narrower": ["random_neighbor_country", "random_allied_country"]},
+      {"name": "all_other_country", "narrower": ["all_neighbor_country", "all_allied_country"]},
+      {"name": "every_possible_country"},
+      {"name": "every_state", "narrower": ["every_owned_state", "every_controlled_state"]},
+      {"name": "any_state", "narrower": ["any_owned_state", "any_controlled_state"]},
+      {"name": "random_state", "narrower": ["random_owned_state", "random_controlled_state"]},
+      {"name": "all_state", "narrower": ["all_owned_state", "all_controlled_state"]}
+    ],
+    "pulseOnActions": {"on_army_leader_daily": "daily", "on_daily": "daily", "on_daily_AST": "daily", "on_daily_ETH": "daily", "on_daily_GER": "daily", "on_daily_ITA": "daily", "on_daily_SOV": "daily", "on_daily_SWE": "daily", "on_justifying_wargoal_pulse": "daily", "on_weekly": "daily", "on_weekly_BUL": "daily", "on_weekly_ECU": "daily", "on_weekly_ETH": "daily", "on_weekly_FIN": "daily", "on_weekly_GER": "daily", "on_weekly_RAJ": "daily", "on_weekly_SOV": "daily", "on_weekly_SWE": "daily", "on_weekly_VEN": "daily", "on_monthly": "monthly", "on_monthly_AFG": "monthly", "on_monthly_AUS": "monthly", "on_monthly_BUL": "monthly", "on_monthly_CHI": "monthly", "on_monthly_COG": "monthly", "on_monthly_CZE": "monthly", "on_monthly_ENG": "monthly", "on_monthly_GER": "monthly", "on_monthly_INS": "monthly", "on_monthly_JAP": "monthly", "on_monthly_LEB": "monthly", "on_monthly_MEX": "monthly", "on_monthly_NOR": "monthly", "on_monthly_PAL": "monthly", "on_monthly_PER": "monthly", "on_monthly_RAJ": "monthly", "on_monthly_SIA": "monthly", "on_monthly_SOV": "monthly", "on_monthly_SWE": "monthly", "on_monthly_SYR": "monthly", "on_monthly_USA": "monthly"},
+    "onActionCallLists": [],
+    "alwaysCheckedBlocks": [
+      {"folder": "common/decisions", "blocks": ["visible", "available", "ai_will_do"], "wrappers": ["*"], "excludeFolders": ["common/decisions/categories"]},
+      {"folder": "common/national_focus", "blocks": ["available", "bypass", "allow_branch"], "wrappers": ["focus_tree"], "nameField": "id"},
+      {"folder": "common/decisions/categories", "blocks": ["visible"]}
+    ],
+    "polledEventBlocks": ["trigger", "mean_time_to_happen"]
+  }
+}

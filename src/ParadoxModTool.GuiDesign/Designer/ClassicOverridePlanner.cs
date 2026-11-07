@@ -98,22 +98,43 @@ public static class ClassicOverridePlanner
     /// <summary>
     /// Kodierung beim Schreiben einer Datei des Plans (Global Constraints "Encoding"): bestehende Dateien nach <see cref="ModFileEncoding.ForWrite"/>
     /// (Windows-1252 bleibt Windows-1252), neue mit Nicht-ASCII-Text aus einer Windows-1252-Quelle als Windows-1252 (<see cref="GuiPlanFile.EncodingName"/>),
-    /// sonst nach dem Spielprofil (<see cref="ModFileEncoding.NewFile"/>). Die App fragt vor dem ersten Schreiben, weil <c>ForWrite</c> die Datei liest.
+    /// sonst nach dem Spielprofil (<see cref="ModFileEncoding.NewFile"/>). Ruling R10: Neue Skriptdateien (<c>.txt</c> unter <c>common/</c>: scripted_guis,
+    /// decisions/categories, custom_gui) sind in beiden Spielen UTF-8 ohne BOM (die Probe im Spiel lief so, vanilla <c>common/</c> hat kein BOM).
+    /// Bestehende Dateien, die <see cref="GuiTextReader.Read"/> als Windows-1252 liest (so lesen die Planer sie), bleiben Windows-1252, auch <c>.txt</c>;
+    /// Lokalisierung (<c>.yml</c>) bleibt UTF-8 mit BOM. Die App fragt vor dem ersten Schreiben, weil <c>ForWrite</c> die Datei liest.
     /// </summary>
     public static Encoding WriteEncoding(GuiPlanFile file, GameProfile? profile)
     {
+        var extension = System.IO.Path.GetExtension(file.FullPath);
         if (!file.IsNew)
         {
-            return ModFileEncoding.ForWrite(profile, file.FullPath);
+            // Mit BOM bleibt es beim BOM (ForWrite), auch wenn der Rest kein gültiges UTF-8 ist; nur Dateien ohne BOM bleiben Windows-1252.
+            return !string.Equals(extension, ".yml", StringComparison.OrdinalIgnoreCase)
+                && System.IO.File.Exists(file.FullPath)
+                && System.IO.File.ReadAllBytes(file.FullPath) is var bytes
+                && !ModFileEncoding.HasUtf8Bom(bytes)
+                && GuiTextReader.Read(file.FullPath).EncodingName == GuiTextReader.Windows1252
+                    ? Windows1252Encoding()
+                    : ModFileEncoding.ForWrite(profile, file.FullPath);
         }
 
         if (file.EncodingName == GuiTextReader.Windows1252)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            return Encoding.GetEncoding(1252);
+            return Windows1252Encoding();
         }
 
-        return ModFileEncoding.NewFile(profile, System.IO.Path.GetExtension(file.FullPath));
+        return IsScriptFile(file.FullPath) ? new UTF8Encoding(false) : ModFileEncoding.NewFile(profile, extension);
+    }
+
+    /// <summary>Eine Skriptdatei: <c>.txt</c> in einem Ordner <c>common</c> (oder darunter).</summary>
+    private static bool IsScriptFile(string path) =>
+        string.Equals(System.IO.Path.GetExtension(path), ".txt", StringComparison.OrdinalIgnoreCase)
+        && path.Replace('\\', '/').Split('/').Any(segment => string.Equals(segment, "common", StringComparison.OrdinalIgnoreCase));
+
+    private static Encoding Windows1252Encoding()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        return Encoding.GetEncoding(1252);
     }
 
     private static string Relative(string modRoot, string path)

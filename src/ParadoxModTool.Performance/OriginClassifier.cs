@@ -67,24 +67,31 @@ public sealed class OriginClassifier
     // Eine leere Wurzel würde über Path.Combine das aktuelle Arbeitsverzeichnis absuchen und falsche Treffer liefern.
     private static IReadOnlyList<string> NonBlank(IEnumerable<string> roots) => roots.Where(r => !string.IsNullOrWhiteSpace(r)).ToList();
 
-    private bool ContainsAny(IReadOnlyList<string> roots, string relative)
+    /// <summary>Vollständiger Pfad der Datei in der aktiven Mod (erst die Phasenordner, dann direkt unter der Wurzel); <c>null</c>, wenn sie dort nicht liegt.</summary>
+    public string? ResolveModFile(string dumpPath) => FindIn(_activeModRoots, dumpPath.Replace('/', Path.DirectorySeparatorChar));
+
+    private bool ContainsAny(IReadOnlyList<string> roots, string relative) => FindIn(roots, relative) is not null;
+
+    private string? FindIn(IReadOnlyList<string> roots, string relative)
     {
         foreach (var root in roots)
         {
             foreach (var phase in SourceResolver.Phases)
             {
-                if (_fileExists(Path.Combine(root, phase, relative)))
+                var candidate = Path.Combine(root, phase, relative);
+                if (_fileExists(candidate))
                 {
-                    return true;
+                    return candidate;
                 }
             }
 
-            if (_fileExists(Path.Combine(root, relative)))
+            var bare = Path.Combine(root, relative);
+            if (_fileExists(bare))
             {
-                return true;
+                return bare;
             }
         }
 
-        return false;
+        return null;
     }
 }

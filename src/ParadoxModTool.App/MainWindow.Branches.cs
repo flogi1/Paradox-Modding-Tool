@@ -19,7 +19,7 @@ public partial class MainWindow
         ExplorerPanelControl.LockMarkProvider = ProvideLockMark;
         ExplorerPanelControl.LockCountBelowProvider = LockCountBelow;
         ExplorerPanelControl.UnlockBelowRequested += (_, folder) => RunUnlockBelow(folder);
-        ExplorerPanelControl.SearchInPathRequested += (_, path) => OpenSearchReplaceWindow(path);
+        ExplorerPanelControl.SearchInPathRequested += (_, path) => OpenSearchInPath(path);
         TabLockProvider.Provider = TabLockTooltip;
         ProjectMenuItem.SubmenuOpened += (_, e) =>
         {

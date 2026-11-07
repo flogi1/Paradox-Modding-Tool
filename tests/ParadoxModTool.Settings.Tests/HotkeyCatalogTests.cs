@@ -64,6 +64,15 @@ public sealed class HotkeyCatalogTests
     }
 
     [Fact]
+    public void GfxAuditShortcutsAreListed()
+    {
+        Assert.Contains(HotkeyCatalog.Entries, e => e.TextId == "gfxAudit.openSite" && e.Group == HotkeyGroup.GfxAudit && e.Key == "Enter" && e.SourceFile == "GfxAuditWindow.Findings.cs");
+        Assert.Contains(HotkeyCatalog.Entries, e => e.TextId == "gfxAudit.search" && e.Group == HotkeyGroup.GfxAudit && e.Key == "Enter" && e.SourceFile == "GfxAuditWindow.cs");
+        Assert.Contains(HotkeyCatalog.Entries, e => e.TextId == "gfxAudit.refresh" && e.Group == HotkeyGroup.GfxAudit && e.Key == "F5" && e.SourceFile == "GfxAuditWindow.cs");
+        Assert.Equal("GFX-Prüfung", SettingsTexts.HotkeyGroupLabel(HotkeyGroup.GfxAudit));
+    }
+
+    [Fact]
     public void GuiBlocksShortcutIsListed()
     {
         Assert.Contains(HotkeyCatalog.Entries, entry => entry.TextId == "main.guiBlocks"
@@ -72,6 +81,31 @@ public sealed class HotkeyCatalogTests
             && entry.Key == "B"
             && entry.SourceFile == "MainWindow.xaml.cs");
         Assert.Equal("GUI-Bausteine öffnen (nur mit eingeschalteten GUI-Werkzeugen)", SettingsTexts.HotkeyDescription("main.guiBlocks"));
+    }
+
+    [Fact]
+    public void MoveToOtherPaneShortcutIsListed()
+    {
+        Assert.Contains(HotkeyCatalog.Entries, entry => entry.TextId == "main.moveToOtherPane"
+            && entry.Group == HotkeyGroup.Main
+            && entry.Modifiers == (HotkeyModifiers.Ctrl | HotkeyModifiers.Shift)
+            && entry.Key == "M"
+            && entry.SourceFile == "MainWindow.xaml.cs");
+        Assert.Equal("Aktives Dokument in den anderen Arbeitsbereich verschieben", SettingsTexts.HotkeyDescription("main.moveToOtherPane"));
+    }
+
+    [Fact]
+    public void ReferenceTreeShortcutIsListedAndUnique()
+    {
+        Assert.Contains(HotkeyCatalog.Entries, entry => entry.TextId == "main.referenceTree"
+            && entry.Group == HotkeyGroup.Main
+            && entry.Modifiers == (HotkeyModifiers.Ctrl | HotkeyModifiers.Shift)
+            && entry.Key == "R"
+            && entry.SourceFile == "MainWindow.xaml.cs");
+        Assert.Single(HotkeyCatalog.Entries, entry => entry.SourceFile == "MainWindow.xaml.cs"
+            && entry.Modifiers == (HotkeyModifiers.Ctrl | HotkeyModifiers.Shift)
+            && entry.Key == "R");
+        Assert.Equal("Name am Cursor im Verweisbaum zeigen", SettingsTexts.HotkeyDescription("main.referenceTree"));
     }
 
     [Fact]

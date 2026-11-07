@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows.Threading;
 using ParadoxModTool.ErrorLog;
 using ParadoxModTool.LaunchControl;
 using ParadoxModTool.Localization;
@@ -6,12 +7,21 @@ using ParadoxModTool.ModCompat;
 using ParadoxModTool.Mods;
 using ParadoxModTool.SaveGames;
 using ParadoxModTool.SteamIntegration;
+using ErrorHotspots = ParadoxModTool.Performance.ErrorHotspots;
+using HintEngine = ParadoxModTool.Performance.HintEngine;
+using PerformanceHint = ParadoxModTool.Performance.PerformanceHint;
+using PerformanceSettings = ParadoxModTool.GameProfiles.PerformanceSettings;
+using RuleContext = ParadoxModTool.Performance.RuleContext;
+using RuleThresholds = ParadoxModTool.Performance.RuleThresholds;
 
 namespace ParadoxModTool.App;
 
 /// <summary>
 /// Was das Fehlerprotokoll vom Hauptfenster braucht (wie <see cref="ModCompatHost"/>). Register und Spielordner als Funktionen: Der Dienst
-/// lebt ab dem PMT-Start und liest sie bei jedem Neuaufbau frisch (Plan-2b-Ruling 2).
+/// lebt ab dem PMT-Start und liest sie bei jedem Neuaufbau frisch (Plan-2b-Ruling 2). <c>Performance</c>: Profiler-Einstellungen des
+/// Spielprofils für die Fehler-Hotspots (Kennzeichen häufiger Ticks); <see langword="null"/>, wenn das Profil keine hat.
+/// BOM-Prüfung (ENC-001 ohne error.log, alle eigenen Mods aus <c>Registry</c>): <c>Profile</c> ist das Spielprofil mit den Kodierungen der
+/// Dateitypen, <c>RemoveBoms</c> entfernt das BOM aus den Dateien der Funde (auch über mehrere Mods).
 /// </summary>
 public sealed record ErrorLogHost(
     string GameName,
@@ -36,13 +46,23 @@ public sealed record ErrorLogHost(
     Func<IReadOnlyList<ModRenamePlan>, string, string, FixOutcome> ApplyCommentOut,
     Func<IReadOnlyList<ModRenamePlan>, ModEditTexts, FixOutcome> ApplyTraceEdits,
     Func<bool> IsGameRunning,
-    Func<string, string, bool> ShowSaveObject);
+    Func<string, string, bool> ShowSaveObject,
+    PerformanceSettings? Performance = null,
+    ParadoxModTool.GameProfiles.GameProfile? Profile = null,
+    Func<IReadOnlyList<BomFinding>, FixOutcome>? RemoveBoms = null);
 
 /// <summary>Texte für eine Änderung an Mod-Dateien (Aktionsverlauf, Sicherung, Meldungen), z.B. Scope-Spur einfügen oder entfernen.</summary>
 public sealed record ModEditTexts(string Description, string SnapshotNote, string Nothing, Func<string, string> Failed, Func<int, int, string> Done);
 
 /// <summary>Ergebnis einer Korrektur (Fehlerprotokoll Plan 3): Erfolg und die Meldung für den Nutzer.</summary>
 public sealed record FixOutcome(bool Success, string Message);
+
+/// <summary>
+/// Ein Fehler-Hotspot: Hinweis einer Performance-Regel zu einer Stelle des error.log mit der Anzahl der Einträge dort (nur Mod-Seite) und
+/// den Einträgen pro Minute Spielsitzung (<see langword="null"/>, wenn die Länge unbekannt oder kürzer als eine Minute ist).
+/// <c>FullPath</c> ist die Datei zur Stelle (über Playset und Vanilla aufgelöst); <see langword="null"/>, wenn sie fehlt.
+/// </summary>
+public sealed record ErrorHotspotHint(PerformanceHint Hint, int Count, double? PerMinute, string? FullPath);
 
 /// <summary>
 /// Die Fehlerprotokoll-Sitzung eines Spiels über das Fenster hinaus (Plan-Ruling 3): Logordner und Läufe, gewähltes Playset, Mod-Liste und
@@ -58,14 +78,17 @@ public sealed class ErrorLogService : IDisposable
     private bool _indexWanted;
     private int _runIndex;
     private int? _comparisonIndex = 1;
+    private readonly ModSourceCollector _sources;
 
     public ErrorLogService(ErrorLogHost host, ErrorCatalog catalog, bool hasCatalog, string suppressionsPath, string? logFolder)
     {
         Host = host;
+        _sources = new ModSourceCollector(host.Registry, host.MetadataFile, host.SteamAppId, host.ModRootTemplate, host.PlaysetsFile);
         HasCatalog = hasCatalog;
         LogFolder = logFolder;
         Session = new ErrorLogSession(catalog, SuppressionSet.Load(suppressionsPath), suppressionsPath, UiText.Current.Language, host.EngineKindOf);
         Session.Changed += (_, _) => UpdateLiveCount();
+        Session.Changed += (_, _) => OnSessionChangedForHints();
     }
 
     /// <summary>Läufe, Playset, Fortschritt oder Hinweise haben sich geändert. Änderungen der Liste meldet <see cref="ErrorLogSession.Changed"/>.</summary>
@@ -279,6 +302,7 @@ public sealed class ErrorLogService : IDisposable
     {
         _cancel?.Cancel();
         StopWatcher();
+        _hintsTimer?.Stop();
     }
 
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
@@ -528,7 +552,7 @@ public sealed class ErrorLogService : IDisposable
         Playsets = playsets.Select(p => p.Name).ToList();
         if (PlaysetName is null || !Playsets.Contains(PlaysetName))
         {
-            PlaysetName = playsets.FirstOrDefault(p => p.IsActive)?.Name ?? Playsets.FirstOrDefault();
+            PlaysetName = ModSourceCollector.DefaultPlaysetName(playsets);
         }
     }
 
@@ -585,16 +609,14 @@ public sealed class ErrorLogService : IDisposable
         IndexState = new IndexProgress(0, 0);
         RaiseStateChanged();
 
-        var playset = PlaysetName is { } name
-            ? PlaysetStore.ListPlaysetMods(Host.PlaysetsFile(), name).Select(m => new PlaysetEntry(m.Path, m.IsEnabled)).ToList()
-            : null;
-        var own = OwnMods();
+        var playset = _sources.PlaysetEntries(PlaysetName);
+        var own = _sources.OwnMods();
         var installDirectory = Host.InstallDirectory();
         var contentRoot = Host.ContentRoot();
         try
         {
             var (mods, vanilla) = await Task.Run(
-                () => (ErrorLogSources.BuildMods(own, playset, InstalledMods()), ErrorLogSources.VanillaRoots(installDirectory, contentRoot)),
+                () => (ErrorLogSources.BuildMods(own, playset, _sources.InstalledMods()), ErrorLogSources.VanillaRoots(installDirectory, contentRoot)),
                 cancel.Token);
             if (build != _build)
             {
@@ -603,6 +625,7 @@ public sealed class ErrorLogService : IDisposable
 
             Session.SetSources(mods, vanilla);
             _ = RefreshTracesAsync();
+            _ = RefreshBomAsync();
             if (!_indexWanted)
             {
                 return;
@@ -651,57 +674,173 @@ public sealed class ErrorLogService : IDisposable
         }
     }
 
-    /// <summary>Ordner der eigenen Mods (im UI-Thread gelesen, das Register ist nicht threadsicher).</summary>
-    private List<OwnModFolder> OwnMods() =>
-        Host.Registry() is not { } registry
-            ? new List<OwnModFolder>()
-            : registry.Mods.SelectMany(m => m.Paths.Where(Directory.Exists).Select(p => new OwnModFolder(m.Name, p))).ToList();
+    private void RaiseStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
 
-    /// <summary>Installierte Mods aus dem lokalen Mod-Ordner und dem Workshop, mit Namen aus den Metadaten (im Hintergrund).</summary>
-    private List<InstalledModFolder> InstalledMods()
+    // BOM-Prüfung aller eigenen Mods (ENC-001 ohne error.log): nur für Spiele, deren Katalog ENC-001 kennt, Funde getrennt von den Einträgen des Logs.
+    private int _bomBuild;
+
+    /// <summary>Die Funde der BOM-Prüfung haben sich geändert.</summary>
+    public event EventHandler? BomChanged;
+
+    /// <summary>Katalogeintrag ENC-001 (Name und Erklärung der Funde); <see langword="null"/>: Das Spiel hat ihn nicht, die Prüfung läuft nicht.</summary>
+    public ErrorKind? BomKind => Session.Catalog.Find(BomCheck.Code);
+
+    /// <summary>Dateien mit BOM in den eigenen Mods (Mod-Register), sortiert nach Mod und Pfad; eine Datei nur einmal.</summary>
+    public IReadOnlyList<BomFinding> BomFindings { get; private set; } = Array.Empty<BomFinding>();
+
+    /// <summary>
+    /// Prüft alle eigenen Mods im Hintergrund (je Datei nur die ersten drei Bytes, <see cref="BomCheck.FindInMods"/>). Register und
+    /// Sicherungsordner werden hier im UI-Thread gelesen; der Sicherungsordner jeder Mod zählt nicht mit. Ein neuerer Aufruf verwirft das
+    /// Ergebnis eines älteren.
+    /// </summary>
+    public async Task RefreshBomAsync()
     {
-        var result = new List<InstalledModFolder>();
-        if (ModRoot() is { } modRoot)
+        var build = ++_bomBuild;
+        IReadOnlyList<BomFinding> found = Array.Empty<BomFinding>();
+        if (Host.Profile is { } profile && BomKind is not null)
         {
-            foreach (var folder in Directory.EnumerateDirectories(modRoot).Where(f => !Path.GetFileName(f).StartsWith('.')))
+            var roots = _sources.OwnMods()
+                .Select(m => new BomScanRoot(m.Name, m.Directory, new[] { Host.SnapshotDirectoryFor(m.Directory) }))
+                .ToList();
+            try
             {
-                result.Add(new InstalledModFolder(NameOf(folder, CompatOrigin.Folder), folder));
+                found = await Task.Run(() => BomCheck.FindInMods(profile, roots));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                found = Array.Empty<BomFinding>();
             }
         }
 
-        if (Host.SteamAppId is { Length: > 0 } appId && SteamFolders.Find() is { } steam)
+        if (build != _bomBuild)
         {
-            foreach (var folder in CompatMembers.FindWorkshopFolders(appId, SteamFolders.LibraryFolders(steam)))
-            {
-                result.Add(new InstalledModFolder(NameOf(folder, CompatOrigin.Workshop), folder));
-            }
+            return;
         }
 
-        return result;
+        BomFindings = found;
+        BomChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private string? ModRoot()
+    // Fehler-Hotspots (Performance-Checker Plan 3, Task 7): die Performance-Regeln nur aus dem error.log, für jedes Spiel mit Fehlerkatalog.
+    private static readonly TimeSpan HintsThrottle = TimeSpan.FromSeconds(2);
+    private DispatcherTimer? _hintsTimer;
+    private bool _hintsDirty = true;
+    private bool _hintsPending;
+    private IReadOnlyList<ErrorHotspotHint> _hints = Array.Empty<ErrorHotspotHint>();
+
+    /// <summary>
+    /// Die Einträge der Sitzung haben sich geändert, <see cref="Hints"/> ist neu zu lesen. Ohne Live gleich nach der Änderung (mehrere
+    /// Änderungen hintereinander einmal), im Live-Betrieb höchstens alle 2 s. Gemeldet wird nur, solange jemand zuhört (das Fenster).
+    /// </summary>
+    public event EventHandler? HintsChanged;
+
+    /// <summary>
+    /// Hinweise der Performance-Regeln (<see cref="HintEngine.DefaultRules"/>) zu den Stellen des error.log, die die Sitzung eigenen oder
+    /// fremden Mods zuordnet (Vanilla- und Engine-Meldungen zählen nicht). Ohne Dump liefern nur Fehler-Spam und Variablenzugriff ohne Guard
+    /// etwas. Berechnet wird erst beim Lesen und nur, wenn sich die Sitzung seitdem geändert hat; nur im UI-Thread lesen. Meldungen ohne
+    /// Katalogeintrag zählen mit, wenn ihr <c>at Datei:Zeile</c> auf eine Mod-Datei zeigt (<see cref="ErrorHotspots.ModSideOf"/>).
+    /// </summary>
+    public IReadOnlyList<ErrorHotspotHint> Hints
     {
-        if (string.IsNullOrWhiteSpace(Host.ModRootTemplate))
+        get
         {
-            return null;
-        }
+            if (!_hintsDirty)
+            {
+                return _hints;
+            }
 
-        var path = Environment.ExpandEnvironmentVariables(Host.ModRootTemplate);
-        return Directory.Exists(path) ? Path.GetFullPath(path) : null;
+            // Läuft aus Post oder Timer: Ein Fehler einer Regel darf nicht als unbehandelte Ausnahme enden. Dann ist die Liste leer (alte Hinweise
+            // gehörten zu einem anderen Stand der Sitzung; beim nächsten Ändern neuer Versuch), der Fehler geht ins Debug-Protokoll.
+            try
+            {
+                _hints = ComputeHints();
+            }
+            catch (Exception ex)
+            {
+                _hints = Array.Empty<ErrorHotspotHint>();
+                System.Diagnostics.Debug.WriteLine($"Fehler-Hotspots nicht berechnet: {ex}");
+            }
+
+            _hintsDirty = false;
+            return _hints;
+        }
     }
 
-    private string NameOf(string folder, CompatOrigin origin)
+    /// <summary>Notiz unter den Hotspots: Im Live-Betrieb wächst die Sitzung noch; sonst <see langword="null"/>.</summary>
+    public string? HintsNote => LiveEnabled ? ErrorLogTexts.HotspotsLive : null;
+
+    private void OnSessionChangedForHints()
+    {
+        _hintsDirty = true;
+        if (HintsChanged is null)
+        {
+            return;
+        }
+
+        if (LiveEnabled)
+        {
+            if (_hintsTimer is null)
+            {
+                _hintsTimer = new DispatcherTimer { Interval = HintsThrottle };
+                _hintsTimer.Tick += (_, _) =>
+                {
+                    _hintsTimer.Stop();
+                    HintsChanged?.Invoke(this, EventArgs.Empty);
+                };
+            }
+
+            if (!_hintsTimer.IsEnabled)
+            {
+                _hintsTimer.Start();
+            }
+
+            return;
+        }
+
+        if (_hintsPending)
+        {
+            return;
+        }
+
+        _hintsPending = true;
+        Post(() =>
+        {
+            _hintsPending = false;
+            HintsChanged?.Invoke(this, EventArgs.Empty);
+        });
+    }
+
+    private IReadOnlyList<ErrorHotspotHint> ComputeHints()
+    {
+        var session = Session;
+        var errors = ErrorHotspots.ModSideOf(session);
+        if (errors.Total == 0)
+        {
+            return Array.Empty<ErrorHotspotHint>();
+        }
+
+        var length = session.SessionLength;
+        var minutes = length is { TotalMinutes: >= 1 } known ? known.TotalMinutes : (double?)null;
+        var context = RuleContext.FromErrorLog(errors, length, ReadSource, Host.Performance, new RuleThresholds());
+        return HintEngine.Run(context, HintEngine.DefaultRules)
+            .Select(hint =>
+            {
+                var count = errors.CountAt(hint.Path, hint.Line);
+                return new ErrorHotspotHint(hint, count, minutes is { } m ? count / m : null, session.Resolve(hint.Path)?.FullPath);
+            })
+            .ToList();
+    }
+
+    /// <summary>Inhalt der Datei zum Pfad aus dem Log (über Playset und Vanilla aufgelöst); <see langword="null"/>, wenn sie fehlt oder nicht lesbar ist.</summary>
+    private string? ReadSource(string logPath)
     {
         try
         {
-            return CompatMembers.FromFolder(folder, origin, null, Host.MetadataFile).Name;
+            return Session.Resolve(logPath) is { } source ? File.ReadAllText(source.FullPath) : null;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return Path.GetFileName(folder);
+            return null;
         }
     }
-
-    private void RaiseStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
 }

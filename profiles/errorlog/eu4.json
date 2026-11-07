@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "code": "GUI-001",
+      "name": { "de": "GUI-Element doppelt definiert", "en": "GUI element defined twice" },
+      "severity": "info",
+      "pattern": "^Parsing Error\\. File: \\\"(?<file>[^\\\"]+)\\\", Error: Already Defined\\. Key: (?<name>[^:]+): (?<key>[^,]+), near line: (?<line>\\d+)",
+      "explain": {
+        "de": "Ein Fenster oder Element mit diesem Namen gibt es schon; Europa Universalis IV behält die erste Fassung und verwirft spätere Kopien. Die Meldung ist erwartbar, wenn eine Mod ein Vanilla-Fenster mit einer Datei wie 00_… überschreibt. Ein Problem ist es nur, wenn die verworfene Kopie die der Mod ist: dann wirkt die Änderung nicht. Hinter dem Namen steht die Eigenschaft in der Zeile, nicht der Elementtyp.",
+        "en": "A window or element with this name already exists; Europa Universalis IV keeps the first version and drops later copies. The message is expected when a mod overrides a vanilla window with a file such as 00_…. It is only a problem when the dropped copy is the mod's own: then the change has no effect. The part after the name is the property on that line, not the element type."
+      },
+      "tips": {
+        "de": [ "Die Prüfung im GUI-Designer (Liste \"Prüfung\") zeigt Definitionen, die verlieren." ],
+        "en": [ "The check in the GUI designer (the \"Check\" list) shows definitions that lose." ]
+      },
+      "fixes": [ "jump", "suppress" ]
+    }
+  ]
+}

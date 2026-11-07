@@ -31,7 +31,13 @@ public partial class MainWindow
         SetMenuText(PlaysetsBarMenuItem, MenuTexts.Playsets, MenuTexts.PlaysetsTip);
         SetMenuText(ErrorLogMenuItem, ParadoxModTool.ErrorLog.ErrorLogTexts.Menu, ParadoxModTool.ErrorLog.ErrorLogTexts.MenuTip);
         SetMenuText(DesyncMenuItem, ParadoxModTool.Desync.DesyncTexts.Menu, ParadoxModTool.Desync.DesyncTexts.MenuTip);
-        SetMenuText(SaveExplorerMenuItem, SaveExplorerTexts.Menu, SaveExplorerSettings is null ? SaveExplorerTexts.NotAvailable : SaveExplorerTexts.MenuTip);
+        SetMenuText(PerformanceMenuItem, ParadoxModTool.Performance.PerformanceTexts.Menu, ParadoxModTool.Performance.PerformanceTexts.MenuTip);
+        SetMenuText(FlagTrackerMenuItem, ParadoxModTool.FlagTracker.FlagTrackerTexts.Menu, ParadoxModTool.FlagTracker.FlagTrackerTexts.MenuTip);
+        SetMenuText(ScriptCheckMenuItem, ParadoxModTool.ScriptCheck.ScriptCheckTexts.Menu, ParadoxModTool.ScriptCheck.ScriptCheckTexts.MenuTip);
+        SetMenuText(GfxAuditMenuItem, ParadoxModTool.GfxAudit.GfxAuditTexts.Menu, ParadoxModTool.GfxAudit.GfxAuditTexts.MenuTip);
+        ReferenceTreeMenuItem.Header = ParadoxModTool.ReferenceTree.ReferenceTreeTexts.MenuItem;
+        ReferenceTreeMenuItem.InputGestureText = ParadoxModTool.ReferenceTree.ReferenceTreeTexts.MenuKey;
+        SetMenuText(SaveExplorerMenuItem, SaveExplorerTexts.Menu, SaveExplorerTexts.MenuTip);
         SetMenuText(CompatchMenuItem, MenuTexts.Compatch, MenuTexts.CompatchTip);
         SetMenuText(ScriptDocsMenuItem, MenuTexts.ScriptDocs, MenuTexts.ScriptDocsTip);
         SetMenuText(TemplatesMenuItem, MenuTexts.Templates, MenuTexts.TemplatesTip);

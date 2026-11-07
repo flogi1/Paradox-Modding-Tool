@@ -221,6 +221,7 @@ public sealed class GuiResolver
                 case GuiRole.StructuredBlock:
                     element.Properties.Add(new ResolvedProperty
                     {
+                        Block = GuiRules.ResolvedBlockNames.Contains(entry.Name) ? ResolveBlock(element, entry, origin, overrides, depth, expanding) : null,
                         Name = entry.Name,
                         Role = GuiRole.StructuredBlock,
                         Value = DocumentOf(entry)?.TextOf(entry.BodySpan).Trim() ?? string.Empty,
@@ -274,6 +275,30 @@ public sealed class GuiResolver
                     break;
             }
         }
+    }
+
+    /// <summary>Löst den Inhalt von <c>modify_texture</c>/<c>glow</c> mit denselben Überschreibungen wie das Widget auf; verschachtelte strukturierte Blöcke bleiben Rohtext.</summary>
+    private ResolvedElement ResolveBlock(ResolvedElement owner, GuiNode entry, GuiOrigin origin, IReadOnlyDictionary<string, OverrideEntry> overrides, int depth, IReadOnlySet<string> expanding)
+    {
+        var sub = new ResolvedElement
+        {
+            Key = entry.Name,
+            Role = GuiRole.StructuredBlock,
+            BaseWidget = entry.Name,
+            TypeChain = new[] { entry.Name },
+            Origin = OriginAt(origin, entry),
+            TemplateLookup = owner.TemplateLookup,
+            FilePathLookup = owner.FilePathLookup,
+        };
+        if (depth + 1 > MaxDepth)
+        {
+            sub.Issues.Add(new GuiResolveIssue(GuiResolveIssueKind.DepthLimit, entry.Name, entry));
+            return sub;
+        }
+
+        // Eigener Vorlagenstapel: using-Zyklen im Block sind unabhängig von denen des Widgets.
+        Apply(sub, entry.Children, sub.Origin, overrides, depth + 1, new HashSet<string>(StringComparer.Ordinal), expanding);
+        return sub;
     }
 
     private void SetProperty(ResolvedElement element, GuiNode entry, GuiRole role, GuiOrigin origin)

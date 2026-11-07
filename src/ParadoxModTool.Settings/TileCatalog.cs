@@ -4,6 +4,7 @@ namespace ParadoxModTool.Settings;
 public static class TileIds
 {
     public const string Project = "project";
+    public const string Mods = "mods";
     public const string CuTool = "cuTool";
     public const string Compatch = "compatch";
     public const string ModCompat = "modCompat";
@@ -20,6 +21,10 @@ public static class TileIds
     public const string GeneratorPackages = "generatorPackages";
     public const string PackageEditor = "packageEditor";
     public const string Desync = "desync";
+    public const string Performance = "performance";
+    public const string FlagTracker = "flagTracker";
+    public const string ScriptCheck = "scriptCheck";
+    public const string GfxAudit = "gfxAudit";
 }
 
 /// <summary>Welche Zahl eine Kachel als Abzeichen zeigt.</summary>
@@ -41,7 +46,8 @@ public static class TileCatalog
 {
     public static IReadOnlyList<TileItem> All { get; } = new[]
     {
-        new TileItem(TileIds.Project, true, true, TileBadge.None, false),
+        new TileItem(TileIds.Project, true, false, TileBadge.None, false),
+        new TileItem(TileIds.Mods, true, false, TileBadge.None, false),
         new TileItem(TileIds.CuTool, true, false, TileBadge.None, false),
         new TileItem(TileIds.Compatch, true, false, TileBadge.None, false),
         new TileItem(TileIds.ModCompat, true, false, TileBadge.None, false),
@@ -55,6 +61,10 @@ public static class TileCatalog
         new TileItem(TileIds.Gui, true, true, TileBadge.None, true),
         new TileItem(TileIds.GuiDataHelper, true, false, TileBadge.None, true),
         new TileItem(TileIds.Templates, true, false, TileBadge.None, false),
+        new TileItem(TileIds.Performance, true, false, TileBadge.None, false),
+        new TileItem(TileIds.FlagTracker, false, false, TileBadge.None, false),
+        new TileItem(TileIds.ScriptCheck, false, false, TileBadge.None, false),
+        new TileItem(TileIds.GfxAudit, false, false, TileBadge.None, false),
         new TileItem(TileIds.GeneratorPackages, false, false, TileBadge.None, false),
         new TileItem(TileIds.PackageEditor, false, false, TileBadge.None, false),
         new TileItem(TileIds.Desync, false, false, TileBadge.None, false),

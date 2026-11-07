@@ -68,6 +68,12 @@ public sealed partial class PackageEditorWindow : Window
     private bool _switching;
     private bool _commentsConfirmed;
 
+    /// <summary>
+    /// Pakete auf der Platte geändert (Speichern, Neu, Kopieren, Löschen, Import): das Hauptfenster zählt die Pakete neu (Werkzeug-Sperre, Hinweis
+    /// "keine Pakete").
+    /// </summary>
+    public event EventHandler? PackagesChanged;
+
     public PackageEditorWindow(PackageEditorHost host)
     {
         _host = host;
@@ -340,6 +346,7 @@ public sealed partial class PackageEditorWindow : Window
 
         UpdateState();
         LoadList(_entry?.Id);
+        PackagesChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
 
@@ -429,6 +436,8 @@ public sealed partial class PackageEditorWindow : Window
             return;
         }
 
+        PackagesChanged?.Invoke(this, EventArgs.Empty);
+
         if (choice.GameId != _host.GameId())
         {
             var game = _host.Games().FirstOrDefault(g => g.Id == choice.GameId).Name ?? choice.GameId;
@@ -465,6 +474,7 @@ public sealed partial class PackageEditorWindow : Window
             return;
         }
 
+        PackagesChanged?.Invoke(this, EventArgs.Empty);
         _search.Text = string.Empty;
         LoadList(null);
         SelectInList(choice.Id);
@@ -499,6 +509,7 @@ public sealed partial class PackageEditorWindow : Window
 
         CloseEntry();
         LoadList(null);
+        PackagesChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private static Button ToolButton(string text, string tip, RoutedEventHandler click)

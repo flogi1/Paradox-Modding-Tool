@@ -1,0 +1,43 @@
+{
+  "notes": "Messung 2026-10-31 an der Vanilla-Installation (events, common/on_actions); Event-Bloecke = Schluessel von eventBlockScopes in profiles/eu4.json; kein common/script_values. extraBuiltins (Kalibrierung 2026-11-01) in drei Gruppen: Argument-Schalter eingebauter Effekte/Trigger (add bis win, z. B. define_heir = { block_disinherit = yes }, spawn_rebels = { win = yes }); Schluessel des Tutorial-Formats in tutorial/*.txt (allow_select_army bis pauseable); eingebaute Trigger/Effekte, die in den Script-Docs fehlen, aber in eu4.exe stehen (ab allow_federation_offensive_wars).; x = no als Aufrufform: Argument-Schalter ergänzt, Kalibrierung 2026-11-06; performance (2026-11-06, Vanilla + imported script docs): globalIterators = script-doc iterators over world-wide sets in every prefix form the docs have (databases, lists, variable maps and small sets left out), narrower only where the game has a well-known scoped form; pulseOnActions = on_monthly_pulse, on_yearly_pulse(_2.._5) and the bi/thri/four/five-year pulses with variants from common/on_actions/00_on_actions.txt (rate by name); no on_action call lists in EU IV; decisions live in decisions/ under the wrapper country_decisions; polled events = trigger/mean_time_to_happen. Open: on_colonial_pulse, on_overextension_pulse, on_siberian_pulse (rate not stated), missions trigger",
+  "ignoredFolders": ["patchnotes"],
+  "eventFolders": ["events"],
+  "eventSubfolders": true,
+  "eventBlocks": ["country_event", "province_event"],
+  "eventCallKeys": ["country_event", "province_event"],
+  "onActionFolders": ["common/on_actions"],
+  "onActionEventLists": ["events","random_events","first_valid"],
+  "effectFolders": ["common/scripted_effects"],
+  "triggerFolders": ["common/scripted_triggers"],
+  "valueFolders": [],
+  "selfFiringFields": ["mean_time_to_happen"],
+  "triggeredOnlyField": "is_triggered_only",
+  "scriptContextKeys": ["immediate","option","after","effect","trigger","limit","potential","allow","is_shown","is_valid","on_accept","on_decline","mean_time_to_happen","hidden_effect","ai_chance"],
+  "callContextKeys": ["custom_tooltip","custom_trigger_tooltip","failing_effect","provinces_to_highlight","can_select","can_use_modifiers_trigger","can_upgrade_trigger","build_trigger","task_completed_effect","task_requirements","pre_effect","fail_if","on_invalid","on_granted","on_revoked","progress","can_start","can_stop","allowed_provinces","can_enforce_trigger","siege_won_trigger","ruler_allow"],
+  "transparentKeys": ["AND","OR","NOT","hidden_effect","custom_tooltip"],
+  "extraBuiltins": ["add","admiral","as_if_faction","block_disinherit","capped_by_special_force_limit","change_original_dynasty","count_one_per_area","dip_reward","discount","estate_loan","extra_shortcut","female","fixed","force_republican_names","free","general","hidden","hide_skills","higher_than_influence","highlight","keep_liberty_desire","locked","male","mutual","name","no_consort_with_heir","play_as","random_gender","secondary","short","should_take_capital","use_heir_as_leader","use_monarch_as_leader","value","win","allow_select_army","allow_select_navy","allow_select_province","enable","instant_build","instant_colony","keep_window_closed","keep_window_open","pause","pauseable","allow_federation_offensive_wars","appoint_next_guru","can_establish_order","cb_on_primitives","change_estate_regent_to_ruler","disband_federation","end_game_tags_blocked","expelling_minorities","general_with_steam_name","has_cultural_union","has_owner_harmonized_religion","has_religious_school","has_spare_flagship_capacity","has_states_general_mechanic","is_admiral","is_center_of_revolution","is_foreign_company","is_in_important_war","is_in_large_debt","is_male","is_monarchists_in_power","is_primitive","is_tutorial_active","kill_consort","remove_center_of_revolution","update_sprite_pack","uses_horde_unity","uses_legitimacy","uses_meritocracy","uses_republican_tradition","cb_on_religious_enemies","active","allow_new_heir","apply_calc","include_heir","include_monarch","instant","kill_monarch","message","perform_readjustment","scaled_with_gain_modifier"],
+  "engineEvents": [],
+  "performance": {
+    "globalIterators": [
+      {"name": "every_country", "narrower": ["every_neighbor_country", "every_known_country"]},
+      {"name": "any_country", "narrower": ["any_neighbor_country", "any_known_country"]},
+      {"name": "random_country", "narrower": ["random_neighbor_country", "random_known_country"]},
+      {"name": "all_country", "narrower": ["all_neighbor_country", "all_known_country"]},
+      {"name": "all_countries_including_self"},
+      {"name": "every_province", "narrower": ["every_owned_province", "every_core_province"]},
+      {"name": "any_province", "narrower": ["any_owned_province", "any_core_province"]},
+      {"name": "random_province", "narrower": ["random_owned_province", "random_core_province"]},
+      {"name": "all_province", "narrower": ["all_owned_province", "all_core_province"]},
+      {"name": "every_capital_province"},
+      {"name": "any_capital_province"},
+      {"name": "random_capital_province"},
+      {"name": "all_capital_provinces"}
+    ],
+    "pulseOnActions": {"on_monthly_pulse": "monthly", "on_yearly_pulse": "yearly", "on_yearly_pulse_2": "yearly", "on_yearly_pulse_3": "yearly", "on_yearly_pulse_4": "yearly", "on_yearly_pulse_5": "yearly", "on_bi_yearly_pulse": "rare", "on_bi_yearly_pulse_2": "rare", "on_bi_yearly_pulse_3": "rare", "on_bi_yearly_pulse_4": "rare", "on_bi_yearly_pulse_5": "rare", "on_five_year_pulse": "rare", "on_five_year_pulse_2": "rare", "on_five_year_pulse_3": "rare", "on_five_year_pulse_4": "rare", "on_four_year_pulse": "rare", "on_four_year_pulse_2": "rare", "on_four_year_pulse_3": "rare", "on_four_year_pulse_4": "rare", "on_thri_yearly_pulse": "rare", "on_thri_yearly_pulse_2": "rare", "on_thri_yearly_pulse_3": "rare", "on_thri_yearly_pulse_4": "rare"},
+    "onActionCallLists": [],
+    "alwaysCheckedBlocks": [
+      {"folder": "decisions", "blocks": ["potential", "allow", "ai_will_do"], "wrappers": ["country_decisions"]}
+    ],
+    "polledEventBlocks": ["trigger", "mean_time_to_happen"]
+  }
+}

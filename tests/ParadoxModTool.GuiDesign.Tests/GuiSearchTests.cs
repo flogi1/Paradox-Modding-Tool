@@ -116,6 +116,53 @@ public class GuiSearchTests
     }
 
     [Fact]
+    public void Files_GroupsRootsByFile_InFileOrder()
+    {
+        var index = RootIndex();
+        var entries = GuiElementSearch.Entries(index, new GuiResolver(index, GuiResolverTests.Rules));
+
+        var files = GuiElementSearch.Files(entries);
+
+        Assert.Equal(new[] { "gui/shared/other.gui", "gui/window_county_view.gui" }, files.Select(f => f.DisplayPath.Replace('\\', '/')));
+        var county = files[1];
+        Assert.Equal(
+            new[] { ("window_county_view.gui", 1), ("named_root", 5), ("window_county_view.gui", 9) },
+            county.Roots.Select(r => (r.Name, r.Definition.Line)).ToArray());
+        Assert.All(county.Roots, r => Assert.True(r.IsFileRoot));
+        Assert.Equal(county.Roots[0].Definition.File.FullPath, county.FilePath);
+    }
+
+    [Fact]
+    public void Files_FileWithoutRoots_Omitted()
+    {
+        var index = GuiIndexTests.Build(
+            (GuiIndexTests.F("gui/only_icons.gui"), "texticon = { icon = gold }"),
+            (GuiIndexTests.F("gui/real.gui"), "container = { }"));
+        var entries = GuiElementSearch.Entries(index, new GuiResolver(index, GuiResolverTests.Rules));
+
+        var files = GuiElementSearch.Files(entries);
+
+        Assert.Equal("real.gui", Path.GetFileName(Assert.Single(files).DisplayPath));
+    }
+
+    [Fact]
+    public void MatchesFile_ByPathPart()
+    {
+        var index = RootIndex();
+        var files = GuiElementSearch.Files(GuiElementSearch.Entries(index, new GuiResolver(index, GuiResolverTests.Rules)));
+        var county = files.Single(f => f.DisplayPath.Contains("county"));
+
+        Assert.True(GuiElementSearch.MatchesFile(county, "COUNTY_view", string.Empty));
+        Assert.True(GuiElementSearch.MatchesFile(county, string.Empty, "gui/window"));
+        Assert.True(GuiElementSearch.MatchesFile(county, string.Empty, @"gui\window"));
+        Assert.True(GuiElementSearch.MatchesFile(county, "county", "view"));
+        Assert.False(GuiElementSearch.MatchesFile(county, "other", string.Empty));
+        Assert.False(GuiElementSearch.MatchesFile(county, "county", "shared"));
+        Assert.All(GuiElementSearch.Entries(index, new GuiResolver(index, GuiResolverTests.Rules)),
+            e => Assert.False(GuiElementSearch.Matches(e, string.Empty, GuiElementFilter.Files)));
+    }
+
+    [Fact]
     public void ClassicTopLevelWindowsAreTheWindowsInGuiTypes()
     {
         var classic = new GuiLayout(Array.Empty<string>(), FirstWins: false, ModsBeforeVanilla: false, Dialect: GuiDialect.Classic);

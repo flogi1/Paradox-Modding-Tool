@@ -62,12 +62,25 @@ public sealed class GeneratorState
 
     public LanguageDefaults LanguageRules { get; set; } = new();
 
+    /// <summary>Start-Sprachen: die <c>defaultLanguages</c> des Pakets, die das Profil kennt (Englisch immer); ohne Angabe alle Sprachen des Profils.</summary>
+    private static List<string> DefaultLanguages(GeneratorPackage package, IReadOnlyList<string> profileLanguages)
+    {
+        if (profileLanguages.Count == 0)
+        {
+            return new List<string> { "english" };
+        }
+
+        return package.Languages.DefaultLanguages is { Count: > 0 } wanted
+            ? profileLanguages.Where(l => l == "english" || wanted.Contains(l, StringComparer.Ordinal)).ToList()
+            : profileLanguages.ToList();
+    }
+
     public static GeneratorState CreateEmpty(GeneratorPackage package, IReadOnlyList<string> profileLanguages) => new()
     {
         PackageId = package.Id,
         Head = FormNode.Create(package.Head, package.Root, package.Constants),
         Target = package.Targets.FirstOrDefault() ?? "mod",
-        Languages = profileLanguages.Count > 0 ? profileLanguages.ToList() : new List<string> { "english" },
+        Languages = DefaultLanguages(package, profileLanguages),
         LanguageRules = package.Languages,
     };
 }

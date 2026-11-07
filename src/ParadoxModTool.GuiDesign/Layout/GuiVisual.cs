@@ -149,3 +149,43 @@ public sealed record JominiSpriteVisual(
     double Opacity,
     JominiSpritePlaceholder Placeholder,
     string? PlaceholderLabel) : GuiVisual;
+
+/// <summary>Mischart einer <c>modify_texture</c>-Ebene (<c>blend_mode</c>); die Formeln stehen in <c>JominiBlend</c>.</summary>
+public enum JominiBlendMode
+{
+    Normal,
+    Multiply,
+    Overlay,
+    Add,
+    AlphaMultiply,
+    ColorDodge,
+    Lighten,
+    Darken,
+    Mask,
+}
+
+/// <summary>Farbeffekt aus <c>effectname</c>, der statisch gezeichnet wird.</summary>
+public enum JominiColorEffect
+{
+    None,
+    Grayscale,
+}
+
+/// <summary>Kanal einer Ebene, den <c>alphamultiply</c> bzw. <c>mask</c> als Maske liest.</summary>
+public enum JominiAlphaChannel
+{
+    Alpha,
+    Luminance,
+}
+
+/// <summary>Eine <c>modify_texture</c>-Ebene: ihr eigenes Sprite (Ausschnitt, Art, Rand, Spiegelung, Farbe, Deckkraft) und die Mischart.</summary>
+public sealed record JominiTextureLayer(JominiSpriteVisual Sprite, JominiBlendMode Mode);
+
+/// <summary><c>glow</c>: Farbe, Radius in GUI-Einheiten (<c>glow_radius</c>) und Deckkraft (<c>alpha</c>).</summary>
+public sealed record JominiGlow(JominiColor Color, double Radius, double Alpha);
+
+/// <summary>Die statischen Effekte eines Kastens: Ebenen in Auflösungsreihenfolge, Leuchten und Farbeffekt.</summary>
+public sealed record JominiEffectVisual(IReadOnlyList<JominiTextureLayer> Layers, JominiGlow? Glow, JominiColorEffect ColorEffect)
+{
+    public bool IsEmpty => Layers.Count == 0 && Glow is null && ColorEffect == JominiColorEffect.None;
+}

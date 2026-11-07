@@ -10,8 +10,11 @@ public sealed class PerformanceProfileTests
         var p = RepoFiles.Profile("eu5").Performance!;
         Assert.Equal("Script.Profiling.Restart", p.RestartCommand);
         Assert.Equal("Script.Profiling.DumpAll", p.DumpCommand);
+        Assert.Equal("Script.Profiling.Stop", p.StopCommand);
         Assert.Equal("profiling*.csv", p.DumpFilePattern);
         Assert.Equal("on_actions (on_actions) @ common/on_action/location_pulses.txt:38", p.MonthlyPulseRow);
+        Assert.Equal(new[] { "ai_tick = daily" }, p.FrequentTickMarkers);
+        Assert.Empty(p.FrequentPulseNames);
         Assert.True(p.IsUsable);
     }
 

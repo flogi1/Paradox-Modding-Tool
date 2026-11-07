@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Imaging;
@@ -32,6 +33,7 @@ public sealed class GuiSchematicCanvas : FrameworkElement
     private bool _markAllOverflow;
     private HashSet<LayoutBox> _buttonLabels = new();
     private ClassicFontLibrary? _fonts;
+    private IReadOnlyDictionary<GuiNode, GuiFindingSeverity> _findingMarks = new Dictionary<GuiNode, GuiFindingSeverity>();
 
     /// <summary>Kästen, deren Textur im laufenden Zeichnen als Bild stand (nicht als schematischer Kasten); die Umrissrunde zeichnet ihren Rahmen.</summary>
     private readonly HashSet<LayoutBox> _spriteDrawn = new();
@@ -175,6 +177,19 @@ public sealed class GuiSchematicCanvas : FrameworkElement
         }
     }
 
+    /// <summary>
+    /// Elemente mit einem Befund der Prüfung (Fehler oder Warnung, klassisch): je Element ein kleiner Punkt oben rechts an seinem ersten Kasten, rot bzw.
+    /// gelb. Leer: keine Zeichen.
+    /// </summary>
+    public void SetFindingMarks(IReadOnlyDictionary<GuiNode, GuiFindingSeverity> marks)
+    {
+        _findingMarks = marks;
+        InvalidateVisual();
+    }
+
+    /// <summary>Gezeigte Befund-Zeichen (für Tests).</summary>
+    internal IReadOnlyDictionary<GuiNode, GuiFindingSeverity> FindingMarks => _findingMarks;
+
     /// <summary>Wird der Überstand dieses Kastens rot umrandet? Alle bei <paramref name="markAll"/>, sonst nur die Kästen des gewählten Elements.</summary>
     internal static bool OverflowShown(LayoutBox box, bool markAll, IReadOnlyCollection<LayoutBox> selected) =>
         (box.OutsideParent || box.OutsideScreen) && (markAll || selected.Contains(box));
@@ -191,6 +206,9 @@ public sealed class GuiSchematicCanvas : FrameworkElement
         {
             // Texturen im Hintergrund laden, in Zeichenreihenfolge (was zuerst gezeichnet wird, kommt zuerst); gezeichnet wird mit dem, was schon da ist.
             GuiImageCache.Shared.Prefetch(TexturesOf(scene));
+
+            // Danach die Effektbilder: bis sie fertig sind, zeigen die Kästen ihr schlichtes Sprite, das deshalb zuerst kommt.
+            GuiImageCache.Shared.PrefetchComposites(scene.Boxes.Select(item => item.Box.Effects).OfType<JominiEffectRecipe>());
         }
 
         if (!keepView || !_userMoved)
@@ -384,6 +402,31 @@ public sealed class GuiSchematicCanvas : FrameworkElement
             }
         }
 
+        // Befunde der Prüfung (klassisch): Punkt oben rechts am ersten Kasten des Elements (Knopftexte und weitere Rastereinträge teilen das Element).
+        if (_findingMarks.Count > 0)
+        {
+            var error = TryFindResource("Theme.Danger") as Brush ?? Brushes.Red;
+            var warning = TryFindResource("Theme.Warning") as Brush ?? Brushes.Gold;
+            var marked = new HashSet<GuiNode>();
+            foreach (var item in _scene.Boxes)
+            {
+                var node = item.Box.Element.Origin.Node;
+                if (_buttonLabels.Contains(item.Box) || !_findingMarks.TryGetValue(node, out var severity) || !marked.Add(node))
+                {
+                    continue;
+                }
+
+                var rect = ToScreen(item.Box);
+                var radius = FindingMarkerSize / 2;
+                dc.DrawEllipse(
+                    severity == GuiFindingSeverity.Error ? error : warning,
+                    FindingMarkerPen,
+                    new Point(rect.Right - radius - 1, rect.Top + radius + 1),
+                    radius,
+                    radius);
+            }
+        }
+
         dc.Pop();
         dc.Pop();
     }
@@ -401,6 +444,19 @@ public sealed class GuiSchematicCanvas : FrameworkElement
         {
             dc.Pop();
         }
+    }
+
+    /// <summary>Durchmesser des Befund-Zeichens in Bildschirmpixeln (unabhängig vom Zoom).</summary>
+    private const double FindingMarkerSize = 8;
+
+    /// <summary>Dünner dunkler Rand des Befund-Zeichens (für beide Schweren gleich), einmal angelegt und eingefroren.</summary>
+    private static readonly Pen FindingMarkerPen = CreateFindingMarkerPen();
+
+    private static Pen CreateFindingMarkerPen()
+    {
+        var pen = new Pen(Brushes.Black, 0.75);
+        pen.Freeze();
+        return pen;
     }
 
     /// <summary>Seitenlänge der Marke bedingter Elemente in Bildschirmpixeln (unabhängig vom Zoom).</summary>
@@ -435,7 +491,7 @@ public sealed class GuiSchematicCanvas : FrameworkElement
             return;
         }
 
-        var spriteDrawn = item.Box.Sprite is { } sprite && JominiSpriteRenderer.Draw(dc, sprite, rect, _zoom, GuiImageCache.Shared, dpi, item.Box.RenderScale);
+        var spriteDrawn = item.Box.Sprite is { } sprite && JominiSpriteRenderer.Draw(dc, sprite, rect, _zoom, GuiImageCache.Shared, dpi, item.Box.RenderScale, item.Box.Effects);
         if (spriteDrawn)
         {
             _spriteDrawn.Add(item.Box);

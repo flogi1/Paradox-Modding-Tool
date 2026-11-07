@@ -498,4 +498,178 @@ public sealed class RealClassicGuiTests
         // Der Zähler, mit dem die Bau-Tests "nichts dekodiert" prüfen, zählt wirklich jeden Aufruf.
         Assert.Equal(before + decodable.Count, GuiImageDecoder.DecodeCalls);
     }
+
+    /// <summary>
+    /// Anti-Lärm: die HOI-IV-Installation als Mod (alle Wurzeln mit Ebene Mod), die Prüfung der Scripted GUIs über jede .gui-Datei. Fenster, Elemente und
+    /// Kategorien der Vanilla-Einträge passen; von diesen drei Arten nur der eine echte Vanilla-Befund (siehe unten). Knöpfe ohne Effekt sind in Vanilla
+    /// erwartet (Vanilla hat keinen _click-Effekt).
+    /// </summary>
+    [Fact]
+    public void ScriptedGuiChecks_VanillaHasNoFindings()
+    {
+        var built = _workspaces.Hoi4;
+        if (built is null)
+        {
+            return;
+        }
+
+        var workspace = built.Workspace;
+        Assert.Equal(GuiScriptWiring.ScriptedGuis, workspace.Rules.Layout.ScriptWiring);
+        var roots = GuiSourceSet
+            .ClassicRootsFor(workspace.Options.InstallDirectory, workspace.Rules.Layout.VanillaRoots!, Array.Empty<string>(), null)
+            .Select(r => r with { Layer = GuiLayer.Mod })
+            .ToList();
+        var index = ScriptedGuiIndex.Build(roots, ClassicWindowIndexView.From(workspace.Index));
+        foreach (var entry in index.Entries)
+        {
+            _output.WriteLine($"{entry.Name}: {entry.ContextType} {entry.WindowName} [{string.Join(", ", entry.EntryContainers)}] "
+                + string.Join(" ", entry.Bindings.Select(b => b.Key + "->" + (b.ElementName ?? "?"))));
+        }
+
+        // Gemessen 2026-10-30 (1.19.3): 19 Einträge in 19 Dateien, alle decision_category; MTG und RAJ_GOE nennen ihr Einstiegsfenster mit […].
+        Assert.True(index.Entries.Count >= 19, "zu wenige Einträge: " + index.Entries.Count);
+        Assert.All(index.Entries, e => Assert.True(e.IsMod));
+
+        var check = new ParadoxModTool.GuiDesign.Checks.ScriptedGuiChecks(index);
+        var kinds = new[]
+        {
+            ParadoxModTool.GuiDesign.Checks.GuiFindingKind.ScriptWindowMissing,
+            ParadoxModTool.GuiDesign.Checks.GuiFindingKind.ScriptElementUnknown,
+            ParadoxModTool.GuiDesign.Checks.GuiFindingKind.CategoryMissing,
+        };
+        var findings = new HashSet<string>();
+        var hints = 0;
+        foreach (var file in workspace.Index.Files)
+        {
+            var context = new ParadoxModTool.GuiDesign.Checks.ClassicCheckContext(workspace, workspace.Index.DocumentOf(file), file.FullPath, null, true, false);
+            foreach (var finding in check.Run(context, CancellationToken.None))
+            {
+                if (kinds.Contains(finding.Kind))
+                {
+                    findings.Add($"{finding.Kind}: {finding.Message}");
+                }
+                else if (finding.Kind == ParadoxModTool.GuiDesign.Checks.GuiFindingKind.ScriptButtonWithoutEffect)
+                {
+                    hints++;
+                }
+            }
+        }
+
+        _output.WriteLine($"Knöpfe ohne _click-Effekt (Hinweise): {hints}");
+
+        // Einzige Ausnahme, ein echter Befund in Vanilla: swe_rearnament_system_ui bindet keine Kategorie ein, die Zeile
+        // "#scripted_gui = swe_rearnament_system_ui" in common/decisions/categories/SWE_decision_categories.txt:7 ist auskommentiert.
+        var expected = $"{ParadoxModTool.GuiDesign.Checks.GuiFindingKind.CategoryMissing}: {GuiTexts.FindingCategoryMissing("swe_rearnament_system_ui")}";
+        // Nur Teilmenge: bindet Paradox die Kategorie wieder ein, bleibt der Test grün; jeder neue Befund lässt ihn scheitern.
+        Assert.True(findings.IsSubsetOf(new[] { expected }), string.Join("\n", findings));
+    }
+
+    /// <summary>
+    /// EU IV: jeder Name der mitgelieferten Fensterliste (aus <c>common/custom_gui/example.txt</c>) findet sein Fenster in der Installation. Gemessen
+    /// 2026-10-30 (1.37.5): der Tippfehler countrydiplimacyview ist countrydiplomacyview; province_window, state_window und buildings_window stehen in
+    /// provinceview; faction.gui hat vier oberste Fenster; example.txt nennt countrydecisionview.gui, die Datei heißt countrydecisionsview.gui.
+    /// </summary>
+    [Fact]
+    public void SupportedWindows_ResolveAll()
+    {
+        if (_workspaces.Eu4 is not { } eu4)
+        {
+            return;
+        }
+
+        var specs = CustomGuiWindows.Load(CustomGuiWindows.ShippedPath, "en");
+        Assert.Equal(26, specs.Count);
+        var resolved = CustomGuiWindows.Resolve(ClassicWindowIndexView.From(eu4.Workspace.Index), specs);
+        var lines = resolved.Select(w => $"{w.DocName} -> {w.WindowName} in {w.TopLevelWindow} ({w.File}; ROOT {w.Root})").ToList();
+        foreach (var line in lines)
+        {
+            _output.WriteLine(line);
+        }
+
+        var unresolved = specs.Where(s => !resolved.Any(w => w.DocName == s.DocName)).Select(s => s.DocName).ToList();
+        Assert.True(unresolved.Count == 0, "nicht aufgelöst: " + string.Join(", ", unresolved));
+
+        var expected = new[]
+        {
+            "province_window -> province_window in provinceview",
+            "buildings_window -> buildings_window in provinceview",
+            "state_window -> state_window in provinceview",
+            "countrycourtview -> countrycourtview in countrycourtview",
+            "countrygovernmentview -> countrygovernmentview in countrygovernmentview",
+            "countrydiplimacyview -> countrydiplomacyview in countrydiplomacyview",
+            "countryeconomyview -> countryeconomyview in countryeconomyview",
+            "countrytradeview -> countrytradeview in countrytradeview",
+            "countrytechnologyview -> countrytechnologyview in countrytechnologyview",
+            "countryideasview -> countryideasview in countryideasview",
+            "countrymissionsview -> countrymissionsview in countrymissionsview",
+            "countrydecisionsview -> countrydecisionsview in countrydecisionsview",
+            "countrystabilityview -> countrystabilityview in countrystabilityview",
+            "countryreligionview -> countryreligionview in countryreligionview",
+            "countrymilitaryview -> countrymilitaryview in countrymilitaryview",
+            "countrysubjectview -> countrysubjectview in countrysubjectview",
+            "countryestatesview -> countryestatesview in countryestatesview",
+            "ages_view -> ages_view in ages_view",
+            "TradeNodeInterface -> TradeNodeInterface in TradeNodeInterface",
+            "hre_window -> hre_window in hre_window",
+            "papacy_window -> papacy_window in papacy_window",
+            "All faction windows -> default_faction_view in default_faction_view",
+            "All faction windows -> merchant_republic_faction_view in merchant_republic_faction_view",
+            "All faction windows -> revolutionary_republic_faction_view in revolutionary_republic_faction_view",
+            "All faction windows -> faction_entry in faction_entry",
+            "celestial_window -> celestial_window in celestial_window",
+            "natives_window -> natives_window in natives_window",
+            "reforms_window -> reforms_window in reforms_window",
+            "parliament_window -> parliament_window in parliament_window",
+        };
+        Assert.Equal(expected, resolved.Select(w => $"{w.DocName} -> {w.WindowName} in {w.TopLevelWindow}"));
+    }
+
+    /// <summary>
+    /// Anti-Lärm EU IV: die Installation als Mod (alle Wurzeln mit Ebene Mod), die Prüfung der Custom GUI über jede .gui-Datei. Vanilla hat 33 Elemente
+    /// mit scripted = yes, alle guiButtonType direkt in countrymissionsview, und 33 custom_button in mission_previews.txt: kein einziger Befund.
+    /// </summary>
+    [Fact]
+    public void CustomGuiChecks_VanillaHasNoFindings()
+    {
+        if (_workspaces.Eu4 is not { } eu4)
+        {
+            return;
+        }
+
+        var workspace = eu4.Workspace;
+        Assert.Equal(GuiScriptWiring.CustomGui, workspace.Rules.Layout.ScriptWiring);
+        Assert.NotNull(workspace.Classic!.CustomGuis);
+        var roots = GuiSourceSet
+            .ClassicRootsFor(workspace.Options.InstallDirectory, workspace.Rules.Layout.VanillaRoots!, Array.Empty<string>(), null)
+            .Select(r => r with { Layer = GuiLayer.Mod })
+            .ToList();
+        var index = CustomGuiIndex.Build(roots)
+            .WithWindows(ClassicWindowIndexView.From(workspace.Index), CustomGuiWindows.Load(CustomGuiWindows.ShippedPath, "en"));
+        _output.WriteLine($"Einträge: {index.Entries.Count}, unterstützte Fenster: {index.Supported.Count}");
+
+        Assert.True(index.Entries.Count >= 33, "zu wenige Einträge: " + index.Entries.Count);
+        Assert.All(index.Entries, e => Assert.True(e.IsMod));
+        Assert.Contains(index.Supported, w => w.WindowName == "countrymissionsview");
+        Assert.Contains("guiButtonType", index.Windows.ElementTypes("select_current_branch_batch_1_missions"));
+        // Jeder Eintrag hat ein Element mit scripted = yes (sonst käme CustomNotScripted).
+        Assert.All(index.Entries, e => Assert.True(index.Windows.HasScriptedElement(e.Name), e.Name));
+
+        var check = new ParadoxModTool.GuiDesign.Checks.CustomGuiChecks(index);
+        var findings = new HashSet<string>();
+        var scripted = 0;
+        foreach (var file in workspace.Index.Files)
+        {
+            var document = workspace.Index.DocumentOf(file);
+            scripted += document.Root.Descendants().Count(ParadoxModTool.GuiDesign.Checks.CustomGuiChecks.IsScripted);
+            var context = new ParadoxModTool.GuiDesign.Checks.ClassicCheckContext(workspace, document, file.FullPath, null, true, false);
+            foreach (var finding in check.Run(context, CancellationToken.None))
+            {
+                findings.Add($"{finding.Kind}: {finding.Message}");
+            }
+        }
+
+        _output.WriteLine($"Elemente mit scripted = yes: {scripted}");
+        Assert.True(scripted >= 33, "zu wenige Elemente mit scripted = yes: " + scripted);
+        Assert.True(findings.Count == 0, string.Join("\n", findings));
+    }
 }

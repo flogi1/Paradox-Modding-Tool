@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -13,6 +14,7 @@ using FontFamily = System.Windows.Media.FontFamily;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using PerformanceTexts = ParadoxModTool.Performance.PerformanceTexts;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace ParadoxModTool.App;
@@ -26,6 +28,9 @@ namespace ParadoxModTool.App;
 public sealed class ErrorLogWindow : Window
 {
     private const int MaxHintOccurrences = 20;
+
+    /// <summary>Eine Zeile der Hotspot-Liste; <c>Key</c> (Regel und Stelle) hält die Auswahl über Neuberechnungen.</summary>
+    private sealed record HotspotRow(string Severity, string Count, string PerMinute, string Location, string Title, string ToolTip, string? FullPath, int Line, string Key);
 
     private readonly ErrorLogService _service;
     private readonly HashSet<string> _opened = new(StringComparer.Ordinal);
@@ -59,6 +64,27 @@ public sealed class ErrorLogWindow : Window
     private readonly Controls.ListBox _traceList = new() { MinHeight = 150, MaxHeight = 480, SelectionMode = Controls.SelectionMode.Extended };
     private readonly Controls.Button _removeTrace = SmallButton(ErrorLogTexts.RemoveTrace);
     private readonly Controls.Button _removeAllTraces = SmallButton(ErrorLogTexts.RemoveAllTraces);
+    // Fehler-Hotspots über dem Fehlerbaum (Performance-Checker Plan 3, Task 7): aufgeklappt, nur sichtbar, wenn es Hinweise gibt.
+    private readonly Controls.Expander _hotspots = new() { Margin = new Thickness(0, 0, 0, 8), Visibility = Visibility.Collapsed, IsExpanded = true };
+    private readonly Controls.ListView _hotspotList = new() { SelectionMode = Controls.SelectionMode.Single, MaxHeight = 240 };
+    private readonly Controls.TextBlock _hotspotNote = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(2, 4, 2, 0), Visibility = Visibility.Collapsed };
+    private IReadOnlyList<ErrorHotspotHint>? _shownHotspots;
+    // BOM-Prüfung aller eigenen Mods (ENC-001 ohne error.log) über dem Fehlerbaum: aufgeklappt, nur sichtbar, wenn es Funde gibt.
+    private readonly Controls.Expander _bom = new() { Margin = new Thickness(0, 0, 0, 8), Visibility = Visibility.Collapsed, IsExpanded = true };
+    private readonly Controls.ListBox _bomList = new() { MaxHeight = 200, SelectionMode = Controls.SelectionMode.Extended };
+    private readonly Controls.TextBlock _bomNote = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(2, 0, 2, 4) };
+    private readonly Controls.Button _removeBom = SmallButton(ErrorLogTexts.BomRemove);
+    private readonly Controls.Button _removeAllBoms = SmallButton(ErrorLogTexts.BomRemoveAll);
+    private readonly Controls.TextBlock _bomBusy = new() { Text = ErrorLogTexts.BomRemoving, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
+
+    /// <summary>
+    /// Entfernen des BOM läuft im Hintergrund: beide Knöpfe gesperrt, auch wenn die Liste zwischendurch neu gefüllt wird; ebenso die übrigen
+    /// Korrekturen, die Mod-Dateien schreiben (Korrektur-Knöpfe im Detail, Spuren entfernen).
+    /// </summary>
+    private bool _bomRemoving;
+
+    /// <summary>Knöpfe "Korrekturen" des gerade gezeigten Eintrags (gesperrt, solange das BOM entfernt wird).</summary>
+    private Controls.Panel? _fixButtons;
     private readonly Controls.StackPanel _detail = new() { Margin = new Thickness(10, 0, 4, 10) };
     private readonly AppSettings _settings;
     private readonly Controls.Border _pathFilter = new() { Padding = new Thickness(6, 1, 2, 1), Margin = new Thickness(0, 6, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
@@ -156,9 +182,15 @@ public sealed class ErrorLogWindow : Window
         tracePanel.Children.Add(_traceList);
         tracePanel.Children.Add(traceButtons);
         _activeTraces.Content = tracePanel;
+        BuildHotspots();
+        BuildBom();
         var left = new Controls.DockPanel();
         Controls.DockPanel.SetDock(_activeTraces, Controls.Dock.Bottom);
         left.Children.Add(_activeTraces);
+        Controls.DockPanel.SetDock(_hotspots, Controls.Dock.Top);
+        left.Children.Add(_hotspots);
+        Controls.DockPanel.SetDock(_bom, Controls.Dock.Top);
+        left.Children.Add(_bom);
         left.Children.Add(_tree);
         body.Children.Add(left);
         var splitter = new Controls.GridSplitter { Width = 6, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -245,11 +277,13 @@ public sealed class ErrorLogWindow : Window
                 _service.Host.JumpTo(trace.Path, trace.Line);
             }
         };
-        _traceList.SelectionChanged += (_, _) => _removeTrace.IsEnabled = _traceList.SelectedItems.Count > 0;
+        _traceList.SelectionChanged += (_, _) => _removeTrace.IsEnabled = !_bomRemoving && _traceList.SelectedItems.Count > 0;
         _removeTrace.Click += (_, _) => RemoveTraces(_traceList.SelectedItems.OfType<Controls.ListBoxItem>().Select(i => i.Tag).OfType<ActiveTrace>().ToList());
         _removeAllTraces.Click += (_, _) => RemoveTraces(_service.Session.Traces);
 
         _service.StateChanged += OnServiceChanged;
+        _service.HintsChanged += OnHintsChanged;
+        _service.BomChanged += OnBomChanged;
         _service.SaveChanged += OnSaveChanged;
         _service.Session.Changed += OnSessionChanged;
         Closing += (_, _) => SaveBounds();
@@ -257,6 +291,8 @@ public sealed class ErrorLogWindow : Window
         {
             _searchDelay.Stop();
             _service.StateChanged -= OnServiceChanged;
+            _service.HintsChanged -= OnHintsChanged;
+            _service.BomChanged -= OnBomChanged;
             _service.Session.Changed -= OnSessionChanged;
             _service.SaveChanged -= OnSaveChanged;
             _service.LiveCountChanged -= OnLiveCountChanged;
@@ -268,9 +304,249 @@ public sealed class ErrorLogWindow : Window
         FillKinds();
         RefreshHeader();
         RefreshList();
+        RefreshHotspots();
+        RefreshBom();
     }
 
-    private void OnServiceChanged(object? sender, EventArgs e) => RefreshHeader();
+    /// <summary>
+    /// Bereich ENC-001 "von PMT geprüft" (Florians Wunsch 2026-10-28): Dateien aller eigenen Mods mit BOM, die das Spielprofil ohne BOM schreibt.
+    /// Getrennt von den Einträgen des Logs, damit Zählung, Vergleich mit dem vorigen Lauf, Unterdrücken, Export und "+N" nur das error.log
+    /// betreffen. Doppelklick öffnet die Datei; "BOM entfernen" für die Auswahl, "Alle entfernen" für alle Funde.
+    /// </summary>
+    private void BuildBom()
+    {
+        _bomNote.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+        var buttons = new Controls.WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        buttons.Children.Add(_removeBom);
+        buttons.Children.Add(_removeAllBoms);
+        _bomBusy.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+        buttons.Children.Add(_bomBusy);
+        var panel = new Controls.StackPanel();
+        panel.Children.Add(_bomNote);
+        panel.Children.Add(_bomList);
+        panel.Children.Add(buttons);
+        _bom.Content = panel;
+        _removeBom.IsEnabled = false;
+        _bomList.SelectionChanged += (_, _) => _removeBom.IsEnabled = !_bomRemoving && _bomList.SelectedItems.Count > 0;
+        _bomList.MouseDoubleClick += (_, e) =>
+        {
+            if (e.OriginalSource is DependencyObject source
+                && Controls.ItemsControl.ContainerFromElement(_bomList, source) is Controls.ListBoxItem { Tag: BomFinding finding })
+            {
+                _service.Host.JumpTo(finding.FullPath, 1);
+                e.Handled = true;
+            }
+        };
+        _removeBom.Click += async (_, _) => await RemoveBomsAsync(_bomList.SelectedItems.OfType<Controls.ListBoxItem>().Select(i => i.Tag).OfType<BomFinding>().ToList());
+        _removeAllBoms.Click += async (_, _) => await RemoveBomsAsync(_bomList.Items.OfType<Controls.ListBoxItem>().Select(i => i.Tag).OfType<BomFinding>().ToList());
+    }
+
+    private void OnBomChanged(object? sender, EventArgs e) => RefreshBom();
+
+    /// <summary>Füllt den BOM-Bereich aus <see cref="ErrorLogService.BomFindings"/> ("Mod: Pfad"); Name und Erklärung kommen aus dem Katalog (ENC-001).</summary>
+    private void RefreshBom()
+    {
+        var kind = _service.BomKind;
+        var findings = _service.BomFindings;
+        if (kind is null || findings.Count == 0)
+        {
+            _bomList.Items.Clear();
+            _bom.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var language = _service.Session.Language;
+        var selected = _bomList.SelectedItems.OfType<Controls.ListBoxItem>().Select(i => i.Tag).OfType<BomFinding>().Select(f => f.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _bomList.Items.Clear();
+        foreach (var finding in findings)
+        {
+            var item = new Controls.ListBoxItem { Content = ErrorLogTexts.BomLine(finding.ModName, finding.RelativePath), Tag = finding, ToolTip = finding.FullPath };
+            _bomList.Items.Add(item);
+            if (selected.Contains(finding.FullPath))
+            {
+                item.IsSelected = true;
+            }
+        }
+
+        var explain = kind.ExplainIn(language);
+        _bomNote.Text = ErrorLogTexts.BomFoundByPmt + (explain.Length > 0 ? Environment.NewLine + explain : string.Empty);
+        _bom.Header = new Controls.TextBlock
+        {
+            Text = ErrorLogTexts.SeverityIcon(kind.Severity) + " " + ErrorLogTexts.BomHeading(kind.NameIn(language), kind.Code, findings.Count),
+            FontWeight = FontWeights.SemiBold,
+        };
+        _bom.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Nach Rückfrage das BOM aus den Dateien entfernen (Sicherung je Mod, ein Schritt im Aktionsverlauf); danach neu prüfen. Das Entfernen läuft im
+    /// Hintergrund (viele Dateien bei "Alle entfernen"), beide Knöpfe sind solange gesperrt; Meldung und neue Prüfung kommen danach im UI-Thread.
+    /// </summary>
+    private async Task RemoveBomsAsync(IReadOnlyList<BomFinding> findings)
+    {
+        if (_bomRemoving || findings.Count == 0 || _service.Host.RemoveBoms is not { } remove)
+        {
+            return;
+        }
+
+        var title = ErrorLogTexts.BomRemove;
+        var list = ErrorLogTexts.BomFileList(findings.Select(f => ErrorLogTexts.BomLine(f.ModName, f.RelativePath)).ToList());
+        if (MessageBox.Show(this, ErrorLogTexts.BomRemoveConfirm(findings.Count, list), title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        FixOutcome outcome;
+        SetBomRemoving(true);
+        try
+        {
+            outcome = await Task.Run(() => remove(findings));
+        }
+        catch (OperationCanceledException)
+        {
+            // App wird beendet: Dispatcher.Invoke im Hintergrund bricht ab. Keine Meldung, kein Fehlerdialog.
+            return;
+        }
+        finally
+        {
+            SetBomRemoving(false);
+        }
+
+        MessageBox.Show(this, outcome.Message, title, MessageBoxButton.OK, outcome.Success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        _ = _service.RefreshBomAsync();
+    }
+
+    /// <summary>Sperrt bzw. entsperrt alles, was Mod-Dateien schreibt, solange das BOM im Hintergrund entfernt wird.</summary>
+    private void SetBomRemoving(bool busy)
+    {
+        _bomRemoving = busy;
+        _bomBusy.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        _removeBom.IsEnabled = !busy && _bomList.SelectedItems.Count > 0;
+        _removeAllBoms.IsEnabled = !busy;
+        _removeTrace.IsEnabled = !busy && _traceList.SelectedItems.Count > 0;
+        _removeAllTraces.IsEnabled = !busy;
+        if (_fixButtons is not null)
+        {
+            _fixButtons.IsEnabled = !busy;
+        }
+    }
+
+    /// <summary>
+    /// Bereich "Fehler-Hotspots" über dem Fehlerbaum (Performance-Checker Plan 3, Task 7): Liste mit Schwere, Anzahl, pro Minute, Stelle und
+    /// Titel (Tooltip = Detail), darunter die Notiz im Live-Betrieb. Doppelklick, Enter oder das Kontextmenü öffnen die Stelle im Editor.
+    /// </summary>
+    private void BuildHotspots()
+    {
+        var grid = new Controls.GridView();
+        grid.Columns.Add(HotspotColumn(PerformanceTexts.AnalyzeHintsColumnSeverity, 56, nameof(HotspotRow.Severity)));
+        grid.Columns.Add(HotspotColumn(ErrorLogTexts.HotspotsColumnCount, 70, nameof(HotspotRow.Count)));
+        grid.Columns.Add(HotspotColumn(ErrorLogTexts.HotspotsColumnPerMinute, 80, nameof(HotspotRow.PerMinute)));
+        grid.Columns.Add(HotspotColumn(PerformanceTexts.AnalyzeColumnLocation, 260, nameof(HotspotRow.Location)));
+        grid.Columns.Add(HotspotColumn(PerformanceTexts.AnalyzeHintsColumnTitle, 240, nameof(HotspotRow.Title)));
+        _hotspotList.View = grid;
+        var rowStyle = new Style(typeof(Controls.ListViewItem), TryFindResource(typeof(Controls.ListViewItem)) as Style);
+        rowStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new System.Windows.Data.Binding(nameof(HotspotRow.ToolTip))));
+        _hotspotList.ItemContainerStyle = rowStyle;
+        _hotspotList.MouseDoubleClick += OnHotspotDoubleClick;
+        _hotspotList.KeyDown += OnHotspotKeyDown;
+        var jumpItem = new Controls.MenuItem { Header = ErrorLogTexts.Jump };
+        jumpItem.Click += (_, _) => JumpToSelectedHotspot();
+        _hotspotList.ContextMenu = new Controls.ContextMenu();
+        _hotspotList.ContextMenu.Items.Add(jumpItem);
+        _hotspotList.ContextMenuOpening += (_, e) => e.Handled = _hotspotList.SelectedItem is not HotspotRow { FullPath: not null };
+        _hotspotNote.SetResourceReference(Controls.TextBlock.ForegroundProperty, "Theme.TextMuted");
+
+        var panel = new Controls.StackPanel();
+        panel.Children.Add(_hotspotList);
+        panel.Children.Add(_hotspotNote);
+        _hotspots.Content = panel;
+
+        // Der Tooltip des Bereichs erklärt ihn (das Fehlerprotokoll hat keine eigene Hilfe); über einer Zeile gilt deren eigener Tooltip.
+        _hotspots.ToolTip = ErrorLogTexts.HotspotsTip;
+    }
+
+    private static Controls.GridViewColumn HotspotColumn(string header, double width, string property) =>
+        new() { Header = header, Width = width, DisplayMemberBinding = new System.Windows.Data.Binding(property) };
+
+    private void OnHintsChanged(object? sender, EventArgs e) => RefreshHotspots();
+
+    /// <summary>
+    /// Füllt die Hotspot-Liste aus <see cref="ErrorLogService.Hints"/> (berechnet beim Lesen, wenn sich die Sitzung geändert hat). Die Auswahl
+    /// bleibt auf derselben Regel und Stelle, damit Live-Neuberechnungen sie nicht verwerfen. Ohne Hinweise ist der Bereich ausgeblendet.
+    /// </summary>
+    private void RefreshHotspots()
+    {
+        var hints = _service.Hints;
+        if (!ReferenceEquals(hints, _shownHotspots))
+        {
+            _shownHotspots = hints;
+            var selected = _hotspotList.SelectedItem as HotspotRow;
+            var rows = hints.Select(HotspotRowOf).ToList();
+            _hotspotList.ItemsSource = rows;
+            _hotspotList.SelectedItem = selected is null ? null : rows.FirstOrDefault(r => r.Key == selected.Key);
+        }
+
+        _hotspots.Header = new Controls.TextBlock { Text = ErrorLogTexts.HotspotsTitle(hints.Count), FontWeight = FontWeights.SemiBold };
+        _hotspots.Visibility = hints.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        RefreshHotspotNote();
+    }
+
+    private void RefreshHotspotNote()
+    {
+        var note = _service.HintsNote;
+        _hotspotNote.Text = note ?? string.Empty;
+        _hotspotNote.Visibility = note is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static HotspotRow HotspotRowOf(ErrorHotspotHint item)
+    {
+        var hint = item.Hint;
+        var location = $"{hint.Path}:{hint.Line.ToString(CultureInfo.InvariantCulture)}";
+        return new HotspotRow(
+            PerformanceWindow.SeverityIcon(hint.Severity),
+            item.Count.ToString("N0", CultureInfo.CurrentCulture),
+            item.PerMinute is { } rate ? rate.ToString("N1", CultureInfo.CurrentCulture) : "-",
+            location,
+            hint.Title,
+            $"{location}{Environment.NewLine}{hint.Title}{Environment.NewLine}{PerformanceWindow.Wrap(hint.Detail, 90)}",
+            item.FullPath,
+            hint.Line,
+            $"{hint.RuleId}|{location}");
+    }
+
+    /// <summary>Doppelklick nur auf einer Zeile der Hotspot-Liste springt in den Editor.</summary>
+    private void OnHotspotDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject source && Controls.ItemsControl.ContainerFromElement(_hotspotList, source) is Controls.ListViewItem)
+        {
+            JumpToSelectedHotspot();
+            e.Handled = true;
+        }
+    }
+
+    private void OnHotspotKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter && _hotspotList.SelectedItem is HotspotRow)
+        {
+            JumpToSelectedHotspot();
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Öffnet die Datei der gewählten Stelle an ihrer Zeile; ohne gefundene Datei (gelöscht oder umbenannt) passiert nichts, wie im Fehlerbaum.</summary>
+    private void JumpToSelectedHotspot()
+    {
+        if (_hotspotList.SelectedItem is HotspotRow { FullPath: { } fullPath } row)
+        {
+            _service.Host.JumpTo(fullPath, row.Line);
+        }
+    }
+
+    private void OnServiceChanged(object? sender, EventArgs e)
+    {
+        RefreshHeader();
+        RefreshHotspotNote();
+    }
 
     /// <summary>Anderer Spielstand geladen: Einzelheiten der gewählten Gruppe neu (Befund-Zeile, Spielstand-Hinweise).</summary>
     private void OnSaveChanged(object? sender, EventArgs e) => OnTreeSelection();
@@ -817,7 +1093,8 @@ public sealed class ErrorLogWindow : Window
         }
 
         AddHeading(panel, ErrorLogTexts.DetailFixes);
-        var buttons = new Controls.WrapPanel();
+        var buttons = new Controls.WrapPanel { IsEnabled = !_bomRemoving };
+        _fixButtons = buttons;
         foreach (var fix in fixes)
         {
             var button = SmallButton(ErrorLogTexts.Fix(fix, entry.Kind));
@@ -943,13 +1220,13 @@ public sealed class ErrorLogWindow : Window
 
         _activeTraces.Header = new Controls.TextBlock { Text = $"{ErrorLogTexts.ActiveTracesHeading} ({session.Traces.Count})", FontWeight = FontWeights.SemiBold };
         _activeTraces.Visibility = session.Traces.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        _removeTrace.IsEnabled = _traceList.SelectedItems.Count > 0;
+        _removeTrace.IsEnabled = !_bomRemoving && _traceList.SelectedItems.Count > 0;
     }
 
     /// <summary>Spuren entfernen: Rückfrage mit den Dateien, dann wie alle Korrekturen mit Sicherung und einem Schritt "Rückgängig".</summary>
     private void RemoveTraces(IReadOnlyList<ActiveTrace> traces)
     {
-        if (traces.Count == 0)
+        if (_bomRemoving || traces.Count == 0)
         {
             return;
         }
@@ -1057,6 +1334,11 @@ public sealed class ErrorLogWindow : Window
 
     private void InsertTrace(ErrorEntry entry, ModSource mod, string path, int line)
     {
+        if (_bomRemoving)
+        {
+            return;
+        }
+
         var session = _service.Session;
         var guards = entry.Kind?.TraceGuards ?? Array.Empty<TraceGuard>();
         var id = TraceMarkers.NewId(session.Traces.Select(t => t.Id).Concat(session.TraceHitIds), Random.Shared);
@@ -1088,7 +1370,7 @@ public sealed class ErrorLogWindow : Window
 
     private void CommentOut(ErrorEntry entry)
     {
-        if (entry.Name is not { } name || entry.Kind is not { SetEffects.Count: > 0 } kind)
+        if (_bomRemoving || entry.Name is not { } name || entry.Kind is not { SetEffects.Count: > 0 } kind)
         {
             return;
         }
@@ -1105,7 +1387,7 @@ public sealed class ErrorLogWindow : Window
     private void RenameEverywhere(ErrorEntry entry, IReadOnlyList<string> candidates)
     {
         var session = _service.Session;
-        if (entry.Name is not { } name)
+        if (_bomRemoving || entry.Name is not { } name)
         {
             return;
         }

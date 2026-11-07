@@ -4,8 +4,6 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using ParadoxModTool.Editor;
 using ParadoxModTool.Mods;
-using System.Windows.Controls.Primitives;
-using ParadoxModTool.Editor.Controls;
 using ParadoxModTool.Settings;
 using Controls = System.Windows.Controls;
 using MessageBox = System.Windows.MessageBox;
@@ -118,6 +116,19 @@ public partial class MainWindow
 
         // Aktive Mod kann gewechselt haben: GUI-Index nachziehen (baut nur neu, wenn sich Mod-Ordner oder Abhängigkeiten geändert haben).
         _ = UpdateGuiWorkspaceAsync(force: false);
+
+        // Flag-Tracker: Ausblendregeln und Warnungen gehören zur aktiven Mod (baut nur bei anderem Mod-Ordner neu). Nur bei fest gewählter
+        // Mod: Bei "Automatisch" folgt die aktive Mod der geöffneten Datei, und schon der Sprung aus dem Flag-Tracker zu einer Fundstelle in
+        // einer anderen Mod löste sonst einen Neuaufbau aus. Dort übernimmt der nächste Aufbau (F5, erneutes Öffnen) die neue Mod.
+        // Eine verlorene feste Wahl (ChoiceLost) verhält sich wie "Automatisch". Der Verweisbaum leert sich aus demselben Grund nur hier
+        // (sonst leerte ihn schon ein Doppelklick auf eine Stelle in einer anderen Mod); bei "Automatisch" nimmt ⟳ die neue Mod.
+        if (!_mods.IsAutomatic && !_mods.ChoiceLost)
+        {
+            _flagTrackerWindow?.ActiveModChanged();
+            _scriptCheckWindow?.ActiveModChanged();
+            _gfxAuditWindow?.ActiveModChanged();
+            ResetReferenceTreeIfScopeChanged();
+        }
     }
 
     /// <summary>Rolle und Sperren für die Statusleiste, z. B. " · Dev-Branch von Idea Variation · 🔒 Datei"; leer, wenn nichts zutrifft. Die Sperre der Datei oder ihres Ordners kommt aus <paramref name="filePath"/>.</summary>
@@ -285,46 +296,8 @@ public partial class MainWindow
         _vanillaDiffWindow?.OpenFilePair(left, right, leftLabel, rightLabel);
     }
 
-    /// <summary>Klick auf "Mod: …" in der Statusleiste: Auswahl der aktiven Mod (aufgeklappt, Suchfeld oben), dazu "Mods verwalten".</summary>
-    private void ModStatus_Click(object sender, MouseButtonEventArgs e)
-    {
-        if (_mods is null)
-        {
-            return;
-        }
-
-        var popup = new Popup { PlacementTarget = ModStatusText, Placement = PlacementMode.Top, StaysOpen = false, AllowsTransparency = false };
-        var choice = new SearchableChoice(searchWidth: 140, choiceWidth: 320);
-        var items = new List<(string Text, object? Tag)> { (MenuTexts.ModsAutomatic, ActiveModChoice.Automatic) };
-        items.AddRange(ChoosableMods().Select(m => (m.Name, (object?)m.Id)));
-        choice.SetItems(items, _mods.IsAutomatic && !_mods.ChoiceLost ? ActiveModChoice.Automatic : _mods.Choice, pinned: 1);
-        choice.SelectionChanged += (_, _) =>
-        {
-            if (choice.SelectedTag is string picked && picked != _activeModChoice)
-            {
-                SetActiveModChoice(picked);
-            }
-
-            popup.IsOpen = false;
-        };
-        var manage = new Controls.Button { Content = new Controls.TextBlock { Text = MenuTexts.ModsManage }, Padding = new Thickness(8, 1, 8, 1), Margin = new Thickness(6, 0, 0, 0) };
-        manage.Click += (_, _) =>
-        {
-            popup.IsOpen = false;
-            OpenModsWindow_Click(manage, new RoutedEventArgs());
-        };
-        var row = new Controls.StackPanel { Orientation = Controls.Orientation.Horizontal, Margin = new Thickness(8) };
-        row.Children.Add(choice);
-        row.Children.Add(manage);
-        var border = new Controls.Border { Child = row, BorderThickness = new Thickness(1) };
-        border.SetResourceReference(Controls.Border.BackgroundProperty, "Theme.PanelBackground");
-        border.SetResourceReference(Controls.Border.BorderBrushProperty, "Theme.ControlBorder");
-        popup.Child = border;
-        popup.IsOpen = true;
-
-        // Liste gleich aufklappen; das Suchfeld oben darin hat dann den Fokus.
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () => choice.Choice.IsDropDownOpen = true);
-    }
+    /// <summary>Klick auf "Mod: …" in der Statusleiste: öffnet gleich "Mods verwalten"; die Wahl der aktiven Mod steht im Menü "Mods".</summary>
+    private void ModStatus_Click(object sender, MouseButtonEventArgs e) => OpenModsWindow_Click(sender, new RoutedEventArgs());
 
     /// <summary>Angelegte Mods des Spiels mit vorhandenem Ordner, nach Namen sortiert (Auswahl in Statusleiste und Menü).</summary>
     private IReadOnlyList<ModInfo> ChoosableMods() =>

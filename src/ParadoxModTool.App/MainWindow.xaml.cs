@@ -131,6 +131,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         InitializeSettings();
+        // Vor dem Laden der Einstellungen (RestoreSession → ApplyAllSettings), weil ApplySetting den Reiter "Suche" ein- oder ausblendet.
+        InitializeSearchTab();
         InitializeFolderFilters();
         InitializeMenuTexts();
         InitializeTileBar();
@@ -266,6 +268,7 @@ public partial class MainWindow : Window
         // Dokumente sofort mit dem richtigen Syntax-Highlighting angezeigt werden.
         StartupProgress.Report(0.4, MainTexts.StartupRestoringSession);
         RestoreSession();
+        InitializeSearchTabPanel();
 
         StartupProgress.Report(0.9, MainTexts.StartupCheckingRecovery);
 
@@ -311,8 +314,12 @@ public partial class MainWindow : Window
         InitializeScriptHints();
         InitializeGuiWorkspace();
         InitializeErrorLog();
-        InitializeDesync();
-        InitializeSaveExplorer();
+        InitializeFlagTracker();
+        InitializeScriptCheck();
+        InitializeGfxAudit();
+        InitializeReferenceTree();
+        ApplyToolAvailability();
+        RefreshGeneratorPackageCount();
 
         StartupProgress.Report(0.97, MainTexts.StartupAlmostDone);
         StartBackgroundUpdateCheck();
@@ -586,6 +593,10 @@ public partial class MainWindow : Window
         _settingsWindow?.SaveBounds();
         SaveErrorLogWindowBounds();
         SaveSaveExplorerWindowBounds();
+        SavePerformanceWindowBounds();
+        SaveFlagTrackerWindowBounds();
+        SaveScriptCheckWindowBounds();
+        SaveGfxAuditWindowBounds();
         _myModsWindow?.SaveBounds();
         _settings.WriteTo(state);
         state.ActiveGameProfileId = _activeProfile?.Id ?? GameContext.GameId;
@@ -613,6 +624,10 @@ public partial class MainWindow : Window
         SaveGuiSettings(state);
         SaveCompatchSettings(state);
         CloseDesync();
+        ClosePerformance();
+        CloseFlagTracker();
+        CloseScriptCheck();
+        CloseGfxAudit();
         SaveErrorLogSettings(state);
         CloseSaveExplorer();
         state.GameExecutablePath = _gameExecutablePath;
@@ -706,6 +721,8 @@ public partial class MainWindow : Window
         pane.SaveAllRequested += (_, _) => SaveAllDocuments();
         pane.OpenLocationRequested += (_, e) => JumpToBookmarkInFile(e.Path, e.Line);
         WireGuiInspector(pane);
+        WireFlagTrackerEditor(pane);
+        WireReferenceTreeEditor(pane);
         pane.CloseDocumentRequested += (_, document) => CloseWithPrompt(pane, document);
         pane.MoveActiveDocumentRequested += (_, document) => MoveDocumentBetweenPanes(pane, otherPane, document, null);
 
@@ -837,7 +854,8 @@ public partial class MainWindow : Window
 
     private void SplitViewToggle_Click(object sender, RoutedEventArgs e) => _settings.SplitViewEnabled = SplitViewToggle.IsChecked == true;
 
-    private void SearchReplace_Click(object sender, RoutedEventArgs e) => OpenSearchReplaceWindow();
+    // Mit "Suche im rechten Panel anzeigen" der Reiter "Suche", sonst das Fenster (siehe MainWindow.SearchTab.cs).
+    private void SearchReplace_Click(object sender, RoutedEventArgs e) => OpenSearch();
 
     /// <summary>
     /// Strg+F öffnet das Suchen-&amp;-Ersetzen-Fenster (Abschnitt 5b: "es wäre gut, wenn
@@ -857,7 +875,7 @@ public partial class MainWindow : Window
         }
 
         // Strg+Umschalt+D: GUI-Daten-Helfer (nur mit eingeschalteten GUI-Werkzeugen und im Jomini-Format).
-        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D && GuiSettings.DataHelperOffered)
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D && GuiSettings.DataHelperOffered && ToolStateOf(TileIds.GuiDataHelper).Available)
         {
             _ = OpenGuiDataHelperAsync();
             e.Handled = true;
@@ -865,9 +883,33 @@ public partial class MainWindow : Window
         }
 
         // Strg+Umschalt+B: GUI-Bausteine (nur mit eingeschalteten GUI-Werkzeugen).
-        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.B && GuiSettings.ToolsEnabled)
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.B && GuiSettings.ToolsEnabled && ToolStateOf(TileIds.Gui).Available)
         {
             OpenGuiBlocks();
+            e.Handled = true;
+            return;
+        }
+
+        // Strg+Umschalt+T: Flag-Tracker (nur in Spielen mit Befehlstabelle; sonst geht die Taste weiter).
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.T && ToolStateOf(TileIds.FlagTracker).Available)
+        {
+            OpenFlagTrackerWindow();
+            e.Handled = true;
+            return;
+        }
+
+        // Strg+Umschalt+R: Name am Cursor im Verweisbaum (nur wenn Flag-Tracker oder Skript-Prüfung verfügbar ist; sonst geht die Taste weiter).
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.R && ReferenceTreeAvailable)
+        {
+            ShowReferenceTreeFromEditor();
+            e.Handled = true;
+            return;
+        }
+
+        // Strg+Umschalt+M: aktives Dokument des fokussierten Arbeitsbereichs in den anderen verschieben (ohne Dokument geht die Taste weiter).
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.M && ActivePane.HasActiveDocument)
+        {
+            ActivePane.MoveActiveDocumentToOtherPane();
             e.Handled = true;
             return;
         }
@@ -887,18 +929,18 @@ public partial class MainWindow : Window
 
         if (e.Key == Key.F)
         {
-            OpenSearchReplaceWindow();
+            OpenSearch();
             e.Handled = true;
         }
         // Strg+H: Suchfenster "GUI-Element inspizieren" (GUI-Inspektor, Plan 2b).
         else if (e.Key == Key.H)
         {
-            if (ParadoxModTool.Editor.Gui.GuiSettings.ToolsEnabled)
+            // Ohne GUI-Werkzeuge bzw. im Spiel ohne GUI-Profil geht die Taste weiter.
+            if (ParadoxModTool.Editor.Gui.GuiSettings.ToolsEnabled && ToolStateOf(TileIds.Gui).Available)
             {
                 OpenGuiElementSearch();
+                e.Handled = true;
             }
-
-            e.Handled = true;
         }
         else if (e.Key == Key.G)
         {
@@ -1148,7 +1190,8 @@ public partial class MainWindow : Window
 
         _hideSearchResultDescriptions = hide;
 
-        foreach (var row in _searchResults)
+        // Ein globaler Zustand für Fenster, Ergebnisleiste und Reiter "Suche" (eigene Trefferliste).
+        foreach (var row in _searchResults.Concat(_searchTabResults))
         {
             row.SetHideDescription(hide);
         }
@@ -1158,6 +1201,7 @@ public partial class MainWindow : Window
         {
             ResultsPanelHideDescriptionCheckBox.IsChecked = hide;
             _searchReplaceWindow?.SetHideDescriptionCheckboxState(hide);
+            _searchTabPanel.SetHideDescriptionCheckboxState(hide);
         }
         finally
         {
@@ -1534,9 +1578,10 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Startkern für "Spiel starten" und "Im Spiel ansehen" (Plan 4 Ruling 7): Spiel-Exe erfragen, falls nötig; gewähltes Playset aktivieren; starten
-    /// und einen Start mit -debug_mode merken (Ruling 8).
+    /// und einen Start mit -debug_mode merken (Ruling 8). Mit <paramref name="activateSelectedPlayset"/> = false bleiben die Playsets unberührt
+    /// (Performance-Checker ohne gewähltes Playset).
     /// </summary>
-    private bool StartGame(string arguments)
+    private bool StartGame(string arguments, bool activateSelectedPlayset = true)
     {
         if (_gameExecutablePath is null || !File.Exists(_gameExecutablePath))
         {
@@ -1550,7 +1595,7 @@ public partial class MainWindow : Window
         // ohnehin schon das aktive ist - ein Fehlschlag hier (Datei fehlt/nicht gefunden/nicht
         // schreibbar) bricht den Start bewusst AB, statt das Spiel dann ggf. mit dem falschen
         // Playset zu starten, ohne dass der Nutzer das bemerkt.
-        if (PlaysetsCombo.SelectedItem is PlaysetInfo selectedPlayset)
+        if (activateSelectedPlayset && PlaysetsCombo.SelectedItem is PlaysetInfo selectedPlayset)
         {
             var manager = CreatePlaysetManager();
             if (manager is not null && (!manager.UsesLauncherDatabase || manager.LoadFilePath is not null))
@@ -1995,6 +2040,7 @@ public partial class MainWindow : Window
         {
             var action = _history.Undo();
             ReloadOpenTabsAffectedBy(action);
+            RefreshBomCheckAfter(action);
         }
         catch (Exception ex)
         {
@@ -2008,6 +2054,7 @@ public partial class MainWindow : Window
         {
             var action = _history.Redo();
             ReloadOpenTabsAffectedBy(action);
+            RefreshBomCheckAfter(action);
         }
         catch (Exception ex)
         {
@@ -2024,8 +2071,10 @@ public partial class MainWindow : Window
     /// Ordnern), da ein offener Tab nach JEDEM Undo/Redo den tatsächlichen Dateiinhalt zeigen
     /// sollte, nicht nur nach diesem einen Werkzeug. Ein einzelnes seither nicht mehr lesbares
     /// Betroffenes Element bricht das Neuladen der übrigen nicht ab.
+    /// <paramref name="keepModified"/>: Dateien mit ungespeicherten Änderungen in einem Tab nicht neu laden (BOM entfernen im Hintergrund, der
+    /// Editor blieb solange bedienbar); der Tab behält seinen Text.
     /// </summary>
-    private void ReloadOpenTabsAffectedBy(IUndoableAction action)
+    private void ReloadOpenTabsAffectedBy(IUndoableAction action, bool keepModified = false)
     {
         var filePaths = new List<string>();
         CollectFilePaths(action, filePaths);
@@ -2045,7 +2094,23 @@ public partial class MainWindow : Window
                     {
                         rebuildGuiIndex = true;
                     }
+                    else if (IsGuiScriptFile(filePath))
+                    {
+                        // Rückgängig von "Scripted GUI anlegen": Die Skriptanbindung liest ihre Ordner selbst neu, der Text zählt nicht.
+                        NotifyGuiFileSaved(filePath, string.Empty);
+                    }
 
+                    continue;
+                }
+
+                if (keepModified && AllPanes.SelectMany(p => p.Documents).Any(d => d.IsModified && EditorPane.PathsEqual(d.FilePath, filePath)))
+                {
+                    continue;
+                }
+
+                // Nur Dateien, die ein Tab zeigt oder die der GUI-Index liest; Bilder (.dds, .tga aus "Sprite anlegen") nicht als Text lesen.
+                if (!IsOpenInAnyTab(filePath) && !IsGuiIndexFile(filePath))
+                {
                     continue;
                 }
 
@@ -2074,10 +2139,55 @@ public partial class MainWindow : Window
         }
     }
 
+    private bool IsOpenInAnyTab(string path) => AllPanes.SelectMany(p => p.Documents).Any(d => EditorPane.PathsEqual(d.FilePath, path));
+
+    private static bool IsGuiIndexFile(string path) =>
+        path.EndsWith(".gui", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".gfx", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase)
+        || IsGuiScriptFile(path);
+
+    /// <summary>
+    /// Eine Skriptdatei, die der GUI-Index liest (Scripted GUIs, Entscheidungskategorien, Custom GUI): nach "Scripted GUI anlegen" und dessen Rückgängig
+    /// muss der Index sie neu lesen, auch wenn kein Tab sie zeigt.
+    /// </summary>
+    private static bool IsGuiScriptFile(string path)
+    {
+        if (!path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var normalized = path.Replace('\\', '/');
+        return normalized.Contains("/common/scripted_guis/", StringComparison.OrdinalIgnoreCase)
+            || normalized.Contains("/common/decisions/categories/", StringComparison.OrdinalIgnoreCase)
+            || normalized.Contains("/common/custom_gui/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// BOM-Prüfung des Fehlerprotokolls nach Rückgängig/Wiederholen neu, wenn die Aktion eine Datei geschrieben hat, deren Endung das Profil
+    /// ohne BOM schreibt (z. B. "BOM entfernen" zurückgenommen); sonst bliebe der Bereich bis zum nächsten Neuladen veraltet.
+    /// </summary>
+    private void RefreshBomCheckAfter(IUndoableAction action)
+    {
+        if (_errorLog is null)
+        {
+            return;
+        }
+
+        var filePaths = new List<string>();
+        CollectFilePaths(action, filePaths);
+        var profile = GameContext.Profile ?? _activeProfile;
+        if (filePaths.Any(p => ParadoxModTool.GameProfiles.ModFileEncoding.NewFileEncodingName(profile, Path.GetExtension(p)) == ParadoxModTool.GameProfiles.ModFileEncoding.Utf8))
+        {
+            _ = _errorLog.RefreshBomAsync();
+        }
+    }
+
     /// <summary>
     /// Sammelt rekursiv alle Dateipfade, die von <paramref name="action"/> geschrieben wurden -
     /// eine <see cref="CompositeUndoableAction"/> (z. B. Ersetzen in mehreren Dateien) besteht aus
-    /// mehreren <see cref="FileWriteUndoableAction"/>-Einzelschritten, die einzeln eingesammelt
+    /// mehreren <see cref="FileWriteUndoableAction"/>- oder <see cref="BinaryWriteUndoableAction"/>-Einzelschritten (z. B. BOM entfernen), die einzeln eingesammelt
     /// werden müssen. Andere Aktionstypen (z. B. <see cref="DelegateUndoableAction"/>) betreffen
     /// keine bekannte Datei und werden ignoriert.
     /// </summary>
@@ -2087,6 +2197,13 @@ public partial class MainWindow : Window
         {
             case FileWriteUndoableAction fileWrite:
                 filePaths.Add(fileWrite.FilePath);
+                break;
+            case BinaryWriteUndoableAction binaryWrite:
+                filePaths.Add(binaryWrite.FilePath);
+                break;
+            case FileDeleteUndoableAction fileDelete:
+                // Gelöscht (oder zurückgeholt): das Neuladen übergeht eine fehlende Datei, ein offener Tab behält seinen Text
+                filePaths.Add(fileDelete.FilePath);
                 break;
             case CompositeUndoableAction composite:
                 foreach (var inner in composite.Actions)

@@ -32,7 +32,7 @@ public static class ExplorerTexts
     public static string Loading => T("explorer.loading", "Lädt…");
 
     // Zeilen-Buttons
-    public static string SearchFolderTip => T("explorer.searchFolder.tip", "In diesem Ordner suchen (öffnet das Suchen-Fenster)");
+    public static string SearchFolderTip => T("explorer.searchFolder.tip", "In diesem Ordner suchen");
 
     public static string OpenLeftTip => T("explorer.openLeft.tip", "Im linken Arbeitsbereich öffnen");
 

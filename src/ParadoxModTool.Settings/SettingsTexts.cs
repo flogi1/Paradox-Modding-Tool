@@ -253,6 +253,10 @@ public static class SettingsTexts
 
     public static string NotesPanelKeepOpenTip => T("settings.notes.keepOpen.tip", "Ohne diese Einstellung blendet sich das Panel bei Dateien ohne Notiz und Lesezeichen aus. Mit ihr bleibt es offen, damit die Ansicht beim Dateiwechsel nicht springt.");
 
+    public static string NotesPanelSearchTab => T("settings.notes.searchTab", "Suche im rechten Panel anzeigen");
+
+    public static string NotesPanelSearchTabTip => T("settings.notes.searchTab.tip", "Suchen & Ersetzen als Reiter ‚Suche‘ im rechten Panel statt als eigenes Fenster, auch in Ordnern. Strg+F öffnet dann den Reiter.");
+
     public static string NotesPanelScope => T("settings.notes.scope", "Scope im Notiz-Panel anzeigen");
 
     public static string NotesPanelScopeTip => T("settings.notes.scope.tip", "Abschnitt „Scope“ im rechten Panel: Scope am Cursor, gespeicherte Scopes und die Warnungen der Datei");
@@ -386,6 +390,10 @@ public static class SettingsTexts
         HotkeyGroup.Gui => T("settings.hotkeyGroup.gui", "GUI-Inspektor"),
         HotkeyGroup.Publish => T("settings.hotkeyGroup.publish", "Veröffentlichen"),
         HotkeyGroup.Templates => T("settings.hotkeyGroup.templates", "Template Generator"),
+        HotkeyGroup.Performance => T("settings.hotkeyGroup.performance", "Performance-Checker"),
+        HotkeyGroup.FlagTracker => T("settings.hotkeyGroup.flagTracker", "Flag-Tracker"),
+        HotkeyGroup.ScriptCheck => T("settings.hotkeyGroup.scriptCheck", "Skript-Prüfung"),
+        HotkeyGroup.GfxAudit => T("settings.hotkeyGroup.gfxAudit", "GFX-Prüfung"),
         HotkeyGroup.Dialogs => T("settings.hotkeyGroup.dialogs", "Dialoge"),
         _ => group.ToString(),
     };
@@ -433,6 +441,9 @@ public static class SettingsTexts
         "main.scopeFinder" => T("settings.hotkey.main.scopeFinder", "Scope Finder öffnen"),
         "main.guiDataHelper" => T("settings.hotkey.main.guiDataHelper", "GUI-Daten-Helfer öffnen (nur mit eingeschalteten GUI-Werkzeugen)"),
         "main.guiBlocks" => T("settings.hotkey.main.guiBlocks", "GUI-Bausteine öffnen (nur mit eingeschalteten GUI-Werkzeugen)"),
+        "main.moveToOtherPane" => T("settings.hotkey.main.moveToOtherPane", "Aktives Dokument in den anderen Arbeitsbereich verschieben"),
+        "main.referenceTree" => T("settings.hotkey.main.referenceTree", "Name am Cursor im Verweisbaum zeigen"),
+        "main.referenceTreeInput" => T("settings.hotkey.main.referenceTreeInput", "Verweisbaum: Namen aus dem Eingabefeld zeigen"),
         "editor.autoComplete" => T("settings.hotkey.editor.autoComplete", "Vorschläge anzeigen"),
         "editor.undo" => T("settings.hotkey.editor.undo", "Rückgängig (Text im aktiven Dokument)"),
         "editor.redo" => T("settings.hotkey.editor.redo", "Wiederholen (Text im aktiven Dokument)"),
@@ -513,6 +524,23 @@ public static class SettingsTexts
         "dialogs.scopeFinderAppend" => T("settings.hotkey.dialogs.scopeFinderAppend", "Scope Finder: gewähltes Glied anhängen; in den Suchfeldern von \"Glied anhängen\" und \"Wert am Ende\" den ersten Treffer übernehmen"),
         "bugs.reject" => T("settings.hotkey.bugs.reject", "Im Bugtracker: gewählte Meldung verwerfen"),
         "saveExplorer.copyId" => T("settings.hotkey.saveExplorer.copyId", "Im Spielstand-Explorer: ID des gewählten Objekts kopieren"),
+        "errorlog.hotspotJump" => T("settings.hotkey.errorlog.hotspotJump", "Im Fehlerprotokoll: gewählten Fehler-Hotspot im Editor öffnen"),
+        "performance.guide" => T("settings.hotkey.performance.guide", "Hilfe öffnen"),
+        "performance.jump" => T("settings.hotkey.performance.jump", "Zeile im Editor öffnen"),
+        "performance.noiseApply" => T("settings.hotkey.performance.noiseApply", "Im Vergleich: Rauschschwelle übernehmen"),
+        "aiPerformance.guide" => T("settings.hotkey.aiPerformance.guide", "Anleitung beim Kapitel \"KI-Analyse\" öffnen (Performance mit KI analysieren)"),
+        "flagTracker.open" => T("settings.hotkey.flagTracker.open", "Flag-Tracker öffnen"),
+        "flagTracker.openSite" => T("settings.hotkey.flagTracker.openSite", "Fundstelle im Editor öffnen"),
+        "flagTracker.showSites" => T("settings.hotkey.flagTracker.showSites", "Stellen zum Namen zeigen"),
+        "flagTracker.search" => T("settings.hotkey.flagTracker.search", "Sofort suchen"),
+        "flagTracker.refresh" => T("settings.hotkey.flagTracker.refresh", "Verzeichnis aktualisieren"),
+        "scriptCheck.openSite" => T("settings.hotkey.scriptCheck.openSite", "Befund im Editor öffnen"),
+        "scriptCheck.openCall" => T("settings.hotkey.scriptCheck.openCall", "Aufrufstelle im Editor öffnen"),
+        "scriptCheck.search" => T("settings.hotkey.scriptCheck.search", "Sofort suchen"),
+        "scriptCheck.refresh" => T("settings.hotkey.scriptCheck.refresh", "Prüfung aktualisieren (im Reiter „Leistung anderer Ziele“: Ziel prüfen)"),
+        "gfxAudit.openSite" => T("settings.hotkey.gfxAudit.openSite", "Befund öffnen (Bilder im Explorer zeigen)"),
+        "gfxAudit.search" => T("settings.hotkey.gfxAudit.search", "Sofort suchen"),
+        "gfxAudit.refresh" => T("settings.hotkey.gfxAudit.refresh", "Prüfung aktualisieren"),
         _ => textId,
     };
 
@@ -643,6 +671,9 @@ public static class SettingsTexts
 
     /// <summary>Name der Kachel "Desync-Analyse" (das Desync-Projekt ist von den Einstellungen aus nicht erreichbar).</summary>
     public static string TileDesync => T("settings.tiles.desync", "Desync-Analyse");
+
+    /// <summary>Name der Kachel "Performance-Checker" (das Performance-Projekt ist von den Einstellungen aus nicht erreichbar).</summary>
+    public static string TilePerformance => T("settings.tiles.performance", "Performance-Checker");
 
     // Werkzeugleisten
     public static string ToolbarItemsHeading => T("settings.toolbars.itemsHeading", "Einträge der kleinen Werkzeugleiste");

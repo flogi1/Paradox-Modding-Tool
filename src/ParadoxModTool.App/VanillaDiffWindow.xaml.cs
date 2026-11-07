@@ -685,7 +685,6 @@ public partial class VanillaDiffWindow : Window
             gameRoot,
             version,
             _overridden,
-            ModRelativePaths(modRoot),
             _selectedOverriddenFile,
             store,
             ParadoxModTool.Compatch.VanillaVersionLedger.Load(_modStateDirectory(modRoot)),
@@ -746,20 +745,6 @@ public partial class VanillaDiffWindow : Window
         LoadOverriddenFiles();
         LoadSelectedPair();
         UpdateStatusText.Text = MiscWindowTexts.DiffMergeDone;
-    }
-
-    /// <summary>Alle Dateien der Mod relativ zum Mod-Ordner (ohne Ordner mit Punkt), für "Vanilla-Datei entfällt".</summary>
-    private static IReadOnlyList<string> ModRelativePaths(string modRoot)
-    {
-        if (!Directory.Exists(modRoot))
-        {
-            return Array.Empty<string>();
-        }
-
-        return Directory.EnumerateFiles(modRoot, "*", SearchOption.AllDirectories)
-            .Select(f => Path.GetRelativePath(modRoot, f).Replace('\\', '/'))
-            .Where(r => !r.StartsWith('.') && !r.Contains("/.", StringComparison.Ordinal))
-            .ToList();
     }
 
     /// <summary>

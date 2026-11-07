@@ -18,11 +18,13 @@ public sealed class ClassicLocalisation
 
     private readonly IReadOnlyList<GuiSourceRoot> _roots;
     private readonly Lazy<Dictionary<string, string>> _texts;
+    private readonly Lazy<HashSet<string>> _foldedKeys;
 
     private ClassicLocalisation(IReadOnlyList<GuiSourceRoot> roots)
     {
         _roots = roots;
         _texts = new Lazy<Dictionary<string, string>>(LoadAll, LazyThreadSafetyMode.ExecutionAndPublication);
+        _foldedKeys = new Lazy<HashSet<string>>(() => new HashSet<string>(_texts.Value.Keys, StringComparer.OrdinalIgnoreCase), LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     /// <summary><paramref name="roots"/> in Ladereihenfolge (wie <see cref="GuiSourceSet.ClassicRootsFor"/>). Liest hier noch nichts.</summary>
@@ -30,6 +32,9 @@ public sealed class ClassicLocalisation
 
     /// <summary>Text zum Schlüssel oder <see langword="null"/>, wenn es ihn nicht gibt.</summary>
     public string? Text(string key) => _texts.Value.TryGetValue(key, out var text) ? text : null;
+
+    /// <summary>Gibt es den Schlüssel, ohne Rücksicht auf Groß-/Kleinschreibung? Nur für Prüfungen; die Vorschau nutzt <see cref="Text"/>.</summary>
+    public bool HasKeyIgnoreCase(string key) => _foldedKeys.Value.Contains(key);
 
     private Dictionary<string, string> LoadAll()
     {

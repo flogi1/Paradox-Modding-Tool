@@ -32,14 +32,56 @@ public enum OverrideBehavior
 /// <see cref="Unwrap"/> und <see cref="KeyField"/> bestimmen, was der Schlüssel eines Eintrags ist (siehe <see cref="RuleKeys"/>): Einträge in einer
 /// Hülle wie <c>country_decisions = { … }</c> zählen einzeln, und bei <see cref="KeyField"/> liefert das Feld im Block den Namen (<c>id</c> bei EU-IV-Events).
 /// <see cref="Operators"/> sind die Präfixe, die in diesem Ordner wirken; null = die des Spiels, leer = keine (Victoria 3).
+/// <see cref="UnwrapBehaviors"/>: Verhalten je Hülle, wo es von <see cref="Behavior"/> abweicht (EU IV <c>interface</c>: Fenster in <c>guiTypes</c>
+/// "zuerst geladen gewinnt", Sprites "zuletzt", gemessen 2026-10-17). Eine Regel damit rechnet nach der Ladereihenfolge der Dateien über Vanilla und Mods,
+/// auch ohne <see cref="OverrideRules.FirstWinsInLoadOrder"/>/<see cref="OverrideRules.LastWinsInLoadOrder"/> des Spiels.
 /// </remarks>
 public sealed record OverrideRule(string Folder, OverrideBehavior Behavior, bool Certain = true, IReadOnlyList<string>? Unwrap = null, string? KeyField = null,
-    IReadOnlyList<string>? Operators = null);
+    IReadOnlyList<string>? Operators = null, IReadOnlyDictionary<string, OverrideBehavior>? UnwrapBehaviors = null)
+{
+    /// <summary>Das Verhalten für Einträge in der Hülle <paramref name="unwrapKey"/> (<c>guiTypes</c>), sonst <see cref="Behavior"/>.</summary>
+    public OverrideBehavior BehaviorFor(string? unwrapKey) => UnwrapBehaviorLookup.For(UnwrapBehaviors, unwrapKey, Behavior);
+}
+
+/// <summary>Gemeinsame Suche für <see cref="OverrideRule.BehaviorFor"/> und <see cref="RuleMatch.BehaviorFor"/>: Hüllennamen ohne Groß-/Kleinschreibung.</summary>
+internal static class UnwrapBehaviorLookup
+{
+    public static OverrideBehavior For(IReadOnlyDictionary<string, OverrideBehavior>? behaviors, string? unwrapKey, OverrideBehavior fallback)
+    {
+        if (behaviors is null || string.IsNullOrEmpty(unwrapKey))
+        {
+            return fallback;
+        }
+
+        foreach (var (key, behavior) in behaviors)
+        {
+            if (string.Equals(key, unwrapKey, StringComparison.OrdinalIgnoreCase))
+            {
+                return behavior;
+            }
+        }
+
+        return fallback;
+    }
+}
 
 /// <summary>Ergebnis der Regelsuche für einen Dateipfad. <see cref="Scope"/> ist der Ordner, in dem Schlüssel einander überschreiben.</summary>
+/// <remarks><see cref="Behavior"/> gilt für die Datei; für einen Eintrag zählt <see cref="BehaviorFor"/> bzw. <see cref="ForKey"/> (Verhalten je Hülle).</remarks>
 public readonly record struct RuleMatch(OverrideBehavior Behavior, bool Certain, bool Known, string Scope, string? KeyField = null, IReadOnlyList<string>? Wrappers = null,
-    IReadOnlyList<string>? Operators = null)
+    IReadOnlyList<string>? Operators = null, IReadOnlyDictionary<string, OverrideBehavior>? UnwrapBehaviors = null)
 {
+    /// <summary>Das Verhalten für Einträge in der Hülle <paramref name="unwrapKey"/>, sonst <see cref="Behavior"/> (siehe <see cref="OverrideRule.UnwrapBehaviors"/>).</summary>
+    public OverrideBehavior BehaviorFor(string? unwrapKey) => UnwrapBehaviorLookup.For(UnwrapBehaviors, unwrapKey, Behavior);
+
+    /// <summary>Die Regel für einen Schlüssel aus <see cref="RuleKeys.Read"/>: <see cref="Behavior"/> nach seiner äußeren Hülle (<see cref="RuleKeys.UnwrapKeyOf"/>).</summary>
+    public RuleMatch ForKey(string key) => UnwrapBehaviors is null ? this : this with { Behavior = BehaviorFor(RuleKeys.UnwrapKeyOf(key)) };
+
+    /// <summary>
+    /// Gewinner nach der Ladereihenfolge der Dateien über Vanilla und Mods, nur für diese Regel: eine Regel mit Verhalten je Hülle (EU IV <c>interface</c>,
+    /// gemessen 2026-10-17). Die übrigen Ordner des Spiels bleiben, wie sie sind.
+    /// </summary>
+    public bool InLoadOrder => UnwrapBehaviors is { Count: > 0 };
+
     /// <summary>Hüllen-Blöcke, deren Einträge einzeln zählen; leer, wenn die Regel keine hat.</summary>
     public IReadOnlyList<string> Unwrap => Wrappers ?? Array.Empty<string>();
 
@@ -67,6 +109,13 @@ public sealed class OverrideRules
             if (earlier.Rule is { } previous && rule.Unwrap is null && rule.KeyField is null)
             {
                 rule = rule with { Unwrap = previous.Unwrap, KeyField = previous.KeyField };
+            }
+
+            // Das Verhalten je Hülle kennt das Regelfenster ebenso wenig; es bleibt nur, solange das Verhalten der Datei dasselbe ist. Wählt der Nutzer ein
+            // anderes, gilt seine Wahl für alle Einträge.
+            if (earlier.Rule is { UnwrapBehaviors: { } kept } before && rule.UnwrapBehaviors is null && rule.Behavior == before.Behavior)
+            {
+                rule = rule with { UnwrapBehaviors = kept };
             }
 
             // Die Präfixe eines Ordners kommen aus dem Profil; das Regelfenster kennt sie nicht und behält die des früheren Eintrags,
@@ -113,11 +162,26 @@ public sealed class OverrideRules
             if (Enum.TryParse<OverrideBehavior>(entry.Behavior, ignoreCase: true, out var behavior) && Split(entry.Folder).Length > 0)
             {
                 shipped.Add(new OverrideRule(entry.Folder, behavior, entry.Certain, entry.Unwrap is { Count: > 0 } unwrap ? unwrap.ToList() : null,
-                    string.IsNullOrWhiteSpace(entry.KeyField) ? null : entry.KeyField.Trim(), entry.Operators?.ToList()));
+                    string.IsNullOrWhiteSpace(entry.KeyField) ? null : entry.KeyField.Trim(), entry.Operators?.ToList(), UnwrapBehaviorsOf(entry)));
             }
         }
 
         return new OverrideRules(shipped, game) { InjectAppends = profile.InjectAppends, FirstWinsInLoadOrder = profile.FirstWinsInLoadOrder, LastWinsInLoadOrder = profile.LastWinsInLoadOrder, LoadOrderCaseSensitive = profile.LoadOrderCaseSensitive };
+    }
+
+    /// <summary>Verhalten je Hülle aus dem Profil; unbekannte Werte fallen weg, ohne gültigen Wert gibt es keine.</summary>
+    private static IReadOnlyDictionary<string, OverrideBehavior>? UnwrapBehaviorsOf(OverrideRuleEntry entry)
+    {
+        var result = new Dictionary<string, OverrideBehavior>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, value) in entry.UnwrapBehaviors ?? new Dictionary<string, string>())
+        {
+            if (!string.IsNullOrWhiteSpace(key) && Enum.TryParse<OverrideBehavior>(value, ignoreCase: true, out var behavior))
+            {
+                result[key.Trim()] = behavior;
+            }
+        }
+
+        return result.Count > 0 ? result : null;
     }
 
     public RuleMatch Match(string relativePath)
@@ -144,7 +208,8 @@ public sealed class OverrideRules
             depth++;
         }
 
-        return new RuleMatch(found.Rule.Behavior, found.Rule.Certain, true, string.Join('/', directory[..depth]), found.Rule.KeyField, found.Rule.Unwrap, found.Rule.Operators);
+        return new RuleMatch(found.Rule.Behavior, found.Rule.Certain, true, string.Join('/', directory[..depth]), found.Rule.KeyField, found.Rule.Unwrap, found.Rule.Operators,
+            found.Rule.UnwrapBehaviors);
     }
 
     private static bool Matches(string[] pattern, string[] directory)

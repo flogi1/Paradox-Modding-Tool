@@ -1,0 +1,21 @@
+# block: Scrollbereich
+# group: Fenster
+# description: Bereich mit senkrechter Scrollleiste (verticalScrollbar nennt das Element right_vertical_slider aus interface/core.gui). Inhalt als Kinder in dieses Fenster setzen; was über die Höhe hinausgeht, wird gescrollt. Vorbild: interface/countrydecisionview.gui
+# param: name | Name | my_scroll_area
+# param: width | Breite | 400
+# param: height | Höhe | 200
+# requires: GFX_tiled_window_transparent
+
+containerWindowType = {
+	name = "$name$"
+	position = { x = 20 y = 60 }
+	size = { width = $width$ height = $height$ }
+	verticalScrollbar = "right_vertical_slider"
+	scroll_wheel_factor = 40
+	smooth_scrolling = yes
+
+	background = {
+		name = "Background"
+		quadTextureSprite = "GFX_tiled_window_transparent"
+	}
+}

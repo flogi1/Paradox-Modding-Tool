@@ -47,6 +47,9 @@ public sealed class GuiRules
 
     public static GuiRules Empty { get; } = new(Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
 
+    /// <summary>Strukturierte Blöcke, die der Resolver zusätzlich als Unterelement auflöst (<see cref="ResolvedProperty.Block"/>): <c>using</c>, <c>block</c> und Konstanten wirken darin.</summary>
+    public static readonly IReadOnlySet<string> ResolvedBlockNames = new HashSet<string>(new[] { "modify_texture", "glow" }, StringComparer.Ordinal);
+
     public IReadOnlySet<string> StructuredBlocks { get; }
 
     public IReadOnlySet<string> WidgetHolders { get; }
@@ -72,8 +75,16 @@ public sealed class GuiRules
                 classic ? GuiDialect.Classic : GuiDialect.Jomini,
                 string.Equals(gui.SpriteOverride, "firstWins", StringComparison.OrdinalIgnoreCase),
                 classic && profile.LoadOrderCaseSensitive,
-                gui.VanillaRoots.Count == 0 ? null : gui.VanillaRoots.ToList()));
+                gui.VanillaRoots.Count == 0 ? null : gui.VanillaRoots.ToList(),
+                profile.ReplacePathGuiCrashRoots.Count == 0 ? null : profile.ReplacePathGuiCrashRoots.ToList(),
+                string.IsNullOrWhiteSpace(profile.MetadataFile) ? null : profile.MetadataFile,
+                ScriptWiringOf(classic ? gui.ScriptWiring : null)));
     }
+
+    private static GuiScriptWiring ScriptWiringOf(string? value) =>
+        string.Equals(value, "scriptedGuis", StringComparison.OrdinalIgnoreCase) ? GuiScriptWiring.ScriptedGuis
+        : string.Equals(value, "customGui", StringComparison.OrdinalIgnoreCase) ? GuiScriptWiring.CustomGui
+        : GuiScriptWiring.None;
 
     /// <summary>
     /// Einordnung: Typname → Typ-Instanz; Profilliste → strukturierter Block bzw. Widget-Halter; nur Listeneinträge → Wertblock;

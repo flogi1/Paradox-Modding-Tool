@@ -38,6 +38,9 @@
     <None Include="..\..\profiles\stellaris.json" Link="profiles\stellaris.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\profiles\errorlog\eu5.json" Link="profiles\errorlog\eu5.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Data\**\*.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

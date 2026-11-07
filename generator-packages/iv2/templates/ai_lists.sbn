@@ -10,7 +10,7 @@ iv2_ga_list_nat_ideas_progress_cost_{{ tag }} = {
 			limit = {
 				has_variable = iv2_var_progress_points_adm
 			}
-			var:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_adm
+			var:iv2_var_progress_points_adm >= iv2_nat_cost_live_adm
 		}
 	}
 	actions = {
@@ -30,7 +30,7 @@ iv2_ga_list_nat_ideas_innovation_cost_{{ tag }} = {
 			limit = {
 				has_variable = iv2_var_innovation_points_adm
 			}
-			var:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_adm
+			var:iv2_var_innovation_points_adm >= iv2_nat_icost_live_adm
 		}
 	}
 	actions = {

@@ -1,0 +1,7 @@
+# Restliste der Skriptprüfung für ck3 (Kalibrierung „Vanilla als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+BrokenReference|is_powerful	nirgends definiert (kein Trigger in den Script-Docs, kein Skripttrigger); 00_relation_triggers.txt:1091 und 00_relation_effects.txt:755, gemeint ist wohl is_powerful_vassal
+BrokenReference|secret_is_blackmailable_strong_hook_trigger	nirgends definiert; nur aufgerufen in 00_religious_triggers.txt:806 (secret_is_blackmailable_trigger)
+BrokenReference|secret_is_blackmailable_weak_hook_trigger	nirgends definiert; nur aufgerufen in 00_religious_triggers.txt:807 (secret_is_blackmailable_trigger)
+BrokenReference|is_eminent	nur als is_eminent = no in 3 Dateien (z. B. events/artifacts/historical_artifacts_events.txt:1111, unter every_holy_site) benutzt, nicht in den Script-Docs (Stand 2026-09-30); vermutlich ein Trigger, den die Docs noch nicht kennen, mit frischen Docs pruefen

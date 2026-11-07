@@ -16,7 +16,8 @@
     { "id": "guiLevels", "label": { "de": "Im Fenster gezeigte Stufen (leer = alle)", "en": "Levels shown in the window (empty = all)" }, "type": "number", "pattern": "^[1-4]?$" },
     { "id": "disabled", "label": { "de": "Deaktiviert", "en": "Disabled" }, "type": "bool", "default": "no" },
     { "id": "disabledNote", "label": { "de": "Notiz zur Deaktivierung", "en": "Note on disabling" }, "type": "text" },
-    { "id": "aiTags", "label": { "de": "KI-Tags (je Zeile eine Tag-Kennung)", "en": "AI tags (one tag id per line)" }, "type": "multilineText" }
+    { "id": "aiTags", "label": { "de": "KI-Tags (je Zeile eine Tag-Kennung)", "en": "AI tags (one tag id per line)" }, "type": "multilineText",
+      "suggest": { "external": "aiTags", "jsonPath": "tags", "idKey": "id", "labelKey": "label" } }
   ],
   "root": {
     "id": "levels", "label": { "de": "Stufen", "en": "Levels" }, "min": 1, "max": 4, "initial": 4,
@@ -25,7 +26,7 @@
       { "id": "expensive", "label": { "de": "Teure Kosten", "en": "Expensive cost" }, "type": "bool", "default": "no" }
     ]
   },
-  "languages": { "copyEnglish": true },
+  "languages": { "defaultLanguages": [ "german", "english" ], "extendEnglish": false, "copyEnglish": false, "englishForMissing": false },
   "targets": [ "mod", "output" ],
   "externals": {
     "aiTags": { "label": { "de": "KI-Tag-Datei (iv2_ai_tags.json)", "en": "AI tag file (iv2_ai_tags.json)" }, "hint": "Idea Variation 2 Skripte/Tag-Editor/iv2_ai_tags.json" }
@@ -109,15 +110,16 @@
     { "id": "loc_idea", "kind": "localization", "path": "main_menu/localization/{{ lang }}/{{ idea_loc_file }}", "template": "loc_idea.sbn",
       "keys": "^(?:iv2_dynamic_nat_idea_|iv2_ga_select_national_idea_|iv2_ga_deselect_nat_idea_|STATIC_MODIFIER_(?:NAME|DESC)_national_idea_modifier_){{ id }}(?:_[0-9])?(?:_desc)?$",
       "insertAfter": "^(?:iv2_dynamic_nat_idea_|iv2_ga_select_national_idea_|iv2_ga_deselect_nat_idea_|STATIC_MODIFIER_(?:NAME|DESC)_national_idea_modifier_){{ category }}_[0-9]+(?:_[0-9])?(?:_desc)?$" },
-    { "id": "messagetypes", "kind": "syncMatching", "path": "main_menu/gui/messagetypes.txt", "template": "messagetypes.sbn",
-      "match": "\\A#?[ \\t]*WE_PERFORM_iv2_ga_(?:select_national_idea_{{ id }}(?:_[0-9])?|deselect_nat_idea_{{ id }})_ACTION(?![0-9_])",
-      "insertAfter": "\\A#?[ \\t]*WE_PERFORM_iv2_ga_(?:select_national_idea_{{ category }}_[0-9]+(?:_[0-9])?|deselect_nat_idea_{{ category }}_[0-9]+)_ACTION(?![0-9_])" },
+    { "id": "messagetypes", "kind": "syncMatching", "path": "main_menu/gui/messagetypes/01_IV2_dynamic_ideas_messagetypes.txt", "template": "messagetypes.sbn",
+      "migrate": { "from": "main_menu/gui/messagetypes.txt", "patterns": [ "^#?[ \\t]*WE_PERFORM_iv2_ga_(?:select_national_idea|deselect_nat_idea)_\\w+_ACTION\\s*=\\s*\\{" ] },
+      "match": "\\A#?[ \\t]*(?:WE_)?PERFORM_iv2_ga_(?:select_national_idea_{{ id }}(?:_[0-9])?|deselect_nat_idea_{{ id }})_ACTION(?![0-9_])",
+      "insertAfter": "\\A#?[ \\t]*(?:WE_)?PERFORM_iv2_ga_(?:select_national_idea_{{ category }}_[0-9]+(?:_[0-9])?|deselect_nat_idea_{{ category }}_[0-9]+)_ACTION(?![0-9_])" },
     { "id": "loc_msg_select", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_select.sbn",
-      "keys": "^WE_PERFORM_iv2_ga_select_national_idea_{{ id }}(?:_[0-9])?_ACTION_[A-Z0-9]+$",
-      "insertAfter": "^WE_PERFORM_iv2_ga_select_national_idea_{{ category }}_[0-9]+(?:_[0-9])?_ACTION_[A-Z0-9]+$" },
+      "keys": "^(?:WE_)?PERFORM_iv2_ga_select_national_idea_{{ id }}(?:_[0-9])?_ACTION_[A-Z0-9]+$",
+      "insertAfter": "^(?:WE_)?PERFORM_iv2_ga_select_national_idea_{{ category }}_[0-9]+(?:_[0-9])?_ACTION_[A-Z0-9]+$" },
     { "id": "loc_msg_deselect", "kind": "localization", "path": "main_menu/localization/{{ lang }}/03_IV2_messages_l_{{ lang }}.yml", "template": "loc_msg_deselect.sbn",
-      "keys": "^WE_PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_[A-Z0-9]+$",
-      "insertAfter": "^WE_PERFORM_iv2_ga_deselect_nat_idea_{{ category }}_[0-9]+_ACTION_[A-Z0-9]+$" },
+      "keys": "^(?:WE_)?PERFORM_iv2_ga_deselect_nat_idea_{{ id }}_ACTION_[A-Z0-9]+$",
+      "insertAfter": "^(?:WE_)?PERFORM_iv2_ga_deselect_nat_idea_{{ category }}_[0-9]+_ACTION_[A-Z0-9]+$" },
     { "id": "ai_tags", "kind": "jsonEntry", "path": "", "external": "aiTags", "jsonPath": "entries", "entryKey": "nat:{{ id }}", "template": "ai_tags.sbn" }
   ],
   "errors": [

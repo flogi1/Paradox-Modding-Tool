@@ -10,6 +10,7 @@ namespace ParadoxModTool.Editor.Gui;
 /// Zeichnet das Texturbild eines Jomini-Kastens (<see cref="JominiSpriteVisual"/>): gestreckt, in neun Teilen, gekachelt, mit Einpassung, Spiegelung,
 /// Färbung und Deckkraft. Die Stücke liefert <see cref="JominiSpriteGeometry"/> (in GUI-Einheiten), der Zeichner rechnet sie mit dem Zoom auf den Bildschirm.
 /// Dekodiert nie: das Bild kommt über <see cref="GuiImageCache.TryGet"/>, solange es noch aussteht, zeichnet der Aufrufer den schematischen Kasten.
+/// Kästen mit Effekten zeigen das Effektbild aus <see cref="GuiImageCache.TryGetComposite"/>, bis es fertig ist das schlichte Sprite.
 /// Läuft auf dem UI-Thread.
 /// </summary>
 internal static class JominiSpriteRenderer
@@ -20,7 +21,11 @@ internal static class JominiSpriteRenderer
     /// </summary>
     /// <param name="zoom">Bildschirmpixel je GUI-Einheit (Randbreiten und Kachelgrößen behalten so ihre Spielgröße).</param>
     /// <param name="renderScale"><see cref="LayoutBox.RenderScale"/> des Kastens (Jomini <c>scale</c>): Ränder und Kacheln werden damit malgenommen.</param>
-    internal static bool Draw(DrawingContext dc, JominiSpriteVisual sprite, Rect screenRect, double zoom, GuiImageCache cache, double pixelsPerDip, double renderScale = 1)
+    /// <param name="effects">Effekte des Kastens (<see cref="LayoutBox.Effects"/>; dessen Grundbild ist <paramref name="sprite"/>): ist das Effektbild fertig
+    /// (<see cref="GuiImageCache.TryGetComposite"/>), wird es statt des schlichten Sprites gezeichnet.</param>
+    internal static bool Draw(
+        DrawingContext dc, JominiSpriteVisual sprite, Rect screenRect, double zoom, GuiImageCache cache, double pixelsPerDip, double renderScale = 1,
+        JominiEffectRecipe? effects = null)
     {
         if (!double.IsFinite(zoom) || zoom <= 0 || !(screenRect.Width > 0) || !(screenRect.Height > 0))
         {
@@ -30,6 +35,14 @@ internal static class JominiSpriteRenderer
         if (sprite.Placeholder != JominiSpritePlaceholder.None || sprite.TextureFullPath is null)
         {
             DrawPlaceholder(dc, sprite, screenRect, pixelsPerDip);
+            return true;
+        }
+
+        // Mit Effekten: das fertige Effektbild; steht es noch aus, ist verdrängt oder unlesbar, das schlichte Sprite wie ohne Effekte (nie der
+        // schematische Kasten, wenn das schlichte Bild schon da ist).
+        if (effects is not null && cache.TryGetComposite(effects, out var composite) == GuiImageState.Ready && composite is not null)
+        {
+            DrawComposite(dc, sprite, composite, effects, screenRect, zoom);
             return true;
         }
 
@@ -56,27 +69,7 @@ internal static class JominiSpriteRenderer
             return true;
         }
 
-        var opacity = double.IsFinite(sprite.Opacity) ? Math.Clamp(sprite.Opacity, 0, 1) : 1;
-        var pushed = 0;
-        if (opacity < 1)
-        {
-            dc.PushOpacity(opacity);
-            pushed++;
-        }
-
-        if (sprite.MirrorHorizontal || sprite.MirrorVertical)
-        {
-            // Der ganze Kasten wird um seine Mitte gespiegelt, Ränder und Kacheln mit (gemessen, Lauf 5, Fälle 13i–13k).
-            var mirror = new ScaleTransform(
-                sprite.MirrorHorizontal ? -1 : 1,
-                sprite.MirrorVertical ? -1 : 1,
-                screenRect.X + screenRect.Width / 2,
-                screenRect.Y + screenRect.Height / 2);
-            mirror.Freeze();
-            dc.PushTransform(mirror);
-            pushed++;
-        }
-
+        var pushed = PushOpacityAndMirror(dc, sprite, screenRect, mirror: true);
         foreach (var piece in pieces)
         {
             DrawPiece(dc, bitmap, piece, screenRect, zoom);
@@ -90,6 +83,55 @@ internal static class JominiSpriteRenderer
         return true;
     }
 
+    /// <summary>
+    /// Zeichnet das fertige Effektbild in den Kasten, um die Polsterung (<see cref="JominiEffectRecipe.PaddingPixels"/> / Pixel je Einheit × Zoom) je Seite
+    /// vergrößert. Die Färbung steckt schon im Bild; die Deckkraft des Sprites kommt hier dazu, die Spiegelung nur, wenn sie das ganze Bild dreht
+    /// (<see cref="JominiEffectRules.ElementMirrorFlipsLayers"/>; sonst hat das Zusammensetzen das Grundbild schon gespiegelt).
+    /// </summary>
+    private static void DrawComposite(DrawingContext dc, JominiSpriteVisual sprite, BitmapSource composite, JominiEffectRecipe effects, Rect screenRect, double zoom)
+    {
+        var inflate = effects.PixelsPerUnit > 0 ? effects.PaddingPixels / effects.PixelsPerUnit * zoom : 0;
+        var target = screenRect;
+        if (double.IsFinite(inflate) && inflate > 0)
+        {
+            target.Inflate(inflate, inflate);
+        }
+
+        var pushed = PushOpacityAndMirror(dc, sprite, screenRect, mirror: JominiEffectRules.ElementMirrorFlipsLayers);
+        dc.DrawImage(composite, target);
+        for (var i = 0; i < pushed; i++)
+        {
+            dc.Pop();
+        }
+    }
+
+    /// <summary>Legt die Deckkraft des Sprites und (mit <paramref name="mirror"/>) seine Spiegelung um die Kastenmitte an; liefert die Zahl der Ebenen zum Entfernen.</summary>
+    private static int PushOpacityAndMirror(DrawingContext dc, JominiSpriteVisual sprite, Rect screenRect, bool mirror)
+    {
+        var opacity = double.IsFinite(sprite.Opacity) ? Math.Clamp(sprite.Opacity, 0, 1) : 1;
+        var pushed = 0;
+        if (opacity < 1)
+        {
+            dc.PushOpacity(opacity);
+            pushed++;
+        }
+
+        if (mirror && (sprite.MirrorHorizontal || sprite.MirrorVertical))
+        {
+            // Der ganze Kasten wird um seine Mitte gespiegelt, Ränder und Kacheln mit (gemessen, Lauf 5, Fälle 13i–13k).
+            var transform = new ScaleTransform(
+                sprite.MirrorHorizontal ? -1 : 1,
+                sprite.MirrorVertical ? -1 : 1,
+                screenRect.X + screenRect.Width / 2,
+                screenRect.Y + screenRect.Height / 2);
+            transform.Freeze();
+            dc.PushTransform(transform);
+            pushed++;
+        }
+
+        return pushed;
+    }
+
     private static void DrawPiece(DrawingContext dc, BitmapSource bitmap, JominiSpritePiece piece, Rect screenRect, double zoom)
     {
         var target = new Rect(
@@ -97,7 +139,8 @@ internal static class JominiSpriteRenderer
             screenRect.Y + piece.Target.Y * zoom,
             piece.Target.Width * zoom,
             piece.Target.Height * zoom);
-        if (!(target.Width > 0) || !(target.Height > 0) || ImageRect(piece.Source) is not { } source || ClassicVisualRenderer.Crop(bitmap, source) is not { } image)
+        if (!(target.Width > 0) || !(target.Height > 0) || JominiSpriteGeometry.ImageRect(piece.Source) is not { } source
+            || ClassicVisualRenderer.Crop(bitmap, new Int32Rect(source.X, source.Y, source.Width, source.Height)) is not { } image)
         {
             return;
         }
@@ -120,30 +163,8 @@ internal static class JominiSpriteRenderer
         dc.DrawImage(image, target);
     }
 
-    /// <summary>
-    /// Ausschnitt in ganzen Texturpixeln (Ränder gerundet, mindestens ein Pixel); <see langword="null"/> bei leerem oder nicht endlichem Ausschnitt.
-    /// Gebrochene Ausschnitte entstehen nur bei <c>fittype</c> und Dichten; ein halbes Pixel Abweichung bleibt unsichtbar.
-    /// </summary>
-    private static Int32Rect? ImageRect(LayoutRect source)
-    {
-        if (!double.IsFinite(source.X) || !double.IsFinite(source.Y) || !double.IsFinite(source.Width) || !double.IsFinite(source.Height)
-            || source.Width <= 0 || source.Height <= 0 || Math.Abs(source.X) > int.MaxValue / 2 || Math.Abs(source.Y) > int.MaxValue / 2
-            || source.Width > int.MaxValue / 2 || source.Height > int.MaxValue / 2)
-        {
-            return null;
-        }
-
-        var left = (int)Math.Round(source.X);
-        var top = (int)Math.Round(source.Y);
-        var right = Math.Max(left + 1, (int)Math.Round(source.X + source.Width));
-        var bottom = Math.Max(top + 1, (int)Math.Round(source.Y + source.Height));
-        return new Int32Rect(left, top, right - left, bottom - top);
-    }
-
-    /// <summary>Färbung der Textur; die Deckkraft liegt ganz in <see cref="JominiSpriteVisual.Opacity"/> (der Alphakanal der Färbung ist immer 1).</summary>
-    internal static GuiTint TintOf(JominiSpriteVisual sprite) => new(Channel(sprite.Tint.R), Channel(sprite.Tint.G), Channel(sprite.Tint.B));
-
-    private static double Channel(double value) => double.IsFinite(value) ? Math.Max(0, value) : 1;
+    /// <summary>Färbung der Textur (<see cref="JominiSpriteRaster.TintOf"/>, dieselbe Regel wie beim Zusammensetzen von Effekten).</summary>
+    internal static GuiTint TintOf(JominiSpriteVisual sprite) => JominiSpriteRaster.TintOf(sprite);
 
     private static void DrawPlaceholder(DrawingContext dc, JominiSpriteVisual sprite, Rect screenRect, double pixelsPerDip)
     {

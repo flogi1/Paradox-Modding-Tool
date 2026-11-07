@@ -29,6 +29,9 @@ public sealed class KeyGroup
 
     public required bool Certain { get; init; }
 
+    /// <summary>Gewinner nach der Ladereihenfolge der Dateien über Vanilla und Mods, nur für diese Regel (<see cref="RuleMatch.InLoadOrder"/>, EU IV <c>interface</c>).</summary>
+    public bool InLoadOrder { get; init; }
+
     public List<CompatContribution> Contributions { get; } = new();
 }
 
@@ -141,8 +144,9 @@ public static class ContributionExtractor
         return result;
     }
 
+    /// <summary>Ein Beitrag mit dem Verhalten seiner Hülle (<see cref="RuleMatch.ForKey"/>: EU IV-Fenster "zuerst", Sprites "zuletzt").</summary>
     private static CompatContribution Make(CompatParticipant p, string relativePath, string fullPath, RuleMatch rule, OverrideKey key, ScriptStatement statement, string fileText) =>
-        new(p, relativePath, fullPath, key.Operator, key.Key, TextOf(statement, fileText), LineOf(statement, fileText), statement, rule.Behavior, rule.Certain);
+        new(p, relativePath, fullPath, key.Operator, key.Key, TextOf(statement, fileText), LineOf(statement, fileText), statement, rule.ForKey(key.Key).Behavior, rule.Certain);
 
     private static string? TextOf(ScriptStatement statement, string fileText)
     {
@@ -314,7 +318,7 @@ public sealed class ContributionIndex
                     var id = rule.Scope.ToLowerInvariant() + "|" + contribution.Key;
                     if (!index._keyGroups.TryGetValue(id, out var group))
                     {
-                        group = new KeyGroup { Scope = rule.Scope, Key = contribution.Key, Behavior = rule.Behavior, Certain = rule.Certain };
+                        group = new KeyGroup { Scope = rule.Scope, Key = contribution.Key, Behavior = contribution.Behavior, Certain = rule.Certain, InLoadOrder = rule.InLoadOrder };
                         index._keyGroups[id] = group;
                     }
 

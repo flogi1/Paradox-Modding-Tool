@@ -44,6 +44,55 @@ public class GuiDesignerEditsTests
         Assert.False(GuiDesignerEdits.IsElement(N(doc, "modify_texture"), resolver));
     }
 
+    /// <summary>
+    /// Klassisch (HOI IV, EU IV) nehmen nur <c>guiTypes</c> und Container-Elemente (containerWindowType, windowType, eu3dialogtype; jede
+    /// Schreibweise) Kinder auf; Icons, Knöpfe, Texte, Listen und <c>background</c> nicht, auch wenn sie Eigenschaften haben.
+    /// </summary>
+    [Theory]
+    [InlineData("hoi4")]
+    [InlineData("eu4")]
+    public void AcceptsWidgets_ClassicContainers(string game)
+    {
+        const string Text =
+            "guiTypes = {\n"
+            + "\tcontainerWindowType = {\n\t\tname = \"a\"\n\t\tbackground = { name = \"Background\" quadTextureSprite = \"x\" }\n"
+            + "\t\tWindowType = { name = \"b\" }\n"
+            + "\t\ticonType = { name = \"c\" }\n"
+            + "\t\tbuttonType = { name = \"d\" }\n"
+            + "\t\tguiButtonType = { name = \"e\" }\n"
+            + "\t\tinstantTextBoxType = { name = \"f\" }\n"
+            + "\t\tgridBoxType = { name = \"g\" }\n"
+            + "\t\tposition = { x = 0 y = 0 }\n"
+            + "\t}\n"
+            + "\teu3dialogtype = { name = \"h\" }\n"
+            + "}\n";
+        var rules = ClassicLayoutKit.Rules(game);
+        var doc = GuiParser.Parse(Text);
+        var index = Index.GuiIndex.FromDocuments(Array.Empty<Index.GuiSourceFile>(), Array.Empty<GuiDocument>(), rules.Layout);
+        var resolver = new Resolve.GuiResolver(index, rules, doc, "interface/edit.gui");
+        bool Accepts(string name) => GuiDesignerEdits.AcceptsWidgets(N(doc, name), resolver);
+
+        Assert.True(Accepts("guiTypes"));
+        Assert.True(Accepts("containerWindowType"));
+        Assert.True(Accepts("WindowType"));
+        Assert.True(Accepts("eu3dialogtype"));
+        Assert.False(GuiDesignerEdits.AcceptsWidgets(doc.Root, resolver));
+        foreach (var name in new[] { "background", "iconType", "buttonType", "guiButtonType", "instantTextBoxType", "gridBoxType", "position" })
+        {
+            Assert.False(Accepts(name), name);
+        }
+
+        // Ohne Auswahl kommt das Element ans Ende von guiTypes, nicht ans Dateiende; neben guiTypes (Dateiebene) gibt es keine Einfügestelle.
+        var guiTypes = N(doc, "guiTypes");
+        Assert.Equal(new GuiInsertion(guiTypes, InsertPosition.LastChild, null), GuiDesignerEdits.InsertionFor(null, GuiPlacement.AtSelection, 0, doc, resolver));
+        Assert.Equal(new GuiInsertion(guiTypes, InsertPosition.LastChild, null), GuiDesignerEdits.InsertionFor(doc.Root, GuiPlacement.AtSelection, 0, doc, resolver));
+        Assert.Null(GuiDesignerEdits.InsertionFor(guiTypes, GuiPlacement.After, 0, doc, resolver));
+
+        // Klassische Datei ohne guiTypes (leer): ans Dateiende wie bisher.
+        var empty = GuiParser.Parse(string.Empty);
+        Assert.Equal(new GuiInsertion(empty.Root, InsertPosition.LastChild, null), GuiDesignerEdits.InsertionFor(null, GuiPlacement.AtSelection, 0, empty, resolver));
+    }
+
     [Fact]
     public void DropRulesAndMoves()
     {

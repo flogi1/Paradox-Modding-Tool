@@ -159,7 +159,7 @@ national_idea_modifier_TST_5 = {
     }
 	obsolete = 1
 }
-##FILE main_menu/gui/messagetypes.txt
+##FILE main_menu/gui/messagetypes/01_IV2_messagetypes.txt
 # Test fixture in the shape of the real IV2 file (invented entries)
 WE_PERFORM_iv2_ga_select_historic_TS_1_ACTION={
 log=yes

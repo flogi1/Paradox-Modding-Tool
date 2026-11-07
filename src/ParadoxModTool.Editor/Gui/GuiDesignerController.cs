@@ -6,6 +6,7 @@ using ICSharpCode.AvalonEdit.Document;
 using ParadoxModTool.Categories;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Catalog;
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Edit;
@@ -131,6 +132,7 @@ public sealed class GuiDesignerController
 
         _treeRun?.Cancel();
         _previewRun?.Cancel();
+        _view.ScheduleChecks(null);
         _reparseTimer.Stop();
         _caretTimer.Stop();
         _document = document;
@@ -186,10 +188,9 @@ public sealed class GuiDesignerController
         // Einfügestelle führt der Ablauf unten zu den üblichen Meldungen.
         if (action is { Kind: GuiDesignerActionKind.Insert, Code: null, Entry: { Kind: GuiPaletteKind.Block } blockEntry })
         {
-            // Klassisch gibt es keine Bausteine (die Palette zeigt sie nicht; hier nur zur Sicherheit, z.B. ein gezogener Eintrag von vorher).
+            // Ohne GUI-Werkzeuge keine Bausteine (die Palette zeigt sie dann nicht; hier nur zur Sicherheit, z.B. ein gezogener Eintrag von vorher).
             if (!GuiSettings.BlocksOffered)
             {
-                _view.SetStatus(GuiTexts.ClassicBlocksLater);
                 return;
             }
 
@@ -777,6 +778,7 @@ public sealed class GuiDesignerController
             _previewTargetPath = null;
             _view.SetPreview(null, keepView: false, viewedFile: _document?.FilePath);
             _view.Select(widget, null);
+            ScheduleFindings(null);
             return;
         }
 
@@ -827,10 +829,49 @@ public sealed class GuiDesignerController
                 _view.SetStatus(GuiSettings.PreviewStatus);
                 _view.SetPreview(_preview, keepView, fonts, viewedFile);
                 _view.Select(widget, _preview);
+                ScheduleFindings(_preview.Scene, document);
             },
             CancellationToken.None,
             TaskContinuationOptions.None,
             TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    /// <summary>
+    /// Befundlauf für den angezeigten Stand: klassisch die Prüfungen (<see cref="CheckContext"/>, nur Mod-Dateien), bei Jomini die Hinweise der Vorschau
+    /// für jede Datei (Vanilla, Abhängigkeit, Entwurf). Ohne Vorschau-Szene oder ohne Arbeitsbereich keine Jomini-Liste. <paramref name="document"/>: der Stand der Szene, sonst
+    /// der angezeigte.
+    /// </summary>
+    private void ScheduleFindings(GuiSchematicScene? scene, GuiDocument? document = null)
+    {
+        if (_document is null)
+        {
+            _view.ScheduleChecks(null);
+        }
+        else if (GuiSettings.Layout.IsClassic)
+        {
+            _view.ScheduleChecks(CheckContext(document ?? LiveOf(_document).Current, scene));
+        }
+        else
+        {
+            // Ohne Arbeitsbereich hat die Vorschau keinen Textur-Finder: jede Textur gälte als fehlend (Fehlerflut), also keine Liste.
+            _view.ScheduleJominiFindings(GuiSettings.Workspace is null ? null : scene);
+        }
+    }
+
+    /// <summary>
+    /// Eingaben der klassischen Prüfung für den angezeigten Stand; null bei Jomini, ohne klassischen Arbeitsbereich oder ohne Dateipfad (dann keine Liste).
+    /// "Datei der Mod" folgt dem Schreibschutz des Designers: Vanilla- und Abhängigkeitsdateien nicht, Entwürfe auch nicht (ihr Pfad ist die
+    /// Vanilla-Datei); gesperrte Mod-Dateien ja.
+    /// </summary>
+    private ClassicCheckContext? CheckContext(GuiDocument document, GuiSchematicScene? scene)
+    {
+        if (!GuiSettings.Layout.IsClassic || GuiSettings.Workspace is not { Classic: not null } workspace || _document?.FilePath is not { } path)
+        {
+            return null;
+        }
+
+        var isModFile = (_readOnly is null or GuiReadOnlyReason.Locked) && !_document.IsGuiDraft;
+        return new ClassicCheckContext(workspace, document, path, scene, isModFile, GuiSettings.MarkAllOverflow);
     }
 
     /// <summary>Baum- oder Vorschau-Klick: Stelle im Code markieren (nur, wenn der Code dem angezeigten Stand entspricht).</summary>

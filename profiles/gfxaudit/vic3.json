@@ -1,0 +1,11 @@
+{
+  "textExtensions": [".txt", ".gui", ".gfx", ".yml", ".asset", ".settings", ".shader", ".fxh"],
+  "spriteBlocks": [],
+  "spriteTextureKeys": [],
+  "spriteRefPrefix": null,
+  "namePrefixes": ["mod_"],
+  "nameSuffixes": ["_shine", "_notachieved", "_not_eligible", "_grey", "_locked", "_opposite", "_small", "_medium"],
+  "alwaysUsedFolders": ["gfx/models", "gfx/particles", "gfx/map", "gfx/cursors", "gfx/loadingscreens", "gfx/flags", "gfx/terrain", "gfx/terrain2", "gfx/portraits/environments"],
+  "pathRoots": [""],
+  "notes": "Measured in the installed Vanilla game, 2026-11-06 (GFX check plan 1, task 1); calibrated in task 6 (unused images 1.6 %, nothing added: no evident engine pattern left, the rest is mostly gfx/portraits/accessory_variations/textures/color_palettes, coat-of-arms emblems not in any list and gfx/unit_illustrations/unused). No sprite definitions."
+}

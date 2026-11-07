@@ -1,0 +1,41 @@
+# block: Fenster
+# group: Fenster
+# description: Fenster mit Hintergrund, Titel und Schließen-Knopf, mitten auf dem Bildschirm. Gehört direkt in guiTypes. Ein Mod-Fenster zeigt das Spiel erst über einen Scripted GUI (Eigenschaftsfeld „Scripted GUI anlegen…“); der Schließen-Knopf braucht dort einen Effekt <name>_close_button_click, der die Bedingung unter visible falsch macht. Vorbild: interface/countrydecisionview.gui, interface/combatlogview.gui
+# param: name | Name des Fensters | my_window
+# param: title | Titel (Lokalisierungsschlüssel) | MY_WINDOW_TITLE
+# param: width | Breite | 500
+# param: height | Höhe | 300
+# requires: GFX_tiled_window2_1b_border, hoi_24header, GFX_closebutton
+
+containerWindowType = {
+	name = "$name$"
+	position = { x = 0 y = 0 }
+	size = { width = $width$ height = $height$ }
+	orientation = CENTER
+	origo = CENTER
+	moveable = yes
+
+	background = {
+		name = "Background"
+		quadTextureSprite = "GFX_tiled_window2_1b_border"
+	}
+
+	instantTextBoxType = {
+		name = "$name$_title"
+		position = { x = 20 y = 14 }
+		font = "hoi_24header"
+		text = "$title$"
+		maxWidth = 400
+		maxHeight = 30
+		format = left
+	}
+
+	buttonType = {
+		name = "$name$_close_button"
+		position = { x = -43 y = 9 }
+		quadTextureSprite = "GFX_closebutton"
+		Orientation = "UPPER_RIGHT"
+		clicksound = click_close
+		pdx_tooltip = "CLOSE"
+	}
+}

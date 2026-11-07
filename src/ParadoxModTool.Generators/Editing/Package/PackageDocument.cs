@@ -174,14 +174,27 @@ public sealed partial class PackageDocument
     public LanguageDefaults Languages
     {
         get => Json["languages"] is JsonObject l
-            ? new LanguageDefaults(Bool(l, "extendEnglish"), Bool(l, "copyEnglish"), Bool(l, "englishForMissing"))
+            ? new LanguageDefaults(Bool(l, "extendEnglish"), Bool(l, "copyEnglish"), Bool(l, "englishForMissing"),
+                (l["defaultLanguages"] as JsonArray)?.Select(n => n?.ToString() ?? string.Empty).ToList())
             : new LanguageDefaults();
-        set => SetNode(Json, "languages", new JsonObject
+        set
         {
-            ["extendEnglish"] = value.ExtendEnglish,
-            ["copyEnglish"] = value.CopyEnglish,
-            ["englishForMissing"] = value.EnglishForMissing,
-        });
+            // defaultLanguages hat keine Maske im Paket-Editor und bleibt stehen
+            var existing = ((Json["languages"] as JsonObject)?["defaultLanguages"] as JsonArray)?.Select(n => n?.ToString() ?? string.Empty).ToList();
+            var defaults = value.DefaultLanguages ?? existing;
+            var node = new JsonObject
+            {
+                ["extendEnglish"] = value.ExtendEnglish,
+                ["copyEnglish"] = value.CopyEnglish,
+                ["englishForMissing"] = value.EnglishForMissing,
+            };
+            if (defaults is { Count: > 0 })
+            {
+                node["defaultLanguages"] = new JsonArray(defaults.Select(t => (JsonNode?)JsonValue.Create(t)).ToArray());
+            }
+
+            SetNode(Json, "languages", node);
+        }
     }
 
     /// <summary>Assets in Dateireihenfolge; Text-Einträge gelten als aus dem Spiel. Schreiben immer in Objektform.</summary>

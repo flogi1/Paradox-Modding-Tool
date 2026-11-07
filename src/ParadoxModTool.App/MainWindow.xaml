@@ -66,6 +66,11 @@
             <MenuItem x:Name="CompatchMenuItem" Click="OpenCompatch_Click" />
             <MenuItem x:Name="ErrorLogMenuItem" Click="OpenErrorLog_Click" />
             <MenuItem x:Name="DesyncMenuItem" Click="OpenDesync_Click" />
+            <MenuItem x:Name="PerformanceMenuItem" Click="OpenPerformance_Click" ToolTipService.ShowOnDisabled="True" />
+            <MenuItem x:Name="FlagTrackerMenuItem" Click="OpenFlagTracker_Click" ToolTipService.ShowOnDisabled="True" />
+            <MenuItem x:Name="ScriptCheckMenuItem" Click="OpenScriptCheck_Click" ToolTipService.ShowOnDisabled="True" />
+            <MenuItem x:Name="GfxAuditMenuItem" Click="OpenGfxAudit_Click" ToolTipService.ShowOnDisabled="True" />
+            <MenuItem x:Name="ReferenceTreeMenuItem" Click="OpenReferenceTree_Click" ToolTipService.ShowOnDisabled="True" />
             <MenuItem x:Name="SaveExplorerMenuItem" Click="OpenSaveExplorer_Click" ToolTipService.ShowOnDisabled="True" />
             <MenuItem x:Name="ScriptDocsMenuItem" Click="OpenScriptDocsWindow_Click" />
             <!-- GUI: Texte aus GuiTexts (MainWindow.Gui.cs); "GUI-Inspektor" ist ausgeblendet, wenn die GUI-Werkzeuge aus sind. -->

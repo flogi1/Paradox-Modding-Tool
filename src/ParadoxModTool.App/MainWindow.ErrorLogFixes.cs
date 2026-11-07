@@ -73,18 +73,120 @@ public partial class MainWindow
             return new FixOutcome(false, nothing);
         }
 
-        var unsaved = AllPanes.SelectMany(p => p.Documents)
-            .FirstOrDefault(d => d.IsModified && files.Any(f => EditorPane.PathsEqual(d.FilePath, f.Path)));
-        if (unsaved?.FilePath is { } unsavedPath)
-        {
-            return new FixOutcome(false, ErrorLogTexts.RenameUnsaved(Path.GetFileName(unsavedPath)));
-        }
+        var writes = files
+            .Select(f => new ModWrite(f.Path, f.NewText, new FileWriteUndoableAction(description + ": " + Path.GetFileName(f.Path), f.Path, f.NewText, new UTF8Encoding(f.HasBom))))
+            .ToList();
+        var folders = plans.Where(p => p.Files.Count > 0).Select(p => p.Folder).ToList();
+        return WriteModActions(folders, writes, description, snapshotNote, failed)
+            ?? new FixOutcome(true, done(files.Sum(f => f.Count), files.Count));
+    }
 
-        foreach (var plan in plans.Where(p => p.Files.Count > 0))
+    /// <summary>
+    /// ENC-001 ohne error.log: das BOM aus Dateien eigener Mods entfernen, sonst Byte für Byte gleich (<see cref="BomCheck.WithoutBom"/>).
+    /// Gelesen wird erst jetzt; Dateien, die inzwischen kein BOM mehr haben oder seit der Prüfung gelöscht bzw. verschoben wurden, bleiben
+    /// unberührt. Ablauf wie <see cref="ApplyModEdits"/>: eine Sicherung je betroffener Mod, alles ein Schritt im Aktionsverlauf.
+    /// Läuft im Hintergrund (Fehlerprotokoll, "Alle entfernen" bei vielen Dateien); <see cref="WriteModActions"/> holt sich den UI-Thread selbst.
+    /// Weil der Editor solange bedienbar bleibt: vor dem Schreiben noch einmal die Prüfung auf ungespeicherte Dateien, eine seit dem Lesen
+    /// gespeicherte Datei (Änderungszeit oder Länge anders) bleibt unberührt und steht in der Meldung, geänderte Tabs werden nicht neu geladen.
+    /// </summary>
+    private FixOutcome RemoveBoms(IReadOnlyList<BomFinding> findings)
+    {
+        var changes = new List<(BomFinding Finding, byte[] Content, BomFileStamp Stamp)>();
+        foreach (var finding in findings)
         {
             try
             {
-                new ModVersionManager(plan.Folder, ErrorLogSnapshotDirectory(plan.Folder)).CreateSnapshot(snapshotNote);
+                if (BomCheck.ReadWithoutBom(finding.FullPath, out var stamp) is { } content)
+                {
+                    changes.Add((finding, content, stamp));
+                }
+            }
+            catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+            {
+                // Seit der Prüfung gelöscht oder verschoben: nichts zu tun.
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return new FixOutcome(false, ErrorLogTexts.BomRemoveFailed(ex.Message));
+            }
+        }
+
+        if (changes.Count == 0)
+        {
+            return new FixOutcome(false, ErrorLogTexts.BomNothing);
+        }
+
+        var description = ErrorLogTexts.BomRemoveAction(changes.Count);
+        var writes = changes
+            .Select(c => new ModWrite(c.Finding.FullPath, null, new BinaryWriteUndoableAction(description + ": " + Path.GetFileName(c.Finding.FullPath), c.Finding.FullPath, c.Content)))
+            .ToList();
+        var stamps = changes.ToDictionary(c => c.Finding.FullPath, c => c.Stamp, StringComparer.OrdinalIgnoreCase);
+        var guard = new BackgroundWriteGuard(w => BomCheck.Unchanged(w.Path, stamps[w.Path]));
+        var folders = changes.Select(c => c.Finding.ModRoot).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (WriteModActions(folders, writes, description, ErrorLogTexts.BomSnapshotNote, ErrorLogTexts.BomRemoveFailed, guard) is { } problem)
+        {
+            return problem;
+        }
+
+        var skipped = changes
+            .Where(c => guard.Skipped.Contains(c.Finding.FullPath, StringComparer.OrdinalIgnoreCase))
+            .Select(c => ErrorLogTexts.BomLine(c.Finding.ModName, c.Finding.RelativePath))
+            .ToList();
+        var skippedNote = skipped.Count > 0 ? ErrorLogTexts.BomSkipped(ErrorLogTexts.BomFileList(skipped)) : null;
+        var removed = changes.Count - skipped.Count;
+        if (removed == 0)
+        {
+            return new FixOutcome(false, skippedNote!);
+        }
+
+        var done = ErrorLogTexts.BomRemoveDone(removed);
+        return new FixOutcome(true, skippedNote is null ? done : done + Environment.NewLine + Environment.NewLine + skippedNote);
+    }
+
+    /// <summary>
+    /// Schutz für Schreiben aus einem Hintergrund-Thread (<see cref="RemoveBoms"/>): <see cref="StillCurrent"/> entscheidet unmittelbar vor jeder
+    /// Datei, ob sie noch geschrieben werden darf; übersprungene Pfade landen in <see cref="Skipped"/>.
+    /// </summary>
+    private sealed record BackgroundWriteGuard(Func<ModWrite, bool> StillCurrent)
+    {
+        public List<string> Skipped { get; } = new();
+    }
+
+    /// <summary>
+    /// Gemeinsamer Kern der Korrekturen an Mod-Dateien: Ungespeicherte offene Dateien brechen ab; je Mod-Ordner eine Sicherung, dann alle
+    /// Schreibaktionen als ein Schritt im Aktionsverlauf. Scheitert eine, werden die schon geschriebenen zurückgenommen (keine Teiländerung).
+    /// <see cref="ModWrite.Text"/>: neuer Inhalt für den GUI-Index (.gui); <see langword="null"/>: den liest das Neuladen der Tabs von der Platte.
+    /// Rückgabe: <see langword="null"/> bei Erfolg, sonst das Ergebnis mit der Fehlermeldung.
+    /// Darf aus einem Hintergrund-Thread kommen: offene Dokumente, Aktionsverlauf, Tabs und Fehlerprotokoll laufen über den UI-Thread
+    /// (<c>Dispatcher.Invoke</c>, im UI-Thread direkt), Sicherung und Schreiben im aufrufenden Thread. Mit <paramref name="guard"/> (Hintergrund):
+    /// nach der Sicherung noch einmal die Prüfung auf ungespeicherte Dateien, je Datei <see cref="BackgroundWriteGuard.StillCurrent"/>, und geänderte
+    /// Tabs werden nicht neu geladen. Wird dabei keine Datei geschrieben, gibt es auch keinen Schritt im Aktionsverlauf.
+    /// </summary>
+    private FixOutcome? WriteModActions(
+        IReadOnlyList<string> folders,
+        IReadOnlyList<ModWrite> writes,
+        string description,
+        string snapshotNote,
+        Func<string, string> failed,
+        BackgroundWriteGuard? guard = null)
+    {
+        FixOutcome? Unsaved()
+        {
+            var unsavedPath = Dispatcher.Invoke(() => AllPanes.SelectMany(p => p.Documents)
+                .FirstOrDefault(d => d.IsModified && writes.Any(w => EditorPane.PathsEqual(d.FilePath, w.Path)))?.FilePath);
+            return unsavedPath is null ? null : new FixOutcome(false, ErrorLogTexts.RenameUnsaved(Path.GetFileName(unsavedPath)));
+        }
+
+        if (Unsaved() is { } unsaved)
+        {
+            return unsaved;
+        }
+
+        foreach (var folder in folders)
+        {
+            try
+            {
+                new ModVersionManager(folder, ErrorLogSnapshotDirectory(folder)).CreateSnapshot(snapshotNote);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
             {
@@ -92,16 +194,27 @@ public partial class MainWindow
             }
         }
 
-        var writes = files
-            .Select(f => (IUndoableAction)new FileWriteUndoableAction(description + ": " + Path.GetFileName(f.Path), f.Path, f.NewText, new UTF8Encoding(f.HasBom)))
-            .ToList();
+        // Die Sicherung kann dauern; im Hintergrund kann der Nutzer inzwischen eine der Dateien geändert haben.
+        if (guard is not null && Unsaved() is { } unsavedNow)
+        {
+            return unsavedNow;
+        }
+
         var written = new List<IUndoableAction>();
+        var performed = new List<ModWrite>();
         try
         {
             foreach (var write in writes)
             {
-                write.Do();
-                written.Add(write);
+                if (guard is not null && !guard.StillCurrent(write))
+                {
+                    guard.Skipped.Add(write.Path);
+                    continue;
+                }
+
+                write.Action.Do();
+                written.Add(write.Action);
+                performed.Add(write);
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -118,20 +231,31 @@ public partial class MainWindow
                 }
             }
 
-            ReloadOpenTabsAffectedBy(new CompositeUndoableAction(string.Empty, written));
+            Dispatcher.Invoke(() => ReloadOpenTabsAffectedBy(new CompositeUndoableAction(string.Empty, written), keepModified: guard is not null));
             return new FixOutcome(false, failed(ex.Message));
         }
 
-        var action = new CompositeUndoableAction(description, writes);
-        _history.Record(action);
-        ReloadOpenTabsAffectedBy(action);
-        foreach (var file in files.Where(f => f.Path.EndsWith(".gui", StringComparison.OrdinalIgnoreCase)))
+        if (performed.Count == 0)
         {
-            NotifyGuiFileSaved(file.Path, file.NewText);
+            return null;
         }
 
-        _errorLog?.RefreshSources();
-        return new FixOutcome(true, done(files.Sum(f => f.Count), files.Count));
+        var action = new CompositeUndoableAction(description, performed.Select(w => w.Action).ToList());
+        Dispatcher.Invoke(() =>
+        {
+            _history.Record(action);
+            ReloadOpenTabsAffectedBy(action, keepModified: guard is not null);
+            foreach (var write in performed)
+            {
+                if (write.Text is { } text && write.Path.EndsWith(".gui", StringComparison.OrdinalIgnoreCase))
+                {
+                    NotifyGuiFileSaved(write.Path, text);
+                }
+            }
+
+            _errorLog?.RefreshSources();
+        });
+        return null;
     }
 
     /// <summary>Plan-3-Rulings 6 und 7: definierende Mod ins gewählte Playset; danach Playset-Auswahl und Quellen neu laden.</summary>
@@ -175,3 +299,6 @@ public partial class MainWindow
         };
     }
 }
+
+/// <summary>Eine Schreibaktion einer Korrektur: Zieldatei, neuer Text für den GUI-Index (bei Binärinhalt <see langword="null"/>) und die Aktion.</summary>
+internal sealed record ModWrite(string Path, string? Text, IUndoableAction Action);

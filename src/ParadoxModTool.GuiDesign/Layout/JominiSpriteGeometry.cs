@@ -6,6 +6,9 @@ namespace ParadoxModTool.GuiDesign.Layout;
 /// </summary>
 public readonly record struct JominiSpritePiece(LayoutRect Source, LayoutRect Target, double TileWidth, double TileHeight);
 
+/// <summary>Ganzzahliger Ausschnitt in Pixeln (links, oben, Breite, Höhe).</summary>
+public readonly record struct PixelRect(int X, int Y, int Width, int Height);
+
 /// <summary>
 /// Reine Geometrie von Jomini-Sprites: Strecken, 9-Teile-Raster, Kacheln und <c>fittype</c>. Die Annahmen über das Spielverhalten stehen in
 /// <see cref="JominiSpriteRules"/>. Spiegeln (<c>mirror</c>) gehört nicht hierher; der Zeichner spiegelt den ganzen Kasten.
@@ -97,6 +100,26 @@ public static class JominiSpriteGeometry
         }
 
         return pieces;
+    }
+
+    /// <summary>
+    /// Ausschnitt in ganzen Texturpixeln (Ränder gerundet, mindestens ein Pixel); <see langword="null"/> bei leerem oder nicht endlichem Ausschnitt.
+    /// Gebrochene Ausschnitte entstehen nur bei <c>fittype</c> und Dichten; ein halbes Pixel Abweichung bleibt unsichtbar.
+    /// </summary>
+    public static PixelRect? ImageRect(LayoutRect source)
+    {
+        if (!double.IsFinite(source.X) || !double.IsFinite(source.Y) || !double.IsFinite(source.Width) || !double.IsFinite(source.Height)
+            || source.Width <= 0 || source.Height <= 0 || Math.Abs(source.X) > int.MaxValue / 2 || Math.Abs(source.Y) > int.MaxValue / 2
+            || source.Width > int.MaxValue / 2 || source.Height > int.MaxValue / 2)
+        {
+            return null;
+        }
+
+        var left = (int)Math.Round(source.X);
+        var top = (int)Math.Round(source.Y);
+        var right = Math.Max(left + 1, (int)Math.Round(source.X + source.Width));
+        var bottom = Math.Max(top + 1, (int)Math.Round(source.Y + source.Height));
+        return new PixelRect(left, top, right - left, bottom - top);
     }
 
     private static bool IsUsable(LayoutRect rect) =>

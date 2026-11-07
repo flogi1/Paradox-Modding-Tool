@@ -71,6 +71,31 @@ public class ErrorLogTextsTests
     }
 
     [Fact]
+    public void BomCheckTextsFallBackToGerman()
+    {
+        Assert.Equal("Skriptdatei mit BOM (ENC-001, von PMT geprüft): 2 Dateien", ErrorLogTexts.BomHeading("Skriptdatei mit BOM", "ENC-001", 2));
+        Assert.Equal("BOM entfernen", ErrorLogTexts.BomRemove);
+        Assert.Equal("Flogi's Galaxy Sizes: common/x.txt", ErrorLogTexts.BomLine("Flogi's Galaxy Sizes", "common/x.txt"));
+        Assert.StartsWith("Von PMT in allen eigenen Mods gefunden", ErrorLogTexts.BomFoundByPmt);
+        Assert.Equal("Das BOM aus 3 Dateien entfernen", ErrorLogTexts.BomRemoveAction(3));
+        Assert.Equal("Das BOM aus 3 Dateien entfernt.", ErrorLogTexts.BomRemoveDone(3));
+    }
+
+    [Fact]
+    public void BomFileListShowsAtMostFifteenPaths()
+    {
+        var paths = Enumerable.Range(1, 18).Select(i => $"events/e{i}.txt").ToList();
+
+        var list = ErrorLogTexts.BomFileList(paths);
+
+        var lines = list.Split('\n');
+        Assert.Equal(16, lines.Length);
+        Assert.Equal("events/e15.txt", lines[14]);
+        Assert.Equal("und 3 weitere", lines[15]);
+        Assert.Equal("a.txt\nb.txt", ErrorLogTexts.BomFileList(new[] { "a.txt", "b.txt" }));
+    }
+
+    [Fact]
     public void LogPositionNamesTheFileOnlyForRunsWithSeveralFiles()
     {
         var entry = Catalogs.Classify("[19:49:44][jomini_effect.cpp:556]: Unknown effect cmf_suppress at common/scripted_effects/purger.txt:2")[0];

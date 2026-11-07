@@ -45,7 +45,22 @@ public static class VanillaUpdateTexts
 
     public static string Counts(int changed, int withoutOld) => F("vanillaUpdate.start.counts", "{0} Dateien in Vanilla geändert, {1} ohne alte Version.", changed, withoutOld);
 
-    public static string Removed(string version, string files) => F("vanillaUpdate.start.removed", "Vanilla-Datei entfällt in Version {0}: {1}", version, files);
+    // Strukturänderungen in Vanilla (Mod-Dateien, die ein verschobener oder ersetzter Vanilla-Pfad trifft)
+    public static string StructureHeader => T("vanillaUpdate.start.structure.header", "Mod-Dateien, die eine Strukturänderung in Vanilla trifft:");
+
+    public static string StructureBusy => T("vanillaUpdate.start.structure.busy", "Strukturänderungen werden geprüft …");
+
+    public static string StructureColFile => T("vanillaUpdate.start.structure.colFile", "Mod-Datei");
+
+    public static string StructureColChange => T("vanillaUpdate.start.structure.colChange", "Änderung");
+
+    public static string StructureColNew => T("vanillaUpdate.start.structure.colNew", "Neuer Vanilla-Ort");
+
+    public static string StructureOpen => T("vanillaUpdate.start.structure.open", "Vanilla-Ort öffnen");
+
+    public static string StructureOpenTip => T("vanillaUpdate.start.structure.open.tip", "Öffnet den ersten neuen Vanilla-Ort: Ordner im Explorer, Datei im Editor. Doppelklick auf eine Zeile öffnet die Mod-Datei im Editor (Ordner im Explorer).");
+
+    public static string StructureNoHistory => T("vanillaUpdate.start.structure.noHistory", "Struktur-Prüfung: ältere Version nicht aufgezeichnet");
 
     public static string NoOldHint => T("vanillaUpdate.start.noOldHint", "Für manche Dateien fehlt eine alte Vanilla-Version. So bekommst du sie: das Spiel in Steam unter Eigenschaften › Betas auf die alte Version stellen, PMT einlesen lassen (automatisch oder mit „Vanilla-Version einlesen“), dann das Spiel wieder aktualisieren.");
 

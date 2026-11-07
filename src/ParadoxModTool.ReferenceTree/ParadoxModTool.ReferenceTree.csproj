@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.ReferenceTree</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.FlagTracker\ParadoxModTool.FlagTracker.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ScriptCheck\ParadoxModTool.ScriptCheck.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParadoxModTool.ReferenceTree.Tests" />
+  </ItemGroup>
+
+</Project>

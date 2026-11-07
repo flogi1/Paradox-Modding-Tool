@@ -42,7 +42,7 @@ public sealed class TileBarTests
         Assert.DoesNotContain(TileIds.Compatch, bar.VisibleIds);
         Assert.DoesNotContain(TileIds.Gui, bar.VisibleIds);
         settings.SetTileVisible(TileIds.Compatch, true);
-        Assert.Equal(2, bar.VisibleIds.ToList().IndexOf(TileIds.Compatch));
+        Assert.Equal(3, bar.VisibleIds.ToList().IndexOf(TileIds.Compatch));
     });
 
     [Fact]
@@ -138,18 +138,18 @@ public sealed class TileBarTests
     public void ClickRaisesTileClickedOrOpensTheMenu() => Sta.Run(() =>
     {
         var menu = new ContextMenu();
-        var bar = Bar(new AppSettings(), Source(menu: id => id == TileIds.Project ? menu : null));
+        var bar = Bar(new AppSettings(), Source(menu: id => id == TileIds.Gui ? menu : null));
         var clicked = new List<string>();
         bar.TileClicked += (_, id) => clicked.Add(id);
 
         bar.TileButton(TileIds.CuTool).RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         Assert.Equal(new[] { TileIds.CuTool }, clicked);
-        Assert.Single(Tree.Descendants<TextBlock>(bar.TileButton(TileIds.Project)), t => t.Name == "TileMenuArrow");
+        Assert.Single(Tree.Descendants<TextBlock>(bar.TileButton(TileIds.Gui)), t => t.Name == "TileMenuArrow");
         Assert.DoesNotContain(Tree.Descendants<TextBlock>(bar.TileButton(TileIds.CuTool)), t => t.Name == "TileMenuArrow");
 
-        bar.TileButton(TileIds.Project).RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+        bar.TileButton(TileIds.Gui).RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         Assert.Equal(new[] { TileIds.CuTool }, clicked);
-        Assert.Same(bar.TileButton(TileIds.Project), menu.PlacementTarget);
+        Assert.Same(bar.TileButton(TileIds.Gui), menu.PlacementTarget);
         menu.IsOpen = false;
     });
 
@@ -187,7 +187,7 @@ public sealed class TileBarTests
         var bar = Bar(settings);
 
         Assert.True(bar.MoveTile(TileIds.Compatch, TileIds.Project));
-        Assert.Equal(new[] { TileIds.Compatch, TileIds.Project, TileIds.CuTool }, settings.TileOrder.Take(3));
+        Assert.Equal(new[] { TileIds.Compatch, TileIds.Project, TileIds.Mods }, settings.TileOrder.Take(3));
         Assert.Equal(TileIds.Compatch, bar.VisibleIds[0]);
         Assert.False(bar.MoveTile("tileX", TileIds.Project));
         Assert.False(bar.MoveTile(ToolbarItemIds.Undo, TileIds.Project));

@@ -1,4 +1,5 @@
-WE_PERFORM_iv2_ga_deselect_ideagroup_{{ g }}_ACTION={
+{{~ for pf in ["WE_PERFORM", "PERFORM"] ~}}
+{{ pf }}_iv2_ga_deselect_ideagroup_{{ g }}_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -8,3 +9,4 @@ pausepopup=no
 sound=no
 message_category = economy
 }
+{{~ end ~}}

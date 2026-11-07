@@ -52,12 +52,16 @@ public sealed class TilesPage : SettingsPage
         RefreshOn(handler => GuiSettings.Changed += handler, handler => GuiSettings.Changed -= handler);
     }
 
-    /// <summary>Beschriftungen aus anderen Projekten: Error-Log und Save Explorer teilen den Kategorienamen, die Desync-Analyse hat einen eigenen Text.</summary>
+    /// <summary>
+    /// Beschriftungen aus anderen Projekten: Error-Log und Save Explorer teilen den Kategorienamen, Desync-Analyse und Performance-Checker
+    /// haben einen eigenen Text.
+    /// </summary>
     private static string? ExternalLabel(string tileId) => tileId switch
     {
         TileIds.ErrorLog => SettingsTexts.CategoryLabel(SettingsCategory.ErrorLog),
         TileIds.SaveExplorer => SettingsTexts.CategoryLabel(SettingsCategory.SaveExplorer),
         TileIds.Desync => SettingsTexts.TileDesync,
+        TileIds.Performance => SettingsTexts.TilePerformance,
         _ => null,
     };
 

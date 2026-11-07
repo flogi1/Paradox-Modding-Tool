@@ -78,13 +78,15 @@ public sealed class GuiWorkspaceService
 
     /// <summary>
     /// Eine gespeicherte .gui-Datei aus Mod oder Abhängigkeits-Mod in den Index übernehmen; klassisch auch eine .gfx-Datei (neue Sprite-Tabelle, "Sprite anlegen"),
-    /// Jomini auch eine .yml-Datei (die Lokalisierung der Vorschau wird neu gelesen). Andere Dateien ändern nichts.
+    /// Jomini auch eine .yml-Datei (die Lokalisierung der Vorschau wird neu gelesen), HOI IV auch eine Skriptdatei der Scripted GUIs oder Entscheidungskategorien.
+    /// Andere Dateien ändern nichts.
     /// </summary>
     public void FileSaved(string path, string text)
     {
         if (_current is null || !(path.EndsWith(".gui", StringComparison.OrdinalIgnoreCase)
             || path.EndsWith(".gfx", StringComparison.OrdinalIgnoreCase)
-            || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase)))
+            || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase)
+            || path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)))
         {
             return;
         }

@@ -76,6 +76,9 @@ public partial class MainWindow
         ReplaceWarningHub.Reported += ShowReplaceWarnings;
         Closed += (_, _) => ReplaceWarningHub.Reported -= ShowReplaceWarnings;
 
+        // Jede Inhaltsänderung der Leiste (auch im nicht gewählten Reiter) blendet sie ein oder aus.
+        NotesPanelControl.ContentChanged += (_, _) => UpdateNotesPanelVisibility();
+
         InitializeBugPanel();
         RefreshNotesPanel();
     }
@@ -212,7 +215,8 @@ public partial class MainWindow
     /// </summary>
     private void UpdateNotesPanelVisibility()
     {
-        var visible = _settings.NotesPanelVisible && (_settings.NotesPanelAlwaysVisible || NotesPanelControl.HasContent || NotesPanelControl.ScopeAvailable);
+        var visible = _settings.NotesPanelVisible && (_settings.NotesPanelAlwaysVisible || NotesPanelControl.HasContent || NotesPanelControl.ScopeAvailable
+            || NotesPanelControl.ReferencesHaveContent || _settings.SearchInSidePanel);
         var currentlyVisible = NotesPanelColumn.Width.Value > 0;
 
         if (visible == currentlyVisible)

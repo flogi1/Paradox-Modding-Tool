@@ -46,6 +46,49 @@ public static class ClassicScreenSettings
         return Parse(text);
     }
 
+    /// <summary>
+    /// Die Spielsprache: der Wert von <c>language</c> auf oberster Ebene (HOI IV schreibt <c>language="l_german"</c>), unverändert; <see langword="null"/>,
+    /// wenn die Datei fehlt, unlesbar ist oder keinen solchen Schlüssel hat.
+    /// </summary>
+    public static string? TryReadLanguage(string settingsTxtPath)
+    {
+        string text;
+        try
+        {
+            if (!File.Exists(settingsTxtPath))
+            {
+                return null;
+            }
+
+            text = File.ReadAllText(settingsTxtPath, Encoding.UTF8);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return null;
+        }
+
+        var tokens = Tokens(text).ToList();
+        var depth = 0;
+        for (var i = 0; i < tokens.Count; i++)
+        {
+            if (tokens[i] == "{")
+            {
+                depth++;
+            }
+            else if (tokens[i] == "}")
+            {
+                depth = Math.Max(0, depth - 1);
+            }
+            else if (depth == 0 && tokens[i].Equals("language", StringComparison.OrdinalIgnoreCase)
+                && i + 2 < tokens.Count && tokens[i + 1] == "=" && tokens[i + 2] is not ("{" or "}" or "=") && tokens[i + 2].Trim().Length > 0)
+            {
+                return tokens[i + 2].Trim();
+            }
+        }
+
+        return null;
+    }
+
     private static (int Width, int Height, double UiScale)? Parse(string text)
     {
         var tokens = Tokens(text).ToList();

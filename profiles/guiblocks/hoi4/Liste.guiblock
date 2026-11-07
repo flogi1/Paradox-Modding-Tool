@@ -1,0 +1,37 @@
+# block: Liste
+# group: Fenster
+# description: Liste für dynamic_lists eines Scripted GUI: ein Fenster mit gridboxtype und ein Eintragsfenster. Beide gehören direkt in guiTypes, denn das Eintragsfenster muss ein oberstes Fenster sein; das Listenfenster lässt sich danach in das eigene Fenster verschieben. Im Scripted GUI ist der Name der Liste der Schlüssel unter dynamic_lists und das Eintragsfenster der entry_container. Vorbild: interface/MTG_naval_treaty_scripted_gui.gui, interface/countrydecisionview.gui
+# param: name | Name der Liste (dynamic_lists) | my_list
+# param: entry_text | Text im Eintrag (Lokalisierungsschlüssel) | MY_LIST_ENTRY
+# requires: hoi_18mbs
+
+containerWindowType = {
+	name = "$name$_window"
+	position = { x = 20 y = 60 }
+	size = { width = 400 height = 300 }
+
+	gridboxtype = {
+		name = "$name$"
+		position = { x = 0 y = 0 }
+		size = { width = 400 height = 300 }
+		slotsize = { width = 400 height = 30 }
+		max_slots_horizontal = 1
+		format = "UPPER_LEFT"
+	}
+}
+
+containerWindowType = {
+	name = "$name$_entry"
+	position = { x = 0 y = 0 }
+	size = { width = 400 height = 30 }
+
+	instantTextBoxType = {
+		name = "$name$_entry_text"
+		position = { x = 8 y = 5 }
+		font = "hoi_18mbs"
+		text = "$entry_text$"
+		maxWidth = 384
+		maxHeight = 20
+		format = left
+	}
+}

@@ -38,6 +38,9 @@ public static class GeneratorPlanner
 
         public int LegacyRemoved { get; set; }
 
+        /// <summary>Aus der Datei wurden Einträge verschoben (<c>migrate</c>); bleibt nur Leerraum, wird sie gelöscht.</summary>
+        public bool Migrated { get; set; }
+
         /// <summary>Voller Pfad einer externen Datei (nur "jsonEntry"); <see cref="RelativePath"/> ist dann nur der Anzeigename <c>extern/&lt;Name&gt;</c>.</summary>
         public string? ExternalPath { get; init; }
     }
@@ -102,6 +105,8 @@ public static class GeneratorPlanner
             order.Add(work);
             return work;
         }
+
+        Migrate();
 
         foreach (var output in package.Outputs)
         {
@@ -310,6 +315,116 @@ public static class GeneratorPlanner
             }
         }
 
+        // "migrate": Einträge aus der alten Datei ans Ende der neuen verschieben, bevor die Ausgaben laufen; die Einträge dieses Laufs schreibt die Ausgabe danach
+        // an Ort und Stelle neu (Treffer bzw. Alt-Muster), sie stehen also nur einmal in der neuen Datei.
+        void Migrate()
+        {
+            var migrating = package.Outputs.Where(o => o.Migrate is not null).ToList();
+            if (migrating.Count == 0)
+            {
+                return;
+            }
+
+            // Schreibt dieser Lauf die alte Datei selbst, wird sie nicht verschoben (sonst läge ihr Text zweimal vor)
+            var ownTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var output in package.Outputs.Where(o => o.Kind is not (OutputKind.Check or OutputKind.JsonEntry or OutputKind.Localization)))
+            {
+                foreach (var item in Items(package, output, model))
+                {
+                    ownTargets.Add(NormalPath(renderer.RenderInline(output.Path, model, item is null ? null : new ScriptObject { ["item"] = item })));
+                }
+            }
+
+            foreach (var group in migrating.GroupBy(o => (From: NormalPath(renderer.RenderInline(o.Migrate!.From, model)), Path: NormalPath(renderer.RenderInline(o.Path, model)))))
+            {
+                var (from, newPath) = group.Key;
+                if (ownTargets.Contains(from))
+                {
+                    continue;
+                }
+
+                var first = group.First();
+                var patterns = new List<Regex>();
+                foreach (var output in group)
+                {
+                    foreach (var pattern in output.Migrate!.Patterns.Select(p => renderer.RenderInline(p, model)).Distinct())
+                    {
+                        try
+                        {
+                            patterns.Add(new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Multiline));
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            throw new GeneratorOutputException(GeneratorsTexts.InFile(from, GeneratorsTexts.MatchInvalid(output.Id, ex.Message)));
+                        }
+                    }
+                }
+
+                // Eine schreibgeschützte alte Datei lässt sich weder umschreiben noch löschen: nichts verschieben, der Lauf schreibt trotzdem die neue Datei
+                var oldAtTarget = Full(writeRoot, from);
+                if (File.Exists(oldAtTarget) && File.GetAttributes(oldAtTarget).HasFlag(FileAttributes.ReadOnly))
+                {
+                    warnings.Add(GeneratorsTexts.MigrateReadOnly(from));
+                    continue;
+                }
+
+                var created = !files.ContainsKey(from);
+                Work old;
+                try
+                {
+                    old = Get(from, first, binary: false);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    warnings.Add(GeneratorsTexts.MigrateUnreadable(from));
+                    continue;
+                }
+
+                var oldText = old.Text ?? string.Empty;
+                var (cleaned, moved, count) = old.Text is null ? (string.Empty, string.Empty, 0) : LegacySweep.Extract(oldText, patterns);
+                if (count == 0)
+                {
+                    // Nichts zu verschieben: die alte Datei gehört nicht in den Plan
+                    if (created)
+                    {
+                        files.Remove(from);
+                        order.Remove(old);
+                    }
+
+                    continue;
+                }
+
+                old.Text = cleaned;
+                old.Migrated = true;
+                old.LegacyRemoved += count;
+                warnings.Add(GeneratorsTexts.Migrated(from, count));
+
+                var newWork = Get(newPath, first, binary: false);
+                // Neue Datei: das Gerüst der Ausgabe kommt zuerst (die Ausgaben nehmen es nur, solange der Text fehlt)
+                var skeleton = group.Select(o => o.Skeleton).FirstOrDefault(s => s is not null);
+                var existing = newWork.Text;
+                if (existing is null)
+                {
+                    existing = skeleton is null ? string.Empty : TextNormalizer.Normalize(renderer.Render(skeleton, package.TemplateText(skeleton), model), newWork.NewLine);
+                    if (existing.Length > 0)
+                    {
+                        // Eine Gerüstzeile, die auch in der alten Datei stand, wandert nicht noch einmal mit (sie bleibt gezählt und aus der alten Datei entfernt)
+                        var skeletonLines = existing.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToHashSet(StringComparer.Ordinal);
+                        moved = LegacySweep.Extract(oldText, patterns, span => skeletonLines.Contains(span.Trim())).Moved;
+                    }
+                }
+
+                if (existing.Length > 0 && !existing.EndsWith('\n'))
+                {
+                    existing += newWork.NewLine;
+                }
+
+                // Zeichengleich, nur im Zeilenende der neuen Datei; sie endet mit einem Zeilenende
+                var text = moved.Replace("\r\n", "\n").Replace("\n", newWork.NewLine);
+                newWork.Text = existing + text + (text.Length == 0 || text.EndsWith('\n') ? string.Empty : newWork.NewLine);
+            }
+        }
+
         void RunCheck(OutputDef output, ScriptObject? scope, string rawPath)
         {
             if (!SafeRelativePath.IsSafe(rawPath.Trim()))
@@ -355,7 +470,7 @@ public static class GeneratorPlanner
             PackageId = package.Id,
             Key = state.Key,
             WriteRoot = writeRoot,
-            Files = order.Select(ToPlannedFile).ToList(),
+            Files = order.Select(w => ToPlannedFile(w, target)).ToList(),
             Warnings = warnings,
         };
     }
@@ -453,8 +568,18 @@ public static class GeneratorPlanner
         _ => relativePath.EndsWith(".yml", StringComparison.OrdinalIgnoreCase) ? "\n" : "\r\n",
     };
 
-    private static GeneratorPlannedFile ToPlannedFile(Work work)
+    private static string NormalPath(string rawPath) => rawPath.Trim().Replace('\\', '/').TrimStart('/');
+
+    private static GeneratorPlannedFile ToPlannedFile(Work work, GeneratorTarget target)
     {
+        // Nach "migrate" bleibt nur Leerraum: die Mod-Datei wird gelöscht; im Ausgabeordner wird sie nur ohne Inhalt geschrieben, die Mod bleibt unberührt
+        if (work.Migrated && target.OutputFolder is null && work.OriginalText is not null && string.IsNullOrWhiteSpace(work.Text))
+        {
+            work.Notes.Add(GeneratorsTexts.MigratedDelete);
+            return new GeneratorPlannedFile(work.RelativePath, PlannedFileStatus.Changed, work.OriginalText, string.Empty, null, null,
+                work.HasBom, work.EncodingName, work.Notes, work.Removed, work.LegacyRemoved, work.ModBaseText, work.ExternalPath, Delete: true);
+        }
+
         PlannedFileStatus status;
         if (work.Bytes is { } bytes)
         {

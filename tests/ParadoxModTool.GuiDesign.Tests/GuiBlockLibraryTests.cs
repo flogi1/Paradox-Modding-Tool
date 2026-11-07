@@ -206,4 +206,23 @@ public sealed class GuiBlockLibraryTests : IDisposable
 
         Assert.Empty(GuiBlockLibrary.MissingRequirements(block, null));
     }
+
+    /// <summary>Klassisch (HOI IV, EU IV) nennt <c>requires</c> Sprites und Schriften; geprüft gegen den Sprite-Index statt gegen Typen.</summary>
+    [Fact]
+    public void Requires_ClassicChecksSprites()
+    {
+        const string Gfx =
+            "spriteTypes = {\n\tspriteType = { name = \"GFX_known\" texturefile = \"gfx/interface/known.dds\" }\n}\n"
+            + "bitmapfonts = {\n\tbitmapfont = { name = \"hoi_18mbs\" path = \"gfx/fonts/hoi_18mbs\" }\n}\n";
+        var sprites = Classic.ClassicSpriteIndex.Build(
+            new[] { GuiIndexTests.F("interface/a.gfx") }, _ => Syntax.GuiParser.Parse(Gfx), spriteFirstWins: false, caseSensitive: true);
+        var rules = ClassicLayoutKit.Rules("hoi4");
+        var index = Index.GuiIndex.FromDocuments(Array.Empty<Index.GuiSourceFile>(), Array.Empty<Syntax.GuiDocument>(), rules.Layout);
+        var block = GuiBlockParser.Parse("# block: A\n# requires: GFX_known, hoi_18mbs, GFX_unknown, unknown_font\nx\n", GuiBlockLayer.Game, null);
+
+        Assert.Equal(new[] { "GFX_unknown", "unknown_font" }, GuiBlockLibrary.MissingRequirements(block, index, sprites));
+
+        // Ohne Sprite-Index lässt sich klassisch nichts prüfen: keine Meldung statt aller Namen als "fehlt".
+        Assert.Empty(GuiBlockLibrary.MissingRequirements(block, index, null));
+    }
 }

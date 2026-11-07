@@ -1474,11 +1474,25 @@ public partial class EditorPane : UserControl
 
     private void CloseActiveDocument_Click(object sender, RoutedEventArgs e) => CloseActiveDocument();
 
-    private void MoveActiveDocument_Click(object sender, RoutedEventArgs e)
+    private void MoveActiveDocument_Click(object sender, RoutedEventArgs e) => MoveActiveDocumentToOtherPane();
+
+    /// <summary>Verschiebt das aktive Dokument in den anderen Arbeitsbereich (Knopf "⇄", Strg+Umschalt+M).</summary>
+    public void MoveActiveDocumentToOtherPane()
     {
         if (ActiveDocument is { } document)
         {
-            MoveActiveDocumentRequested?.Invoke(this, document);
+            MoveDocumentToOtherPane(document);
+        }
+    }
+
+    private void MoveDocumentToOtherPane(OpenDocument document) => MoveActiveDocumentRequested?.Invoke(this, document);
+
+    /// <summary>Kontextmenü am Tab: verschiebt den angeklickten Tab (nicht den aktiven) in den anderen Arbeitsbereich.</summary>
+    private void MoveTabToOtherPane_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { DataContext: OpenDocument document })
+        {
+            MoveDocumentToOtherPane(document);
         }
     }
 

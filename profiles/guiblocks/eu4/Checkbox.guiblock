@@ -1,0 +1,22 @@
+# block: Checkbox
+# group: Bedienelemente
+# description: Checkbox mit Beschriftung, wie in der Diplomatieansicht. Den Haken setzt das Spiel; Custom GUI kennt keine Checkboxen (custom_button gehört zu guiButtonType), in einem eigenen Fenster wirkt sie nicht. Vorbild: interface/countrydiplomacyview.gui
+# param: name | Name | my_checkbox
+# param: text | Beschriftung (Lokalisierungsschlüssel) | MY_CHECKBOX
+# requires: GFX_checkbox_gold_32, vic_18
+
+checkboxType = {
+	name = "$name$"
+	position = { x = 30 y = 240 }
+	quadTextureSprite = "GFX_checkbox_gold_32"
+}
+
+instantTextBoxType = {
+	name = "$name$_text"
+	position = { x = 65 y = 250 }
+	font = "vic_18"
+	text = "$text$"
+	maxWidth = 250
+	maxHeight = 20
+	format = left
+}

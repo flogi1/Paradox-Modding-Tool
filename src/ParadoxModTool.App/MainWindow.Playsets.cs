@@ -65,8 +65,11 @@ public partial class MainWindow
     /// </summary>
     private bool StartPlayset(string playsetId) => LaunchWithPlayset(manager => manager.PrepareStart(playsetId));
 
-    /// <summary>Gemeinsamer Start: <paramref name="prepare"/> bereitet die Dateien vor (aktiv setzen, Lade-Datei); erst bei Erfolg wird das Spiel gestartet.</summary>
-    private bool LaunchWithPlayset(Func<PlaysetManager, PlaysetResult> prepare)
+    /// <summary>
+    /// Gemeinsamer Start: <paramref name="prepare"/> bereitet die Dateien vor (aktiv setzen, Lade-Datei); erst bei Erfolg wird das Spiel gestartet.
+    /// Ohne <paramref name="arguments"/> gilt die in der Werkzeugleiste gewählte Startoption (der Performance-Checker gibt eigene vor).
+    /// </summary>
+    private bool LaunchWithPlayset(Func<PlaysetManager, PlaysetResult> prepare, string? arguments = null)
     {
         if (!ConfirmUnsavedModFilesBeforeLaunch())
         {
@@ -92,7 +95,7 @@ public partial class MainWindow
             return false;
         }
 
-        var arguments = (LaunchOptionsCombo.SelectedItem as LaunchOption)?.Args ?? string.Empty;
+        arguments ??= (LaunchOptionsCombo.SelectedItem as LaunchOption)?.Args ?? string.Empty;
         var result = GameLauncher.Launch(_gameExecutablePath, arguments);
         if (!result.Success)
         {

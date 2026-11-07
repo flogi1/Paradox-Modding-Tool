@@ -218,6 +218,8 @@ public partial class GeneratorWindow
                 ShowPath();
                 // Ein Plan ohne diese Datei ist veraltet
                 ClearPlan();
+                // Vorschlagslisten der Felder kommen aus dieser Datei
+                Dispatcher.BeginInvoke(BuildForm);
             }
         };
         row.Children.Add(path);
@@ -436,7 +438,7 @@ public partial class GeneratorWindow
                     return ModifierField(field, node, box);
                 }
 
-                control = box;
+                control = field.Suggest is not null && field.Type == FieldType.MultilineText ? WithSuggestions(field.Suggest, box) : box;
                 break;
             }
         }
@@ -477,6 +479,74 @@ public partial class GeneratorWindow
         UpdateWarning();
         panel.Children.Add(button);
         panel.Children.Add(warning);
+        return panel;
+    }
+
+    /// <summary>
+    /// Mehrzeiliges Feld mit Vorschlagsliste (<c>suggest</c>): unter dem Textfeld ein Kästchen je Eintrag der externen Datei; angehakt sind die Kennungen,
+    /// die als Zeile im Feld stehen. Kennungen im Feld, die die Liste nicht kennt, bleiben unberührt. Ohne gewählte Datei erscheint ein Hinweis.
+    /// </summary>
+    private FrameworkElement WithSuggestions(FieldSuggest suggest, TextBox box)
+    {
+        var panel = new StackPanel();
+        panel.Children.Add(box);
+        var items = FieldSuggestions.Load(suggest, ExternalPathStore.Load(_package!.DataFolder));
+        if (items.Count == 0)
+        {
+            panel.Children.Add(new TextBlock { Text = GeneratorTexts.SuggestionsNone, Foreground = Muted(), TextWrapping = TextWrapping.Wrap, Width = box.Width, Margin = new Thickness(0, 3, 0, 0) });
+            return panel;
+        }
+
+        static List<string> Lines(string text) => text.Replace("\r\n", "\n").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
+        var boxes = new List<(string Id, CheckBox Box)>();
+        var updating = false;
+        var wrap = new WrapPanel { Margin = new Thickness(0, 3, 0, 0), MaxWidth = box.Width };
+        foreach (var (id, label) in items)
+        {
+            var check = new CheckBox
+            {
+                Content = new TextBlock { Text = string.IsNullOrEmpty(label) ? id : $"{label} ({id})" },
+                Margin = new Thickness(0, 0, 12, 2),
+                ToolTip = id,
+                IsChecked = Lines(box.Text).Contains(id, StringComparer.Ordinal),
+            };
+            check.Click += (_, _) =>
+            {
+                var lines = Lines(box.Text);
+                if (check.IsChecked == true)
+                {
+                    if (!lines.Contains(id, StringComparer.Ordinal))
+                    {
+                        lines.Add(id);
+                    }
+                }
+                else
+                {
+                    lines.RemoveAll(l => l == id);
+                }
+
+                updating = true;
+                box.Text = string.Join("\n", lines);
+                updating = false;
+            };
+            boxes.Add((id, check));
+            wrap.Children.Add(check);
+        }
+
+        box.TextChanged += (_, _) =>
+        {
+            if (updating)
+            {
+                return;
+            }
+
+            var lines = Lines(box.Text);
+            foreach (var (id, check) in boxes)
+            {
+                check.IsChecked = lines.Contains(id, StringComparer.Ordinal);
+            }
+        };
+        panel.Children.Add(wrap);
         return panel;
     }
 

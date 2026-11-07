@@ -1,0 +1,17 @@
+# block: Text mit Variable
+# group: Anzeige
+# description: Text, der den Wert einer Variable zeigt ([?variable], wie in Einträgen von dynamic_lists mit [?v]). Nicht im Spiel gemessen: vanilla schreibt [?…] nur in Lokalisierungstexte. Sicherer Weg: ein Lokalisierungsschlüssel, dessen Text [?variable] enthält (Baustein „Text mit Lokalisierungsschlüssel“). Vorbild: interface/countrydecisionview.gui
+# param: name | Name | my_value
+# param: variable | Variable | my_variable
+# param: width | Breite | 200
+# requires: hoi_18mbs
+
+instantTextBoxType = {
+	name = "$name$"
+	position = { x = 20 y = 130 }
+	font = "hoi_18mbs"
+	text = "[?$variable$]"
+	maxWidth = $width$
+	maxHeight = 20
+	format = left
+}

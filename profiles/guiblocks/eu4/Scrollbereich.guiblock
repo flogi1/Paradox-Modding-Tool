@@ -1,0 +1,17 @@
+# block: Scrollbereich
+# group: Fenster
+# description: Liste mit senkrechter Scrollleiste (listboxType; scrollbartype nennt das Element standardlistbox_slider aus interface/core.gui). EU IV kennt keinen scrollbaren Container wie HOI IV: den Inhalt füllt nur das Spiel, in einem eigenen Fenster bleibt die Liste leer. Sinnvoll in der Kopie eines Spielfensters. Vorbild: interface/countryideasview.gui
+# param: name | Name | my_listbox
+# param: width | Breite | 270
+# param: height | Höhe | 300
+
+listboxType = {
+	name = "$name$"
+	position = { x = 30 y = 80 }
+	size = { x = $width$ y = $height$ }
+	Orientation = "UPPER_LEFT"
+	horizontal = 0
+	spacing = 1.0
+	scrollbartype = "standardlistbox_slider"
+	borderSize = { x = 0 y = 0 }
+}

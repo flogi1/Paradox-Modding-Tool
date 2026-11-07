@@ -222,6 +222,7 @@ public sealed partial class PackageEditorWindow
         Directory.CreateDirectory(root);
         var target = GeneratorPackageArchive.Extract(content, root, newId, mode, names =>
             MessageBox.Show(this, PackageEditorTexts.ImportOverwriteStates(string.Join(", ", names)), PackageEditorTexts.Title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes);
+        PackagesChanged?.Invoke(this, EventArgs.Empty);
         if (content.GameId != _host.GameId())
         {
             MessageBox.Show(this, PackageEditorTexts.OtherGameNote(gameName), PackageEditorTexts.Title, MessageBoxButton.OK, MessageBoxImage.Information);

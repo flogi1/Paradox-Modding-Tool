@@ -37,6 +37,12 @@ public sealed class AddressInfo
 
     public required bool Certain { get; init; }
 
+    /// <summary>
+    /// Der Gewinner richtet sich nach der Ladereihenfolge der Dateien über Vanilla und Mods (Spielschalter <see cref="OverrideRules.FirstWinsInLoadOrder"/>/
+    /// <see cref="OverrideRules.LastWinsInLoadOrder"/> passend zu <see cref="Behavior"/>, oder eine Regel mit Verhalten je Hülle, <see cref="RuleMatch.InLoadOrder"/>).
+    /// </summary>
+    public bool InLoadOrder { get; init; }
+
     /// <summary>Präfixe, die im Ordner wirken (aus der Regel); null = die des Spiels (<see cref="CompatchInput.KeyOperators"/>).</summary>
     public IReadOnlyList<string>? Operators { get; init; }
 

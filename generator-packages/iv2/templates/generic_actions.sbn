@@ -29,7 +29,7 @@ iv2_ga_select_historic_{{ tag }}_{{ i.number }} = {
 			}
 			custom_tooltip = {
 				text = iv2_tt_no_points_for_nat_idea{{ exp0 }}_{{ c.key }}
-				var:iv2_var_progress_points_{{ c.key }} >= var:iv2_var_national_idea_cost{{ exp0 }}_{{ c.key }}
+				var:iv2_var_progress_points_{{ c.key }} >= iv2_nat_cost_live{{ exp0 }}_{{ c.key }}
 			}
 			custom_tooltip = {
 				text = iv2_tt_not_reached_national_idea_limit
@@ -69,17 +69,17 @@ iv2_ga_select_historic_{{ tag }}_{{ i.number }} = {
 				text = iv2_tt_sub_points{{ exp0 }}_{{ c.key }}
 				change_variable = {
 					name = iv2_var_progress_points_{{ c.key }}
-					subtract = var:iv2_var_national_idea_cost{{ exp0 }}_{{ c.key }}
+					subtract = iv2_nat_cost_live{{ exp0 }}_{{ c.key }}
 				}
 			}
 			custom_tooltip = {
 				text = iv2_tt_increase_points_{{ c.key }}
 				change_variable = {
-					name = iv2_var_national_idea_cost_{{ c.key }}
+					name = iv2_var_nat_cost_inc_{{ c.key }}
 					add = iv2_progress_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_cost_expensive_{{ c.key }}
+					name = iv2_var_nat_cost_inc_expensive_{{ c.key }}
 					add = iv2_progress_cost_increase
 				}
 			}
@@ -113,7 +113,7 @@ iv2_ga_select_historic_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
 			custom_tooltip = {
 				text = iv2_tt_no_innovation_points_for_nat_idea{{ expl }}_{{ c.key }}
 				has_country_modifier = national_idea_modifier_{{ tag }}_{{ i.number }}{{ prev }}
-				var:iv2_var_innovation_points_{{ c.key }} >= var:iv2_var_national_idea_innovation_cost{{ expl }}_{{ c.key }}
+				var:iv2_var_innovation_points_{{ c.key }} >= iv2_nat_icost_live{{ expl }}_{{ c.key }}
 			}
 			{{ sct }}{{ l.suffix }} = yes
 		}
@@ -138,17 +138,17 @@ iv2_ga_select_historic_{{ tag }}_{{ i.number }}{{ l.suffix }} = {
 				text = {{ l.expensive ? "iv2_tt_sub_points_innovation_expensive_" : "iv2_tt_sub_points_innovation_" }}{{ c.key }}
 				change_variable = {
 					name = iv2_var_innovation_points_{{ c.key }}
-					subtract = var:iv2_var_national_idea_innovation_cost{{ expl }}_{{ c.key }}
+					subtract = iv2_nat_icost_live{{ expl }}_{{ c.key }}
 				}
 			}
 			custom_tooltip = {
 				text = iv2_tt_increase_innovation_points_{{ c.key }}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_{{ c.key }}
+					name = iv2_var_nat_icost_inc_{{ c.key }}
 					add = iv2_innovation_cost_increase
 				}
 				change_variable = {
-					name = iv2_var_national_idea_innovation_cost_expensive_{{ c.key }}
+					name = iv2_var_nat_icost_inc_expensive_{{ c.key }}
 					add = iv2_innovation_cost_increase
 				}
 			}
@@ -192,12 +192,12 @@ iv2_ga_deselect_historic_{{ tag }}_{{ i.number }} = {
 					}
 					remove_country_modifier = national_idea_modifier_{{ tag }}_{{ i.number }}{{ l.suffix }}
 					change_variable = {
-						name = iv2_var_national_idea_cost_{{ c.key }}
+						name = iv2_var_nat_cost_inc_{{ c.key }}
 						subtract = iv2_progress_cost_increase
 					}
 {{~ if !l.first ~}}
 					change_variable = {
-						name = iv2_var_national_idea_innovation_cost_{{ c.key }}
+						name = iv2_var_nat_icost_inc_{{ c.key }}
 						subtract = {{ innovation_decrease(l.index0) }}
 					}
 {{~ end ~}}

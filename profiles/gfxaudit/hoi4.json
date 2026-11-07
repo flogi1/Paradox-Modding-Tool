@@ -1,0 +1,11 @@
+{
+  "textExtensions": [".txt", ".gui", ".gfx", ".yml", ".asset", ".settings", ".shader", ".fxh"],
+  "spriteBlocks": ["spriteType", "corneredTileSpriteType", "frameAnimatedSpriteType", "progressbartype", "textSpriteType", "maskedShieldType", "LineChartType", "PieChartType", "circularProgressBarType"],
+  "spriteTextureKeys": ["texturefile", "texturefile1", "texturefile2", "texturefile3", "alphamaskfile", "animationtexturefile", "animationmaskfile"],
+  "spriteRefPrefix": "GFX_",
+  "namePrefixes": ["GFX_idea_", "GFX_focus_", "GFX_goal_", "GFX_trait_", "GFX_EMI_", "GFX_SMI_", "GFX_text_", "GFX_achievement_", "GFX_", "GFX_unit_", "GFX_nato_unit_", "GFX_GER_", "GFX_JAP_", "GFX_ITA_", "GFX_ENG_", "GFX_SOV_", "GFX_FRA_", "GFX_USA_", "GFX_FIN_", "GFX_CHI_", "GFX_PRC_", "GFX_MAN_", "GFX_BEL_", "GFX_POL_", "GFX_RAJ_", "GFX_HUN_"],
+  "nameSuffixes": ["_shine", "_notachieved", "_not_eligible", "_grey", "_locked", "_opposite", "_small", "_medium", "_icon_medium", "_icon_small"],
+  "alwaysUsedFolders": ["gfx/models", "gfx/particles", "gfx/map", "gfx/cursors", "gfx/loadingscreens", "gfx/flags", "gfx/fonts", "map/terrain", "gfx/interface/terrains"],
+  "pathRoots": [""],
+  "notes": "Measured in the installed Vanilla game, 2026-11-06 (GFX check plan 1, task 1); calibrated in task 6 (unused images 15.8 % -> 13.2 %). Task 6 added, each a name the engine builds itself: GFX_unit_ / GFX_nato_unit_ with _icon_medium / _icon_small (sub-unit icons GFX_unit_<sub unit>_icon_medium, NATO counter variant), GFX_<TAG>_ for the 15 tags with country-specific equipment icons in Vanilla (GFX_<TAG>_<equipment>_medium; other tags need an engine pattern, see task 6 notes). Folders: gfx/fonts (font pages next to the .fnt files), map/terrain (map textures with fixed names), gfx/interface/terrains (combat backgrounds named terrain_<terrain>_<day|night>_<weather>, never written in script)."
+}

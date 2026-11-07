@@ -26,14 +26,24 @@ public sealed class TilesPageTests
     });
 
     [Fact]
+    public void TilesPage_ListsMods() => Sta.Run(() =>
+    {
+        using var page = new TilesPage(new FakeHost());
+        var box = UiFind.All<ReorderListBox>(page.View).Single();
+        Assert.Contains(TileIds.Mods, box.CurrentIds);
+        Assert.Equal(1, box.CurrentIds.ToList().IndexOf(TileIds.Mods));
+        Assert.Contains(UiFind.All<TextBlock>(box.Row(TileIds.Mods)), t => t.Text == MenuTexts.TileLabel(TileIds.Mods));
+    });
+
+    [Fact]
     public void TilesPageArrowsAndResetWriteTheOrder() => Sta.Run(() =>
     {
         var host = new FakeHost();
         using var page = new TilesPage(host);
         var box = UiFind.All<ReorderListBox>(page.View).Single();
         UiFind.Click(box.DownButton(TileIds.Project));
-        Assert.Equal(TileIds.CuTool, host.Settings.TileOrder[0]);
-        Assert.Equal(TileIds.CuTool, box.CurrentIds[0]);
+        Assert.Equal(TileIds.Mods, host.Settings.TileOrder[0]);
+        Assert.Equal(TileIds.Mods, box.CurrentIds[0]);
         host.Settings.SetTileIconOnly(TileIds.Gui, true);
 
         UiFind.Click(UiFind.Button(page, SettingsTexts.TileResetOrder));

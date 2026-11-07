@@ -1,4 +1,5 @@
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_1_ACTION={
+{{~ for pf in ["WE_PERFORM", "PERFORM"] ~}}
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_1_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -9,7 +10,7 @@ sound=no
 message_category = economy
 }
 
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_2_ACTION={
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_2_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -20,7 +21,7 @@ sound=no
 message_category = economy
 }
 
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_3_ACTION={
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_3_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -31,7 +32,7 @@ sound=no
 message_category = economy
 }
 
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_4_ACTION={
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_4_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -42,7 +43,7 @@ sound=no
 message_category = economy
 }
 
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_5_ACTION={
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_5_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -53,7 +54,7 @@ sound=no
 message_category = economy
 }
 
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_6_ACTION={
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_6_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -64,7 +65,7 @@ sound=no
 message_category = economy
 }
 
-WE_PERFORM_iv2_ga_ideagroup_{{ g }}_7_ACTION={
+{{ pf }}_iv2_ga_ideagroup_{{ g }}_7_ACTION={
 log=yes
 onmap=no
 popup=no
@@ -74,3 +75,4 @@ pausepopup=no
 sound=no
 message_category = economy
 }
+{{~ end ~}}

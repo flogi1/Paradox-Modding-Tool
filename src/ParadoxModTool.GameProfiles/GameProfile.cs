@@ -83,6 +83,13 @@ public sealed class OverrideRuleEntry
     /// Null = die Präfixe des Spiels (<see cref="GameProfile.KeyOperators"/>), leer = keine.
     /// </summary>
     public List<string>? Operators { get; set; }
+
+    /// <summary>
+    /// Verhalten je Hülle aus <see cref="Unwrap"/>, wo es von <see cref="Behavior"/> abweicht (EU IV <c>interface</c>:
+    /// <c>{ "guiTypes": "FirstWins", "spriteTypes": "LastWins" }</c>, gemessen 2026-10-17). Eine Regel damit rechnet nach der Ladereihenfolge der Dateien
+    /// über Vanilla und Mods, auch wenn das Spiel <see cref="GameProfile.FirstWinsInLoadOrder"/>/<see cref="GameProfile.LastWinsInLoadOrder"/> nicht setzt.
+    /// </summary>
+    public Dictionary<string, string>? UnwrapBehaviors { get; set; }
 }
 
 /// <summary>
@@ -137,6 +144,10 @@ public sealed class GameProfile
     public string? ErrorLogRules { get; set; }
     /// <summary>Pfad der Desync-Regeln für die OOS-Analyse, relativ zum profiles-Ordner (z.B. "desync/eu5.json"); null = keine Desync-Analyse.</summary>
     public string? DesyncRules { get; set; }
+    /// <summary>Pfad der Regeln der Skript-Prüfung, relativ zum profiles-Ordner (z.B. "scriptcheck/eu5.json"); null = keine Skript-Prüfung.</summary>
+    public string? ScriptCheckRules { get; set; }
+    /// <summary>Pfad der Regeln der GFX-Prüfung, relativ zum profiles-Ordner (z.B. "gfxaudit/eu5.json"); null = keine GFX-Prüfung.</summary>
+    public string? GfxAuditRules { get; set; }
     public string? Notes { get; set; }
 
     /// <summary>Überschreib-Verhalten je Ordner (Mod-Kompatibilität): Ordnermuster mit <c>*</c> für ein Segment, Verhalten als Name von <c>OverrideBehavior</c>, "Certain" = laut Wiki gesichert.</summary>
@@ -427,6 +438,12 @@ public sealed class GuiProfileSettings
     /// direkte Unterordner (z. B. <c>dlc/*</c>). Leer = nicht angegeben.
     /// </summary>
     public List<string> VanillaRoots { get; set; } = new();
+
+    /// <summary>
+    /// Nur klassisch: wie Skript an Fenster und Elemente kommt. <c>scriptedGuis</c> = HOI IV (<c>common/scripted_guis</c>), <c>customGui</c> = EU IV
+    /// (<c>common/custom_gui</c>); <see langword="null"/> = keins.
+    /// </summary>
+    public string? ScriptWiring { get; set; }
 }
 
 /// <summary>
@@ -440,6 +457,9 @@ public sealed class PerformanceSettings
     /// <summary>Konsolenbefehl, der den Profiler-Dump schreibt (z. B. <c>Script.Profiling.Dump</c>).</summary>
     public string DumpCommand { get; set; } = string.Empty;
 
+    /// <summary>Konsolenbefehl, der die Aufzeichnung beendet (z. B. <c>Script.Profiling.Stop</c>); EU V schreibt den Dump erst nach Stop. null = kein eigener Schritt.</summary>
+    public string? StopCommand { get; set; }
+
     /// <summary>Dateimuster des Dumps im Logs-Ordner des Spiels (z. B. <c>profiling*.csv</c>); null = noch nicht gemessen, die Funktion bleibt für dieses Spiel gesperrt.</summary>
     public string? DumpFilePattern { get; set; }
 
@@ -452,8 +472,14 @@ public sealed class PerformanceSettings
     /// <summary>Vollständiger Zeilenschlüssel der Zeile, die genau einmal im Monat läuft; Grundlage, um Aufrufzahlen auf Monate umzurechnen.</summary>
     public string? MonthlyPulseRow { get; set; }
 
-    /// <summary>Namen der täglichen On-Actions (für die Aufrufzahl pro Tag).</summary>
-    public List<string> DailyOnActions { get; set; } = new();
+    /// <summary>
+    /// Anweisungen <c>key = value</c> direkt im obersten Block, die einen häufig (täglich oder wöchentlich) laufenden Block kennzeichnen,
+    /// z. B. <c>ai_tick = daily</c>; verglichen ohne Rücksicht auf Leerraum und Groß-/Kleinschreibung.
+    /// </summary>
+    public List<string> FrequentTickMarkers { get; set; } = new();
+
+    /// <summary>Schlüssel oberster Blöcke, die selbst häufig laufen (z. B. tägliche Pulse); leer, solange keiner gemessen ist.</summary>
+    public List<string> FrequentPulseNames { get; set; } = new();
 
     /// <summary>Die Funktion ist für das Spiel nutzbar, sobald Dump-Befehl und Dateimuster gemessen sind.</summary>
     public bool IsUsable => !string.IsNullOrEmpty(DumpFilePattern) && !string.IsNullOrEmpty(DumpCommand);

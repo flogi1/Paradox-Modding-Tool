@@ -13,6 +13,8 @@
   "scriptDocsFolder": "logs/script_documentation",
   "scriptDocsFiles": { "EventTarget": "scopes.log" },
   "errorLogRules": "errorlog/stellaris.json",
+  "scriptCheckRules": "scriptcheck/stellaris.json",
+  "gfxAuditRules": "gfxaudit/stellaris.json",
   "eventBlockScopes": {
     "country_event": "country",
     "carrier_event": "planet",

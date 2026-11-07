@@ -224,7 +224,7 @@ public sealed class DynamicIdeasPackageTests : IDisposable
         var ga = ModFile(GenericActions("army"));
         var select = Block(ga, "iv2_ga_select_national_idea_army_1");
         Assert.Contains("\tai_tick = never\n\t#ai_tick_frequency = 36\n", select);
-        Assert.Contains("\t\t\ttext = iv2_tt_no_points_for_nat_idea_army\n\t\t\tvar:iv2_var_progress_points_army >= var:iv2_var_national_idea_cost_army\n", select);
+        Assert.Contains("\t\t\ttext = iv2_tt_no_points_for_nat_idea_army\n\t\t\tvar:iv2_var_progress_points_army >= iv2_nat_cost_live_army\n", select);
         Assert.Contains("\t\t\ttext = iv2_tt_sub_points_army\n", select);
         Assert.Contains("\t\t\tiv2_sct_dnat_idea_army_1 = yes\n", select);
         foreach (var (suffix, previous) in new[] { ("_1", ""), ("_2", "_1"), ("_3", "_2") })
@@ -274,15 +274,15 @@ public sealed class DynamicIdeasPackageTests : IDisposable
 
         var ga = ModFile(GenericActions("adm"));
         var select = Block(ga, "iv2_ga_select_national_idea_adm_31");
-        Assert.Contains("\t\t\ttext = iv2_tt_no_points_for_nat_idea_expensive_adm\n\t\t\tvar:iv2_var_progress_points_adm >= var:iv2_var_national_idea_cost_expensive_adm\n", select);
-        Assert.Contains("\t\t\ttext = iv2_tt_sub_points_expensive_adm\n\t\t\t\tchange_variable = {\n\t\t\t\t\tname = iv2_var_progress_points_adm\n\t\t\t\t\tsubtract = var:iv2_var_national_idea_cost_expensive_adm\n", select);
+        Assert.Contains("\t\t\ttext = iv2_tt_no_points_for_nat_idea_expensive_adm\n\t\t\tvar:iv2_var_progress_points_adm >= iv2_nat_cost_live_expensive_adm\n", select);
+        Assert.Contains("\t\t\ttext = iv2_tt_sub_points_expensive_adm\n\t\t\t\tchange_variable = {\n\t\t\t\t\tname = iv2_var_progress_points_adm\n\t\t\t\t\tsubtract = iv2_nat_cost_live_expensive_adm\n", select);
         // Die Kostensteigerungen bleiben gleich
-        Assert.Contains("\t\t\t\t\tname = iv2_var_national_idea_cost_adm\n\t\t\t\t\tadd = iv2_progress_cost_increase\n", select);
+        Assert.Contains("\t\t\t\t\tname = iv2_var_nat_cost_inc_adm\n\t\t\t\t\tadd = iv2_progress_cost_increase\n", select);
         var level2 = Block(ga, "iv2_ga_select_national_idea_adm_31_1");
         Assert.Contains("\t\t\ttext = iv2_tt_no_innovation_points_for_nat_idea_expensive_adm\n", level2);
-        Assert.Contains("\t\t\tvar:iv2_var_innovation_points_adm >= var:iv2_var_national_idea_innovation_cost_expensive_adm\n", level2);
-        Assert.Contains("\t\t\ttext = iv2_tt_sub_points_innovation_expensive_adm\n\t\t\t\tchange_variable = {\n\t\t\t\t\tname = iv2_var_innovation_points_adm\n\t\t\t\t\tsubtract = var:iv2_var_national_idea_innovation_cost_expensive_adm\n", level2);
-        Assert.Contains("\t\t\t\t\tname = iv2_var_national_idea_innovation_cost_adm\n\t\t\t\t\tadd = iv2_innovation_cost_increase\n", level2);
+        Assert.Contains("\t\t\tvar:iv2_var_innovation_points_adm >= iv2_nat_icost_live_expensive_adm\n", level2);
+        Assert.Contains("\t\t\ttext = iv2_tt_sub_points_innovation_expensive_adm\n\t\t\t\tchange_variable = {\n\t\t\t\t\tname = iv2_var_innovation_points_adm\n\t\t\t\t\tsubtract = iv2_nat_icost_live_expensive_adm\n", level2);
+        Assert.Contains("\t\t\t\t\tname = iv2_var_nat_icost_inc_adm\n\t\t\t\t\tadd = iv2_innovation_cost_increase\n", level2);
         var level3 = Block(ga, "iv2_ga_select_national_idea_adm_31_2");
         Assert.Contains("\t\t\ttext = iv2_tt_no_innovation_points_for_nat_idea_adm\n", level3);
         Assert.Contains("\t\t\ttext = iv2_tt_sub_points_innovation_adm\n", level3);
@@ -858,7 +858,7 @@ public sealed class DynamicIdeasPackageTests : IDisposable
 
     private static string Messages(string language) => $"main_menu/localization/{language}/03_IV2_messages_l_{language}.yml";
 
-    private const string MessageTypes = "main_menu/gui/messagetypes.txt";
+    private const string MessageTypes = "main_menu/gui/messagetypes/01_IV2_dynamic_ideas_messagetypes.txt";
 
     /// <summary>Die 19 Schlüssel einer Idee wie army_1 der Mod: Name und Wahlen, Abwahl, Statische Modifikatoren, vor jeder Gruppe eine Leerzeile.</summary>
     private static string IdeaLocText(string id, string name, string desc)
@@ -886,14 +886,19 @@ public sealed class DynamicIdeasPackageTests : IDisposable
     /// <summary>Die 36 Meldungen der vier Wahlen einer Idee wie army_1 der Mod (Stufen 2-4 mit Name und Stufe).</summary>
     private static string SelectMessages(string id)
     {
+        // Erst alle WE_PERFORM-Wahlen, dann ihre PERFORM-Zwillinge (KI-Aktionen), je mit _DESC
         var text = string.Empty;
-        foreach (var s in new[] { "", "_1", "_2", "_3" })
+        foreach (var prefix in new[] { "WE_PERFORM", "PERFORM" })
         {
-            var p = $" WE_PERFORM_iv2_ga_select_national_idea_{id}{s}_ACTION_";
-            var reference = s.Length == 0 ? $"$iv2_dynamic_nat_idea_{id}$" : $"$iv2_ga_select_national_idea_{id}{s}$";
-            text += $"{p}SETUP: \"$iv2_message_selected_ig$ {reference}\"\n{p}HEADER: \"$iv2_message_selected_dynamic_nat_idea_1$\"\n" +
-                    $"{p}TITLE: \"$iv2_message_selected_dynamic_nat_idea_1$\"\n{p}EFFECTS: \"$iv2_message_selected_ig$ {reference}\"\n" +
-                    $"{p}LOG: \"$iv2_message_selected_ig$ {reference}\"\n{p}BTN1: \"OK\"\n{p}BTN2: \"OK\"\n{p}BTN3: \"$common_string_go_to$\"\n{p}MAP: \"\"\n";
+            foreach (var s in new[] { "", "_1", "_2", "_3" })
+            {
+                var p = $" {prefix}_iv2_ga_select_national_idea_{id}{s}_ACTION_";
+                var reference = s.Length == 0 ? $"$iv2_dynamic_nat_idea_{id}$" : $"$iv2_ga_select_national_idea_{id}{s}$";
+                text += $"{p}SETUP: \"$iv2_message_selected_ig$ {reference}\"\n{p}HEADER: \"$iv2_message_selected_dynamic_nat_idea_1$\"\n" +
+                        $"{p}TITLE: \"$iv2_message_selected_dynamic_nat_idea_1$\"\n{p}EFFECTS: \"$iv2_message_selected_ig$ {reference}\"\n" +
+                        $"{p}DESC: \"$iv2_message_selected_ig$ {reference}\"\n" +
+                        $"{p}LOG: \"$iv2_message_selected_ig$ {reference}\"\n{p}BTN1: \"OK\"\n{p}BTN2: \"OK\"\n{p}BTN3: \"$common_string_go_to$\"\n{p}MAP: \"\"\n";
+            }
         }
 
         return text;
@@ -902,19 +907,26 @@ public sealed class DynamicIdeasPackageTests : IDisposable
     /// <summary>Die 9 Meldungen der Abwahl einer Idee wie army_1 der Mod.</summary>
     private static string DeselectMessages(string id)
     {
-        var p = $" WE_PERFORM_iv2_ga_deselect_nat_idea_{id}_ACTION_";
         var reference = $"$iv2_dynamic_nat_idea_{id}$";
-        return $"{p}SETUP: \"$iv2_message_deselected_ig$ {reference}\"\n{p}HEADER: \"$iv2_message_deselected_dynamic_nat_idea_1$\"\n" +
-               $"{p}TITLE: \"$iv2_message_deselected_dynamic_nat_idea_1$\"\n{p}EFFECTS: \"$iv2_message_deselected_ig$ {reference}\"\n" +
-               $"{p}LOG: \"$iv2_message_deselected_ig$ {reference}\"\n{p}BTN1: \"OK\"\n{p}BTN2: \"OK\"\n{p}BTN3: \"$common_string_go_to$\"\n{p}MAP: \"\"\n";
+        return string.Concat(new[] { "WE_PERFORM", "PERFORM" }.Select(prefix =>
+        {
+            var p = $" {prefix}_iv2_ga_deselect_nat_idea_{id}_ACTION_";
+            return $"{p}SETUP: \"$iv2_message_deselected_ig$ {reference}\"\n{p}HEADER: \"$iv2_message_deselected_dynamic_nat_idea_1$\"\n" +
+                   $"{p}TITLE: \"$iv2_message_deselected_dynamic_nat_idea_1$\"\n{p}EFFECTS: \"$iv2_message_deselected_ig$ {reference}\"\n" +
+                   $"{p}DESC: \"$iv2_message_deselected_ig$ {reference}\"\n" +
+                   $"{p}LOG: \"$iv2_message_deselected_ig$ {reference}\"\n{p}BTN1: \"OK\"\n{p}BTN2: \"OK\"\n{p}BTN3: \"$common_string_go_to$\"\n{p}MAP: \"\"\n";
+        }));
     }
 
     /// <summary>Ein Block der Meldungsarten (Ort 17) wie in der Mod.</summary>
-    private static string MessageType(string action) =>
-        $"WE_PERFORM_{action}_ACTION={{\nlog=yes\nonmap=no\npopup=no\nidle=no\noption=yes\npausepopup=no\nsound=no\nmessage_category = economy\n}}\n";
+    private static string MessageType(string action, string prefix = "WE_PERFORM") =>
+        $"{prefix}_{action}_ACTION={{\nlog=yes\nonmap=no\npopup=no\nidle=no\noption=yes\npausepopup=no\nsound=no\nmessage_category = economy\n}}\n";
 
+    /// <summary>Die fünf Meldungsarten einer Idee, erst als WE_PERFORM, dann als PERFORM-Zwilling.</summary>
     private static string MessageTypes5(string id) =>
-        string.Concat(new[] { "", "_1", "_2", "_3" }.Select(s => MessageType($"iv2_ga_select_national_idea_{id}{s}"))) + MessageType($"iv2_ga_deselect_nat_idea_{id}");
+        string.Concat(new[] { "WE_PERFORM", "PERFORM" }.Select(prefix =>
+            string.Concat(new[] { "", "_1", "_2", "_3" }.Select(s => MessageType($"iv2_ga_select_national_idea_{id}{s}", prefix))) +
+            MessageType($"iv2_ga_deselect_nat_idea_{id}", prefix)));
 
     [Fact]
     public void German_adm_loc_goes_to_existing_file()

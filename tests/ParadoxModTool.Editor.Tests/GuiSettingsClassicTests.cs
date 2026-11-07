@@ -180,7 +180,7 @@ public sealed class GuiSettingsClassicTests
     }
 
     [Fact]
-    public void Blocks_and_new_gui_file_not_offered_for_classic()
+    public void Blocks_offered_for_classic()
     {
         var previous = GuiSettings.Layout;
         var previousTools = GuiSettings.ToolsEnabled;
@@ -189,12 +189,10 @@ public sealed class GuiSettingsClassicTests
             GuiSettings.SetToolsEnabled(true);
             GuiSettings.Layout = GuiLayout.Default;
             Assert.True(GuiSettings.BlocksOffered);
-            Assert.True(GuiSettings.NewFileOffered);
 
-            // Klassisch: Bausteine sind Jomini-Code, "Neue GUI-Datei" schriebe nach <mod>/gui, das weder Spiel noch Index lesen (Plan 3).
+            // Klassisch: eigene Bausteine für HOI IV und EU IV (Plan 3 Task 8).
             GuiSettings.Layout = Classic;
-            Assert.False(GuiSettings.BlocksOffered);
-            Assert.False(GuiSettings.NewFileOffered);
+            Assert.True(GuiSettings.BlocksOffered);
 
             // Ausgeschaltete GUI-Werkzeuge (Hauptschalter) prüft der Test nicht: SetToolsEnabled(false) meldet Changed an Arbeitsbereiche anderer Tests
             // auf deren Thread.

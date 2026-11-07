@@ -598,10 +598,16 @@
                 <ControlTemplate TargetType="TreeView">
                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}" SnapsToDevicePixels="True">
-                        <ScrollViewer Focusable="False" CanContentScroll="False" Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="TreeScroller" Focusable="False" CanContentScroll="False" Padding="{TemplateBinding Padding}">
                             <ItemsPresenter />
                         </ScrollViewer>
                     </Border>
+                    <!-- Virtualisieren geht nur mit inhaltsweisem Scrollen (wie die WPF-Standardvorlage); betrifft nur Bäume mit IsVirtualizing (Verweisbaum). -->
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="VirtualizingPanel.IsVirtualizing" Value="True">
+                            <Setter TargetName="TreeScroller" Property="CanContentScroll" Value="True" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

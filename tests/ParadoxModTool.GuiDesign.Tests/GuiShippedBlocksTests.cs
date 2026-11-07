@@ -16,6 +16,8 @@ public class GuiShippedBlocksTests
     [InlineData("eu5")]
     [InlineData("ck3")]
     [InlineData("vic3")]
+    [InlineData("hoi4")]
+    [InlineData("eu4")]
     public void ShippedBlocks_LoadRenderAndParse(string game)
     {
         foreach (var block in Shipped(game))
@@ -37,6 +39,12 @@ public class GuiShippedBlocksTests
     [InlineData("vic3", "Fenster", "Fenster", "Fenster mit Tabs", "Scrollbare Liste", "Tab-Leiste")]
     [InlineData("vic3", "Bedienelemente", "Checkbox", "Dropdown", "Knopf mit Icon", "Standard-Knopf", "Suchfeld")]
     [InlineData("vic3", "Anzeige", "Charakterporträt", "Flagge", "Fortschrittsbalken", "Icon mit Tooltip", "Modifier-Tooltip", "Trennlinie", "Überschrift und Text")]
+    [InlineData("hoi4", "Fenster", "Fenster", "Liste", "Scrollbereich")]
+    [InlineData("hoi4", "Bedienelemente", "Checkbox", "Knopf mit Text")]
+    [InlineData("hoi4", "Anzeige", "Fortschrittsbalken", "Icon mit Tooltip", "Text mit Lokalisierungsschlüssel", "Text mit Variable")]
+    [InlineData("eu4", "Fenster", "Fenster", "Liste", "Scrollbereich")]
+    [InlineData("eu4", "Bedienelemente", "Checkbox", "Knopf mit Text")]
+    [InlineData("eu4", "Anzeige", "Fortschrittsbalken", "Icon mit Tooltip", "Text mit Lokalisierungsschlüssel")]
     public void Group_HasExactlyTheseBlocks(string game, string group, params string[] names)
     {
         Assert.Equal(
@@ -78,6 +86,8 @@ public class GuiShippedBlocksTests
     [InlineData("eu5")]
     [InlineData("ck3")]
     [InlineData("vic3")]
+    [InlineData("hoi4")]
+    [InlineData("eu4")]
     public void ShippedBlocks_RenderWithZeroAndTwoEntries(string game)
     {
         foreach (var block in Shipped(game))
@@ -118,6 +128,8 @@ public class GuiShippedBlocksTests
     [InlineData("eu5")]
     [InlineData("ck3")]
     [InlineData("vic3")]
+    [InlineData("hoi4")]
+    [InlineData("eu4")]
     public void Requires_AreUsedInBody(string game)
     {
         foreach (var block in Shipped(game))
@@ -157,6 +169,8 @@ public class GuiShippedBlocksTests
     [InlineData("eu5")]
     [InlineData("ck3")]
     [InlineData("vic3")]
+    [InlineData("hoi4")]
+    [InlineData("eu4")]
     public void Models_ExistInVanilla(string game)
     {
         var vanilla = VanillaGui.For(game);
@@ -170,7 +184,9 @@ public class GuiShippedBlocksTests
             var models = block.Description[(block.Description.LastIndexOf("Vorbild: ", StringComparison.Ordinal) + "Vorbild: ".Length)..];
             foreach (var model in models.TrimEnd('.').Split(", "))
             {
-                Assert.True(File.Exists(Path.Combine(vanilla.GameDirectory, model)), $"{block.Name}: {model} fehlt");
+                // HOI IV und EU IV haben keinen Ordner game/: die Vorbilder liegen direkt im Installationsordner.
+                var root = Directory.Exists(vanilla.GameDirectory) ? vanilla.GameDirectory : vanilla.InstallDirectory;
+                Assert.True(File.Exists(Path.Combine(root, model)), $"{block.Name}: {model} fehlt");
             }
         }
     }
@@ -286,6 +302,61 @@ public class GuiShippedBlocksTests
         Assert.Contains("visible = \"[GetVariableSystem.Exists( 'my_window' )]\"", text);
         Assert.Matches(@"(?m)^\s*onclick = ""\[GetVariableSystem\.Clear\( 'my_window' \)\]""", text);
         Assert.Contains("scripted_widgets", block.Description);
+    }
+
+    /// <summary>Klassisch: HOI IV neun Bausteine (mit "Text mit Variable"), EU IV acht, dazu je "Leere Datei".</summary>
+    [Theory]
+    [InlineData("hoi4", 9)]
+    [InlineData("eu4", 8)]
+    public void ClassicShippedBlocks_Count(string game, int count)
+    {
+        Assert.Equal(count, Shipped(game).Count);
+        Assert.Equal(1, new GuiBlockLibrary(ShippedDirectory(game), null, null).Effective.Count(b => b.IsBuiltIn));
+    }
+
+    /// <summary>Klassisch: jeder Baustein lässt sich als letztes Kind in ein Fenster unter <c>guiTypes</c> einfügen und parst ohne Diagnose.</summary>
+    [Theory]
+    [InlineData("hoi4")]
+    [InlineData("eu4")]
+    public void ClassicShippedBlocks_InsertIntoWindow(string game)
+    {
+        Assert.NotEmpty(Shipped(game));
+        foreach (var block in Shipped(game))
+        {
+            var document = GuiParser.Parse("guiTypes = {\n\tcontainerWindowType = {\n\t\tname = \"host\"\n\t}\n}\n");
+            var window = document.Root.Descendants().Single(c => c.Name == "containerWindowType");
+            var code = GuiBlockRenderer.Render(block, GuiBlockValues.Defaults(block)) + "\n";
+
+            var edit = Designer.GuiDesignerEdits.Insert(document, new Designer.GuiInsertion(window, Edit.InsertPosition.LastChild, null), code);
+            var result = GuiParser.Parse(Edit.TextEdit.Apply(document.Text, edit.Edits));
+
+            Assert.True(result.Diagnostics.Count == 0, $"{block.Name}: {string.Join("; ", result.Diagnostics)}");
+            Assert.True(result.Root.Descendants().Single(c => c.Name == "containerWindowType" && c.Parent?.Name == "guiTypes").Children.Count > 1, block.Name);
+        }
+    }
+
+    /// <summary>
+    /// Klassisch: Knöpfe nennen den Weg zum Skript (HOI IV "Scripted GUI anlegen", EU IV "Custom GUI anlegen"); EU IV setzt an Knopf, Text und Icon
+    /// <c>scripted = yes</c>. Kein Baustein schreibt <c>backGround</c> mit einem Wert (EU IV stürzte mit einem Sprite-Namen dort ab, Probe 2026-10-30).
+    /// </summary>
+    [Theory]
+    [InlineData("hoi4", "Scripted GUI anlegen")]
+    [InlineData("eu4", "Custom GUI anlegen")]
+    public void ClassicShippedBlocks_NameTheScriptWay(string game, string action)
+    {
+        Assert.Contains(action, Shipped(game).Single(b => b.Name == "Knopf mit Text").Description);
+        var icon = Shipped(game).Single(b => b.Name == "Icon mit Tooltip");
+        Assert.Contains("pdx_tooltip = \"MY_ICON_TT\"", GuiBlockRenderer.Render(icon, GuiBlockValues.Defaults(icon)));
+        foreach (var block in Shipped(game))
+        {
+            var text = GuiBlockRenderer.Render(block, GuiBlockValues.Defaults(block));
+            // Jeder Wert außer einem Block (HOI IV background = { … }), auch ungequotet; leeres "" ist ebenfalls unnötig.
+            Assert.DoesNotMatch(@"(?i)\bbackground\s*=\s*(?!\{)\S", text);
+            if (game == "eu4" && block.Name is "Knopf mit Text" or "Text mit Lokalisierungsschlüssel" or "Icon mit Tooltip")
+            {
+                Assert.Matches(@"(?m)^\s*scripted = yes\s*$", text);
+            }
+        }
     }
 
     private static int Count(string text, string word) => Regex.Matches(text, @"\b" + Regex.Escape(word) + @"\b").Count;

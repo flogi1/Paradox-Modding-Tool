@@ -32,6 +32,10 @@ call :run_test tests\ParadoxModTool.GuiDesign.Tests
 call :run_test tests\ParadoxModTool.Updates.Tests
 call :run_test tests\ParadoxModTool.Generators.Tests
 call :run_test tests\ParadoxModTool.Performance.Tests
+call :run_test tests\ParadoxModTool.FlagTracker.Tests
+call :run_test tests\ParadoxModTool.ScriptCheck.Tests
+call :run_test tests\ParadoxModTool.ReferenceTree.Tests
+call :run_test tests\ParadoxModTool.GfxAudit.Tests
 
 echo.
 if "%FAILED%"=="1" (

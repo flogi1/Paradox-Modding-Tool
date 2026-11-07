@@ -23,6 +23,7 @@ public static class ToolIcons
     {
         // Kacheln
         [TileIds.Project] = "M3 7h6l2 2h10v11H3z M9 14h6 M13 12l2 2-2 2",
+        [TileIds.Mods] = "M4 4h16v6H4z M4 14h16v6H4z M7 7h4 M7 17h4 M16 7h1 M16 17h1",
         [TileIds.CuTool] = "M4 4h7v16H4z M13 4h7v16h-7z M7 9v6 M16 9v6",
         [TileIds.Compatch] = "M4 4h11v11H4z M9 9h11v11H9z",
         [TileIds.ModCompat] = "M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z M8 12l3 3 5-6",
@@ -32,6 +33,10 @@ public static class ToolIcons
         [TileIds.ErrorLog] = "M12 4l9 16H3z M12 10v4 M12 17v1",
         [TileIds.ScriptDocs] = "M4 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z M20 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z",
         [TileIds.Gui] = "M3 4h18v16H3z M3 8h18 M9 8v12",
+        [TileIds.Performance] = "M19 14a7 7 0 1 1-14 0a7 7 0 1 1 14 0 M10 3h4 M12 3v4 M12 14l3-3 M17.5 7.5l1.5-1.5",
+        [TileIds.FlagTracker] = "M6 3v18 M6 4h12l-3 4 3 4H6",
+        [TileIds.ScriptCheck] = "M4 6h10 M4 12h6 M4 18h4 M15 13l2.5 2.5 4.5-5 M12 4l1 2",
+        [TileIds.GfxAudit] = "M4 5h16v14H4z M4 15l5-5 4 4 3-3 4 4 M15 9h.01",
         [TileIds.GeneratorPackages] = "M3 8l9-4 9 4v9l-9 4-9-4z M3 8l9 4 9-4 M12 12v9",
         [TileIds.PackageEditor] = "M3 8l9-4 9 4v4 M3 8l9 4 9-4 M3 8v9l9 4 M12 12v9 M14 20l6-6 2 2-6 6h-2z",
         [TileIds.Desync] = "M3 5h8v10H3z M13 5h8v10h-8z M7 15v4 M17 15v4 M4 19h16",

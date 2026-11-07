@@ -1,0 +1,11 @@
+{
+  "textExtensions": [".txt", ".gui", ".gfx", ".yml", ".asset", ".settings", ".shader", ".fxh"],
+  "spriteBlocks": ["spriteType", "corneredTileSpriteType", "frameAnimatedSpriteType", "progressbartype", "textSpriteType", "maskedShieldType", "LineChartType", "PieChartType", "circularProgressBarType", "portraitType", "flagSpriteType"],
+  "spriteTextureKeys": ["texturefile", "texturefile1", "texturefile2", "texturefile3", "alphamaskfile", "animationtexturefile", "animationmaskfile", "masking_texture"],
+  "spriteRefPrefix": "GFX_",
+  "namePrefixes": ["GFX_text_", "GFX_tr_", "GFX_tradition_", "GFX_mod_", "GFX_"],
+  "nameSuffixes": ["_shine", "_notachieved", "_not_eligible", "_grey", "_locked", "_opposite", "_small", "_medium"],
+  "alwaysUsedFolders": ["gfx/models", "gfx/particles", "gfx/map", "gfx/cursors", "gfx/loadingscreens", "gfx/flags", "flags", "gfx/portraits/city_sets", "gfx/fonts", "gfx/interface/icons/modifiers", "gfx/interface/icons/achievements", "gfx/portraits/environments"],
+  "pathRoots": [""],
+  "notes": "Measured in the installed Vanilla game, 2026-11-06 (GFX check plan 1, task 1); calibrated in task 6 (unused images 17.6 % -> 11.6 %). Task 6 added sprite blocks portraitType and flagSpriteType (GFX_portrait_character_close_up, GFX_empire_flag_32 … were reported missing), and folders the engine loads by name: gfx/fonts (font pages next to the .fnt files), gfx/interface/icons/modifiers (mod_<modifier>.dds, mostly without sprite definitions), gfx/interface/icons/achievements (<achievement key without achievement_>.dds and _locked), gfx/portraits/environments (pc_<planet class>_sky<n> backgrounds)."
+}

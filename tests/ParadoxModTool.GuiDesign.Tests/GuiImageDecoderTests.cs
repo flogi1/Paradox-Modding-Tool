@@ -706,12 +706,12 @@ public sealed class GuiImageDecoderTests : IDisposable
     public void UnsupportedFormat_does_not_decode()
     {
         var path = WriteTemp(_temp, "head.dds", Dx10Head(98));
-        var before = GuiImageDecoder.DecodeCalls;
+        var before = GuiImageDecoder.ThreadDecodeCalls;
 
         Assert.Null(TextureLocator.ReadHeader(path)!.Value.UnsupportedFormat);
         Assert.NotNull(TextureLocator.ReadHeader(WriteTemp(_temp, "bc5.dds", Dx10Head(83)))!.Value.UnsupportedFormat);
 
-        Assert.Equal(before, GuiImageDecoder.DecodeCalls);
+        Assert.Equal(before, GuiImageDecoder.ThreadDecodeCalls);
     }
 
     private static byte[] Encode(BitmapEncoder encoder, int width, int height)

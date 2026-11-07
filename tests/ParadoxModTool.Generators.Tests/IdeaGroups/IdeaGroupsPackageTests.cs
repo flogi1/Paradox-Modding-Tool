@@ -32,7 +32,7 @@ public sealed class IdeaGroupsPackageTests : IDisposable
     private string Mod => _temp.PathOf("mod");
 
     /// <summary>Leere Behälter der Dateien, in die das Paket verschachtelt schreibt (wie in IV2, ohne Gruppen).</summary>
-    private static IEnumerable<(string Path, string Text)> Skeletons()
+    internal static IEnumerable<(string Path, string Text)> Skeletons()
     {
         string Switches(string effect)
         {

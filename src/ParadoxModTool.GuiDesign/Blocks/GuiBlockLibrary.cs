@@ -108,6 +108,21 @@ public sealed class GuiBlockLibrary
                 .Where(name => index.Find(name, GuiDefinitionKind.Type) is null && index.Find(name, GuiDefinitionKind.Template) is null)
                 .ToList();
 
+    /// <summary>
+    /// Wie <see cref="MissingRequirements(GuiBlock, GuiIndex?)"/>, im klassischen Format (HOI IV, EU IV) aber mit der klassischen Bedeutung: <c>requires</c>
+    /// nennt Sprite- und Schriftnamen, gesucht im Sprite-Index (<see cref="Classic.ClassicSpriteIndex.Find"/>, auch bei abweichender Groß-/Kleinschreibung,
+    /// dann zeigt die Vorschau selbst einen Hinweis; <see cref="Classic.ClassicSpriteIndex.Font"/> genau). Klassisch ohne Sprite-Index: keine.
+    /// </summary>
+    public static IReadOnlyList<string> MissingRequirements(GuiBlock block, GuiIndex? index, Classic.ClassicSpriteIndex? sprites)
+    {
+        if (sprites is not null)
+        {
+            return block.Requires.Where(name => sprites.Find(name).Sprite is null && sprites.Font(name) is null).ToList();
+        }
+
+        return index is { Layout.IsClassic: true } ? Array.Empty<string>() : MissingRequirements(block, index);
+    }
+
     private string WritableDirectory(GuiBlockLayer layer)
     {
         if (layer == GuiBlockLayer.Shipped)

@@ -20,6 +20,8 @@ public sealed record GeneratorTarget(string ModRoot, string? OutputFolder, IRead
 /// sind der Stand am Schreibort (<see langword="null"/> = Datei fehlt dort); daran prüft der Writer, ob sich die Datei seit der Vorschau geändert hat.
 /// <see cref="ModBaseText"/>: beim Ziel "Ausgabeordner" ohne Kopie dort der Text der Mod-Datei, auf dem die Ausgabe aufbaut (nur für die Vorschau).
 /// <see cref="ExternalPath"/>: voller Pfad einer externen Datei außerhalb von Mod und Ausgabeordner (dann ist <see cref="RelativePath"/> nur <c>extern/&lt;Name&gt;</c> zur Anzeige).
+/// <see cref="Delete"/>: die Datei wird gelöscht (nach <c>migrate</c> bleibt in der alten Datei nur Leerraum); <see cref="Status"/> ist dann <see cref="PlannedFileStatus.Changed"/>
+/// und <see cref="NewText"/> leer. Ein vom Nutzer geänderter Text hebt das Löschen auf.
 /// </summary>
 public sealed record GeneratorPlannedFile(
     string RelativePath,
@@ -34,7 +36,8 @@ public sealed record GeneratorPlannedFile(
     IReadOnlyList<string> RemovedBlocks,
     int LegacyRemoved = 0,
     string? ModBaseText = null,
-    string? ExternalPath = null);
+    string? ExternalPath = null,
+    bool Delete = false);
 
 /// <summary>Was ein Lauf schreiben würde; geschrieben wird erst über <see cref="GeneratorPlanWriter"/>.</summary>
 public sealed class GeneratorPlan
@@ -69,6 +72,7 @@ public sealed class GeneratorPlan
         Files = Files.Select(f => f.RelativePath != relativePath ? f : f with
         {
             NewText = newText,
+            Delete = false,
             Status = f.OriginalText is null ? PlannedFileStatus.New : f.OriginalText == newText ? PlannedFileStatus.Unchanged : PlannedFileStatus.Changed,
         }).ToList(),
     };

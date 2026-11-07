@@ -179,7 +179,10 @@ public sealed class GuiWorkspace
         var textures = new GuiTextureLocator(GuiTextureLocator.ContextRootsFor(options.InstallDirectory, options.DependencyRoots, options.ModRoot, options.Rules.Layout.Contexts));
         cancellation.ThrowIfCancellationRequested();
         var classicAssets = classic
-            ? ClassicAssets.Build(classicRoots, gfxFiles, options.Rules.Layout.SpriteFirstWins, options.Rules.Layout.CaseSensitive, previous: previous?.Classic)
+            ? ClassicAssets.Build(
+                classicRoots, gfxFiles, options.Rules.Layout.SpriteFirstWins, options.Rules.Layout.CaseSensitive, previous: previous?.Classic,
+                scriptedGuiWindows: options.Rules.Layout.ScriptWiring == GuiScriptWiring.ScriptedGuis ? () => ClassicWindowIndexView.From(index) : null,
+                customGuiWindows: options.Rules.Layout.ScriptWiring == GuiScriptWiring.CustomGui ? () => ClassicWindowIndexView.From(index) : null)
             : null;
         // Beispiele nur aus Vanilla: im Hintergrund suchen, die Oberfläche wartet nie darauf. Ein Fehler lässt nur die Aufgabe scheitern.
         var examples = classic ? Task.Run(() => ClassicExampleIndex.Build(index)) : null;
@@ -208,6 +211,11 @@ public sealed class GuiWorkspace
         if (fullPath.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
         {
             return WithLocalisationFile(fullPath);
+        }
+
+        if (fullPath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+        {
+            return WithScriptFile(fullPath);
         }
 
         if (!fullPath.EndsWith(".gui", StringComparison.OrdinalIgnoreCase))
@@ -239,7 +247,8 @@ public sealed class GuiWorkspace
                 info.Exists ? info.Length : text.Length,
                 info.Exists ? info.LastWriteTimeUtc.Ticks : 0);
             var index = Index.WithFile(file, text);
-            return new GuiWorkspace(Options, index, Catalog, Textures, 0, true, TimeSpan.Zero, ClassicGfxFiles, Classic, ClassicExamples, Text?.WithIndex(index));
+            var classic = Classic?.WithWindows(() => ClassicWindowIndexView.From(index));
+            return new GuiWorkspace(Options, index, Catalog, Textures, 0, true, TimeSpan.Zero, ClassicGfxFiles, classic, ClassicExamples, Text?.WithIndex(index));
         }
 
         return this;
@@ -266,6 +275,55 @@ public sealed class GuiWorkspace
             }
 
             return new GuiWorkspace(Options, Index, Catalog, Textures, 0, true, TimeSpan.Zero, ClassicGfxFiles, Classic, ClassicExamples, Text.WithFreshLocalisation());
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Eine gespeicherte Skriptdatei der Mod oder einer Abhängigkeit: HOI IV unter <c>common/scripted_guis</c> oder <c>common/decisions/categories</c>
+    /// lässt die Scripted GUIs, EU IV unter <c>common/custom_gui</c> die Custom GUI im Hintergrund neu lesen. Andere <c>.txt</c>-Dateien, Vanilla und
+    /// Spiele ohne Skriptanbindung ändern nichts.
+    /// </summary>
+    private GuiWorkspace WithScriptFile(string fullPath)
+    {
+        if (Classic is null || (Classic.ScriptedGuis is null && Classic.CustomGuis is null))
+        {
+            return this;
+        }
+
+        var roots = new[] { Options.ModRoot }.Concat(Options.DependencyRoots).Where(root => !string.IsNullOrWhiteSpace(root));
+        foreach (var root in roots)
+        {
+            var relative = Path.GetRelativePath(root!, fullPath).Replace('\\', '/');
+            if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
+            {
+                continue;
+            }
+
+            var folder = relative.Contains('/') ? relative[..relative.LastIndexOf('/')] : string.Empty;
+            var index = Index;
+            ClassicAssets classic;
+            if (string.Equals(folder, ScriptedGuiIndex.ScriptFolder, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(folder, ScriptedGuiIndex.CategoryFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                classic = Classic.WithScriptFile(() => ClassicWindowIndexView.From(index));
+            }
+            else if (string.Equals(folder, CustomGuiIndex.Folder, StringComparison.OrdinalIgnoreCase))
+            {
+                classic = Classic.WithCustomGuiFile(() => ClassicWindowIndexView.From(index));
+            }
+            else
+            {
+                return this;
+            }
+
+            if (ReferenceEquals(classic, Classic))
+            {
+                return this;
+            }
+
+            return new GuiWorkspace(Options, Index, Catalog, Textures, 0, true, TimeSpan.Zero, ClassicGfxFiles, classic, ClassicExamples, Text);
         }
 
         return this;

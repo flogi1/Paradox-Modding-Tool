@@ -36,6 +36,15 @@ public static class VanillaDiffTexts
 
     public static string ConflictChangedByBoth(string display) => F("diff.conflict.changedByBoth", "\"{0}\" wurde sowohl vom Mod als auch vom Spiel-Update unterschiedlich verändert. Die Fassung des Spiel-Updates wurde übernommen; bitte die Mod-Änderung bei Bedarf über \"Mod übernehmen\" wählen.", display);
 
+    /// <summary>Kurzbezeichnung einer Strukturänderung (<see cref="VanillaStructureCheck"/>) für Listen.</summary>
+    public static string StructureChangeLabel(StructureChangeKind kind) => kind switch
+    {
+        StructureChangeKind.FileReplacedByFolder => T("diff.structure.fileReplacedByFolder", "Datei durch Ordner ersetzt"),
+        StructureChangeKind.FileMoved => T("diff.structure.fileMoved", "Datei verschoben"),
+        StructureChangeKind.FileRemoved => T("diff.structure.fileRemoved", "Datei entfernt"),
+        _ => T("diff.structure.folderGone", "Ordner entfernt"),
+    };
+
     private static string T(string key, string german) => UiText.Get(key, german);
 
     private static string F(string key, string german, params object?[] args) => UiText.Format(key, german, args);

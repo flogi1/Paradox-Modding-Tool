@@ -18,6 +18,12 @@ public static class PlaysetModFilter
 /// <summary>Die Mods, die man einem Playset hinzufügen kann.</summary>
 public static class PlaysetInstalledMods
 {
+    /// <summary>Endung der Archivordner der GFX-Prüfung; muss mit <c>GfxArchive.ArchiveSuffix</c> übereinstimmen (hier doppelt, weil LaunchControl GfxAudit nicht kennt; ein Test prüft die Gleichheit).</summary>
+    public const string GfxArchiveSuffix = "_gfx_archiv";
+
+    /// <summary>Ob ein Ordnername ein Archivordner der GFX-Prüfung ist; solche Ordner sind keine Mods.</summary>
+    public static bool IsGfxArchiveFolder(string folderName) => folderName.EndsWith(GfxArchiveSuffix, StringComparison.OrdinalIgnoreCase);
+
     /// <summary>
     /// Bekannte Mods (bei Launcher-Spielen die <c>mods</c>-Tabelle), Unterordner des Mod-Ordners und jeder Pfad, der schon in einem Playset steht; ohne Doppelte
     /// (Pfade ohne Rücksicht auf Schreibweise und Schlusstrenner), nach Name sortiert. Bei Launcher-Spielen zählen nur Ordner mit Geschwisterdatei <c>.mod</c>, weil
@@ -54,6 +60,11 @@ public static class PlaysetInstalledMods
         {
             foreach (var folder in Directory.EnumerateDirectories(gameModFolder))
             {
+                if (IsGfxArchiveFolder(Path.GetFileName(folder)))
+                {
+                    continue;
+                }
+
                 if (!requireDescriptor || File.Exists(folder + ".mod"))
                 {
                     Add(new PlaysetModEntry(folder, ReadMetadataName(folder) ?? Path.GetFileName(folder), true, null));

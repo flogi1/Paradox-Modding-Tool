@@ -37,6 +37,36 @@ public class ErrorLogSessionTests
     }
 
     [Fact]
+    public void SessionLengthComesFromRunTimes()
+    {
+        // Datum aus der letzten Änderung jeder Datei (LogFileTimes): fest gesetzt, damit der Test nicht von der Tageszeit abhängt.
+        using var logs = new TempTree(
+            ("logs/error.1.log", "[10:00:30][jomini_effect.cpp:556]: Unknown effect a at common/scripted_effects/purger.txt:2\n[10:05:00][jomini_effect.cpp:556]: Unknown effect b at common/scripted_effects/purger.txt:2\n"),
+            ("logs/error.log", "[10:05:01][jomini_effect.cpp:556]: Unknown effect c at common/scripted_effects/purger.txt:3\n[10:12:30][jomini_effect.cpp:556]: Unknown effect d at common/scripted_effects/purger.txt:3\n"));
+        var run = new LogRun(new[]
+        {
+            new LogRunFile(logs.PathOf("logs/error.1.log"), 1, new DateTime(2026, 10, 1, 10, 5, 0, DateTimeKind.Local).ToUniversalTime()),
+            new LogRunFile(logs.PathOf("logs/error.log"), 0, new DateTime(2026, 10, 1, 10, 12, 30, DateTimeKind.Local).ToUniversalTime()),
+        }, null, false);
+        using var tree = OwnModTree();
+        var session = NewSession(tree);
+        TimeSpan? seenOnChange = null;
+        session.Changed += (_, _) => seenOnChange = session.SessionLength;
+
+        session.LoadRun(run);
+
+        Assert.Equal(TimeSpan.FromMinutes(12), session.SessionLength);
+        Assert.Equal(TimeSpan.FromMinutes(12), seenOnChange);
+
+        session.LoadRun("error.log", LogReader.Parse(new[] { UnknownEffect }), DateTime.UtcNow);
+        Assert.Null(session.SessionLength);
+
+        session.LoadRun(run);
+        session.ClearRun();
+        Assert.Null(session.SessionLength);
+    }
+
+    [Fact]
     public void AfterManySwitchesFileNamesCountFromTheNewestPart()
     {
         using var tree = OwnModTree();

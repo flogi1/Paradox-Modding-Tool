@@ -227,6 +227,20 @@ public static class GeneratorsTexts
 
     public static string LegacyRemoved(int count) => F("generators.note.legacyRemoved", "{0} alte Einträge ohne Markierung entfernt.", count);
 
+    public static string Migrated(string oldPath, int removed) =>
+        F("generators.note.migrated", "{1} Einträge aus \"{0}\" in die neue Datei verschoben.", oldPath, removed);
+
+    public static string MigratedDelete => T("generators.note.migratedDelete", "Die alte Datei ist danach leer und wird gelöscht.");
+
+    public static string MigrateUnreadable(string oldPath) =>
+        F("generators.note.migrateUnreadable", "Die alte Datei \"{0}\" ist nicht lesbar; ihre Einträge wurden nicht verschoben.", oldPath);
+
+    public static string MigrateReadOnly(string oldPath) =>
+        F("generators.note.migrateReadOnly", "Die alte Datei \"{0}\" ist schreibgeschützt; ihre Einträge wurden nicht verschoben.", oldPath);
+
+    public static string MigrateItemPath(string output) =>
+        F("generators.error.migrateItemPath", "package.json: Ausgabe \"{0}\": Mit \"migrate\" darf der Pfad nicht von \"item\" abhängen.", output);
+
     private static string T(string key, string german) => UiText.Get(key, german);
 
     private static string F(string key, string german, params object[] args) => UiText.Format(key, german, args);

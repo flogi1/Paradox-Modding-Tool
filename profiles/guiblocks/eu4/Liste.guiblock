@@ -1,0 +1,38 @@
+# block: Liste
+# group: Fenster
+# description: Gitterliste (gridBoxType) mit einem Eintragsfenster, wie in den Spielfenstern. EU IV füllt Gitterlisten nur aus dem Spiel selbst; Custom GUI kennt keine Listen, in einem eigenen Fenster bleibt die Liste leer. Sinnvoll in der Kopie eines Spielfensters, dessen Liste das Spiel unter diesem Namen füllt. Das Eintragsfenster gehört direkt in guiTypes. Vorbild: interface/countrynativesview.gui
+# param: name | Name der Liste | my_list
+# param: entry_text | Text im Eintrag (Lokalisierungsschlüssel) | MY_LIST_ENTRY
+# requires: vic_18
+
+windowType = {
+	name = "$name$_window"
+	position = { x = 30 y = 80 }
+	size = { x = 400 y = 300 }
+	Orientation = "UPPER_LEFT"
+
+	gridBoxType = {
+		name = "$name$"
+		position = { x = 0 y = 0 }
+		size = { width = 400 height = 300 }
+		slotsize = { width = 400 height = 30 }
+		max_slots_horizontal = 1
+	}
+}
+
+windowType = {
+	name = "$name$_entry"
+	position = { x = 0 y = 0 }
+	size = { x = 400 y = 30 }
+	Orientation = "UPPER_LEFT"
+
+	instantTextBoxType = {
+		name = "$name$_entry_text"
+		position = { x = 8 y = 5 }
+		font = "vic_18"
+		text = "$entry_text$"
+		maxWidth = 384
+		maxHeight = 20
+		format = left
+	}
+}

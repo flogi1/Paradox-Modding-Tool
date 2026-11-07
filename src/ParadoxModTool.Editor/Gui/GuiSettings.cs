@@ -5,6 +5,7 @@ using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.GuiDesign.Layout;
 using ParadoxModTool.GuiDesign.Resolve;
+using ParadoxModTool.GuiDesign.Syntax;
 
 namespace ParadoxModTool.Editor.Gui;
 
@@ -57,13 +58,10 @@ public static class GuiSettings
     public static bool TypeCopyOffered => !Layout.IsClassic;
 
     /// <summary>
-    /// Bausteine (Fenster, Palette, Knopf, Kontextmenü, Strg+Umschalt+B): nur mit GUI-Werkzeugen und im Jomini-Format. Die Bausteine sind Jomini-Code;
-    /// klassische Bausteine kommen mit Plan 3, bis dahin <see cref="GuiTexts.ClassicBlocksLater"/>.
+    /// Bausteine (Fenster, Palette, Knopf, Kontextmenü, Strg+Umschalt+B): mit GUI-Werkzeugen in beiden Formaten. Jedes Spiel hat eigene mitgelieferte
+    /// Bausteine (<c>profiles\guiblocks\&lt;spiel-id&gt;</c>), HOI IV und EU IV im klassischen Format (Plan 3 Task 8).
     /// </summary>
-    public static bool BlocksOffered => ToolsEnabled && !Layout.IsClassic;
-
-    /// <summary>"Neue GUI-Datei": nur im Jomini-Format; klassisch käme die Datei nach &lt;Mod&gt;/gui, das HOI IV und EU IV nicht lesen (Plan 3).</summary>
-    public static bool NewFileOffered => !Layout.IsClassic;
+    public static bool BlocksOffered => ToolsEnabled;
 
     /// <summary>Brotkrumen-Leiste wird gezeigt (Hauptschalter und eigener Schalter an).</summary>
     public static bool BreadcrumbOffered => ToolsEnabled && BreadcrumbEnabled;
@@ -249,6 +247,36 @@ public static class GuiSettings
     /// (abgebrochen). Die App setzt ihn. Null = kein Knopf "Sprite anlegen…".
     /// </summary>
     public static Func<string?, string?>? SpriteCreator { get; set; }
+
+    /// <summary>
+    /// "Scripted GUI anlegen…" (klassisch, HOI IV) für ein oberstes Fenster ohne Mod-Eintrag: bekommt Fensternamen und Knopfnamen und liefert
+    /// <see langword="true"/>, wenn angelegt. Die App setzt ihn. Null = kein Knopf.
+    /// </summary>
+    public static Func<string, IReadOnlyList<string>, bool>? ScriptedGuiCreator { get; set; }
+
+    /// <summary>
+    /// "Effekt anlegen" (klassisch, HOI IV) für einen Knopf in einem Fenster mit Mod-Eintrag: bekommt Eintrag und Knopfnamen und liefert
+    /// <see langword="true"/>, wenn angelegt. Die App setzt ihn. Null = kein Knopf.
+    /// </summary>
+    public static Func<ScriptedGuiEntry, string, bool>? ScriptedGuiEffectCreator { get; set; }
+
+    /// <summary>
+    /// "Custom GUI anlegen" (klassisch, EU IV) für ein Element einer Mod-Datei: bekommt Element und Dateipfad und liefert <see langword="true"/>, wenn
+    /// angelegt. Die App setzt ihn. Null = kein Knopf.
+    /// </summary>
+    public static Func<GuiNode, string, bool>? CustomGuiCreator { get; set; }
+
+    /// <summary>
+    /// "In Vanilla-Fenster einbauen…" (klassisch, EU IV) für ein oberstes Mod-Fenster: bekommt Fenster und Dateipfad und liefert <see langword="true"/>,
+    /// wenn eingebaut. Die App setzt ihn. Null = kein Knopf.
+    /// </summary>
+    public static Func<GuiNode, string, bool>? CustomGuiBuilder { get; set; }
+
+    /// <summary>
+    /// Texturauswahl für das Eigenschaftenfeld (Jomini): bekommt den aktuellen Feldwert und liefert den gewählten Pfad ab <c>gfx/</c> oder null
+    /// (abgebrochen). Die App setzt ihn (Fenster mit Vorschaubildern). Null = kein Knopf "Textur wählen…".
+    /// </summary>
+    public static Func<string?, string?>? TexturePicker { get; set; }
 
     /// <summary>
     /// GUI-Daten-Helfer für das Eigenschaftenfeld: bekommt das gewählte Element (für den Datenkontext) und liefert den gebauten Ausdruck oder null

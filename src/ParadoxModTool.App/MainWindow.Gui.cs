@@ -2,12 +2,14 @@ using System.IO;
 using System.Windows;
 using ParadoxModTool.Editor.Gui;
 using ParadoxModTool.Editor;
+using ParadoxModTool.GuiDesign.Blocks;
 using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Designer;
 using ParadoxModTool.GuiDesign.Index;
 using ParadoxModTool.UndoRedo;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Resolve;
+using ParadoxModTool.GuiDesign.Syntax;
 using ParadoxModTool.Mods;
 using ParadoxModTool.Session;
 using MessageBox = System.Windows.MessageBox;
@@ -219,15 +221,14 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// Menüpunkt "GUI-Element inspizieren" nur bei eingeschalteten GUI-Werkzeugen; Daten-Helfer, Bausteine und "Neue GUI-Datei" außerdem nur im
-    /// Jomini-Format (das Spiel wechselt nur mit einem Neustart, das Profil steht also schon fest).
+    /// Menüpunkt "GUI-Element inspizieren" und Bausteine nur bei eingeschalteten GUI-Werkzeugen (Bausteine in beiden Formaten), der Daten-Helfer nach
+    /// <see cref="GuiSettings.DataHelperOffered"/>; "Neue GUI-Datei" steht immer da (klassisch nach &lt;Mod&gt;/interface).
     /// </summary>
     private void SyncGuiInspectMenu()
     {
         GuiInspectMenuItem.Visibility = GuiSettings.ToolsEnabled ? Visibility.Visible : Visibility.Collapsed;
         GuiDataHelperMenuItem.Visibility = GuiSettings.DataHelperOffered ? Visibility.Visible : Visibility.Collapsed;
         GuiBlocksMenuItem.Visibility = GuiSettings.BlocksOffered ? Visibility.Visible : Visibility.Collapsed;
-        GuiNewFileMenuItem.Visibility = GuiSettings.NewFileOffered ? Visibility.Visible : Visibility.Collapsed;
         RebuildToolbar();
         TileBarControl.Rebuild();
     }
@@ -271,6 +272,12 @@ public partial class MainWindow
     /// <summary>Suchfenster "GUI-Element inspizieren" (Menü und Strg+H).</summary>
     private void OpenGuiElementSearch()
     {
+        // Jeder Weg (Menü, Kachel, Leiste, Tastenkürzel) endet hier: im Spiel ohne GUI-Profil bleibt die Suche zu.
+        if (!ToolStateOf(ParadoxModTool.Settings.TileIds.Gui).Available)
+        {
+            return;
+        }
+
         if (_guiSearch is null)
         {
             _guiSearch = new GuiElementSearchWindow { Owner = this };
@@ -300,18 +307,11 @@ public partial class MainWindow
     private void GuiInspectMenuItem_Click(object sender, RoutedEventArgs e) => OpenGuiElementSearch();
 
     /// <summary>
-    /// "Neue GUI-Datei" (Plan 3a Ruling 10): Datei in &lt;Kontext&gt;/gui der aktiven Mod (Plan 3b Ruling 2) über den Aktionsverlauf anlegen
+    /// "Neue GUI-Datei" (Plan 3a Ruling 10): Datei in &lt;Kontext&gt;/gui der aktiven Mod (Plan 3b Ruling 2), klassisch in interface/, über den Aktionsverlauf anlegen
     /// (rückgängig machbar), im aktiven Arbeitsbereich in "Geteilt" öffnen und in den GUI-Index übernehmen.
     /// </summary>
     private void NewGuiFile_Click(object sender, RoutedEventArgs e)
     {
-        // Klassisch (HOI IV, EU IV) läge die Datei in <mod>/gui, das weder Spiel noch Index lesen; kommt mit Plan 3.
-        if (!GuiSettings.NewFileOffered)
-        {
-            MessageBox.Show(this, GuiTexts.ClassicBlocksLater, GuiTexts.NewFileTitle, MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         if (CurrentGuiModRoots().ModRoot is not { } modRoot)
         {
             MessageBox.Show(this, GuiTexts.NewFileNoMod, GuiTexts.NewFileTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -319,8 +319,31 @@ public partial class MainWindow
         }
 
         var library = LoadGuiBlockLibrary();
-        var dialog = new GuiNewFileWindow(modRoot, library.Effective, CurrentGuiLayout) { Owner = this };
-        if (dialog.ShowDialog() != true || GuiBlockFileText(library, dialog.Block!, dialog.FileName) is not { } text)
+        var dialog = new GuiNewFileWindow(modRoot, library.Effective, CurrentGuiLayout, CurrentGuiLayout.IsClassic ? GuiSettings.Workspace?.Index : null) { Owner = this };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        // Klassisch (HOI IV, EU IV): Datei in <mod>/interface mit einem Fenster aus dem Baustein "Fenster" in guiTypes (Plan 3 Task 9).
+        var classic = CurrentGuiLayout.IsClassic;
+        string? text;
+        if (classic)
+        {
+            if (library.Find(ClassicNewFile.WindowBlockName) is not { IsValid: true } windowBlock)
+            {
+                MessageBox.Show(this, GuiTexts.NewFileNoWindowBlock, GuiTexts.NewFileTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            text = ClassicNewFile.Scaffold(windowBlock, GuiBlockNames.WidgetNameFor(dialog.FileName));
+        }
+        else
+        {
+            text = GuiBlockFileText(library, dialog.Block!, dialog.FileName);
+        }
+
+        if (text is null)
         {
             return;
         }
@@ -345,6 +368,34 @@ public partial class MainWindow
         UpdateHasNote(document);
         pane.ShowGuiMode(document, GuiViewMode.Split);
         NotifyGuiFileSaved(path, text);
+        if (classic)
+        {
+            OfferClassicScriptAction(path, text);
+        }
+    }
+
+    /// <summary>
+    /// Nach "Neue GUI-Datei" im klassischen Format: Fragt, ob die Aktion läuft, die das neue Fenster ins Spiel bringt, und führt dieselbe Funktion aus wie das
+    /// Eigenschaftenfeld ("Scripted GUI anlegen…" bei HOI IV, "In Vanilla-Fenster einbauen…" bei EU IV).
+    /// </summary>
+    private void OfferClassicScriptAction(string path, string text)
+    {
+        var action = ClassicNewFile.ScriptActionName(CurrentGuiLayout);
+        if (action is null
+            || GuiParser.Parse(text).Root.Descendants().FirstOrDefault(ClassicWindows.IsWindow) is not { } window
+            || MessageBox.Show(this, GuiTexts.NewFileRunAction(action), GuiTexts.NewFileTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        if (GuiSettings.ScriptedGuiCreator is { } scripted)
+        {
+            scripted(ClassicWindows.NameOf(window), GuiPropertyEditor.ScriptButtonNames(window));
+        }
+        else if (GuiSettings.CustomGuiBuilder is { } builder)
+        {
+            builder(window, path);
+        }
     }
 
     /// <summary>Farbdialog für das Eigenschaftenfeld des Designers (das Editor-Projekt hat kein WinForms).</summary>

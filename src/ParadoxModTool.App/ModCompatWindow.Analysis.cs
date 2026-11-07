@@ -154,8 +154,10 @@ public partial class ModCompatWindow
         }
 
         var participants = BuildParticipants();
-        // Stellaris: auch eine einzelne Mod kann gegen eine Vanilla-Datei verlieren, die nach Ladereihenfolge gewinnt (Fundart LosesToVanilla).
-        var minimum = _host.Profile is { LastWinsInLoadOrder: true } ? 1 : 2;
+        // Stellaris: auch eine einzelne Mod kann gegen eine Vanilla-Datei verlieren, die nach Ladereihenfolge gewinnt (Fundart LosesToVanilla);
+        // ebenso in einem Ordner mit Verhalten je Hülle (EU IV interface), auch ohne Ladereihenfolge für das ganze Spiel.
+        var rules = BuildRules();
+        var minimum = rules.LastWinsInLoadOrder || rules.Rules.Any(r => r.UnwrapBehaviors is { Count: > 0 }) ? 1 : 2;
         if (participants.Count(p => !p.IsVanilla) < minimum)
         {
             StatusText.Text = ModCompatWindowTexts.NeedTwoMods;
@@ -181,7 +183,7 @@ public partial class ModCompatWindow
         var request = new CompatRequest
         {
             Participants = participants,
-            Rules = BuildRules(),
+            Rules = rules,
             FocusId = focusId,
             CounterpartIds = counterparts,
             Cache = _cache,

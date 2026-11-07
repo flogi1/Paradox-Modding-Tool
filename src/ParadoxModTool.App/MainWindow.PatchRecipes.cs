@@ -90,8 +90,6 @@ public partial class MainWindow
                 {
                     var scan = ParadoxModTool.Compatch.VanillaUpdateRun.Scan(
                         ParadoxModTool.VanillaDiff.VanillaFileTracker.FindOverriddenFiles(gameRoot, modRoot, profile),
-                        Array.Empty<string>(),
-                        gameRoot,
                         ParadoxModTool.VanillaDiff.VanillaHistoryStore.FromHistoryRoot(historyDirectory),
                         version,
                         ParadoxModTool.Compatch.VanillaVersionLedger.Load(ledgerDirectory),

@@ -20,7 +20,13 @@ public enum GuiElementFilter
     List,
     Template,
     Other,
+
+    /// <summary>Dateien statt Elemente: eine Zeile je Datei mit obersten Fenstern (<see cref="GuiElementSearch.Files"/>).</summary>
+    Files,
 }
+
+/// <summary>Zeile der Art "Dateien": Pfad und die obersten Fenster der Datei in Dateireihenfolge; die Auswahl öffnet <c>Roots[0]</c>.</summary>
+public sealed record GuiFileEntry(string FilePath, string DisplayPath, IReadOnlyList<GuiElementEntry> Roots);
 
 /// <summary>
 /// Eintrag der Suchliste: Definition, aufgelöstes Engine-Widget ("" bei Templates), Art und Tooltip-Merkmal (Plan-Ruling 6).
@@ -109,6 +115,7 @@ public static class GuiElementSearch
             GuiElementFilter.Template => entry.Kind == GuiDefinitionKind.Template,
             GuiElementFilter.Tooltip => entry.IsTooltip,
             GuiElementFilter.FileRoot => entry.IsFileRoot,
+            GuiElementFilter.Files => false,
             _ when entry.Kind == GuiDefinitionKind.Template => false,
             GuiElementFilter.Button => entry.Category == GuiWidgetCategory.Button,
             GuiElementFilter.Window => entry.Category == GuiWidgetCategory.Window,
@@ -118,6 +125,28 @@ public static class GuiElementSearch
             GuiElementFilter.List => entry.Category == GuiWidgetCategory.List,
             _ => entry.Category == GuiWidgetCategory.Other,
         };
+    }
+
+    /// <summary>
+    /// Dateien mit obersten Fenstern (aus den <see cref="GuiElementEntry.IsFileRoot"/>-Einträgen): Fenster in Dateireihenfolge (Zeile der
+    /// Definition), Dateien nach Anzeigepfad sortiert. Dateien ohne oberstes Fenster fehlen.
+    /// </summary>
+    public static IReadOnlyList<GuiFileEntry> Files(IReadOnlyList<GuiElementEntry> entries) =>
+        entries.Where(entry => entry.IsFileRoot)
+            .GroupBy(entry => entry.Definition.File.FullPath, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new GuiFileEntry(
+                group.Key,
+                group.First().Definition.File.RelativePath,
+                group.OrderBy(entry => entry.Definition.Line).ToList()))
+            .OrderBy(file => file.DisplayPath, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    /// <summary>Beide Felder ("Name enthält" und "Datei enthält") suchen im Pfad der Datei; "/" und "\" gleichwertig, Groß-/Kleinschreibung egal.</summary>
+    public static bool MatchesFile(GuiFileEntry file, string text, string fileFilter)
+    {
+        var path = file.DisplayPath.Replace('\\', '/');
+        return (text.Length == 0 || path.Contains(text.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            && (fileFilter.Length == 0 || path.Contains(fileFilter.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase));
     }
 
     private static GuiElementEntry Entry(GuiDefinition definition, GuiResolver resolver, IReadOnlySet<string> tooltipTypes)

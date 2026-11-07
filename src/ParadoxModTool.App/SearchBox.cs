@@ -10,10 +10,11 @@ namespace ParadoxModTool.App;
 internal static class SearchBox
 {
     /// <summary>Das Feld liegt in einem Grid mit dem Platzhalter; der Platzhalter verschwindet, sobald Text da ist.</summary>
-    public static (FrameworkElement Panel, TextBox Box) Create(string? text = null)
+    /// <param name="placeholderText">Eigener Platzhalter; <c>null</c> = "Suchen".</param>
+    public static (FrameworkElement Panel, TextBox Box) Create(string? text = null, string? placeholderText = null)
     {
         var box = new TextBox { Text = text ?? string.Empty, VerticalContentAlignment = VerticalAlignment.Center, MinHeight = 22 };
-        var placeholder = new TextBlock { Text = SettingsTexts.ListSearchPlaceholder, IsHitTestVisible = false, Margin = new Thickness(5, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        var placeholder = new TextBlock { Text = placeholderText ?? SettingsTexts.ListSearchPlaceholder, IsHitTestVisible = false, Margin = new Thickness(5, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         placeholder.SetResourceReference(TextBlock.ForegroundProperty, "Theme.TextMuted");
         void Update() => placeholder.Visibility = box.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         box.TextChanged += (_, _) => Update();

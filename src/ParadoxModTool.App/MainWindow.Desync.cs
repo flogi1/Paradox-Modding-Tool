@@ -18,12 +18,6 @@ public partial class MainWindow
     /// <summary>Das Spielprofil hat Desync-Regeln.</summary>
     private bool DesyncAvailable => (GameContext.Profile ?? _activeProfile)?.DesyncRules is not null;
 
-    /// <summary>
-    /// Beim Start, sobald das Profil feststeht: Menüpunkt nur im klassischen Layout und nur mit Desync-Regeln zeigen.
-    /// Die Sichtbarkeit entscheidet allein <see cref="ApplyMenuLayout"/>, sonst taucht der Punkt im neuen Layout wieder in der Menüleiste auf.
-    /// </summary>
-    private void InitializeDesync() => ApplyMenuLayout();
-
     /// <summary>Beim Schließen von PMT, vor dem Fehlerprotokoll (das Fenster hängt an dessen Sitzung): Fenster schließen, Vergleich abbrechen.</summary>
     private void CloseDesync()
     {

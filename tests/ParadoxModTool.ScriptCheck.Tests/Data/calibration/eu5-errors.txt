@@ -1,0 +1,5 @@
+# Restliste der Skriptprüfung für eu5 (Kalibrierung „Vanilla als Mod“, CalibrationTests.Calibration_*).
+# Jede Zeile: Error-Schlüssel<TAB>Grund (echter Vanilla-Fehler). Jeder neue Error-Schlüssel lässt den Test scheitern;
+# Schlüssel, die nicht mehr auftreten, stehen nur in der Testausgabe.
+BrokenReference|has_proximity_source_building	nur als = no in in_game/common/generic_actions/parliament.txt:1344 ff. (8 Stellen), nicht in den Script-Docs (Stand 2026-09-26); vermutlich neuer Trigger, mit frischen Docs pruefen
+BrokenReference|is_historical_capital	nur als = no in in_game/common/generic_actions/parliament.txt:1345 ff. (8 Stellen), nicht in den Script-Docs (Stand 2026-09-26); vermutlich neuer Trigger, mit frischen Docs pruefen

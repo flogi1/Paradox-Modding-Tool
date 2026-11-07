@@ -434,7 +434,18 @@ internal sealed partial class AiTaskWindow : Window
             return;
         }
 
-        Clipboard.SetText(_flavor.BuildText(input));
+        string text;
+        try
+        {
+            text = _flavor.BuildText(input);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show(this, ex.Message, _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        Clipboard.SetText(text);
         MessageBox.Show(this, AiPackageTexts.Copied, _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -445,13 +456,25 @@ internal sealed partial class AiTaskWindow : Window
             return;
         }
 
+        // Text zuerst bauen: fehlt der Lauf, kommt die Warnung vor dem Speichern-Dialog
+        string text;
+        try
+        {
+            text = _flavor.BuildText(input);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show(this, ex.Message, _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         var dialog = new SaveFileDialog { Filter = "Markdown (*.md)|*.md", FileName = _flavor.SaveFileName };
         if (dialog.ShowDialog(this) != true)
         {
             return;
         }
 
-        File.WriteAllText(dialog.FileName, _flavor.BuildText(input), new UTF8Encoding(false));
+        File.WriteAllText(dialog.FileName, text, new UTF8Encoding(false));
         MessageBox.Show(this, AiPackageTexts.Saved(dialog.FileName), _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -474,7 +497,17 @@ internal sealed partial class AiTaskWindow : Window
             return;
         }
 
-        _flavor.BuildFolder(input, dialog.FolderName);
+        // Der Auftrag wird vor dem Schreiben gebaut: fehlt der Lauf, entsteht nichts im Ordner
+        try
+        {
+            _flavor.BuildFolder(input, dialog.FolderName);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show(this, ex.Message, _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         MessageBox.Show(this, AiPackageTexts.Saved(dialog.FolderName), _flavor.Title, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 

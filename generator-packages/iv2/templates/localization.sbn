@@ -37,29 +37,33 @@ l_{{ lang }}:
 {{~ for c in categories ~}}
 {{~ for i in c.ideas ~}}
 {{~ base = tag + "_" + i.number ~}}
+{{~ for pf in ["WE_PERFORM", "PERFORM"] ~}}
 {{~ for l in i.levels ~}}
-{{~ action = "WE_PERFORM_iv2_ga_select_historic_" + base + l.suffix + "_ACTION" ~}}
+{{~ action = pf + "_iv2_ga_select_historic_" + base + l.suffix + "_ACTION" ~}}
 {{~ body = "$iv2_dynamic_nat_idea_" + c.key + "_" + i.number + l.suffix + "$" ~}}
  {{ action }}_SETUP: "$iv2_message_selected_ig$ {{ body }}"
  {{ action }}_HEADER: "$iv2_message_selected_dynamic_nat_idea_1$"
  {{ action }}_TITLE: "$iv2_message_selected_dynamic_nat_idea_1$"
  {{ action }}_EFFECTS: "$iv2_message_selected_ig$ {{ body }}"
+ {{ action }}_DESC: "$iv2_message_selected_ig$ {{ body }}"
  {{ action }}_LOG: "$iv2_message_selected_ig$ {{ body }}"
  {{ action }}_BTN1: "OK"
  {{ action }}_BTN2: "OK"
  {{ action }}_BTN3: "$common_string_go_to$"
  {{ action }}_MAP: ""
 {{~ end ~}}
-{{~ action = "WE_PERFORM_iv2_ga_deselect_historic_" + base + "_ACTION" ~}}
+{{~ action = pf + "_iv2_ga_deselect_historic_" + base + "_ACTION" ~}}
 {{~ body = "$iv2_dynamic_nat_idea_" + c.key + "_" + i.number + "$" ~}}
  {{ action }}_SETUP: "$iv2_message_deselected_ig$ {{ body }}"
  {{ action }}_HEADER: "$iv2_message_deselected_dynamic_nat_idea_1$"
  {{ action }}_TITLE: "$iv2_message_deselected_dynamic_nat_idea_1$"
  {{ action }}_EFFECTS: "$iv2_message_deselected_ig$ {{ body }}"
+ {{ action }}_DESC: "$iv2_message_deselected_ig$ {{ body }}"
  {{ action }}_LOG: "$iv2_message_deselected_ig$ {{ body }}"
  {{ action }}_BTN1: "OK"
  {{ action }}_BTN2: "OK"
  {{ action }}_BTN3: "$common_string_go_to$"
  {{ action }}_MAP: ""
+{{~ end ~}}
 {{~ end ~}}
 {{~ end ~}}

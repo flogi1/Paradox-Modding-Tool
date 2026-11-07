@@ -55,16 +55,27 @@ public sealed class TileBar : UserControl
 
     public TileBar()
     {
+        var scroller = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Padding = new Thickness(4, 3, 4, 3),
+            Content = _strip,
+        };
+
+        // Mausrad schiebt die Leiste waagerecht, sobald sie breiter als das Fenster ist
+        scroller.PreviewMouseWheel += (_, e) =>
+        {
+            if (scroller.ScrollableWidth > 0)
+            {
+                scroller.ScrollToHorizontalOffset(scroller.HorizontalOffset - e.Delta);
+                e.Handled = true;
+            }
+        };
         var border = new Border
         {
             BorderThickness = new Thickness(0, 0, 0, 1),
-            Child = new ScrollViewer
-            {
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                Padding = new Thickness(4, 3, 4, 3),
-                Content = _strip,
-            },
+            Child = scroller,
         };
         border.SetResourceReference(Border.BorderBrushProperty, "Theme.Separator");
         border.SetResourceReference(Border.BackgroundProperty, "Theme.WindowBackground");

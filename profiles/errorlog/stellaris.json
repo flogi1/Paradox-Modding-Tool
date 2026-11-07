@@ -79,10 +79,10 @@
       },
       "tips": {
         "de": [
-          "Die Datei in PMT öffnen und mit der Kodierung UTF-8 (ohne BOM) speichern."
+          "Im Fehlerprotokoll im Bereich \"Skriptdatei mit BOM (ENC-001, von PMT geprüft)\" die Datei wählen und \"BOM entfernen\" klicken; PMT entfernt das BOM und lässt alle übrigen Bytes gleich. Der Bereich listet auch Dateien, die das Spiel nicht meldet."
         ],
         "en": [
-          "Open the file in PMT and save it with the encoding UTF-8 (without BOM)."
+          "In the error log, select the file in the section \"Script file with BOM (ENC-001, checked by PMT)\" and click \"Remove BOM\"; PMT removes the BOM and keeps every other byte. The section also lists files the game does not report."
         ]
       },
       "fixes": [

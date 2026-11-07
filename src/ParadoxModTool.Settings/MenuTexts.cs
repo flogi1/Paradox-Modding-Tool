@@ -58,6 +58,15 @@ public static class MenuTexts
 
     public static string ProjectSyncTip => T("menu.project.sync.tip", "Zwei Mods des Projekts ordnerweit vergleichen und einzelne Dateien übernehmen");
 
+    // Werkzeug-Sperre je Spiel (ToolAvailability)
+    public static string NotSupported(string game) => F("menu.tool.notSupported", "Für {0} nicht unterstützt", game);
+
+    public static string HintNoPackages => T("menu.tool.hint.noPackages", "Für dieses Spiel gibt es noch keine Pakete");
+
+    public static string HintNoRecipePresets => T("menu.tool.hint.noRecipePresets", "Keine Vorlagen für dieses Spiel – eigene Rezepte gehen");
+
+    public static string HintNoScriptDocs => T("menu.tool.hint.noScriptDocs", "Keine Script-Doku gefunden (Spiel-Logs fehlen)");
+
     public static string CuTool => T("menu.cuTool", "Compare und Update Tool");
 
     public static string CuToolTip => T("menu.cuTool.tip", "Compare und Update Tool: zwei Dateien oder Ordner vergleichen (Compare) und Mod-Dateien mit Vanilla abgleichen, mit 3-Wege-Merge nach Spiel-Updates (Update). Markierte Zeilen übernimmt U in die andere Seite. Ersetzungslisten ersetzen gespeicherte Wörter in einem Mod-Ordner mit einem Knopf, z.B. nach einem Spiel-Patch.");
@@ -145,11 +154,12 @@ public static class MenuTexts
 
     /// <summary>
     /// Beschriftung einer Kachel (<see cref="TileIds"/>): die heutigen Menütexte, für "Projekt verwalten" und "GUI" eigene Schlüssel.
-    /// Texte aus anderen Projekten (Error-Log, Desync, Save Explorer) liefert <paramref name="external"/>; ohne Treffer steht die Kennung.
+    /// Texte aus anderen Projekten (Error-Log, Desync, Save Explorer, Performance-Checker) liefert <paramref name="external"/>; ohne Treffer steht die Kennung.
     /// </summary>
     public static string TileLabel(string tileId, Func<string, string?>? external = null) => tileId switch
     {
         TileIds.Project => T("menu.tile.project", "Projekt verwalten"),
+        TileIds.Mods => T("menu.tile.mods", "Mods verwalten"),
         TileIds.CuTool => CuTool,
         TileIds.Compatch => Compatch,
         TileIds.ModCompat => ModCompat,
@@ -169,7 +179,8 @@ public static class MenuTexts
     /// <summary>Tooltip einer Kachel; Quellen wie bei <see cref="TileLabel"/>.</summary>
     public static string TileTip(string tileId, Func<string, string?>? external = null) => tileId switch
     {
-        TileIds.Project => ProjectTip,
+        TileIds.Project => ProjectSyncTip,
+        TileIds.Mods => T("menu.tile.mods.tip", "Übersicht aller eigenen Mods"),
         TileIds.CuTool => CuToolTip,
         TileIds.Compatch => CompatchTip,
         TileIds.ModCompat => ModCompatTip,

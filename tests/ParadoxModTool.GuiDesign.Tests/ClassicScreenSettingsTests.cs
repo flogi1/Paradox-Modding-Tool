@@ -67,6 +67,16 @@ public sealed class ClassicScreenSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Reads_game_language()
+    {
+        Assert.Equal("l_german", ClassicScreenSettings.TryReadLanguage(Write("force_pow2_textures=no\nlanguage=\"l_german\"\ngraphics={\n\tsize={ x=2048 y=1152 }\n}\n")));
+
+        // Nur oberste Ebene; fehlt der Schlüssel oder die Datei, null.
+        Assert.Null(ClassicScreenSettings.TryReadLanguage(Write("graphics={ language=\"l_french\" }\n")));
+        Assert.Null(ClassicScreenSettings.TryReadLanguage(Path.Combine(_temp, "missing.txt")));
+    }
+
+    [Fact]
     public void Settings_path_is_next_to_the_mod_folder()
     {
         Assert.Equal(@"C:\Docs\Paradox Interactive\Hearts of Iron IV\settings.txt", ClassicScreenSettings.PathFor(@"C:\Docs\Paradox Interactive\Hearts of Iron IV\mod\"));

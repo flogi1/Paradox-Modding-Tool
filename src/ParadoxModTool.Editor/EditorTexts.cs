@@ -53,6 +53,8 @@ public static class EditorTexts
     // Tabs
     public static string TabOpenFolder => T("editor.tab.openFolder", "Ordner öffnen");
 
+    public static string TabMoveToOtherPane => T("editor.tab.moveToOtherPane", "In andere Arbeitsfläche verschieben");
+
     public static string TabModifiedTip => T("editor.tab.modified.tip", "Ungespeicherte Änderungen");
 
     public static string TabNoteTip => T("editor.tab.note.tip", "Es gibt eine Notiz zu dieser Datei - anklicken zum Anzeigen/Bearbeiten");

@@ -368,6 +368,48 @@ public static class ErrorLogTexts
 
     public static string PublishTracesWarning(int count) => F("errorlog.trace.publishWarning", "Die Mod enthält noch {0} Scope-Spuren (PMT-TRACE). Entfernen im Fehlerprotokoll unter \"Aktive Spuren\". Trotzdem veröffentlichen?", count);
 
+    // PMT-eigene BOM-Prüfung aller eigenen Mods (ENC-001 ohne error.log); Name und Erklärung kommen aus dem Katalog.
+    public static string BomHeading(string kindName, string code, int files) => F("errorlog.bom.heading", "{0} ({1}, von PMT geprüft): {2} Dateien", kindName, code, files);
+
+    public static string BomFoundByPmt => T("errorlog.bom.foundByPmt", "Von PMT in allen eigenen Mods gefunden, nicht aus dem error.log: Das Spiel meldet nicht jede dieser Dateien. Doppelklick öffnet die Datei.");
+
+    public static string BomLine(string mod, string path) => F("errorlog.bom.line", "{0}: {1}", mod, path);
+
+    public static string BomRemove => T("errorlog.bom.remove", "BOM entfernen");
+
+    public static string BomRemoveAll => T("errorlog.bom.removeAll", "Alle entfernen");
+
+    public static string BomRemoveConfirm(int files, string list) => F("errorlog.bom.removeConfirm", "Bei {0} Dateien das BOM entfernen? Sonst bleibt jedes Byte gleich, vorher legt PMT eine Sicherung jeder betroffenen Mod an.\n\n{1}", files, list);
+
+    public static string BomRemoveAction(int files) => F("errorlog.bom.removeAction", "Das BOM aus {0} Dateien entfernen", files);
+
+    public static string BomSnapshotNote => T("errorlog.bom.snapshotNote", "vor Entfernen des BOM");
+
+    public static string BomNothing => T("errorlog.bom.nothing", "Keine der Dateien beginnt noch mit einem BOM.");
+
+    public static string BomRemoveDone(int files) => F("errorlog.bom.removeDone", "Das BOM aus {0} Dateien entfernt.", files);
+
+    public static string BomRemoving => T("errorlog.bom.removing", "Das BOM wird gerade entfernt, bitte warten.");
+
+    public static string BomSkipped(string list) => F("errorlog.bom.skipped", "Übersprungen, Datei wurde inzwischen geändert:\n{0}", list);
+
+    public static string BomMore(int count) => F("errorlog.bom.more", "und {0} weitere", count);
+
+    /// <summary>Dateiliste für Rückfrage und Meldungen: höchstens 15 Pfade, danach eine Zeile "und N weitere".</summary>
+    public static string BomFileList(IReadOnlyList<string> paths)
+    {
+        const int max = 15;
+        var lines = paths.Take(max).ToList();
+        if (paths.Count > max)
+        {
+            lines.Add(BomMore(paths.Count - max));
+        }
+
+        return string.Join("\n", lines);
+    }
+
+    public static string BomRemoveFailed(string reason) => F("errorlog.bom.removeFailed", "Entfernen fehlgeschlagen, alle Dateien sind wieder im alten Stand: {0}", reason);
+
     public static string FixLater => T("errorlog.fix.later", "Folgt in einer späteren Version von PMT.");
 
     public static string SuppressHeading => T("errorlog.suppress", "Unterdrücken");
@@ -506,6 +548,17 @@ public static class ErrorLogTexts
         evidence.ObjectCount > 0
             ? F("errorlog.save.evidence", "Im Spielstand {0}: bei {1} Objekten gesetzt ({2})", evidence.SaveLabel, evidence.ObjectCount, string.Join(", ", evidence.Examples.Select(e => F("errorlog.save.example", "{0} {1}", e.Kind.Label, e.DisplayName))))
             : F("errorlog.save.nowhere", "Im Spielstand {0} nirgends gesetzt", evidence.SaveLabel);
+
+    // Fehler-Hotspots: Hinweise der Performance-Regeln nur aus dem error.log (Performance-Checker Plan 3, Task 7).
+    public static string HotspotsTitle(int count) => F("errorlog.hotspots.title", "Fehler-Hotspots ({0})", count);
+
+    public static string HotspotsLive => T("errorlog.hotspots.live", "Sitzung läuft noch, Zahlen wachsen");
+
+    public static string HotspotsTip => T("errorlog.hotspots.tip", "Stellen deiner und fremder Mods, an denen das error.log dieses Laufs viele Einträge hat (ab 100 je Stelle), und Variablenzugriffe ohne Guard an Stellen mit einer Variablen-Meldung. Es sind dieselben Regeln wie bei den Hinweisen des Performance-Checkers, hier nur aus dem error.log, darum für jedes Spiel mit Fehlerkatalog, auch ohne Profiler. Vanilla- und Engine-Meldungen zählen nicht mit. Unterdrückte Einträge zählen mit. „pro Minute“ rechnet mit der Länge der Spielsitzung (erste bis letzte Zeile mit Uhrzeit); im Live-Betrieb steht dort „-“. Der Tooltip einer Zeile erklärt den Hinweis, Doppelklick oder Enter öffnet die Stelle im Editor.");
+
+    public static string HotspotsColumnCount => T("errorlog.hotspots.column.count", "Anzahl");
+
+    public static string HotspotsColumnPerMinute => T("errorlog.hotspots.column.perMinute", "pro Minute");
 
     private static string T(string key, string german) => UiText.Get(key, german);
 

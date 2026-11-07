@@ -7,6 +7,14 @@ public enum GuiDialect
     Classic,
 }
 
+/// <summary>Wie Skript an klassische Fenster kommt (Profil <c>gui.scriptWiring</c>): HOI IV über Scripted GUIs, EU IV über Custom GUI.</summary>
+public enum GuiScriptWiring
+{
+    None,
+    ScriptedGuis,
+    CustomGui,
+}
+
 /// <summary>
 /// Wo ein Spiel seine .gui-Dateien hat und welche Definition gilt (Spielprofil, Abschnitt <c>gui</c>). <see cref="Contexts"/>: Kontextordner wie bei EU V
 /// (<c>in_game</c>, <c>main_menu</c>, <c>loading_screen</c>); leer = flach, die Dateien liegen direkt in <c>gui/</c> (Crusader Kings III).
@@ -16,6 +24,7 @@ public enum GuiDialect
 /// Nur klassisch: <see cref="SpriteFirstWins"/> gilt für Sprites (<c>spriteType</c>), <see cref="FirstWins"/> dort für Fenster; <see cref="CaseSensitive"/>
 /// vergleicht Dateinamen in der Ladereihenfolge nach Groß-/Kleinschreibung (HOI IV); <see cref="VanillaRoots"/> nennt die Ordner der Installation, deren
 /// <c>interface/</c> Vanilla ist (<c>""</c> = die Installation selbst, ein <c>/*</c> am Ende = jeder direkte Unterordner).
+/// <see cref="ReplacePathGuiCrashRoots"/> (Profil <c>replacePathGuiCrashRoots</c>) und <see cref="MetadataFile"/> (Profil <c>metadataFile</c>) braucht die Prüfung auf <c>replace_path</c> in Unterordnern.
 /// </summary>
 public sealed record GuiLayout(
     IReadOnlyList<string> Contexts,
@@ -24,7 +33,10 @@ public sealed record GuiLayout(
     GuiDialect Dialect = GuiDialect.Jomini,
     bool SpriteFirstWins = false,
     bool CaseSensitive = false,
-    IReadOnlyList<string>? VanillaRoots = null)
+    IReadOnlyList<string>? VanillaRoots = null,
+    IReadOnlyList<string>? ReplacePathGuiCrashRoots = null,
+    string? MetadataFile = null,
+    GuiScriptWiring ScriptWiring = GuiScriptWiring.None)
 {
     /// <summary>EU V: drei Kontextordner, zuletzt geladene Definition gewinnt. Gilt, wenn das Profil nichts angibt.</summary>
     public static GuiLayout Default { get; } = new(new[] { "in_game", "main_menu", "loading_screen" }, false);

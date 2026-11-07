@@ -6,6 +6,7 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ParadoxModTool.GuiDesign;
 using ParadoxModTool.GuiDesign.Blocks;
+using ParadoxModTool.GuiDesign.Classic;
 using ParadoxModTool.GuiDesign.Index;
 
 namespace ParadoxModTool.Editor.Gui;
@@ -28,6 +29,7 @@ public sealed class GuiBlockWindow : Window
 {
     private GuiBlockLibrary _library;
     private readonly GuiIndex? _index;
+    private readonly ClassicSpriteIndex? _sprites;
     private readonly GuiBlockWindowOptions _options;
     private readonly TextBox _search = new() { Margin = new Thickness(0, 0, 0, 6) };
     private readonly ListBox _list = new();
@@ -53,10 +55,12 @@ public sealed class GuiBlockWindow : Window
     private GuiBlock? _selected;
     private GuiBlockValues? _values;
 
-    public GuiBlockWindow(GuiBlockLibrary library, GuiIndex? index, IHighlightingDefinition? highlighting, GuiBlockWindowOptions options)
+    public GuiBlockWindow(
+        GuiBlockLibrary library, GuiIndex? index, IHighlightingDefinition? highlighting, GuiBlockWindowOptions options, ClassicSpriteIndex? sprites = null)
     {
         _library = library;
         _index = index;
+        _sprites = sprites;
         _options = options;
         Title = GuiTexts.BlocksTitle;
         Width = 1000;
@@ -279,7 +283,7 @@ public sealed class GuiBlockWindow : Window
         var inputs = new GuiBlockInputs(block, _values, block.Parameters, block.Repeats);
         inputs.Changed += (_, _) => UpdatePreview();
         _inputs.Content = inputs;
-        var missing = GuiBlockLibrary.MissingRequirements(block, _index);
+        var missing = GuiBlockLibrary.MissingRequirements(block, _index, _sprites);
         _missingText.Text = missing.Count > 0 ? GuiTexts.BlocksMissing(string.Join(", ", missing)) : string.Empty;
         _missing.Visibility = missing.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         _act.IsEnabled = _options.CanAct;

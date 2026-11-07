@@ -35,6 +35,30 @@ public sealed class GuiImageCacheTests
     }
 
     [Fact]
+    public void CancelQueued_drops_waiting_jobs_and_leaves_no_trace()
+    {
+        var paths = Enumerable.Range(0, 200).Select(i => WriteTga($"cancel/{i}.tga", 16, 16)).ToList();
+        var cache = new GuiImageCache(1L << 30);
+        cache.Prefetch(paths.Select(p => (p, GuiTint.White)));
+
+        cache.CancelQueued();
+
+        // Nur, was die Hintergrund-Threads schon in Arbeit haben (höchstens zwei), bleibt bis zu seinem Ende.
+        Assert.True(cache.QueuedCount <= 2, $"Noch {cache.QueuedCount} in der Warteschlange.");
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (cache.QueuedCount > 0 && DateTime.UtcNow < deadline)
+        {
+            Thread.Sleep(5);
+        }
+
+        Assert.Equal(0, cache.QueuedCount);
+
+        // Ein abgebrochenes Bild ist nicht als dekodiert gemerkt: ein neuer Abruf stellt es wieder ein.
+        var dropped = paths.Last(p => !cache.Contains(p));
+        Assert.Equal(GuiImageState.Pending, cache.TryGet(dropped, GuiTint.White, out _));
+    }
+
+    [Fact]
     public void Recently_used_image_survives_eviction()
     {
         var a = WriteTga("lru/a.tga", 2, 2);

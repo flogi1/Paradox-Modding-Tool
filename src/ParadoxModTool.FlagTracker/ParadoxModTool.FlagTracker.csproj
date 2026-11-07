@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ParadoxModTool.FlagTracker</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParadoxModTool.Scopes\ParadoxModTool.Scopes.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.GameProfiles\ParadoxModTool.GameProfiles.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ModCompat\ParadoxModTool.ModCompat.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Mods\ParadoxModTool.Mods.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.ErrorLog\ParadoxModTool.ErrorLog.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.SearchReplace\ParadoxModTool.SearchReplace.csproj" />
+    <ProjectReference Include="..\ParadoxModTool.Localization\ParadoxModTool.Localization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParadoxModTool.FlagTracker.Tests" />
+  </ItemGroup>
+
+</Project>

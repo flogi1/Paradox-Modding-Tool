@@ -1,3 +1,4 @@
+using ParadoxModTool.GuiDesign.Checks;
 using ParadoxModTool.GuiDesign.Resolve;
 using ParadoxModTool.GuiDesign.Syntax;
 
@@ -49,6 +50,9 @@ public sealed class LayoutOptions
     };
 }
 
+/// <summary>Hinweis eines Kastens mit seiner Befund-Art (<see cref="LayoutBox.NoteKinds"/>).</summary>
+public readonly record struct LayoutNoteKind(GuiFindingKind Kind, string Text);
+
 /// <summary>Rechteck in Bildschirmkoordinaten.</summary>
 public readonly record struct LayoutRect(double X, double Y, double Width, double Height);
 
@@ -78,6 +82,12 @@ public sealed class LayoutBox
 
     public List<string> Notes { get; } = new();
 
+    /// <summary>
+    /// Klassisch und Jomini: Hinweise aus <see cref="Notes"/>, die ein echtes Problem nennen, mit ihrer Befund-Art (Text wie in <see cref="Notes"/>); daraus
+    /// entstehen Befunde, ohne den Hinweistext zu lesen. Annäherungen stehen nur in <see cref="Notes"/>.
+    /// </summary>
+    public List<LayoutNoteKind> NoteKinds { get; } = new();
+
     public bool Uncertain => Notes.Count > 0;
 
     /// <summary>Was in diesem Kasten gezeichnet wird (Sprite oder Text); <see langword="null"/> bei reinen Containern und Kästen ohne Darstellung.</summary>
@@ -85,6 +95,12 @@ public sealed class LayoutBox
 
     /// <summary>Nur Jomini: das Texturbild des Kastens (<c>texture</c>), gezeichnet unter <see cref="Visual"/>; so behält ein Button Textur und Beschriftung. <see langword="null"/> ohne Textur.</summary>
     public JominiSpriteVisual? Sprite { get; set; }
+
+    /// <summary>
+    /// Nur Jomini: die Effekte des Texturbilds (<c>modify_texture</c>, <c>glow</c>, <c>effectname</c>) als Rezept für <see cref="JominiEffectComposer"/>, mit der
+    /// fertigen Kastengröße. Gesetzt nur bei gezeichnetem <see cref="Sprite"/> (ohne Platzhalter) und nicht leeren Effekten; sonst <see langword="null"/>.
+    /// </summary>
+    public JominiEffectRecipe? Effects { get; set; }
 
     /// <summary>Der Kasten ragt um mehr als 1 Pixel über den Kasten seines Elternelements hinaus.</summary>
     public bool OutsideParent { get; set; }
