@@ -14,6 +14,12 @@ public sealed record SearchPanelContext
     /// <summary>Text des aktiven Dokuments (Modus "Aktuelles Dokument").</summary>
     public required Func<string> GetActiveDocumentText { get; init; }
 
+    /// <summary>
+    /// Die Dokumente beider Arbeitsbereiche (links, dann rechts; ein leerer oder ausgeblendeter Arbeitsbereich fehlt). <see langword="null"/> = der Host
+    /// bietet die Option "Beide Arbeitsbereiche" nicht an.
+    /// </summary>
+    public Func<IReadOnlyList<SearchDocumentSource>>? GetBothDocuments { get; init; }
+
     /// <summary>Markiert einen Treffer (Offset, Länge) im aktiven Dokument.</summary>
     public required Action<int, int> SelectInActiveDocument { get; init; }
 
@@ -51,4 +57,10 @@ public sealed record SearchPanelContext
     /// Ordner oder Datei. Der Reiter merkt sich damit das durchsuchte Dokument; Ordner-Treffer hängen an keinem Dokument.
     /// </summary>
     public Action<bool>? SearchPerformed { get; init; }
+
+    /// <summary>Direkt nach <see cref="SearchPerformed"/> im Dokumentmodus: ob dabei beide Arbeitsbereiche durchsucht wurden (Treffer gehören dann zu zwei Dokumenten).</summary>
+    public Action<bool>? SearchedBothPanes { get; init; }
 }
+
+/// <summary>Ein durchsuchbares Dokument eines Arbeitsbereichs: Name des Arbeitsbereichs, Text und "Treffer markieren" (springt dorthin).</summary>
+public sealed record SearchDocumentSource(string Label, Func<string> GetText, Action<int, int> Select);

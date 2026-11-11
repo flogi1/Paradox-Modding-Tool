@@ -117,6 +117,14 @@ public static class SearchTexts
 
     public static string WholeWord => T("searchWindow.wholeWord", "Nur ganzes Wort");
 
+    public static string BothPanes => T("searchWindow.bothPanes", "Beide Arbeitsbereiche");
+
+    public static string BothPanesTip => T("searchWindow.bothPanes.tip", "Durchsucht im Modus \"Aktuelles Dokument\" die aktiven Dokumente beider Arbeitsbereiche (Ersetzen wirkt nur im aktiven Dokument).");
+
+    public static string WorkspaceLeft => T("searchWindow.workspaceLeft", "Links");
+
+    public static string WorkspaceRight => T("searchWindow.workspaceRight", "Rechts");
+
     public static string IgnoreFormatting => T("searchWindow.ignoreFormatting", "Formatierung ignorieren");
 
     public static string IgnoreFormattingTip => T("searchWindow.ignoreFormatting.tip",

@@ -49,6 +49,8 @@ public static class HotkeyCatalog
     {
         new("editor.undo", HotkeyGroup.Main, Ctrl, "Z", ""),
         new("editor.redo", HotkeyGroup.Main, Ctrl, "Y", ""),
+        new("editor.duplicateLine", HotkeyGroup.Main, Ctrl, "D", ""),
+        new("editor.deleteLine", HotkeyGroup.Main, Ctrl | HotkeyModifiers.Shift, "K", ""),
         new("main.search", HotkeyGroup.Main, Ctrl, "F", "MainWindow.xaml.cs"),
         new("main.guiInspector", HotkeyGroup.Main, Ctrl, "H", "MainWindow.xaml.cs"),
         new("main.goToLine", HotkeyGroup.Main, Ctrl, "G", "MainWindow.xaml.cs"),

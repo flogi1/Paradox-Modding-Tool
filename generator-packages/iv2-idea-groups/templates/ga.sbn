@@ -30,6 +30,7 @@ iv2_ga_select_ideagroup_{{ g }} = {
 			}
 			custom_tooltip = {
 				text = iv2_tt_no_available_idea_{{ category }}
+				has_variable = iv2_var_current_idea_group_{{ category }}
 				var:iv2_var_current_idea_group_{{ category }} > var:iv2_var_current_picked_idea_group_{{ category }}
 			}
 		}

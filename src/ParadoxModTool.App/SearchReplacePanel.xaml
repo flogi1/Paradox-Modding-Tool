@@ -104,7 +104,9 @@
                  Varianten desselben Codeblocks sollen beide gefunden werden. Ersetzt wird trotzdem
                  exakt der in der jeweiligen Datei tatsächlich gefundene, unterschiedlich formatierte
                  Textbereich - siehe SearchOptions.IgnoreFormatting/TextSearch.FindAllIgnoringFormatting. -->
-            <CheckBox x:Name="IgnoreFormattingCheckBox" />
+            <CheckBox x:Name="IgnoreFormattingCheckBox" Margin="0,0,16,0" />
+            <!-- Nutzerwunsch: nicht immer ist der richtige Arbeitsbereich angewählt; nur im Modus "Aktuelles Dokument" und nur im Hauptfenster-Kontext sichtbar. -->
+            <CheckBox x:Name="BothPanesCheckBox" Visibility="Collapsed" />
         </WrapPanel>
 
         <WrapPanel Grid.Row="5" Orientation="Horizontal" Margin="0,0,0,8">

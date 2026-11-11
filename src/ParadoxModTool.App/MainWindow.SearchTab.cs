@@ -21,6 +21,9 @@ public partial class MainWindow
     /// </summary>
     private object? _searchTabDocument;
 
+    /// <summary>Die Treffer des Reiters stammen aus beiden Arbeitsbereichen (Option "Beide Arbeitsbereiche"); Fokuswechsel zwischen ihnen leert sie nicht.</summary>
+    private bool _searchTabBoth;
+
     /// <summary>
     /// Einmal im Konstruktor, vor dem Laden der Einstellungen (ApplySetting setzt danach <see cref="NotesSidePanel.SearchTabEnabled"/>). Das Panel selbst
     /// wird erst in <see cref="InitializeSearchTabPanel"/> eingerichtet.
@@ -52,7 +55,7 @@ public partial class MainWindow
                 // ActivePane kann sich still ändern (Split-View aus); dann gehören die Treffer zu einem anderen Dokument und dürfen dort nichts markieren.
                 SelectInActiveDocument = (offset, length) =>
                 {
-                    if (_searchTabDocument is not null && !ReferenceEquals(ActivePane.ActiveDocument, _searchTabDocument))
+                    if (_searchTabDocument is not null && !_searchTabBoth && !ReferenceEquals(ActivePane.ActiveDocument, _searchTabDocument))
                     {
                         ClearSearchTabIfDocumentChanged();
                         return;
@@ -72,7 +75,19 @@ public partial class MainWindow
                 // Derselbe Merker wie beim Fenster: Reiter und Fenster suchen im zuletzt benutzten Ordner weiter.
                 GetLastFolder = () => _searchLastFolder,
                 SetLastFolder = folder => _searchLastFolder = folder,
-                SearchPerformed = inDocument => _searchTabDocument = inDocument ? ActivePane.ActiveDocument : null,
+                SearchPerformed = inDocument =>
+                {
+                    _searchTabDocument = inDocument ? ActivePane.ActiveDocument : null;
+                    _searchTabBoth = false;
+                },
+                SearchedBothPanes = both => _searchTabBoth = both,
+                GetBothDocuments = () => AllPanes
+                    .Where(pane => pane.IsVisible && pane.ActiveDocument is not null)
+                    .Select(pane => new SearchDocumentSource(
+                        ReferenceEquals(pane, LeftEditor) ? SearchTexts.WorkspaceLeft : SearchTexts.WorkspaceRight,
+                        () => pane.CurrentText,
+                        pane.SelectRange))
+                    .ToList(),
             });
     }
 
@@ -80,7 +95,7 @@ public partial class MainWindow
     private void ClearSearchTabIfDocumentChanged()
     {
         // Auch bei leerer Liste (0 Treffer, nach "Alle ersetzen"), damit der Status nicht die alte Zahl zeigt.
-        if (_searchTabDocument is null || ReferenceEquals(ActivePane.ActiveDocument, _searchTabDocument))
+        if (_searchTabDocument is null || _searchTabBoth || ReferenceEquals(ActivePane.ActiveDocument, _searchTabDocument))
         {
             return;
         }

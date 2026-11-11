@@ -447,6 +447,8 @@ public static class SettingsTexts
         "editor.autoComplete" => T("settings.hotkey.editor.autoComplete", "Vorschläge anzeigen"),
         "editor.undo" => T("settings.hotkey.editor.undo", "Rückgängig (Text im aktiven Dokument)"),
         "editor.redo" => T("settings.hotkey.editor.redo", "Wiederholen (Text im aktiven Dokument)"),
+        "editor.duplicateLine" => T("settings.hotkey.editor.duplicateLine", "Zeile duplizieren (oder Auswahl)"),
+        "editor.deleteLine" => T("settings.hotkey.editor.deleteLine", "Zeile löschen"),
         "designer.undo" => T("settings.hotkey.designer.undo", "Rückgängig im Designer (nicht in Eingabefeldern)"),
         "designer.redo" => T("settings.hotkey.designer.redo", "Wiederholen im Designer (auch Strg+Umschalt+Z)"),
         "designer.delete" => T("settings.hotkey.designer.delete", "Im Baum: Element löschen"),

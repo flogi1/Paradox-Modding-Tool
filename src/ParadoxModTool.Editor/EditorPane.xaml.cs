@@ -59,6 +59,8 @@ public partial class EditorPane : UserControl
         // Farbe der Textauswahl aus dem Theme (Token EditorSelection); folgt einem Themenwechsel.
         Editor.TextArea.SetResourceReference(ICSharpCode.AvalonEdit.Editing.TextArea.SelectionBrushProperty, "Theme.EditorSelection");
 
+        RebindLineCommands();
+
         // Kategorie-Filter (Nutzer-Feedback) über die Standard-CollectionView der Tab-Liste -
         // WPF wendet einen auf CollectionViewSource.GetDefaultView gesetzten Filter automatisch
         // auf die ListBox an, ohne dass ItemsSource selbst ausgetauscht werden müsste.

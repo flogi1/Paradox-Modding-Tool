@@ -149,6 +149,8 @@ public partial class SearchReplacePanel : UserControl
         WholeWordCheckBox.Content = SearchTexts.WholeWord;
         IgnoreFormattingCheckBox.Content = SearchTexts.IgnoreFormatting;
         IgnoreFormattingCheckBox.ToolTip = SearchTexts.IgnoreFormattingTip;
+        BothPanesCheckBox.Content = SearchTexts.BothPanes;
+        BothPanesCheckBox.ToolTip = SearchTexts.BothPanesTip;
         FindAllButton.Content = SearchTexts.FindAll;
         ReplaceAllButton.Content = SearchTexts.ReplaceAll;
         HideDescriptionCheckBox.Content = SearchTexts.HideDescription;
@@ -270,6 +272,7 @@ public partial class SearchReplacePanel : UserControl
         }
 
         FolderPanel.Visibility = IsFilesMode ? Visibility.Visible : Visibility.Collapsed;
+        BothPanesCheckBox.Visibility = !IsFilesMode && _context?.GetBothDocuments is not null ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void Browse_Click(object sender, RoutedEventArgs e)
@@ -346,12 +349,12 @@ public partial class SearchReplacePanel : UserControl
     /// <summary>
     /// Enter im Suchfeld (und im Ordnerfeld) startet die Suche; Umschalt+Enter lässt das Suchfeld eine neue Zeile beginnen (mehrzeilige Codeblöcke).
     /// </summary>
-    private void SearchInput_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    private async void SearchInput_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
         {
             e.Handled = true;
-            FindAll_Click(sender, e);
+            await FindAllAsync(!IsFilesMode);
         }
     }
 
@@ -419,7 +422,49 @@ public partial class SearchReplacePanel : UserControl
         }
     }
 
-    private async void FindAll_Click(object sender, RoutedEventArgs e)
+    private async void FindAll_Click(object sender, RoutedEventArgs e) => await FindAllAsync(false);
+
+    /// <summary>Suchsignatur der letzten Enter-Suche im Dokument und Index des zuletzt angesprungenen Treffers (weitere Enter springen zum nächsten).</summary>
+    private string? _jumpSignature;
+
+    private int _jumpIndex;
+
+    /// <summary>
+    /// Enter im Suchfeld (Dokumentmodus): springt zum ersten Treffer, jedes weitere Enter mit derselben Suche zum nächsten (am Ende wieder zum ersten).
+    /// Der Fokus bleibt im Suchfeld, damit Enter weitersucht statt im Dokument die Auswahl zu ersetzen.
+    /// </summary>
+    private void JumpToHit(string query)
+    {
+        var count = _context.Results.Count;
+        if (count == 0)
+        {
+            _jumpSignature = null;
+            return;
+        }
+
+        var signature = string.Join("", query, MatchCaseCheckBox.IsChecked, WholeWordCheckBox.IsChecked, IgnoreFormattingCheckBox.IsChecked, BothPanesCheckBox.IsChecked);
+        _jumpIndex = signature == _jumpSignature ? (_jumpIndex + 1) % count : 0;
+        _jumpSignature = signature;
+
+        ResultsList.SelectedIndex = _jumpIndex;
+        ResultsList.ScrollIntoView(_context.Results[_jumpIndex]);
+        SelectRow(_context.Results[_jumpIndex]);
+        SearchTextBox.Focus();
+    }
+
+    private void SelectRow(SearchResultRow row)
+    {
+        if (row.SelectAction is { } select)
+        {
+            select(row.Offset, row.Length);
+        }
+        else
+        {
+            _context.SelectInActiveDocument(row.Offset, row.Length);
+        }
+    }
+
+    private async Task FindAllAsync(bool jumpToHit)
     {
         // Vor Initialize (der Reiter wird erst nach dem Laden der Sitzung eingerichtet) gibt es noch keinen Kontext.
         if (_busy || _context is null)
@@ -465,15 +510,36 @@ public partial class SearchReplacePanel : UserControl
         }
         else
         {
-            var text = _context.GetActiveDocumentText();
-            var matches = TextSearch.FindAll(text, query, CurrentOptions);
-            foreach (var match in matches)
+            var bothPanes = BothPanesCheckBox.IsChecked == true && _context.GetBothDocuments is not null;
+            var found = 0;
+            if (bothPanes)
             {
-                _context.Results.Add(SearchResultRow.FromDocumentMatch(match, _context.GetHideDescription()));
+                foreach (var source in _context.GetBothDocuments!())
+                {
+                    foreach (var match in TextSearch.FindAll(source.GetText(), query, CurrentOptions))
+                    {
+                        _context.Results.Add(SearchResultRow.FromDocumentMatch(match, _context.GetHideDescription(), source.Label, source.Select));
+                        found++;
+                    }
+                }
+            }
+            else
+            {
+                var text = _context.GetActiveDocumentText();
+                foreach (var match in TextSearch.FindAll(text, query, CurrentOptions))
+                {
+                    _context.Results.Add(SearchResultRow.FromDocumentMatch(match, _context.GetHideDescription()));
+                    found++;
+                }
             }
 
-            StatusText.Text = SearchTexts.DocumentFound(matches.Count);
+            StatusText.Text = SearchTexts.DocumentFound(found);
             _context.SearchPerformed?.Invoke(true);
+            _context.SearchedBothPanes?.Invoke(bothPanes);
+            if (jumpToHit)
+            {
+                JumpToHit(query);
+            }
         }
     }
 
@@ -589,7 +655,7 @@ public partial class SearchReplacePanel : UserControl
         }
         else
         {
-            _context.SelectInActiveDocument(row.Offset, row.Length);
+            SelectRow(row);
         }
     }
 

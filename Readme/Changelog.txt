@@ -3,6 +3,15 @@ New
 Changed
 Fixed
 
+v1.0.1 (11.11.2026)
+New
+- Editor: Ctrl+D duplicates the current line (or the selection), Ctrl+Shift+K deletes the line. Both can be rebound under Settings > Hotkeys.
+- Search (document mode): the new option "Both workspaces" searches the active documents of the left and right workspace; hits show which workspace they are in and jump there (Replace still only affects the active document).
+- Search (document mode): Enter in the search box jumps to the first hit, each further Enter to the next one; the focus stays in the search box.
+- Script docs window: Ctrl+C copies the name of the selected entry.
+Fixed
+- IV2 idea groups: the generated "no available idea" tooltip check now tests has_variable first, so it no longer reads a variable that is not set.
+
 v1.0.0 (07.11.2026)
 New
 - Reference tree (Crusader Kings III, Victoria 3, Europa Universalis IV and V, Hearts of Iron IV, Stellaris): the right panel now has the tabs Notes | Check | References. The References tab shows where a variable, flag, event, on_action, scripted effect or trigger, or script value is set, read, used or uses, with vanilla and other mods grouped. Open it with right-click > "Show in reference tree", Ctrl+Shift+R, the input box in the tab or, in the classic layout, Tools > "Show in reference tree".

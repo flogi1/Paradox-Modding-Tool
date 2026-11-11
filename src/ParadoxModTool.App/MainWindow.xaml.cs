@@ -1075,7 +1075,14 @@ public partial class MainWindow : Window
                 () => ResolveDefaultModRoot(_activeProfile?.DefaultModRootTemplate),
                 () => ComputeGameContentRoot(_gameExecutablePath),
                 () => _searchLastFolder,
-                folder => _searchLastFolder = folder)
+                folder => _searchLastFolder = folder,
+                () => AllPanes
+                    .Where(pane => pane.IsVisible && pane.ActiveDocument is not null)
+                    .Select(pane => new SearchDocumentSource(
+                        ReferenceEquals(pane, LeftEditor) ? SearchTexts.WorkspaceLeft : SearchTexts.WorkspaceRight,
+                        () => pane.CurrentText,
+                        pane.SelectRange))
+                    .ToList())
             {
                 Owner = this,
             };
@@ -1655,6 +1662,10 @@ public partial class MainWindow : Window
         if (row.FilePath is { } filePath)
         {
             OpenSearchResult(filePath, row.Offset, row.Length);
+        }
+        else if (row.SelectAction is { } select)
+        {
+            select(row.Offset, row.Length);
         }
         else
         {

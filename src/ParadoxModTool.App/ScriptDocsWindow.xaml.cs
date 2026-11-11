@@ -39,6 +39,18 @@ public partial class ScriptDocsWindow : Window
         _insertName = insertName;
         _openFileAtLine = openFileAtLine;
 
+        // Strg+C in der Eintragsliste kopiert den Namen des markierten Eintrags (wie "In Editor einfügen", nur in die Zwischenablage).
+        EntryList.CommandBindings.Add(new CommandBinding(
+            ApplicationCommands.Copy,
+            (_, _) =>
+            {
+                if (EntryList.SelectedItem is EntryRow row)
+                {
+                    System.Windows.Clipboard.SetText(row.Entry.Name);
+                }
+            },
+            (_, e) => e.CanExecute = EntryList.SelectedItem is EntryRow));
+
         foreach (var kind in Enum.GetValues<ScriptDocKind>())
         {
             var box = new CheckBox

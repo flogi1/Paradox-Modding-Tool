@@ -34,7 +34,8 @@ public partial class SearchReplaceWindow : Window
         Func<string?> resolveDefaultModRoot,
         Func<string?> resolveGameContentRoot,
         Func<string?>? getLastFolder = null,
-        Action<string>? setLastFolder = null)
+        Action<string>? setLastFolder = null,
+        Func<IReadOnlyList<SearchDocumentSource>>? getBothDocuments = null)
     {
         InitializeComponent();
         Title = SearchTexts.Title;
@@ -61,6 +62,7 @@ public partial class SearchReplaceWindow : Window
                 ResolveGameContentRoot = resolveGameContentRoot,
                 GetLastFolder = getLastFolder,
                 SetLastFolder = setLastFolder,
+                GetBothDocuments = getBothDocuments,
             });
     }
 
@@ -167,9 +169,15 @@ public sealed class SearchResultRow : INotifyPropertyChanged
 
     public int Length { get; private init; }
 
+    /// <summary>Bei Treffern aus "Beide Arbeitsbereiche": Name des Arbeitsbereichs; sonst leer.</summary>
+    public string DocumentLabel { get; private init; } = string.Empty;
+
+    /// <summary>Bei Treffern aus "Beide Arbeitsbereiche": springt in dem Dokument, in dem der Treffer liegt; sonst <see langword="null"/>.</summary>
+    public Action<int, int>? SelectAction { get; private init; }
+
     /// <summary>Die beschreibende Zeile ("Datei — Zeile N: ..."), ausblendbar über <see cref="HideDescription"/>.</summary>
     public string Description => FilePath is null
-        ? SearchTexts.ResultLine(LineNumber, LineText)
+        ? (DocumentLabel.Length > 0 ? DocumentLabel + " — " : string.Empty) + SearchTexts.ResultLine(LineNumber, LineText)
         : LineNumber > 0
             ? SearchTexts.ResultFileLine(Path.GetFileName(FilePath), LineNumber, LineText)
             : $"{Path.GetFileName(FilePath)} — {LineText}";
@@ -204,6 +212,19 @@ public sealed class SearchResultRow : INotifyPropertyChanged
         MatchedText = match.MatchedText,
         Offset = match.Offset,
         Length = match.Length,
+        HideDescription = hideDescription,
+    };
+
+    public static SearchResultRow FromDocumentMatch(TextMatch match, bool hideDescription, string documentLabel, Action<int, int> select) => new()
+    {
+        FilePath = null,
+        LineNumber = match.LineNumber,
+        LineText = match.LineText,
+        MatchedText = match.MatchedText,
+        Offset = match.Offset,
+        Length = match.Length,
+        DocumentLabel = documentLabel,
+        SelectAction = select,
         HideDescription = hideDescription,
     };
 
