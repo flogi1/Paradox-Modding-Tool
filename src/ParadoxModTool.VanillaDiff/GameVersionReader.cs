@@ -57,7 +57,7 @@ public static class GameVersionReader
                     }
                 }
 
-                version = FindReleaseVersion(exe);
+                version = FindReleaseVersion(exe) ?? FindVersionBeforeGitMarker(exe);
                 lock (ExeCache)
                 {
                     ExeCache[key] = version;
@@ -106,6 +106,66 @@ public static class GameVersionReader
 
                 var next = span[(at + 1)..].IndexOf(ReleaseMarker);
                 at = next < 0 ? -1 : at + 1 + next;
+            }
+
+            carried = Math.Min(Overlap, length);
+            span[(length - carried)..].CopyTo(buffer);
+        }
+
+        return null;
+    }
+
+    private static readonly byte[] GitMarker = System.Text.Encoding.ASCII.GetBytes("\0Exe Git Version");
+
+    /// <summary>
+    /// Ab EU V 1.4.7 heißt der Zweig "…/release/next" ohne Nummer (geprüft 2026-11-16). Die Version steht dann als
+    /// "1.4.7\0Río Salado\0Exe Git Version: {}" in der Exe: Versionsnummer, Versionsname, dann der Marker.
+    /// </summary>
+    private static string? FindVersionBeforeGitMarker(string path)
+    {
+        const int Overlap = 256;
+        var buffer = new byte[4 * 1024 * 1024 + Overlap];
+        using var stream = File.OpenRead(path);
+        var carried = 0;
+        int read;
+        while ((read = stream.Read(buffer, carried, buffer.Length - carried)) > 0)
+        {
+            var length = carried + read;
+            var span = buffer.AsSpan(0, length);
+            for (var from = 0; from < length;)
+            {
+                var found = span[from..].IndexOf(GitMarker);
+                if (found < 0)
+                {
+                    break;
+                }
+
+                var at = from + found;
+                from = at + 1;
+                var nameEnd = at; // Ende des Versionsnamens (der NUL des Markers)
+                var nameStart = nameEnd;
+                while (nameStart > 0 && span[nameStart - 1] != 0 && nameEnd - nameStart < 64)
+                {
+                    nameStart--;
+                }
+
+                if (nameStart < 2 || span[nameStart - 1] != 0)
+                {
+                    continue;
+                }
+
+                var verEnd = nameStart - 1;
+                var verStart = verEnd;
+                while (verStart > 0 && (char.IsAsciiDigit((char)span[verStart - 1]) || span[verStart - 1] == (byte)'.'))
+                {
+                    verStart--;
+                }
+
+                var text = System.Text.Encoding.ASCII.GetString(span[verStart..verEnd]);
+                if (text.Contains('.') && char.IsAsciiDigit(text[0]) && (verStart == 0 || span[verStart - 1] == 0))
+                {
+                    return text;
+                }
             }
 
             carried = Math.Min(Overlap, length);

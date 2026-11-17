@@ -354,6 +354,9 @@ public static class MiscWindowTexts
 
     public static string DiffChooseModFolderShort => T("diff.chooseModFolderShort", "Wählen");
 
+    public static string DiffLastReadVersion(string? version) => string.Format(
+        T("diff.lastReadVersion", "Zuletzt gelesen: {0}"), version ?? T("diff.lastReadVersionNone", "–"));
+    public static string DiffLastReadVersionTip => T("diff.lastReadVersionTip", "Neueste Spielversion, deren Vanilla-Dateien in die Historie dieses Mods eingelesen wurden.");
     public static string DiffGameVersionLabel => T("diff.gameVersionLabel", "Spielversion:");
 
     public static string DiffFilterTip => T("diff.filter.tip", "Dateien filtern: Text im Pfad, Groß-/Kleinschreibung egal");

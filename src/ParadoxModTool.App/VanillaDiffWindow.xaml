@@ -89,14 +89,17 @@
                     <Button x:Name="MergeButton" DockPanel.Dock="Right" Padding="10,0" FontWeight="SemiBold" IsEnabled="False" Click="MergeButton_Click">
                         <TextBlock Text="{x:Static local:MiscWindowTexts.DiffMergeAfterUpdate}" />
                     </Button>
-                    <Button x:Name="ReadVersionButton" DockPanel.Dock="Right" Padding="10,0" Margin="0,0,6,0" Click="ReadVersionButton_Click"
-                            ToolTip="{x:Static local:VanillaUpdateTexts.ReadVersionTip}">
+                    <Button x:Name="ReadVersionButton" DockPanel.Dock="Right" Padding="10,0" Margin="0,0,6,0" Click="ReadVersionButton_Click">
                         <TextBlock Text="{x:Static local:VanillaUpdateTexts.ReadVersionButton}" />
                     </Button>
                     <TextBox x:Name="ManualVersionTextBox" DockPanel.Dock="Right" Width="80" VerticalContentAlignment="Center"
                              ToolTip="{x:Static local:MiscWindowTexts.DiffVersionTip}"
                              LostFocus="ManualVersionTextBox_Commit" KeyDown="ManualVersionTextBox_KeyDown" />
-                    <TextBlock DockPanel.Dock="Right" Text="{x:Static local:MiscWindowTexts.DiffGameVersionLabel}" VerticalAlignment="Center" Margin="12,0,6,0" />
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,6,0">
+                        <TextBlock x:Name="GameVersionLabelText" Text="{x:Static local:MiscWindowTexts.DiffGameVersionLabel}" />
+                        <TextBlock x:Name="LastReadHelp" Text=" (?)" Cursor="Help" Foreground="{DynamicResource Theme.TextMuted}" />
+                        <TextBlock x:Name="GameVersionColonText" />
+                    </StackPanel>
                     <TextBlock Text="{x:Static local:MiscWindowTexts.DiffModFolderLabel}" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <Button x:Name="ModRootButton" DockPanel.Dock="Right" Padding="8,0" Margin="6,0,0,0" Click="ModRootButton_Click"
                             ToolTip="{x:Static local:MiscWindowTexts.DiffChooseModFolderTip}">

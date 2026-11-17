@@ -208,12 +208,14 @@ public partial class VanillaDiffWindow : Window
             return;
         }
 
+        ShowDetectedVersion(version);
         _recording = true;
         ReadVersionButton.IsEnabled = false;
         var progress = new Progress<(int Done, int Total)>(p => UpdateStatusText.Text = VanillaUpdateTexts.Reading(p.Done, p.Total));
         try
         {
             var result = await Task.Run(() => _recordSnapshots(progress));
+            RefreshLastReadVersion();
             UpdateStatusText.Text = VanillaUpdateTexts.Recorded(version, result.Recorded, result.AlreadyPresent)
                 + (result.Failed > 0 ? " " + VanillaUpdateTexts.Failed(result.Failed) : string.Empty);
         }
@@ -549,6 +551,7 @@ public partial class VanillaDiffWindow : Window
         var gameRoot = _resolveGameRoot();
         ModRootStatusText.Text = modRoot ?? MiscWindowTexts.DiffNoModFolder;
         ModRootStatusText.ToolTip = modRoot;
+        RefreshLastReadVersion();
 
         if (_activeProfile is null || modRoot is null || gameRoot is null)
         {
@@ -770,6 +773,7 @@ public partial class VanillaDiffWindow : Window
         }
 
         _detectedGameVersion = GameVersionReader.TryReadVersion(gameRoot);
+        ShowDetectedVersion(_detectedGameVersion);
         var effectiveVersion = _detectedGameVersion ?? ManualVersionTextBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(effectiveVersion))
         {
@@ -785,6 +789,46 @@ public partial class VanillaDiffWindow : Window
         UpdateStatusText.Text = _mergeBaseline.HasOlderBaseline
             ? MiscWindowTexts.DiffMergeAvailable(_mergeBaseline.OlderVersion ?? string.Empty, effectiveVersion)
             : MiscWindowTexts.DiffBaselineRecorded(effectiveVersion);
+    }
+
+    /// <summary>Zeigt die neueste Version, die in die Vanilla-Historie des gewählten Mods eingelesen wurde.</summary>
+    private void RefreshLastReadVersion()
+    {
+        string? newest = null;
+        if (ResolveModRoot() is { } modRoot)
+        {
+            try
+            {
+                newest = VanillaHistoryStore.FromHistoryRoot(
+                    ParadoxModTool.VersionManager.StorageLocations.ResolveVanillaHistoryDirectory(modRoot, _getStorageSettings())).NewestRecordedVersion();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Historie nicht lesbar: Anzeige bleibt leer.
+            }
+        }
+
+        // Beschriftung "Spielversion (?):" - das Fragezeichen sitzt vor dem Doppelpunkt, der Rest bleibt je Sprache wie übersetzt.
+        var label = MiscWindowTexts.DiffGameVersionLabel;
+        var main = label.TrimEnd(':', '：', ' ', ' ');
+        GameVersionLabelText.Text = main;
+        GameVersionColonText.Text = label[main.Length..];
+
+        var lastRead = MiscWindowTexts.DiffLastReadVersion(newest);
+        LastReadHelp.ToolTip = lastRead + Environment.NewLine + MiscWindowTexts.DiffLastReadVersionTip;
+        ReadVersionButton.ToolTip = VanillaUpdateTexts.ReadVersionTip + Environment.NewLine + Environment.NewLine + lastRead;
+    }
+
+    /// <summary>Zeigt die gelesene Spielversion im Versionsfeld, damit sie nicht nur in der Statuszeile steht.</summary>
+    private void ShowDetectedVersion(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return;
+        }
+
+        ManualVersionTextBox.Text = version;
+        _lastCommittedManualVersion = version;
     }
 
     /// <summary>Übernimmt die manuell eingetragene Spielversion erst bei Enter oder Fokusverlust (nicht bei jedem Tastendruck).</summary>

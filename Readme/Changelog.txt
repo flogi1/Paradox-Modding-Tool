@@ -3,6 +3,12 @@ New
 Changed
 Fixed
 
+v1.0.2 (17.11.2026)
+New
+- Compare and Update tool: the Update tab shows the game version it read in the version field, and the "(?)" next to "Game version" and the read button show the last version read into the vanilla history as a tooltip.
+Fixed
+- Europa Universalis V 1.4.7 and later: the game version is found automatically again (the game executable no longer names the version in its branch name, so PMT now reads it from the version text in the executable).
+
 v1.0.1 (11.11.2026)
 New
 - Editor: Ctrl+D duplicates the current line (or the selection), Ctrl+Shift+K deletes the line. Both can be rebound under Settings > Hotkeys.

@@ -45,6 +45,21 @@ public class VanillaHistoryStoreTests : IDisposable
     }
 
     [Fact]
+    public void NewestRecordedVersion_ComparesNumericallyAcrossFiles_AndIgnoresStructureListings()
+    {
+        Assert.Null(_sut.NewestRecordedVersion());
+
+        _sut.RecordSnapshot("common/x.txt", "1.9.2", _vanillaFile);
+        _sut.RecordSnapshot("gui/y.gui", "1.10.1", _vanillaFile);
+        _sut.RecordSnapshot("common/x.txt", "1.4.7", _vanillaFile);
+        var listing = _sut.StructureListingPath("2.0.0");
+        Directory.CreateDirectory(Path.GetDirectoryName(listing)!);
+        File.WriteAllText(listing, "x");
+
+        Assert.Equal("1.10.1", _sut.NewestRecordedVersion());
+    }
+
+    [Fact]
     public void ReadSnapshot_LiefertGespeichertenInhalt()
     {
         _sut.RecordSnapshot("common/x.txt", "1.0", _vanillaFile);

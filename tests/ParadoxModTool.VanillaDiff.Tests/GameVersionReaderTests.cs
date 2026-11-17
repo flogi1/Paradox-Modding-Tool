@@ -67,6 +67,21 @@ public class GameVersionReaderTests : IDisposable
     }
 
     [Fact]
+    public void TryReadVersion_EuV_NextBranch_ReadsVersionBeforeGitMarker()
+    {
+        // EU V ab 1.4.7: Zweig "…/release/next" ohne Nummer; Version steht als "1.4.7\0Río Salado\0Exe Git Version" in der Exe.
+        var game = Path.Combine(_gameRoot, "game");
+        var binaries = Path.Combine(_gameRoot, "binaries");
+        Directory.CreateDirectory(game);
+        Directory.CreateDirectory(binaries);
+        var filler = new byte[5 * 1024 * 1024];
+        var marker = System.Text.Encoding.UTF8.GetBytes("\0ud009/release/next 2026-10-29\0\0\01.4.7\0Río Salado\0Exe Git Version: {} : {}\0");
+        File.WriteAllBytes(Path.Combine(binaries, "eu5.exe"), filler.Concat(marker).Concat(filler).ToArray());
+
+        Assert.Equal("1.4.7", GameVersionReader.TryReadVersion(game));
+    }
+
+    [Fact]
     public void TryReadVersion_ExeWithoutReleaseBranch_GivesNull()
     {
         var game = Path.Combine(_gameRoot, "game");
@@ -90,7 +105,7 @@ public class GameVersionReaderTests : IDisposable
         // Release-Builds tragen die Version als Zweigname "…/release/1.3.11" in der Exe. Beta-Zweige heißen "…/release/next" ohne Nummer: Dann ist
         // null richtig (die Oberfläche fragt nach der Version). Den Fund selbst prüfen die Tests mit der nachgebauten Exe.
         var version = GameVersionReader.TryReadVersion(Game);
-        Assert.True(version is null || System.Text.RegularExpressions.Regex.IsMatch(version, @"^\d+(\.\d+)+$"), $"Keine Versionsnummer: \"{version}\"");
+        Assert.True(version is not null && System.Text.RegularExpressions.Regex.IsMatch(version, @"^\d+(\.\d+)+$"), $"Keine Versionsnummer: \"{version}\"");
     }
 
     [Fact]

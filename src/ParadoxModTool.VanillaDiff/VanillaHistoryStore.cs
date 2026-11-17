@@ -64,6 +64,34 @@ public sealed class VanillaHistoryStore
             .ToList();
     }
 
+    /// <summary>
+    /// Neueste Spielversion, für die irgendeine Datei eingelesen wurde (bereinigter Name wie im Dateinamen, z. B. "1.4.7");
+    /// <see langword="null"/>, wenn die Historie leer ist.
+    /// </summary>
+    public string? NewestRecordedVersion()
+    {
+        if (!Directory.Exists(_historyRoot))
+        {
+            return null;
+        }
+
+        string? newest = null;
+        foreach (var dir in Directory.EnumerateDirectories(_historyRoot).Where(d => !Path.GetFileName(d).StartsWith('.')))
+        {
+            foreach (var file in Directory.EnumerateFiles(dir, "*.txt"))
+            {
+                var name = Path.GetFileNameWithoutExtension(file);
+                if (GameVersionComparer.Normalize(name) is not null
+                    && (newest is null || GameVersionComparer.Instance.Compare(name, newest) > 0))
+                {
+                    newest = name;
+                }
+            }
+        }
+
+        return newest;
+    }
+
     /// <summary>Liest den gespeicherten Snapshot einer Datei für eine bestimmte Spielversion.</summary>
     public string ReadSnapshot(string relativePath, string gameVersion)
     {
